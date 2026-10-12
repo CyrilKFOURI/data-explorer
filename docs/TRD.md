@@ -10,7 +10,7 @@ Application **locale** : un serveur Python sur la machine et une interface web o
 |---|---|---|
 | Backend | **Python 3.12 + FastAPI** (géré avec `uv`) | L'écosystème stats et ML est en Python (scipy, statsmodels, scikit-learn, SDV pour CTGAN…) |
 | Moteur de données | **DuckDB** sur des fichiers **Parquet** | Interroge des millions de lignes sans tout charger en RAM ; filtres et agrégations en SQL très rapides |
-| Calculs | pandas / numpy / scipy (V1), statsmodels (module séries temporelles) | Tests statistiques et ajustement de lois |
+| Calculs | **Polars** (en mémoire, moteur Rust multi-cœur) + numpy / scipy (V1), statsmodels (module séries temporelles) ; pandas seulement si une bibliothèque l'exige | Tests statistiques et ajustement de lois. Pas de backend Rust : le calcul lourd est déjà compilé (DuckDB en C++, Polars en Rust, scipy en C/Fortran), et l'écosystème stats/ML est en Python. Un point chaud pourra être réécrit en Rust via PyO3 si besoin. |
 | Base de l'app | **SQLite** | Métadonnées, types corrigés, préférences, cache des analyses ; un seul fichier, zéro serveur |
 | Frontend | **React + TypeScript + Vite** | Contrôle total de l'ergonomie et du design, ce que Dash permet mal |
 | Routage | TanStack Router | Routes typées, paramètres d'URL (dataset, variable, filtres) partageables |
