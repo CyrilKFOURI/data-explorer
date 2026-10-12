@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 from urllib.parse import quote
 
@@ -7,6 +8,8 @@ from fastapi.testclient import TestClient
 from app.api.security import hostname
 from app.config import Settings
 from app.core.jobs import InlineJobRunner
+from app.domain.ingestion.errors import IngestionError
+from app.domain.ingestion.paths import to_local_path
 from app.main import create_app
 
 
@@ -61,8 +64,33 @@ def test_cross_site_requests_are_rejected(local_client: TestClient) -> None:
     assert by_origin.status_code == 403
 
 
-@pytest.mark.parametrize("path", ["\\\\attacker\\share\\data.csv", "//attacker/share"])
-def test_network_paths_are_rejected(local_client: TestClient, path: str) -> None:
+NETWORK_PATHS = [
+    "\\\\attacker\\share\\data.csv",
+    "//attacker/share",
+    "/\\attacker\\share",
+    "\\/attacker/share",
+    "\\\\?\\UNC\\attacker\\share",
+    "\\\\.\\UNC\\attacker\\share",
+    "//?/UNC/attacker/share",
+    "\\\\attacker@SSL\\DavWWWRoot\\x.csv",
+]
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows path syntax")
+@pytest.mark.parametrize("path", NETWORK_PATHS)
+def test_network_paths_are_rejected_before_any_file_access(path: str) -> None:
+    with pytest.raises(IngestionError, match="Only local paths"):
+        to_local_path(path)
+
+
+def test_local_paths_are_accepted(tmp_path: Path) -> None:
+    assert to_local_path(str(tmp_path)) == tmp_path
+    assert to_local_path(str(tmp_path / "a" / ".." / "b")) == tmp_path / "b"
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows path syntax")
+@pytest.mark.parametrize("path", NETWORK_PATHS[:3])
+def test_network_paths_are_rejected_by_every_endpoint(local_client: TestClient, path: str) -> None:
     with local_client:
         # Pre-encoded like a browser would send it (the test client normalizes backslashes).
         browse = local_client.get(f"/api/v1/browse?path={quote(path, safe='')}")
@@ -71,4 +99,4 @@ def test_network_paths_are_rejected(local_client: TestClient, path: str) -> None
 
     for name, response in (("browse", browse), ("preview", preview), ("import", imported)):
         assert response.status_code == 422, name
-        assert "Network paths" in response.json()["error"]["message"], name
+        assert "Only local paths" in response.json()["error"]["message"], name

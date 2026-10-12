@@ -17,19 +17,16 @@ from app.core.jobs import JobRunner
 from app.core.storage import Workspace
 from app.domain.datasets import repository as repo
 from app.domain.datasets.repository import DatasetRecord, JobRecord, now
-from app.domain.ingestion.browse import Listing, is_within, list_directory
+from app.domain.ingestion.browse import Listing, list_directory
 from app.domain.ingestion.errors import IngestionError
 from app.domain.ingestion.importer import import_to_parquet
 from app.domain.ingestion.options import ImportOptions, SourceOptions
+from app.domain.ingestion.paths import is_within, to_local_path
 from app.domain.ingestion.preview import ColumnInfo, Preview, preview_source
 from app.domain.ingestion.sources import SourceFile, fingerprint, list_source_files
 from app.domain.ingestion.sql import lit
 
 SourceState = Literal["ok", "changed", "missing"]
-
-
-def is_network_path(value: str) -> bool:
-    return value.startswith(("\\\\", "//"))
 
 
 class NotFoundError(AppError):
@@ -59,15 +56,10 @@ class DatasetService:
         return [self.settings.data_dir, self.workspace.uploads_dir, self.settings.samples_dir]
 
     def resolve(self, raw_path: str) -> Path:
-        path = Path(raw_path).expanduser()
-        if is_network_path(raw_path) or is_network_path(path.drive):
-            # Opening a network path makes Windows authenticate to a remote host (credential leak).
-            raise IngestionError("Network paths are not supported: copy the files locally first.")
-        path = path.resolve()
-        if is_network_path(path.drive):
-            raise IngestionError("Network paths are not supported: copy the files locally first.")
+        """Validate a user path lexically, before any file system access (see `paths.py`)."""
+        path = to_local_path(raw_path)
         roots = self.allowed_roots()
-        if roots is not None and not is_within(path, [root.resolve() for root in roots]):
+        if roots is not None and not is_within(path, [to_local_path(str(r)) for r in roots]):
             raise IngestionError("This path is outside the allowed data folder.")
         return path
 

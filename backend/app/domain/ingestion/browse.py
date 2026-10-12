@@ -9,6 +9,7 @@ from typing import Literal
 
 from app.domain.ingestion.errors import IngestionError
 from app.domain.ingestion.options import Format
+from app.domain.ingestion.paths import is_within, to_local_path
 from app.domain.ingestion.sources import detect_format
 
 
@@ -40,10 +41,6 @@ def is_hidden(path: Path) -> bool:
     return bool(attributes & HIDDEN_ATTRIBUTES)
 
 
-def is_within(path: Path, roots: list[Path]) -> bool:
-    return any(path == root or path.is_relative_to(root) for root in roots)
-
-
 def default_roots() -> list[Path]:
     roots = [Path.home()]
     if sys.platform == "win32":
@@ -55,8 +52,10 @@ def default_roots() -> list[Path]:
 
 
 def list_directory(path: Path | None, restricted_to: list[Path] | None) -> Listing:
-    roots = [root.resolve() for root in restricted_to] if restricted_to else default_roots()
-    current = (path or roots[0]).resolve()
+    roots = (
+        [to_local_path(str(root)) for root in restricted_to] if restricted_to else default_roots()
+    )
+    current = to_local_path(str(path or roots[0]))
     if restricted_to and not is_within(current, roots):
         raise IngestionError("This folder is outside the allowed data folder.")
     if not current.is_dir():
