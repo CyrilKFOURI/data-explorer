@@ -1,0 +1,90 @@
+/*
+ * Design tokens: the only source of colors, fonts and density in the app.
+ * Direction: warm neutral + terracotta accent (docs/UI_UX.md).
+ * Light by default, dark via the system or [data-theme="dark"].
+ */
+
+:root {
+  --font-ui: "IBM Plex Sans", system-ui, sans-serif;
+  --font-code: "IBM Plex Mono", ui-monospace, monospace;
+
+  --surface-0: #f7f5f2;
+  --surface-1: #fffdfa;
+  --surface-2: #efebe5;
+  --ink-1: #24201b;
+  --ink-2: #5c544a;
+  --ink-3: #8a8176;
+  --line: #e2dcd3;
+  --accent: #c2562f;
+  --accent-ink: #ffffff;
+  --accent-soft: #f6e3da;
+
+  --ok: #2f7d4f;
+  --warn: #9a6200;
+  --bad: #b3261e;
+
+  --type-numeric: #3b6ea8;
+  --type-categorical: #8a5a9e;
+  --type-date: #2f7d6d;
+  --type-bool: #8c6d1f;
+  --type-text: #6b6259;
+  --type-id: #77706a;
+
+  /* Compact density (default). */
+  --control-h: 28px;
+  --sidebar-w: 216px;
+  --sidebar-w-collapsed: 52px;
+  --topbar-h: 44px;
+}
+
+:root[data-density="comfortable"] {
+  --control-h: 32px;
+  --sidebar-w: 232px;
+  --topbar-h: 48px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --surface-0: #14120f;
+    --surface-1: #1d1a16;
+    --surface-2: #27231e;
+    --ink-1: #ede8e1;
+    --ink-2: #b5aca0;
+    --ink-3: #847b70;
+    --line: #332e28;
+    --accent: #e07a50;
+    --accent-ink: #14120f;
+    --accent-soft: #3a2519;
+    --ok: #5dbb84;
+    --warn: #e0a23a;
+    --bad: #f07167;
+    --type-numeric: #7fa7d6;
+    --type-categorical: #c39ad3;
+    --type-date: #6cc0ad;
+    --type-bool: #d4b25e;
+    --type-text: #b0a69b;
+    --type-id: #a39b93;
+  }
+}
+
+:root[data-theme="dark"] {
+  --surface-0: #14120f;
+  --surface-1: #1d1a16;
+  --surface-2: #27231e;
+  --ink-1: #ede8e1;
+  --ink-2: #b5aca0;
+  --ink-3: #847b70;
+  --line: #332e28;
+  --accent: #e07a50;
+  --accent-ink: #14120f;
+  --accent-soft: #3a2519;
+  --ok: #5dbb84;
+  --warn: #e0a23a;
+  --bad: #f07167;
+  --type-numeric: #7fa7d6;
+  --type-categorical: #c39ad3;
+  --type-date: #6cc0ad;
+  --type-bool: #d4b25e;
+  --type-text: #b0a69b;
+  --type-id: #a39b93;
+}

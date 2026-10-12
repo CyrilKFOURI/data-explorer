@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    image: data-explorer:latest
+    ports:
+      # Only reachable from this machine.
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - workspace:/workspace
+      # Host folder whose files can be imported from the app ("Browse"), read-only.
+      - ${DATA_DIR:-./data}:/data:ro
+
+volumes:
+  workspace:

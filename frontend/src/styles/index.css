@@ -1,0 +1,65 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+/* Drop Tailwind's default palette and fonts: only our tokens exist as utilities. */
+@theme {
+  --color-*: initial;
+  --font-*: initial;
+}
+
+@theme inline {
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-ink-1: var(--ink-1);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --color-type-numeric: var(--type-numeric);
+  --color-type-categorical: var(--type-categorical);
+  --color-type-date: var(--type-date);
+  --color-type-bool: var(--type-bool);
+  --color-type-text: var(--type-text);
+  --color-type-id: var(--type-id);
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --font-sans: var(--font-ui);
+  --font-mono: var(--font-code);
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    background: var(--surface-0);
+    color: var(--ink-1);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0ms !important;
+      animation-duration: 0ms !important;
+    }
+  }
+}
