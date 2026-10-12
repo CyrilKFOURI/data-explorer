@@ -5,10 +5,10 @@ Roadmap en **sprints**, chacun composé de **tranches verticales** : chaque case
 ## V1 — Explorateur
 
 ### Sprint 0 — Socle
-- [ ] 000-socle — backend FastAPI + frontend React/Vite, une seule commande `dev`, healthcheck, SQLite + migrations, Shell (barre latérale, barre du haut, thème clair/sombre, tokens), routage, registres de modules vides, tests / lint / typecheck branchés
+- [ ] 000-socle — backend FastAPI + frontend React/Vite, une seule commande `dev`, healthcheck, SQLite + migrations, Shell (barre latérale, barre du haut, thème clair/sombre, tokens), routage, registres de modules vides, tests / lint / typecheck branchés, Dockerfile + docker-compose qui démarrent l'app, LICENSE MIT
 
 ### Sprint 1 — Données et types
-- [ ] 001-import — fichier ou dossier (CSV, Parquet, Excel) → aperçu → options → copie Parquet ; datasets récents ; réimport instantané si la source n'a pas changé
+- [ ] 001-import — fichier ou dossier (CSV, Parquet, Excel) → aperçu → options → copie Parquet ; datasets récents ; réimport instantané si la source n'a pas changé ; upload + dossier monté `/data` ; jeux de démo dans `samples/`
 - [ ] 002-detection-types — moteur de règles + base de connaissances (YAML) + page Colonnes (revue, correction persistée, annulation) ; jeu de tests de détection
 
 ### Sprint 2 — Explorer
@@ -21,6 +21,7 @@ Roadmap en **sprints**, chacun composé de **tranches verticales** : chaque case
 - [ ] 007-correlations-insights — matrice d'association mixte, clustering, paires classées, insights générés par règles
 - [ ] 008-donnees-export — table virtualisée, modes d'affichage, exports CSV / Parquet / Excel / PNG
 - [ ] 009-parametres-finitions — page Paramètres, palette de commandes, raccourcis, revue design et accessibilité
+- [ ] 010-portfolio — README anglais avec captures, `docker compose up` testé sur une machine propre, image < 600 Mo, CI (tests + build Docker)
 
 **→ Release V1.0**
 
@@ -32,3 +33,5 @@ Roadmap en **sprints**, chacun composé de **tranches verticales** : chaque case
 - [ ] Sprint 7 — Module données synthétiques (CTGAN, TVAE/VAE, TimeGAN, évaluation de fidélité)
 - [ ] À planifier — Module Assistant IA (LLM local optionnel)
 - [ ] À planifier — Rapport HTML exportable du dataset
+- [ ] À planifier — Vidéo / GIF de démo pour le README
+- [ ] À planifier — Interface en français (i18n déjà prête)

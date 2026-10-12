@@ -1,6 +1,6 @@
 # TRD — Technical Requirements
 
-> Statut : **proposition**, à valider pendant l'interview (la stack surtout).
+> Statut : validé (interview du 2026-10-12).
 
 ## Stack
 
@@ -47,9 +47,22 @@ Navigateur (React)  ──HTTP /api/v1──▶  FastAPI
 | Analyses | Résultats de profils, tests, préparations de graphiques (SQLite ou fichiers) | hash(empreinte dataset, version des types, filtres, analyse, paramètres) | Changement de type ou de filtre → nouvelle clé ; LRU avec plafond de taille (Paramètres) |
 | Client | Réponses API en mémoire + IndexedDB | Clé de requête | Revalidation en arrière-plan |
 
-**Workspace** : `%LOCALAPPDATA%\DataExplorer\` par défaut, modifiable avec `DATA_EXPLORER_HOME` dans `.env`. Il contient `app.db`, `datasets/` et `cache/`. Il est hors du dépôt git.
+**Workspace** : dossier défini par `DATA_EXPLORER_HOME` (`.env`). En Docker, c'est un **volume nommé** (`/workspace`), qui survit aux mises à jour de l'image. En développement natif : `%LOCALAPPDATA%\DataExplorer\`. Il contient `app.db`, `datasets/` et `cache/`, hors du dépôt git.
 
-**Hors-ligne** : l'app est hors-ligne par construction. Polices, plotly.js et icônes sont embarqués, il n'y a ni CDN ni appel externe. En production, le backend sert aussi l'interface buildée : une seule commande lance tout.
+**Hors-ligne** : l'app est hors-ligne par construction. Polices, plotly.js et icônes sont embarqués, il n'y a ni CDN ni appel externe. En production, le backend sert aussi l'interface buildée.
+
+## Distribution (validé : Docker)
+
+- **Une commande** pour le visiteur : `docker compose up`, puis ouvrir `http://localhost:8000`.
+- **Image multi-étapes** : une étape Node build l'interface, l'image finale (Python slim) ne contient que le backend et le front compilé. Objectif : < 600 Mo pour la V1.
+- **Accès aux fichiers** : un conteneur ne voit pas `C:\...`. Deux voies d'import :
+  1. **Glisser-déposer / upload** depuis le navigateur : marche partout.
+  2. **Dossier monté** : `docker-compose.yml` monte un dossier de l'hôte (`./data` par défaut, modifiable dans `.env`) en `/data` **en lecture seule**. Le bouton « Browse » de l'app parcourt `/data`. C'est la voie pour les gros fichiers et les dossiers.
+- **Port** publié seulement sur `127.0.0.1:8000` de l'hôte (pas exposé au réseau local).
+- **GPU** (modules ML et synthétiques, plus tard) : variante d'image CUDA + `docker-compose.gpu.yml` (nécessite NVIDIA Container Toolkit / WSL2). La V1 n'en a pas besoin.
+- **Développement** : en natif (uv + Vite, rechargement à chaud). Docker sert à la distribution et aux tests de fumée en CI.
+- Les **images Docker prennent de la place** sur le SSD : prévenir avant les builds lourds (surtout CUDA).
+- **Licence : MIT.**
 
 ## Services externes / API
 
@@ -59,7 +72,8 @@ Navigateur (React)  ──HTTP /api/v1──▶  FastAPI
 ## Sécurité & auth
 
 - Mono-utilisateur local : pas de comptes, pas d'authentification (validé : projet portfolio installé en local, pas de démo hébergée).
-- Le serveur écoute uniquement sur `127.0.0.1`.
+- Le serveur n'est accessible que depuis la machine : `127.0.0.1` en natif ; en Docker, il écoute dans le conteneur, mais le port n'est publié que sur `127.0.0.1` de l'hôte.
+- Upload : taille max réglable ; dans le dossier monté `/data`, chemins limités à ce dossier (pas de `../`).
 - Les fichiers sources sont en **lecture seule** : l'app ne les modifie jamais et travaille sur sa copie Parquet.
 - Secrets (clés API futures) uniquement dans `.env`, jamais commités.
 

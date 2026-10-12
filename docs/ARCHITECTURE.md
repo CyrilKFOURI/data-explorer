@@ -6,10 +6,13 @@ Objectif : pouvoir **ajouter une page, un module, un visuel, un test statistique
 
 ```
 New App/
-├── CLAUDE.md · PLAN.md · .env.example · .gitignore
+├── CLAUDE.md · PLAN.md · README.md (EN) · LICENSE (MIT) · .env.example · .gitignore
+├── Dockerfile                    ← multi-étapes : build du front (Node) → image Python slim
+├── docker-compose.yml            ← port 127.0.0.1:8000, volume workspace, ./data monté en /data (lecture seule)
+├── docker-compose.gpu.yml        (futur) variante CUDA pour ML / synthétique
 ├── docs/                         ← voir CLAUDE.md pour l'index
-├── samples/                      ← petits jeux de données de démo et de test (commités)
-├── scripts/                      ← dev.ps1, build.ps1…
+├── samples/                      ← démos commitées : titanic, iris, penguins, california_housing, typing_traps, série temporelle
+├── scripts/                      ← dev.ps1, make_big_sample.py (≈5 M lignes, non commité)…
 │
 ├── backend/
 │   ├── pyproject.toml

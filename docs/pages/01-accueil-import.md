@@ -8,7 +8,7 @@ Point d'entrée : importer un nouveau jeu de données ou reprendre un dataset ex
 
 1. **Zone d'import** (en haut, large)
    - Glisser-déposer un fichier : CSV, TSV, Parquet, Excel (.xlsx/.xls)
-   - Ou coller le **chemin** d'un fichier ou d'un **dossier**, avec bouton « Parcourir »
+   - Ou choisir un fichier ou un **dossier** dans le dossier monté (`/data` en Docker, voir [TRD.md](../TRD.md#distribution-validé--docker)) avec le bouton « Browse ». C'est la voie conseillée pour les gros fichiers et les dossiers. En natif, on peut aussi coller un chemin.
 2. **Datasets récents** : liste avec le nom, la source, le nombre de lignes × colonnes, la date de dernière ouverture et un statut (prêt / source modifiée / erreur). Actions : ouvrir, renommer, réimporter, supprimer (supprime la copie, jamais la source).
 
 ## Déroulé d'un import
@@ -28,7 +28,11 @@ Point d'entrée : importer un nouveau jeu de données ou reprendre un dataset ex
 
 - Réimporter une source inchangée est instantané (empreinte identique → copie existante réutilisée).
 - Un dossier dont le contenu change est signalé à la réouverture.
-- **Jeux de démo** dans `samples/` pour essayer l'app sans fichier sous la main.
+- **Jeux de démo** en un clic (« Try a sample dataset »), dans `samples/` :
+  - classiques publics : Titanic, Iris, Palmer Penguins, California Housing
+  - `typing_traps` : dataset synthétique plein de pièges de typage (dates en texte, `1 234,56`, entiers discrets 1–5, IDs, codes postaux, `N/A`, booléens oui/non…), qui sert aussi de test de détection
+  - une série temporelle (prête pour le futur module)
+  - gros volume : ~5 M lignes **générées par script** (`scripts/make_big_sample.py`), non commitées
 
 ## Cas limites
 

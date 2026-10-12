@@ -19,7 +19,7 @@ Deux profils, servis par **deux niveaux d'explication** sur chaque résultat :
 | Data scientist / analyste | Aller vite, chiffres exacts, vocabulaire technique | Verdict + statistique + p-value + taille d'effet, tout de suite |
 | Étudiant en stats / data | Comprendre ce qu'il fait | Panneau dépliable « Understand this test » : hypothèses, conditions, comment lire le résultat, quand utiliser un autre test |
 
-Les visiteurs du portfolio découvrent l'app par une **vidéo/GIF dans le README** et l'installent en local. Pas de démo hébergée.
+Les visiteurs du portfolio découvrent l'app par le **README** (captures ; vidéo plus tard) et l'installent en local avec Docker. Pas de démo hébergée.
 
 ## Fonctionnalités MVP
 
@@ -67,4 +67,4 @@ La V1 est réussie quand les quatre critères sont remplis :
 1. **Détection des types ≥ 95 %** de bonnes réponses, colonne par colonne, sur un jeu de test d'au moins 15 datasets variés (`backend/tests/fixtures/typing/`), mesurée en CI.
 2. **Vitesse** : Vue d'ensemble affichée en < 2 s sur 1 M lignes × 50 colonnes (cache froid) ; < 300 ms pour un réglage d'affichage (Top N, visuel) ; jeux jusqu'à **~5 M lignes** utilisables de façon fluide.
 3. **Rigueur statistique** : chaque test et chaque ajustement de loi est validé par des tests automatiques contre scipy / statsmodels sur des données de référence ; ses conditions d'application sont vérifiées et affichées.
-4. **Prêt pour le portfolio** : installation en une commande, jeux de démo inclus, README en anglais avec captures et GIF/vidéo de démo.
+4. **Prêt pour le portfolio** : installation en une commande (`docker compose up`), jeux de démo inclus, README en anglais avec captures d'écran, licence MIT. La vidéo/GIF de démo viendra plus tard, ce n'est pas un critère V1.
