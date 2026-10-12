@@ -31,3 +31,5 @@ class Settings(BaseSettings):
     data_dir: Path | None = None
     samples_dir: Path = Field(default_factory=default_samples_dir)
     max_upload_mb: int = 2048
+    # Host names the API answers to (protection against DNS rebinding).
+    allowed_hosts: list[str] = Field(default_factory=lambda: ["localhost", "127.0.0.1", "::1"])

@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api import datasets, health, jobs, sources
 from app.api.errors import register_error_handlers
+from app.api.security import protect
 from app.config import Settings
 from app.core import db
 from app.core.jobs import JobRunner, ThreadJobRunner
@@ -42,6 +43,7 @@ def create_app(settings: Settings | None = None, job_runner: JobRunner | None = 
     app.state.workspace = workspace
     app.state.datasets = dataset_service
     register_error_handlers(app)
+    protect(app, tuple(settings.allowed_hosts))
 
     api = APIRouter(prefix=API_PREFIX)
     for module in (health, datasets, sources, jobs):

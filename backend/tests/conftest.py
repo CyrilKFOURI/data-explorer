@@ -9,6 +9,12 @@ from app.core.jobs import InlineJobRunner
 from app.main import create_app
 
 
+@pytest.fixture(autouse=True)
+def allow_test_host(monkeypatch: pytest.MonkeyPatch) -> None:
+    """TestClient sends `Host: testserver`; production only allows localhost names."""
+    monkeypatch.setenv("DATA_EXPLORER_ALLOWED_HOSTS", '["localhost", "127.0.0.1", "testserver"]')
+
+
 @pytest.fixture
 def settings(tmp_path: Path) -> Settings:
     return Settings(home=tmp_path / "workspace")

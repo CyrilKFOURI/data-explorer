@@ -28,6 +28,10 @@ from app.domain.ingestion.sql import lit
 SourceState = Literal["ok", "changed", "missing"]
 
 
+def is_network_path(value: str) -> bool:
+    return value.startswith(("\\\\", "//"))
+
+
 class NotFoundError(AppError):
     def __init__(self, what: str) -> None:
         super().__init__(f"{what} not found", code="not_found", status_code=404)
@@ -55,7 +59,13 @@ class DatasetService:
         return [self.settings.data_dir, self.workspace.uploads_dir, self.settings.samples_dir]
 
     def resolve(self, raw_path: str) -> Path:
-        path = Path(raw_path).expanduser().resolve()
+        path = Path(raw_path).expanduser()
+        if is_network_path(raw_path) or is_network_path(path.drive):
+            # Opening a network path makes Windows authenticate to a remote host (credential leak).
+            raise IngestionError("Network paths are not supported: copy the files locally first.")
+        path = path.resolve()
+        if is_network_path(path.drive):
+            raise IngestionError("Network paths are not supported: copy the files locally first.")
         roots = self.allowed_roots()
         if roots is not None and not is_within(path, [root.resolve() for root in roots]):
             raise IngestionError("This path is outside the allowed data folder.")

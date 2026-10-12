@@ -73,6 +73,8 @@ Navigateur (React)  ──HTTP /api/v1──▶  FastAPI
 
 - Mono-utilisateur local : pas de comptes, pas d'authentification (validé : projet portfolio installé en local, pas de démo hébergée).
 - Le serveur n'est accessible que depuis la machine : `127.0.0.1` en natif ; en Docker, il écoute dans le conteneur, mais le port n'est publié que sur `127.0.0.1` de l'hôte.
+- **Protection contre les autres sites ouverts dans le navigateur** (`app/api/security.py`) : l'API refuse les requêtes dont l'en-tête `Host` n'est pas local (DNS rebinding), celles marquées `Sec-Fetch-Site: cross-site/same-site` et celles venant d'une autre `Origin` (CSRF, y compris de simples GET). Liste réglable : `DATA_EXPLORER_ALLOWED_HOSTS`.
+- Les **chemins réseau** (`\serveur\partage`, `//serveur`) sont refusés : les ouvrir ferait s'authentifier Windows auprès d'un hôte distant (fuite du hash NTLM).
 - Upload : taille max réglable ; dans le dossier monté `/data`, chemins limités à ce dossier (pas de `../`).
 - Les fichiers sources sont en **lecture seule** : l'app ne les modifie jamais et travaille sur sa copie Parquet.
 - Secrets (clés API futures) uniquement dans `.env`, jamais commités.
