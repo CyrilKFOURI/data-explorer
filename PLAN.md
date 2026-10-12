@@ -8,7 +8,7 @@ Roadmap en **sprints**, chacun composé de **tranches verticales** : chaque case
 - [ ] 000-socle (code fait ; reste : vérif Docker + revue design) — backend FastAPI + frontend React/Vite, une seule commande `dev`, healthcheck, SQLite + migrations, Shell (barre latérale, barre du haut, thème clair/sombre, tokens), routage, registres de modules vides, tests / lint / typecheck branchés, Dockerfile + docker-compose qui démarrent l'app, LICENSE MIT
 
 ### Sprint 1 — Données et types
-- [ ] 001-import — fichier ou dossier (CSV, Parquet, Excel) → aperçu → options → copie Parquet ; datasets récents ; réimport instantané si la source n'a pas changé ; upload + dossier monté `/data` ; jeux de démo dans `samples/`
+- [x] 001-import — fichier ou dossier (CSV, Parquet, Excel) → aperçu → options → copie Parquet ; datasets récents ; réimport instantané si la source n'a pas changé ; upload + dossier monté `/data` ; jeux de démo dans `samples/`
 - [ ] 002-detection-types — moteur de règles + base de connaissances (YAML) + page Colonnes (revue, correction persistée, annulation) ; jeu de tests de détection
 
 ### Sprint 2 — Explorer

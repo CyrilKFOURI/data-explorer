@@ -7,7 +7,7 @@ Point d'entrée : importer un nouveau jeu de données ou reprendre un dataset ex
 ## Contenu
 
 1. **Zone d'import** (en haut, large)
-   - Glisser-déposer un fichier : CSV, TSV, Parquet, Excel (.xlsx/.xls)
+   - Glisser-déposer un fichier : CSV, TSV, Parquet, Excel (.xlsx/.xlsm ; l'ancien .xls est refusé avec un message qui propose de l'enregistrer en .xlsx). Le fichier est envoyé au backend (copie interne dans le workspace)
    - Ou choisir un fichier ou un **dossier** dans le dossier monté (`/data` en Docker, voir [TRD.md](../TRD.md#distribution-validé--docker)) avec le bouton « Browse ». C'est la voie conseillée pour les gros fichiers et les dossiers. En natif, on peut aussi coller un chemin.
 2. **Datasets récents** : liste avec le nom, la source, le nombre de lignes × colonnes, la date de dernière ouverture et un statut (prêt / source modifiée / erreur). Actions : ouvrir, renommer, réimporter, supprimer (supprime la copie, jamais la source).
 

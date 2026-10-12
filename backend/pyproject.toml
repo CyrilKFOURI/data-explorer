@@ -5,7 +5,11 @@ description = "Local, offline exploratory data analysis with statistical depth."
 requires-python = ">=3.12"
 license = "MIT"
 dependencies = [
+    "duckdb>=1.5.6",
     "fastapi>=0.143.0",
+    "openpyxl>=3.1.5",
+    "polars>=2.0.0",
+    "pyarrow>=26.0.0",
     "pydantic-settings>=2.15.0",
     "uvicorn[standard]>=0.54.0",
 ]

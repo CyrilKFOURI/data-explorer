@@ -11,8 +11,8 @@ def test_migrations_create_tables(tmp_path: Path) -> None:
     }
     connection.close()
 
-    assert applied == ["0001_init"]
-    assert {"schema_migrations", "settings"} <= tables
+    assert applied == ["0001_init", "0002_datasets"]
+    assert {"schema_migrations", "settings", "datasets", "dataset_files", "jobs"} <= tables
 
 
 def test_migrations_are_idempotent(tmp_path: Path) -> None:

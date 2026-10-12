@@ -27,7 +27,8 @@ New App/
 │   │   │   ├── jobs.py           ← tâches longues + progression
 │   │   │   └── errors.py         ← erreurs métier → réponses HTTP claires
 │   │   ├── domain/               ← LOGIQUE PURE : ni FastAPI ni HTTP, testable seule
-│   │   │   ├── ingestion/        ← readers/ (csv, parquet, excel), dossier, normalisation
+│   │   │   ├── ingestion/        ← sources, détection CSV, lecture DuckDB, aperçu, import Parquet, navigation
+│   │   │   ├── datasets/         ← dépôt SQLite + service (cycle de vie des datasets, jobs d'import)
 │   │   │   ├── typing/           ← moteur de détection
 │   │   │   │   ├── engine.py
 │   │   │   │   ├── detectors/    ← un détecteur par fichier (dates, nombres, motifs, noms…)
@@ -40,7 +41,7 @@ New App/
 │   │   │   ├── filters/          ← règles JSON → SQL DuckDB
 │   │   │   └── insights/         ← règles qui rédigent les phrases d'insights
 │   │   ├── api/                  ← routers HTTP fins : appellent domain/, ne calculent rien
-│   │   │   └── datasets.py · columns.py · profile.py · charts.py · stats.py · filters.py
+│   │   │   └── datasets.py · sources.py · jobs.py · errors.py (AppError → JSON) · (à venir : columns, profile, charts, stats, filters)
 │   │   ├── schemas/              ← modèles Pydantic = contrats de l'API
 │   │   └── modules/              ← modules optionnels, chacun autonome
 │   │       ├── registry.py       ← liste des modules actifs → routers montés

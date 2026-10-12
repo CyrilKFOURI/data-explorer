@@ -15,7 +15,9 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_PROJECT_ENVIRONMENT=/opt/venv \
     PATH="/opt/venv/bin:$PATH" \
     DATA_EXPLORER_HOME=/workspace \
-    DATA_EXPLORER_STATIC_DIR=/app/static
+    DATA_EXPLORER_STATIC_DIR=/app/static \
+    DATA_EXPLORER_SAMPLES_DIR=/app/samples \
+    DATA_EXPLORER_DATA_DIR=/data
 
 WORKDIR /app
 COPY backend/pyproject.toml backend/uv.lock ./
@@ -23,6 +25,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY backend/ ./
 RUN uv sync --frozen --no-dev
 COPY --from=web /web/dist ./static
+COPY samples/ /app/samples/
 
 RUN useradd --create-home app && mkdir -p /workspace /data && chown app /workspace
 USER app

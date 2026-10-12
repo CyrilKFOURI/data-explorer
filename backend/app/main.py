@@ -8,19 +8,23 @@ from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api import health
+from app.api import datasets, health, jobs, sources
+from app.api.errors import register_error_handlers
 from app.config import Settings
 from app.core import db
-from app.core.errors import register_error_handlers
+from app.core.jobs import JobRunner, ThreadJobRunner
 from app.core.storage import Workspace
+from app.domain.datasets.service import DatasetService
 from app.modules.registry import mount_modules
 
 API_PREFIX = "/api/v1"
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def create_app(settings: Settings | None = None, job_runner: JobRunner | None = None) -> FastAPI:
     settings = settings or Settings()
     workspace = Workspace(settings.home)
+    runner = job_runner or ThreadJobRunner()
+    dataset_service = DatasetService(workspace, settings, runner)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -30,14 +34,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             db.apply_migrations(connection)
         finally:
             connection.close()
+        dataset_service.recover_interrupted()
         yield
+        runner.shutdown()
 
     app = FastAPI(title="Data Explorer", version=health.app_version(), lifespan=lifespan)
     app.state.workspace = workspace
+    app.state.datasets = dataset_service
     register_error_handlers(app)
 
     api = APIRouter(prefix=API_PREFIX)
-    api.include_router(health.router)
+    for module in (health, datasets, sources, jobs):
+        api.include_router(module.router)
     app.include_router(api)
     mount_modules(app, API_PREFIX)
 

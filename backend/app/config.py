@@ -14,6 +14,10 @@ def default_home() -> Path:
     return Path.home() / ".local" / "share" / "data-explorer"
 
 
+def default_samples_dir() -> Path:
+    return Path(__file__).resolve().parents[2] / "samples"
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="DATA_EXPLORER_",
@@ -23,3 +27,7 @@ class Settings(BaseSettings):
 
     home: Path = Field(default_factory=default_home)
     static_dir: Path | None = None
+    # When set (Docker: /data), browsing and imports are restricted to this folder.
+    data_dir: Path | None = None
+    samples_dir: Path = Field(default_factory=default_samples_dir)
+    max_upload_mb: int = 2048
