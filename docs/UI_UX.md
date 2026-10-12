@@ -1,10 +1,10 @@
 # UI / UX
 
-> Direction artistique définie ; **palette non figée** (choisie plus tard, en tokens). Avant tout travail d'interface, utiliser les skills listés dans `CLAUDE.md`.
+> Statut : validé (interview du 2026-10-12). Les valeurs exactes des couleurs seront ajustées sur maquette au Sprint 0 (contrastes vérifiés). Avant tout travail d'interface, utiliser les skills listés dans `CLAUDE.md`.
 
 ## Style général
 
-**« Instrument de laboratoire »** : un outil d'analyste précis, dense mais calme, où les données sont la seule chose qui attire l'œil. Références d'esprit : un bon logiciel scientifique, ou un tableur haut de gamme, pas une landing page.
+**« Instrument de laboratoire, ton éditorial »** : un outil d'analyste précis, dense mais calme, où les données sont la seule chose qui attire l'œil. Il est réchauffé par une palette chaude et une dataviz soignée, à la manière d'**Observable** et de **Datawrapper** : titres de graphiques informatifs, annotations directes plutôt que légendes lointaines, axes discrets, beaucoup de soin sur la typographie des graphiques. Pas une landing page.
 
 Principes :
 - **Les données d'abord** : l'interface est neutre, la couleur est réservée aux graphiques, aux types de colonnes et aux alertes.
@@ -12,13 +12,24 @@ Principes :
 - **Hiérarchie par la typographie** (taille, graisse, couleur d'encre) plutôt que par des boîtes, des ombres et des couleurs.
 - **Bordures fines (1 px)** et fonds légèrement différenciés pour séparer ; rayons discrets (4–6 px) ; ombres seulement sur les éléments flottants (menus, dialogues).
 - **Mouvement sobre** : 150–200 ms, uniquement pour expliquer un changement (ouverture, réordonnancement). Désactivé si le système demande moins d'animations.
-- **Clair et sombre** dès la V1, à égalité.
+- **Clair et sombre** dès la V1, à égalité. **Par défaut, le thème suit celui du système.**
+- **Densité compacte par défaut**, option « confortable » dans les Paramètres (deux jeux d'espacements en tokens).
+- **Icônes : Lucide**, utilisées avec retenue pour ne pas faire « template » : trait de 1,5 px partout, 16 px dans l'interface, seulement là où une icône aide à agir (jamais décorative à côté d'un titre), toujours avec un libellé ou une info-bulle.
 
 **Interdits anti-« AI slop »** : dégradés violet/bleu, glassmorphism, émojis en guise d'icônes, grosses cartes très arrondies avec ombre portée partout, titres héroïques, texte gris clair illisible, icône décorative sur chaque titre, compteurs animés, « ✨ Insights IA ✨ ».
 
 ## Couleurs
 
-Pas de palette fixe : tout passe par des **tokens sémantiques** dans `frontend/src/styles/tokens.css`, redéfinis pour le thème sombre.
+Direction retenue : **neutre chaud + accent terracotta**. Tout passe par des **tokens sémantiques** dans `frontend/src/styles/tokens.css`, redéfinis pour le thème sombre, et jamais par des couleurs Tailwind par défaut.
+
+| Token | Clair | Sombre |
+|---|---|---|
+| `--surface-0` (fond) | `#F7F5F2` | `#14120F` |
+| `--surface-1` (panneaux) | `#FFFDFA` | `#1D1A16` |
+| `--ink-1` (texte) | `#24201B` | `#EDE8E1` |
+| `--accent` (terracotta) | `#C2562F` | à éclaircir pour le contraste AA (≈ `#E07A50`) |
+
+Valeurs de départ, à affiner sur maquette. La terracotta est réservée aux **actions** (bouton principal, sélection, focus). Dans les graphiques, la palette catégorielle validée par `dataviz` doit rester distinguable de l'accent et ne pas le contredire.
 
 | Token | Usage |
 |---|---|
@@ -30,11 +41,9 @@ Pas de palette fixe : tout passe par des **tokens sémantiques** dans `frontend/
 | `--ok`, `--warn`, `--bad` | Résultats de tests, qualité des données |
 | `--chart-1…8`, séquentielle, divergente | Palettes Plotly, validées avec le skill `dataviz` (contraste, daltonisme) |
 
-Le choix des valeurs se fera en interview. Pistes : neutre froid + accent encre, neutre chaud + accent terracotta, ou quasi monochrome + accent vif.
-
 ## Typographie
 
-- **Une sans-serif pour l'interface**, et une **monospace** pour les noms de colonnes, les valeurs brutes et le code. Pistes (polices libres, embarquées localement) : IBM Plex Sans + Plex Mono, Geist + Geist Mono, Source Sans 3 + JetBrains Mono. On évite Inter par défaut.
+- **IBM Plex Sans** pour l'interface et les graphiques, **IBM Plex Mono** pour les noms de colonnes, les valeurs brutes et le code. Les deux sont embarquées localement (pas de Google Fonts : hors-ligne).
 - **Chiffres tabulaires** (`font-variant-numeric: tabular-nums`) partout où il y a des nombres ; nombres alignés à droite dans les tableaux.
 - Échelle courte : 12 / 13 / 14 (corps) / 16 / 20 / 24. Pas de titres géants.
 
@@ -67,4 +76,7 @@ Le choix des valeurs se fera en interview. Pistes : neutre froid + accent encre,
 
 ## Références visuelles
 
-À compléter (interview) : apps ou captures que tu aimes. Pistes de ton : Linear (densité, calme), Observable (dataviz), JMP / DataWrapper (pédagogie des stats).
+- **Observable** (observablehq.com, Observable Plot) : graphiques sobres et précis, notebooks lisibles, mélange texte + visuel.
+- **Datawrapper** : titres de graphiques qui disent la conclusion, annotations directes, palettes accessibles, axes et grilles discrets.
+
+Ce qu'on en reprend : la **typographie des graphiques** (titre, sous-titre, source), les **annotations sur le graphique** (médiane, seuil, valeur aberrante nommée), une grille légère, et des **phrases de conclusion** au-dessus des visuels (« Revenue is right-skewed: the mean is 40% above the median »).
