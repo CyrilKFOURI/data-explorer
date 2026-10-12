@@ -8,7 +8,7 @@ Bibliothèque : **Plotly** (plotly.js côté interface). Tous les graphiques pas
 - **Échantillonnage visible** : au-delà de 50 000 points (seuil réglable), les nuages de points sont dessinés sur un échantillon aléatoire à graine fixe. La mention « échantillon de 50 000 / 2,3 M lignes » s'affiche toujours. Les statistiques, elles, sont calculées sur toutes les lignes.
 - **Grands volumes** : densité 2D ou hexbin à la place d'un nuage de points si l'échantillon reste illisible.
 - **États vides explicites** : un message (« Aucune ligne après filtres », « Choisissez une variable Y ») plutôt qu'un graphique vide ou une erreur.
-- **Nombres** au format français (1 234,5 ; 1,2 M), axes en % pour les rôles pourcentage, unités issues du rôle sémantique.
+- **Nombres** au format de la locale active (EN par défaut : 1,234.5 ; 1.2M), axes en % pour les rôles pourcentage, unités issues du rôle sémantique.
 - **Couleurs** : palette catégorielle validée (skill `dataviz`), lisible en clair et en sombre. Une même catégorie garde la même couleur partout dans la session.
 
 ## Règles d'affichage des variables catégorielles

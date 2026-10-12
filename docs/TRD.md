@@ -58,7 +58,7 @@ Navigateur (React)  ──HTTP /api/v1──▶  FastAPI
 
 ## Sécurité & auth
 
-- Mono-utilisateur local : pas de comptes, pas d'authentification (à confirmer).
+- Mono-utilisateur local : pas de comptes, pas d'authentification (validé : projet portfolio installé en local, pas de démo hébergée).
 - Le serveur écoute uniquement sur `127.0.0.1`.
 - Les fichiers sources sont en **lecture seule** : l'app ne les modifie jamais et travaille sur sa copie Parquet.
 - Secrets (clés API futures) uniquement dans `.env`, jamais commités.
@@ -66,6 +66,7 @@ Navigateur (React)  ──HTTP /api/v1──▶  FastAPI
 ## Contraintes
 
 - Machine cible : Windows 11, 32 Go de RAM, RTX 4050 (6 Go de VRAM, CUDA). Utile pour les modules ML et synthétiques.
-- Volumes visés : à définir en interview. Proposition : fluide jusqu'à environ 5 M lignes × 200 colonnes.
+- Volumes visés (validé) : fluide jusqu'à environ **5 M lignes** × 200 colonnes.
 - Budgets de performance proposés : Vue d'ensemble affichée en < 2 s sur 1 M lignes × 50 colonnes (cache froid) ; < 300 ms pour un changement de Top N ou de visuel.
-- Interface en français, nombres au format français.
+- Interface **en anglais** en V1 ; tous les textes centralisés (fichiers de traduction) pour ajouter le français ensuite. Format des nombres et des dates selon la locale active.
+- Docs internes (`docs/`) en français ; README public en anglais.

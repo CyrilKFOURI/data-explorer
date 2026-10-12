@@ -71,7 +71,7 @@ New App/
     │   ├── ui/                   ← design system : Button, Select, Dialog, Tooltip, Tabs, Table… (aucune logique métier)
     │   ├── api/                  ← client typé généré depuis l'OpenAPI du backend + hooks par ressource
     │   ├── stores/               ← état UI (filtres actifs, préférences)
-    │   ├── lib/                  ← formatage des nombres FR, utilitaires
+    │   ├── lib/                  ← formatage des nombres (selon la locale), i18n, utilitaires
     │   └── styles/               ← tokens.css, polices locales
     └── tests/e2e/
 ```

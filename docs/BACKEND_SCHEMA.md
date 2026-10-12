@@ -45,7 +45,7 @@ datasets 1──n jobs
 
 ## Règles d'accès (qui lit/écrit quoi)
 
-- Application **mono-utilisateur locale** (à confirmer en interview) : pas de notion d'utilisateur ni de droits.
+- Application **mono-utilisateur locale** (validé) : pas de notion d'utilisateur ni de droits.
 - **Seul le backend** lit et écrit SQLite et le workspace. Le frontend passe toujours par l'API.
 - Les **fichiers sources** sont en lecture seule.
 - Le cache peut être vidé à tout moment (Paramètres) sans perte d'information : il se reconstruit.

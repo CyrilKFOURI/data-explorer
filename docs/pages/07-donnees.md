@@ -8,7 +8,7 @@ Voir les **lignes brutes** après filtres : point de contrôle et sortie des don
 
 - Table virtualisée (défilement fluide sur des millions de lignes, chargées par blocs)
 - En-têtes de colonne : nom + `TypeBadge` + mini-histogramme ; clic → tri ; menu → filtrer, masquer, figer, ouvrir la fiche
-- Cellules : nombres alignés à droite au format FR, dates lisibles, vides marqués (« — » grisé), texte long tronqué avec info-bulle
+- Cellules : nombres alignés à droite au format de la locale, dates lisibles, vides marqués (« — » grisé), texte long tronqué avec info-bulle
 - Modes d'affichage : premières lignes · **échantillon aléatoire** · lignes dupliquées seulement · lignes avec manquants seulement
 - Recherche plein texte dans le sous-ensemble filtré
 
