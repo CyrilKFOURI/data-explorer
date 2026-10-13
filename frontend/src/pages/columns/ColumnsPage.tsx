@@ -10,7 +10,7 @@ import { Sparkline } from "../../features/columns/Sparkline";
 import { TypeBadge } from "../../features/columns/TypeBadge";
 import { useColumnHistory } from "../../features/columns/useColumnHistory";
 import { formatCount } from "../../lib/format";
-import { t } from "../../lib/i18n";
+import { t, type MessageKey } from "../../lib/i18n";
 import { Button } from "../../ui/Button";
 import { Checkbox, ErrorNote, Select, TextInput } from "../../ui/fields";
 import { SegmentedControl } from "../../ui/SegmentedControl";
@@ -320,6 +320,14 @@ function ColumnRow({
             {t("columns.invalid", { count: formatCount(invalid), pct: percentOf(invalid, rows) })}
           </p>
         )}
+        {column.type === "datetime" && summary?.date && (
+          <p className="mt-0.5 max-w-64 text-xs text-ink-2" title={summary.date.parts.map(datePartLabel).join(", ")}>
+            {summary.date.min?.slice(0, 10)} → {summary.date.max?.slice(0, 10)} · {summary.date.step}
+            <span className="block truncate text-ink-3">
+              {t("columns.dateParts", { parts: summary.date.parts.map(datePartLabel).join(", ") })}
+            </span>
+          </p>
+        )}
         {column.type === "categorical_ordinal" && (
           <p className="mt-0.5 flex max-w-64 items-baseline gap-1.5 text-xs text-ink-2">
             <span className="truncate" title={(column.order ?? []).join(" < ")}>
@@ -375,6 +383,21 @@ function ColumnRow({
       </td>
     </tr>
   );
+}
+
+const DATE_PART_KEYS: Record<string, MessageKey> = {
+  year: "part.year",
+  quarter: "part.quarter",
+  month: "part.month",
+  year_month: "part.year_month",
+  week: "part.week",
+  day_of_week: "part.day_of_week",
+  day_of_month: "part.day_of_month",
+  hour: "part.hour",
+};
+
+function datePartLabel(part: string): string {
+  return DATE_PART_KEYS[part] ? t(DATE_PART_KEYS[part]) : part;
 }
 
 function ConfidenceTag({ confidence }: { confidence: Column["confidence"] }) {

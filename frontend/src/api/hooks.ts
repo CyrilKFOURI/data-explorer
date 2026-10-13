@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   api,
+  type ChartParams,
   type ColumnChange,
   type Dataset,
   type ImportOptions,
@@ -20,6 +21,9 @@ export const queryKeys = {
   samples: ["samples"] as const,
   columns: (id: string) => ["datasets", id, "columns"] as const,
   roles: ["column-roles"] as const,
+  overview: (id: string) => ["datasets", id, "overview"] as const,
+  chart: (id: string, column: string, params: ChartParams) =>
+    ["datasets", id, "chart", column, params] as const,
 };
 
 const isImporting = (datasets: Dataset[] | undefined) =>
@@ -162,6 +166,8 @@ export function useUpdateColumns(id: string) {
     onSuccess: (columns) => {
       client.setQueryData(queryKeys.columns(id), columns);
       void client.invalidateQueries({ queryKey: queryKeys.dataset(id), exact: true });
+      void client.invalidateQueries({ queryKey: queryKeys.overview(id) });
+      void client.invalidateQueries({ queryKey: ["datasets", id, "chart"] });
     },
   });
 }
@@ -182,5 +188,19 @@ export function useReviewTypes(id: string) {
       client.setQueryData(queryKeys.dataset(id), dataset);
       void client.invalidateQueries({ queryKey: queryKeys.datasets, exact: true });
     },
+  });
+}
+
+export function useOverview(id: string, enabled: boolean) {
+  return useQuery({ queryKey: queryKeys.overview(id), queryFn: () => api.overview(id), enabled });
+}
+
+export function useChart(id: string, column: string, params: ChartParams, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.chart(id, column, params),
+    queryFn: () => api.chart(id, column, params),
+    enabled,
+    staleTime: 60_000,
+    placeholderData: (previous) => previous,
   });
 }

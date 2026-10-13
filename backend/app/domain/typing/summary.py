@@ -10,6 +10,7 @@ from typing import Any
 
 import duckdb
 
+from app.domain.typing.dates import date_profile
 from app.domain.typing.parsers import present_sql, typed_sql
 from app.domain.typing.types import AnalysisType, Parser
 
@@ -111,11 +112,15 @@ def summarize(
         f"FROM (SELECT {typed} AS t, {present} AS r FROM {source})"
     ).fetchone() or (0, 0, 0, 0)
     examples = _top(connection, source, typed, "c DESC, v", 5)
-    return {
+    summary: dict[str, Any] = {
         "rows": int(rows),
         "null_count": int(rows - valid),
         "invalid_count": int(present_count - valid),
         "distinct_count": int(distinct),
         "examples": [example["label"] for example in examples],
         "histogram": histogram(connection, source, typed, analysis_type, order),
+        "date": None,
     }
+    if analysis_type == "datetime" and valid:
+        summary["date"] = date_profile(connection, source, typed, parser.kind == "year")
+    return summary

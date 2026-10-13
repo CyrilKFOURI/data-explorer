@@ -12,6 +12,14 @@ class HistogramBar(BaseModel):
     count: int
 
 
+class DateProfile(BaseModel):
+    has_time: bool
+    min: str | None
+    max: str | None
+    step: str
+    parts: list[str]
+
+
 class ColumnSummary(BaseModel):
     rows: int
     null_count: int
@@ -19,6 +27,7 @@ class ColumnSummary(BaseModel):
     distinct_count: int
     examples: list[str]
     histogram: list[HistogramBar]
+    date: DateProfile | None = None
 
 
 class ColumnOut(BaseModel):

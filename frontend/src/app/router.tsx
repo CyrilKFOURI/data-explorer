@@ -9,9 +9,9 @@ import {
 import { modules as registeredModules } from "../modules/registry";
 import type { ModuleManifest } from "../modules/types";
 import { ColumnsPage } from "../pages/columns/ColumnsPage";
-import { DatasetPage } from "../pages/dataset/DatasetPage";
 import { HomePage } from "../pages/home/HomePage";
 import { NotFoundPage } from "../pages/not-found/NotFoundPage";
+import { OverviewPage } from "../pages/overview/OverviewPage";
 import { SettingsPage } from "../pages/settings/SettingsPage";
 import { Shell } from "./layout/Shell";
 
@@ -38,7 +38,7 @@ export function createAppRouter({
   const datasetRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: "/d/$datasetId",
-    component: DatasetPage,
+    component: OverviewPage,
   });
   const columnsRoute = createRoute({
     getParentRoute: () => rootRoute,

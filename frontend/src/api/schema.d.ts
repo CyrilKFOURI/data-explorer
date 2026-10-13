@@ -300,6 +300,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/datasets/{dataset_id}/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Overview */
+        get: operations["overview_api_v1_datasets__dataset_id__overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/datasets/{dataset_id}/columns/chart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Chart */
+        get: operations["chart_api_v1_datasets__dataset_id__columns_chart_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/modules/hello": {
         parameters: {
             query?: never;
@@ -321,6 +355,108 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** Alert */
+        Alert: {
+            /** Kind */
+            kind: string;
+            /**
+             * Severity
+             * @enum {string}
+             */
+            severity: "warning" | "info";
+            /** Message */
+            message: string;
+            /** Columns */
+            columns?: string[];
+        };
+        /** Bar */
+        Bar: {
+            /** Label */
+            label: string;
+            /** Count */
+            count: number;
+        };
+        /** Bin */
+        Bin: {
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+            /** Count */
+            count: number;
+        };
+        /** Box */
+        Box: {
+            /** Q1 */
+            q1: number;
+            /** Median */
+            median: number;
+            /** Q3 */
+            q3: number;
+            /** Lowerfence */
+            lowerfence: number;
+            /** Upperfence */
+            upperfence: number;
+            /** Outliers */
+            outliers: number;
+            /** Outlier Values */
+            outlier_values: number[];
+        };
+        /** Chart */
+        Chart: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "histogram" | "bars" | "timeline" | "identifier" | "high_cardinality" | "empty";
+            /** View */
+            view: string;
+            /** Views */
+            views: string[];
+            /**
+             * Rows
+             * @default 0
+             */
+            rows: number;
+            /**
+             * Missing
+             * @default 0
+             */
+            missing: number;
+            /**
+             * Distinct
+             * @default 0
+             */
+            distinct: number;
+            /** Bars */
+            bars?: components["schemas"]["Bar"][];
+            others?: components["schemas"]["Others"] | null;
+            /**
+             * Ordered
+             * @default false
+             */
+            ordered: boolean;
+            /** Bins */
+            bins?: components["schemas"]["Bin"][];
+            /** Stats */
+            stats?: {
+                [key: string]: number | null;
+            } | null;
+            box?: components["schemas"]["Box"] | null;
+            /** Step */
+            step?: string | null;
+            /** Steps */
+            steps?: string[];
+            /** Examples */
+            examples?: string[];
+            /**
+             * Duplicates
+             * @default 0
+             */
+            duplicates: number;
+            /** Message */
+            message?: string | null;
+        };
         /**
          * ColumnChange
          * @description A correction of one column. `None` fields are left unchanged.
@@ -394,6 +530,15 @@ export interface components {
             excluded: boolean;
             summary: components["schemas"]["ColumnSummary"] | null;
         };
+        /** ColumnStats */
+        ColumnStats: {
+            /** Missing Pct */
+            missing_pct: number;
+            /** Distinct */
+            distinct: number;
+            /** Skewness */
+            skewness?: number | null;
+        };
         /** ColumnSummary */
         ColumnSummary: {
             /** Rows */
@@ -408,6 +553,7 @@ export interface components {
             examples: string[];
             /** Histogram */
             histogram: components["schemas"]["HistogramBar"][];
+            date?: components["schemas"]["DateProfile"] | null;
         };
         /** ConversionOut */
         ConversionOut: {
@@ -490,6 +636,19 @@ export interface components {
              */
             source_state: "ok" | "changed" | "missing";
             job?: components["schemas"]["JobOut"] | null;
+        };
+        /** DateProfile */
+        DateProfile: {
+            /** Has Time */
+            has_time: boolean;
+            /** Min */
+            min: string | null;
+            /** Max */
+            max: string | null;
+            /** Step */
+            step: string;
+            /** Parts */
+            parts: string[];
         };
         /** Entry */
         Entry: {
@@ -626,6 +785,42 @@ export interface components {
             roots: string[];
             /** Entries */
             entries: components["schemas"]["Entry"][];
+        };
+        /** Others */
+        Others: {
+            /** Count */
+            count: number;
+            /** Categories */
+            categories: number;
+        };
+        /** Overview */
+        Overview: {
+            /** Rows */
+            rows: number;
+            /** Columns */
+            columns: number;
+            /** Used Columns */
+            used_columns: number;
+            /** Missing Cells */
+            missing_cells: number;
+            /** Missing Pct */
+            missing_pct: number;
+            /** Duplicate Rows */
+            duplicate_rows: number;
+            /** Duplicate Columns */
+            duplicate_columns: string[][];
+            /** Size Bytes */
+            size_bytes: number;
+            /** Types */
+            types: {
+                [key: string]: number;
+            };
+            /** Alerts */
+            alerts: components["schemas"]["Alert"][];
+            /** Column Stats */
+            column_stats: {
+                [key: string]: components["schemas"]["ColumnStats"];
+            };
         };
         /**
          * Parser
@@ -1390,6 +1585,74 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RoleOut"][];
+                };
+            };
+        };
+    };
+    overview_api_v1_datasets__dataset_id__overview_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Overview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    chart_api_v1_datasets__dataset_id__columns_chart_get: {
+        parameters: {
+            query: {
+                column: string;
+                view?: string | null;
+                top_n?: number;
+                full?: boolean;
+                step?: string | null;
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Chart"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

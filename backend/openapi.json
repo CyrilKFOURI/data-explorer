@@ -885,6 +885,154 @@
         }
       }
     },
+    "/api/v1/datasets/{dataset_id}/overview": {
+      "get": {
+        "tags": [
+          "profiling"
+        ],
+        "summary": "Overview",
+        "operationId": "overview_api_v1_datasets__dataset_id__overview_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Overview"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{dataset_id}/columns/chart": {
+      "get": {
+        "tags": [
+          "profiling"
+        ],
+        "summary": "Chart",
+        "operationId": "chart_api_v1_datasets__dataset_id__columns_chart_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "column",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Column"
+            }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "View"
+            }
+          },
+          {
+            "name": "top_n",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 10,
+              "title": "Top N"
+            }
+          },
+          {
+            "name": "full",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Full"
+            }
+          },
+          {
+            "name": "step",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Step"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Chart"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/modules/hello": {
       "get": {
         "tags": [
@@ -909,6 +1057,277 @@
   },
   "components": {
     "schemas": {
+      "Alert": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "warning",
+              "info"
+            ],
+            "title": "Severity"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Columns"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "severity",
+          "message"
+        ],
+        "title": "Alert"
+      },
+      "Bar": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "count"
+        ],
+        "title": "Bar"
+      },
+      "Bin": {
+        "properties": {
+          "start": {
+            "type": "number",
+            "title": "Start"
+          },
+          "end": {
+            "type": "number",
+            "title": "End"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "count"
+        ],
+        "title": "Bin"
+      },
+      "Box": {
+        "properties": {
+          "q1": {
+            "type": "number",
+            "title": "Q1"
+          },
+          "median": {
+            "type": "number",
+            "title": "Median"
+          },
+          "q3": {
+            "type": "number",
+            "title": "Q3"
+          },
+          "lowerfence": {
+            "type": "number",
+            "title": "Lowerfence"
+          },
+          "upperfence": {
+            "type": "number",
+            "title": "Upperfence"
+          },
+          "outliers": {
+            "type": "integer",
+            "title": "Outliers"
+          },
+          "outlier_values": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Outlier Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "q1",
+          "median",
+          "q3",
+          "lowerfence",
+          "upperfence",
+          "outliers",
+          "outlier_values"
+        ],
+        "title": "Box"
+      },
+      "Chart": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "histogram",
+              "bars",
+              "timeline",
+              "identifier",
+              "high_cardinality",
+              "empty"
+            ],
+            "title": "Kind"
+          },
+          "view": {
+            "type": "string",
+            "title": "View"
+          },
+          "views": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Views"
+          },
+          "rows": {
+            "type": "integer",
+            "title": "Rows",
+            "default": 0
+          },
+          "missing": {
+            "type": "integer",
+            "title": "Missing",
+            "default": 0
+          },
+          "distinct": {
+            "type": "integer",
+            "title": "Distinct",
+            "default": 0
+          },
+          "bars": {
+            "items": {
+              "$ref": "#/components/schemas/Bar"
+            },
+            "type": "array",
+            "title": "Bars"
+          },
+          "others": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Others"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ordered": {
+            "type": "boolean",
+            "title": "Ordered",
+            "default": false
+          },
+          "bins": {
+            "items": {
+              "$ref": "#/components/schemas/Bin"
+            },
+            "type": "array",
+            "title": "Bins"
+          },
+          "stats": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stats"
+          },
+          "box": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Box"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "step": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step"
+          },
+          "steps": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Steps"
+          },
+          "examples": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Examples"
+          },
+          "duplicates": {
+            "type": "integer",
+            "title": "Duplicates",
+            "default": 0
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "view",
+          "views"
+        ],
+        "title": "Chart"
+      },
       "ColumnChange": {
         "properties": {
           "name": {
@@ -1169,6 +1588,35 @@
         ],
         "title": "ColumnOut"
       },
+      "ColumnStats": {
+        "properties": {
+          "missing_pct": {
+            "type": "number",
+            "title": "Missing Pct"
+          },
+          "distinct": {
+            "type": "integer",
+            "title": "Distinct"
+          },
+          "skewness": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skewness"
+          }
+        },
+        "type": "object",
+        "required": [
+          "missing_pct",
+          "distinct"
+        ],
+        "title": "ColumnStats"
+      },
       "ColumnSummary": {
         "properties": {
           "rows": {
@@ -1200,6 +1648,16 @@
             },
             "type": "array",
             "title": "Histogram"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DateProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -1447,6 +1905,56 @@
           "source_state"
         ],
         "title": "DatasetOut"
+      },
+      "DateProfile": {
+        "properties": {
+          "has_time": {
+            "type": "boolean",
+            "title": "Has Time"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "step": {
+            "type": "string",
+            "title": "Step"
+          },
+          "parts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Parts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "has_time",
+          "min",
+          "max",
+          "step",
+          "parts"
+        ],
+        "title": "DateProfile"
       },
       "Entry": {
         "properties": {
@@ -1883,6 +2391,102 @@
           "entries"
         ],
         "title": "Listing"
+      },
+      "Others": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "categories": {
+            "type": "integer",
+            "title": "Categories"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count",
+          "categories"
+        ],
+        "title": "Others"
+      },
+      "Overview": {
+        "properties": {
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "columns": {
+            "type": "integer",
+            "title": "Columns"
+          },
+          "used_columns": {
+            "type": "integer",
+            "title": "Used Columns"
+          },
+          "missing_cells": {
+            "type": "integer",
+            "title": "Missing Cells"
+          },
+          "missing_pct": {
+            "type": "number",
+            "title": "Missing Pct"
+          },
+          "duplicate_rows": {
+            "type": "integer",
+            "title": "Duplicate Rows"
+          },
+          "duplicate_columns": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Duplicate Columns"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "title": "Size Bytes"
+          },
+          "types": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Types"
+          },
+          "alerts": {
+            "items": {
+              "$ref": "#/components/schemas/Alert"
+            },
+            "type": "array",
+            "title": "Alerts"
+          },
+          "column_stats": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ColumnStats"
+            },
+            "type": "object",
+            "title": "Column Stats"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rows",
+          "columns",
+          "used_columns",
+          "missing_cells",
+          "missing_pct",
+          "duplicate_rows",
+          "duplicate_columns",
+          "size_bytes",
+          "types",
+          "alerts",
+          "column_stats"
+        ],
+        "title": "Overview"
       },
       "Parser": {
         "properties": {

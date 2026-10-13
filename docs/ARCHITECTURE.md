@@ -34,11 +34,11 @@ New App/
 │   │   │   │   ├── engine.py
 │   │   │   │   ├── detectors/    ← un détecteur par fichier (dates, nombres, motifs, noms…)
 │   │   │   │   └── knowledge_base/  ← roles.toml, vocabulary.toml (rôles, valeurs nulles, booléens, ordres)
-│   │   │   ├── profiling/        ← résumé du dataset, stats univariées
+│   │   │   ├── profiling/        ← résumé du dataset, alertes qualité (Vue d'ensemble)
 │   │   │   ├── stats/            ← tests statistiques, un fichier par famille + registry.py
 │   │   │   │   ├── normality.py · distribution_fit.py · outliers.py
 │   │   │   │   └── bivariate.py · correlations.py
-│   │   │   ├── charts/           ← préparation des données des visuels (bins, KDE, Top N…)
+│   │   │   ├── charts/           ← préparation des données des visuels (bins, Top N + Others, timeline, parties de date)
 │   │   │   ├── filters/          ← règles JSON → SQL DuckDB
 │   │   │   └── insights/         ← règles qui rédigent les phrases d'insights
 │   │   ├── api/                  ← routers HTTP fins : appellent domain/, ne calculent rien

@@ -9,7 +9,10 @@ Bibliothèque : **Plotly** (plotly.js côté interface). Tous les graphiques pas
 - **Grands volumes** : densité 2D ou hexbin à la place d'un nuage de points si l'échantillon reste illisible.
 - **États vides explicites** : un message (« Aucune ligne après filtres », « Choisissez une variable Y ») plutôt qu'un graphique vide ou une erreur.
 - **Nombres** au format de la locale active (EN par défaut : 1,234.5 ; 1.2M), axes en % pour les rôles pourcentage, unités issues du rôle sémantique.
-- **Couleurs** : palette catégorielle validée (skill `dataviz`), lisible en clair et en sombre. Une même catégorie garde la même couleur partout dans la session.
+- **Couleurs** :
+  - graphique à **une seule série** (cartes de la Vue d'ensemble) : la couleur du **type** de la colonne (`--type-*`), contraste ≥ 3:1 vérifié en clair et en sombre ; « Others » et « (missing) » en gris atténué ;
+  - **plusieurs séries** (camembert, couleur par groupe dans Comparer…) : palette catégorielle `--chart-1…8` (ordre fixe : bleu, orange, aqua, jaune, magenta, vert, violet, rouge), validée avec le validateur du skill `dataviz` sur nos fonds. En clair, aqua, jaune et magenta passent sous 3:1 : les libellés restent donc toujours visibles. Les couleurs de type ne servent **jamais** de palette multi-séries (trop proches pour les daltoniens) ;
+  - une même catégorie garde la même couleur partout dans la session.
 
 ## Règles d'affichage des variables catégorielles
 

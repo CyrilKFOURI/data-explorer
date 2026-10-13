@@ -12,7 +12,7 @@ Roadmap en **sprints**, chacun composé de **tranches verticales** : chaque case
 - [x] 002-detection-types — moteur de règles + base de connaissances (TOML) + page Colonnes (revue, correction persistée, annulation) ; jeu de tests de détection
 
 ### Sprint 2 — Explorer
-- [ ] 003-vue-ensemble — bandeau de résumé + alertes qualité + grille 3 par ligne paginée ; règles d'affichage catégorielles (Top N, « Autres », plein écran)
+- [x] 003-vue-ensemble — bandeau de résumé + alertes qualité + grille 3 par ligne paginée ; règles d'affichage catégorielles (Top N, « Autres », plein écran)
 - [ ] 004-fiche-variable — stats complètes, tests de normalité, ajustement de lois, transformations, valeurs aberrantes, QQ-plot
 - [ ] 005-filtres — filtres globaux ET/OU, puces, filtres enregistrés, filtrer depuis un graphique
 

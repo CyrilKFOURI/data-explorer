@@ -45,8 +45,10 @@ function setup() {
     },
     "POST /datasets/d1/columns/review": dataset({ types_reviewed_at: "2026-10-13T10:00:00Z" }),
     "POST /datasets/d1/open": dataset(),
-    "GET /datasets/d1/schema": [],
-    "GET /datasets/d1/head": { columns: [], rows: [] },
+    "GET /datasets/d1/overview": {
+      rows: 100, columns: 3, used_columns: 3, missing_cells: 0, missing_pct: 0, duplicate_rows: 0,
+      duplicate_columns: [], size_bytes: 100, types: {}, alerts: [], column_stats: {},
+    },
   });
   renderAt("/d/d1/columns");
   return calls;
@@ -138,6 +140,6 @@ describe("Columns page", () => {
     await waitFor(() =>
       expect(calls.some((call) => call.key === "POST /datasets/d1/columns/review")).toBe(true),
     );
-    expect(await screen.findByRole("link", { name: "Column types reviewed" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Overview" })).toBeInTheDocument();
   });
 });

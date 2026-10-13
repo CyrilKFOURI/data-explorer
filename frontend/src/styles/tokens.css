@@ -30,6 +30,16 @@
   --type-text: #6b6259;
   --type-id: #77706a;
 
+  /* Categorical chart palette (validated with the dataviz skill on our surfaces), fixed order. */
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
+  --chart-3: #1baf7a;
+  --chart-4: #eda100;
+  --chart-5: #e87ba4;
+  --chart-6: #008300;
+  --chart-7: #4a3aa7;
+  --chart-8: #e34948;
+
   /* Compact density (default). */
   --control-h: 28px;
   --sidebar-w: 216px;
@@ -64,6 +74,14 @@
     --type-bool: #d4b25e;
     --type-text: #b0a69b;
     --type-id: #a39b93;
+    --chart-1: #3987e5;
+    --chart-2: #d95926;
+    --chart-3: #199e70;
+    --chart-4: #c98500;
+    --chart-5: #d55181;
+    --chart-6: #008300;
+    --chart-7: #9085e9;
+    --chart-8: #e66767;
   }
 }
 
@@ -87,4 +105,12 @@
   --type-bool: #d4b25e;
   --type-text: #b0a69b;
   --type-id: #a39b93;
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-4: #c98500;
+  --chart-5: #d55181;
+  --chart-6: #008300;
+  --chart-7: #9085e9;
+  --chart-8: #e66767;
 }

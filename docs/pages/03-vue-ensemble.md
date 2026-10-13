@@ -27,7 +27,8 @@ Balayer **toutes les variables d'un coup d'œil** et repérer ce qui mérite d'�
 
 - Règles d'affichage catégorielles appliquées partout : Top N, « Autres », « (manquant) », barres horizontales. Voir [VISUALS.md](../VISUALS.md).
 - Les cartes hors écran ne sont rendues qu'en devenant visibles.
-- Page, tri, filtres de grille et Top N mémorisés par dataset.
+- Page, tri, filtres de grille et Top N mémorisés par dataset (stockage local du navigateur).
+- Dates : la carte bascule entre Timeline, Month, Day of week et Hour (voir [DATES.md](../DATES.md)).
 
 ## Cas limites
 

@@ -20,6 +20,20 @@ export type ColumnChange = Partial<Omit<Schemas["ColumnChange"], "name">> & { na
 export type AnalysisType = Column["type"];
 export type Role = Schemas["RoleOut"];
 export type Conversion = Schemas["ConversionOut"];
+// Fields with server defaults are always present in responses.
+export type Alert = Required<Schemas["Alert"]>;
+export type Overview = Omit<Required<Schemas["Overview"]>, "alerts"> & { alerts: Alert[] };
+export type Chart = Required<Schemas["Chart"]>;
+export type ChartParams = { view?: string | null; topN?: number; full?: boolean; step?: string | null };
+
+function chartQuery(column: string, params: ChartParams): string {
+  const query = new URLSearchParams({ column });
+  if (params.view) query.set("view", params.view);
+  if (params.topN) query.set("top_n", String(params.topN));
+  if (params.full) query.set("full", "true");
+  if (params.step) query.set("step", params.step);
+  return query.toString();
+}
 
 export class ApiError extends Error {
   readonly status: number;
@@ -80,6 +94,9 @@ export const api = {
     ),
   reviewTypes: (id: string) => request<Dataset>("POST", `/datasets/${id}/columns/review`),
   roles: () => request<Role[]>("GET", "/column-roles"),
+  overview: (id: string) => request<Overview>("GET", `/datasets/${id}/overview`),
+  chart: (id: string, column: string, params: ChartParams) =>
+    request<Chart>("GET", `/datasets/${id}/columns/chart?${chartQuery(column, params)}`),
 
   job: (id: string) => request<Job>("GET", `/jobs/${id}`),
 

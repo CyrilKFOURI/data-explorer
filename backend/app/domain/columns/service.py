@@ -124,7 +124,7 @@ class ColumnService:
         finally:
             connection.close()
 
-    def _ready(self, dataset_id: str) -> DatasetRecord:
+    def ready(self, dataset_id: str) -> DatasetRecord:
         record = self.datasets.get(dataset_id)
         if record.status != "ready":
             raise AppError("This dataset is not ready yet.", code="not_ready", status_code=409)
@@ -168,10 +168,10 @@ class ColumnService:
         return [to_view(record) for record in records]
 
     def detect(self, dataset_id: str) -> list[ColumnView]:
-        return self.detect_storage(dataset_id, self._ready(dataset_id).storage_path)
+        return self.detect_storage(dataset_id, self.ready(dataset_id).storage_path)
 
     def columns(self, dataset_id: str) -> list[ColumnView]:
-        dataset = self._ready(dataset_id)
+        dataset = self.ready(dataset_id)
         with self._db() as connection:
             records = repo.list_columns(connection, dataset_id)
         if not records:
@@ -181,7 +181,7 @@ class ColumnService:
     # --- Corrections ---------------------------------------------------------------------------
 
     def update(self, dataset_id: str, changes: list[ColumnChange]) -> list[ColumnView]:
-        dataset = self._ready(dataset_id)
+        dataset = self.ready(dataset_id)
         valid_roles = {role.id for role in load().roles}
         types_changed = False
         with self._db() as connection:
@@ -252,7 +252,7 @@ class ColumnService:
 
     def conversion(self, dataset_id: str, column: str, target: AnalysisType) -> tuple[Parser, dict]:
         """What the column would look like in another type, without saving anything."""
-        dataset = self._ready(dataset_id)
+        dataset = self.ready(dataset_id)
         with self._db() as connection:
             record = repo.get_column(connection, dataset_id, column)
         if record is None:
@@ -262,7 +262,7 @@ class ColumnService:
         return parser, json.loads(self._summarize(dataset.storage_path, record))
 
     def mark_reviewed(self, dataset_id: str) -> DatasetRecord:
-        self._ready(dataset_id)
+        self.ready(dataset_id)
         with self._db() as connection:
             datasets_repo.update_dataset(connection, dataset_id, types_reviewed_at=now())
         return self.datasets.get(dataset_id)

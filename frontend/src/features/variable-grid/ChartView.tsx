@@ -1,0 +1,63 @@
+import { forwardRef, useMemo } from "react";
+
+import type { AnalysisType, Chart } from "../../api/client";
+import { boxFigure, barsFigure, histogramFigure, pieFigure, timelineFigure } from "../../charts/figures";
+import { Plot, type PlotHandle } from "../../charts/Plot";
+import { formatCount } from "../../lib/format";
+import { t } from "../../lib/i18n";
+
+type ChartViewProps = {
+  chart: Chart;
+  type: AnalysisType;
+  name: string;
+  height: number;
+};
+
+/** Draws prepared chart data; non-chart kinds (identifier, high cardinality) get a short summary. */
+export const ChartView = forwardRef<PlotHandle, ChartViewProps>(function ChartView(
+  { chart, type, name, height },
+  ref,
+) {
+  const figure = useMemo(() => {
+    if (chart.kind === "histogram") {
+      if (chart.view === "box") return boxFigure(chart, type);
+      return histogramFigure(chart, chart.view === "lengths" ? "text" : type, chart.view === "lengths" ? "texts" : "rows");
+    }
+    if (chart.kind === "timeline") return timelineFigure(chart);
+    if (chart.kind === "bars") return chart.view === "pie" ? pieFigure(chart) : barsFigure(chart, type);
+    return null;
+  }, [chart, type]);
+
+  if (figure) return <Plot ref={ref} figure={figure} height={height} label={t("chart.label", { name })} />;
+
+  if (chart.kind === "identifier") {
+    return (
+      <div style={{ height }} className="flex flex-col justify-center gap-3 px-1">
+        <Metric label={t("chart.unique")} value={formatCount(chart.distinct)} />
+        <Metric
+          label={t("chart.duplicated")}
+          value={formatCount(chart.duplicates)}
+          tone={chart.duplicates ? "text-warn" : "text-ok"}
+        />
+        <p className="truncate font-mono text-xs text-ink-3">{chart.examples.join(" · ")}</p>
+      </div>
+    );
+  }
+  return (
+    <div style={{ height }} className="flex flex-col items-center justify-center gap-2 px-4 text-center">
+      <p className="text-ink-2">{chart.message ?? t("chart.empty")}</p>
+      {chart.kind === "high_cardinality" && (
+        <p className="truncate font-mono text-xs text-ink-3">{chart.examples.join(" · ")}</p>
+      )}
+    </div>
+  );
+});
+
+function Metric({ label, value, tone = "text-ink-1" }: { label: string; value: string; tone?: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <span className="text-xs text-ink-3">{label}</span>
+      <span className={`text-lg font-semibold tabular-nums ${tone}`}>{value}</span>
+    </div>
+  );
+}

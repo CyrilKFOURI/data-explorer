@@ -17,9 +17,13 @@ import { t, type MessageKey } from "../../lib/i18n";
 import type { ModuleManifest } from "../../modules/types";
 
 /** Pages of the open dataset; those without a route yet arrive with features 003–008. */
-const DATASET_PAGES: { labelKey: MessageKey; icon: LucideIcon; to?: "/d/$datasetId/columns" }[] = [
+const DATASET_PAGES: {
+  labelKey: MessageKey;
+  icon: LucideIcon;
+  to?: "/d/$datasetId" | "/d/$datasetId/columns";
+}[] = [
+  { labelKey: "nav.overview", icon: LayoutGrid, to: "/d/$datasetId" },
   { labelKey: "nav.columns", icon: Columns3, to: "/d/$datasetId/columns" },
-  { labelKey: "nav.overview", icon: LayoutGrid },
   { labelKey: "nav.compare", icon: ScatterChart },
   { labelKey: "nav.correlations", icon: Grid3x3 },
   { labelKey: "nav.data", icon: Rows3 },
@@ -67,6 +71,7 @@ export function Sidebar({ collapsed, onToggle, modules }: SidebarProps) {
                 <Link
                   to={to}
                   params={{ datasetId }}
+                  activeOptions={{ exact: true }}
                   title={collapsed ? t(labelKey) : undefined}
                   aria-label={collapsed ? t(labelKey) : undefined}
                   className={`${itemClass} hover:bg-surface-2 hover:text-ink-1`}
