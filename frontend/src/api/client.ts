@@ -24,7 +24,34 @@ export type Conversion = Schemas["ConversionOut"];
 export type Alert = Required<Schemas["Alert"]>;
 export type Overview = Omit<Required<Schemas["Overview"]>, "alerts"> & { alerts: Alert[] };
 export type Chart = Required<Schemas["Chart"]>;
-export type ChartParams = { view?: string | null; topN?: number; full?: boolean; step?: string | null };
+export type ChartParams = {
+  view?: string | null;
+  topN?: number;
+  full?: boolean;
+  step?: string | null;
+  bins?: number | null;
+};
+
+/** The server sends every field, defaults included: make them all required, deeply. */
+type Complete<T> = T extends (infer Item)[]
+  ? Complete<Item>[]
+  : T extends object
+    ? { [K in keyof T]-?: Complete<T[K]> }
+    : T;
+export type VariableProfile = Complete<Schemas["VariableProfile"]>;
+export type NumericProfile = NonNullable<VariableProfile["numeric"]>;
+export type Describe = NumericProfile["describe"];
+export type Normality = NumericProfile["normality"];
+export type NormalityTest = Normality["tests"][number];
+export type CategoricalProfile = NonNullable<VariableProfile["categorical"]>;
+export type DateProfile = NonNullable<VariableProfile["date"]>;
+export type TextProfile = NonNullable<VariableProfile["text"]>;
+export type IdentifierProfile = NonNullable<VariableProfile["identifier"]>;
+export type Fit = Complete<Schemas["Fit"]>;
+export type Law = Fit["laws"][number];
+export type Transform = Fit["transforms"][number];
+export type Outliers = Complete<Schemas["Outliers"]>;
+export type OutlierMethod = Outliers["method"];
 
 function chartQuery(column: string, params: ChartParams): string {
   const query = new URLSearchParams({ column });
@@ -32,6 +59,7 @@ function chartQuery(column: string, params: ChartParams): string {
   if (params.topN) query.set("top_n", String(params.topN));
   if (params.full) query.set("full", "true");
   if (params.step) query.set("step", params.step);
+  if (params.bins) query.set("bins", String(params.bins));
   return query.toString();
 }
 
@@ -97,6 +125,15 @@ export const api = {
   overview: (id: string) => request<Overview>("GET", `/datasets/${id}/overview`),
   chart: (id: string, column: string, params: ChartParams) =>
     request<Chart>("GET", `/datasets/${id}/columns/chart?${chartQuery(column, params)}`),
+  variable: (id: string, column: string) =>
+    request<VariableProfile>("GET", `/datasets/${id}/variable?${new URLSearchParams({ column })}`),
+  fit: (id: string, column: string) =>
+    request<Fit>("GET", `/datasets/${id}/variable/fit?${new URLSearchParams({ column })}`),
+  outliers: (id: string, column: string, method: OutlierMethod) =>
+    request<Outliers>(
+      "GET",
+      `/datasets/${id}/variable/outliers?${new URLSearchParams({ column, method })}`,
+    ),
 
   job: (id: string) => request<Job>("GET", `/jobs/${id}`),
 

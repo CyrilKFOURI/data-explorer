@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { ArrowUpRight, Download, Maximize2 } from "lucide-react";
 import { useRef, useState } from "react";
 
@@ -62,14 +63,15 @@ export function VariableCard({ datasetId, column, topN, onChangeType }: Variable
             disabled={!data}
             onClick={() => setFullscreen(true)}
           />
-          <Button
-            variant="ghost"
-            icon={ArrowUpRight}
-            iconOnly
+          <Link
+            to="/d/$datasetId/variable/$column"
+            params={{ datasetId, column: column.name }}
             aria-label={t("card.details")}
-            title={t("card.detailsSoon")}
-            disabled
-          />
+            title={t("card.details")}
+            className="inline-flex size-(--control-h) items-center justify-center rounded-md text-ink-2 hover:bg-surface-2 hover:text-ink-1"
+          >
+            <ArrowUpRight size={15} strokeWidth={1.5} aria-hidden />
+          </Link>
         </div>
       </header>
 

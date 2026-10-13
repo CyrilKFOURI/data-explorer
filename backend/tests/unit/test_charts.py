@@ -43,6 +43,13 @@ def test_histogram_bins_cover_all_values(connection: duckdb.DuckDBPyConnection) 
     assert result.stats is not None and result.stats["median"] == pytest.approx(224.25)
 
 
+def test_bin_count_can_be_forced(connection: duckdb.DuckDBPyConnection) -> None:
+    result = chart(connection, "measure", "numeric_continuous", bins=80)
+
+    assert len(result.bins) == 80
+    assert sum(b["count"] for b in result.bins) == 300
+
+
 def test_box_view_has_quartiles(connection: duckdb.DuckDBPyConnection) -> None:
     result = chart(connection, "measure", "numeric_continuous", view="box")
 

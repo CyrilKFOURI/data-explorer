@@ -1007,6 +1007,24 @@
               ],
               "title": "Step"
             }
+          },
+          {
+            "name": "bins",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 200,
+                  "minimum": 5
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bins"
+            }
           }
         ],
         "responses": {
@@ -1016,6 +1034,178 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Chart"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{dataset_id}/variable": {
+      "get": {
+        "tags": [
+          "variable"
+        ],
+        "summary": "Profile",
+        "operationId": "profile_api_v1_datasets__dataset_id__variable_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "column",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Column"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VariableProfile"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{dataset_id}/variable/fit": {
+      "get": {
+        "tags": [
+          "variable"
+        ],
+        "summary": "Fit",
+        "operationId": "fit_api_v1_datasets__dataset_id__variable_fit_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "column",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Column"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Fit"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{dataset_id}/variable/outliers": {
+      "get": {
+        "tags": [
+          "variable"
+        ],
+        "summary": "Outliers",
+        "operationId": "outliers_api_v1_datasets__dataset_id__variable_outliers_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "column",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Column"
+            }
+          },
+          {
+            "name": "method",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "iqr",
+                "iqr3",
+                "zscore",
+                "robust"
+              ],
+              "type": "string",
+              "default": "iqr",
+              "title": "Method"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Outliers"
                 }
               }
             }
@@ -1177,6 +1367,127 @@
           "outlier_values"
         ],
         "title": "Box"
+      },
+      "CategoricalProfile": {
+        "properties": {
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "missing": {
+            "type": "integer",
+            "title": "Missing"
+          },
+          "distinct": {
+            "type": "integer",
+            "title": "Distinct"
+          },
+          "entropy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entropy"
+          },
+          "normalized_entropy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Normalized Entropy"
+          },
+          "herfindahl": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Herfindahl"
+          },
+          "top": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Bar"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "top_share": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Top Share"
+          },
+          "imbalanced": {
+            "type": "boolean",
+            "title": "Imbalanced"
+          },
+          "rare_count": {
+            "type": "integer",
+            "title": "Rare Count"
+          },
+          "rare": {
+            "items": {
+              "$ref": "#/components/schemas/Bar"
+            },
+            "type": "array",
+            "title": "Rare"
+          },
+          "chi2": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chi2"
+          },
+          "chi2_p": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chi2 P"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rows",
+          "missing",
+          "distinct",
+          "entropy",
+          "normalized_entropy",
+          "herfindahl",
+          "top",
+          "top_share",
+          "imbalanced",
+          "rare_count"
+        ],
+        "title": "CategoricalProfile"
       },
       "Chart": {
         "properties": {
@@ -1652,7 +1963,7 @@
           "date": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/DateProfile"
+                "$ref": "#/components/schemas/app__schemas__columns__DateProfile"
               },
               {
                 "type": "null"
@@ -1739,6 +2050,30 @@
         },
         "type": "object",
         "title": "CsvOptions"
+      },
+      "Curve": {
+        "properties": {
+          "x": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "X"
+          },
+          "y": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Y"
+          }
+        },
+        "type": "object",
+        "required": [
+          "x",
+          "y"
+        ],
+        "title": "Curve"
       },
       "DatasetOut": {
         "properties": {
@@ -1906,16 +2241,73 @@
         ],
         "title": "DatasetOut"
       },
-      "DateProfile": {
+      "Describe": {
         "properties": {
-          "has_time": {
-            "type": "boolean",
-            "title": "Has Time"
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "missing": {
+            "type": "integer",
+            "title": "Missing"
+          },
+          "infinite": {
+            "type": "integer",
+            "title": "Infinite"
+          },
+          "zeros": {
+            "type": "integer",
+            "title": "Zeros"
+          },
+          "negatives": {
+            "type": "integer",
+            "title": "Negatives"
+          },
+          "distinct": {
+            "type": "integer",
+            "title": "Distinct"
+          },
+          "mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean"
+          },
+          "std": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Std"
+          },
+          "cv": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cv"
           },
           "min": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "number"
               },
               {
                 "type": "null"
@@ -1923,10 +2315,109 @@
             ],
             "title": "Min"
           },
+          "p1": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P1"
+          },
+          "p5": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P5"
+          },
+          "p10": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P10"
+          },
+          "q1": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q1"
+          },
+          "median": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median"
+          },
+          "q3": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q3"
+          },
+          "p90": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P90"
+          },
+          "p95": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P95"
+          },
+          "p99": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P99"
+          },
           "max": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "number"
               },
               {
                 "type": "null"
@@ -1934,27 +2425,92 @@
             ],
             "title": "Max"
           },
-          "step": {
-            "type": "string",
-            "title": "Step"
+          "iqr": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Iqr"
           },
-          "parts": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Parts"
+          "mad": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mad"
+          },
+          "skewness": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skewness"
+          },
+          "kurtosis": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kurtosis"
+          },
+          "sum": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sum"
           }
         },
         "type": "object",
         "required": [
-          "has_time",
+          "rows",
+          "count",
+          "missing",
+          "infinite",
+          "zeros",
+          "negatives",
+          "distinct",
+          "mean",
+          "std",
+          "cv",
           "min",
+          "p1",
+          "p5",
+          "p10",
+          "q1",
+          "median",
+          "q3",
+          "p90",
+          "p95",
+          "p99",
           "max",
-          "step",
-          "parts"
+          "iqr",
+          "mad",
+          "skewness",
+          "kurtosis",
+          "sum"
         ],
-        "title": "DateProfile"
+        "title": "Describe"
       },
       "Entry": {
         "properties": {
@@ -2037,6 +2593,60 @@
           "size"
         ],
         "title": "FileInfo"
+      },
+      "Fit": {
+        "properties": {
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "grid": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Grid"
+          },
+          "sample_quantiles": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Sample Quantiles"
+          },
+          "laws": {
+            "items": {
+              "$ref": "#/components/schemas/Law"
+            },
+            "type": "array",
+            "title": "Laws"
+          },
+          "transforms": {
+            "items": {
+              "$ref": "#/components/schemas/Transform"
+            },
+            "type": "array",
+            "title": "Transforms"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "n",
+          "grid",
+          "sample_quantiles"
+        ],
+        "title": "Fit"
       },
       "HTTPValidationError": {
         "properties": {
@@ -2146,6 +2756,75 @@
           "count"
         ],
         "title": "HistogramBar"
+      },
+      "IdentifierProfile": {
+        "properties": {
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "missing": {
+            "type": "integer",
+            "title": "Missing"
+          },
+          "distinct": {
+            "type": "integer",
+            "title": "Distinct"
+          },
+          "unique_pct": {
+            "type": "number",
+            "title": "Unique Pct"
+          },
+          "duplicated_values": {
+            "type": "integer",
+            "title": "Duplicated Values"
+          },
+          "duplicates": {
+            "items": {
+              "$ref": "#/components/schemas/Bar"
+            },
+            "type": "array",
+            "title": "Duplicates"
+          },
+          "min_length": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Length"
+          },
+          "max_length": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Length"
+          },
+          "patterns": {
+            "items": {
+              "$ref": "#/components/schemas/Bar"
+            },
+            "type": "array",
+            "title": "Patterns"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rows",
+          "missing",
+          "distinct",
+          "unique_pct",
+          "duplicated_values"
+        ],
+        "title": "IdentifierProfile"
       },
       "ImportOptions": {
         "properties": {
@@ -2351,6 +3030,73 @@
         ],
         "title": "JobOut"
       },
+      "Law": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "discrete": {
+            "type": "boolean",
+            "title": "Discrete"
+          },
+          "params": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Params"
+          },
+          "log_likelihood": {
+            "type": "number",
+            "title": "Log Likelihood"
+          },
+          "aic": {
+            "type": "number",
+            "title": "Aic"
+          },
+          "bic": {
+            "type": "number",
+            "title": "Bic"
+          },
+          "ks": {
+            "type": "number",
+            "title": "Ks"
+          },
+          "density": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Density"
+          },
+          "quantiles": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Quantiles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "discrete",
+          "params",
+          "log_likelihood",
+          "aic",
+          "bic",
+          "ks",
+          "density",
+          "quantiles"
+        ],
+        "title": "Law"
+      },
       "Listing": {
         "properties": {
           "path": {
@@ -2392,6 +3138,99 @@
         ],
         "title": "Listing"
       },
+      "Normality": {
+        "properties": {
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "sample": {
+            "type": "integer",
+            "title": "Sample"
+          },
+          "tests": {
+            "items": {
+              "$ref": "#/components/schemas/TestResult"
+            },
+            "type": "array",
+            "title": "Tests"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "n",
+          "sample"
+        ],
+        "title": "Normality"
+      },
+      "NumericProfile": {
+        "properties": {
+          "describe": {
+            "$ref": "#/components/schemas/Describe"
+          },
+          "normality": {
+            "$ref": "#/components/schemas/Normality"
+          },
+          "kde": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Curve"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ecdf": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Curve"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "qq": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QQ"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sample": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Sample"
+          }
+        },
+        "type": "object",
+        "required": [
+          "describe",
+          "normality",
+          "kde",
+          "ecdf",
+          "qq",
+          "sample"
+        ],
+        "title": "NumericProfile"
+      },
       "Others": {
         "properties": {
           "count": {
@@ -2409,6 +3248,110 @@
           "categories"
         ],
         "title": "Others"
+      },
+      "OutlierRow": {
+        "properties": {
+          "row": {
+            "type": "integer",
+            "title": "Row"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "row",
+          "value"
+        ],
+        "title": "OutlierRow"
+      },
+      "OutlierRule": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "iqr",
+              "iqr3",
+              "zscore",
+              "robust"
+            ],
+            "title": "Method"
+          },
+          "low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Low"
+          },
+          "high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "pct": {
+            "type": "number",
+            "title": "Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method",
+          "low",
+          "high",
+          "count",
+          "pct"
+        ],
+        "title": "OutlierRule"
+      },
+      "Outliers": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "iqr",
+              "iqr3",
+              "zscore",
+              "robust"
+            ],
+            "title": "Method"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/OutlierRule"
+            },
+            "type": "array",
+            "title": "Rules"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/OutlierRow"
+            },
+            "type": "array",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method"
+        ],
+        "title": "Outliers"
       },
       "Overview": {
         "properties": {
@@ -2682,6 +3625,41 @@
         ],
         "title": "PreviewRequest"
       },
+      "QQ": {
+        "properties": {
+          "theoretical": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Theoretical"
+          },
+          "sample": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Sample"
+          },
+          "slope": {
+            "type": "number",
+            "title": "Slope"
+          },
+          "intercept": {
+            "type": "number",
+            "title": "Intercept"
+          }
+        },
+        "type": "object",
+        "required": [
+          "theoretical",
+          "sample",
+          "slope",
+          "intercept"
+        ],
+        "title": "QQ",
+        "description": "Sample quantiles against the standard normal's, with the line through Q1 and Q3."
+      },
       "RenameRequest": {
         "properties": {
           "name": {
@@ -2797,6 +3775,206 @@
         "title": "SourceOptions",
         "description": "How to read a source. `None` fields mean \"detect\" or \"everything\"."
       },
+      "TestResult": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "statistic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statistic"
+          },
+          "p_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Value"
+          },
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "statistic",
+          "p_value",
+          "n"
+        ],
+        "title": "TestResult"
+      },
+      "TextProfile": {
+        "properties": {
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "missing": {
+            "type": "integer",
+            "title": "Missing"
+          },
+          "distinct": {
+            "type": "integer",
+            "title": "Distinct"
+          },
+          "min_length": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Length"
+          },
+          "max_length": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Length"
+          },
+          "mean_length": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean Length"
+          },
+          "words": {
+            "items": {
+              "$ref": "#/components/schemas/Bar"
+            },
+            "type": "array",
+            "title": "Words"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rows",
+          "missing",
+          "distinct",
+          "min_length",
+          "max_length",
+          "mean_length"
+        ],
+        "title": "TextProfile"
+      },
+      "Transform": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "lmbda": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lmbda"
+          },
+          "skewness_before": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skewness Before"
+          },
+          "skewness_after": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skewness After"
+          },
+          "shapiro_before": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shapiro Before"
+          },
+          "shapiro_after": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shapiro After"
+          },
+          "bins": {
+            "items": {
+              "$ref": "#/components/schemas/Bin"
+            },
+            "type": "array",
+            "title": "Bins"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "lmbda",
+          "skewness_before",
+          "skewness_after",
+          "shapiro_before",
+          "shapiro_after",
+          "bins"
+        ],
+        "title": "Transform"
+      },
       "UploadOut": {
         "properties": {
           "path": {
@@ -2854,6 +4032,217 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VariableProfile": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "numeric": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NumericProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "categorical": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoricalProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "date": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/app__domain__variable__profiles__DateProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "text": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TextProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "identifier": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IdentifierProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "type"
+        ],
+        "title": "VariableProfile"
+      },
+      "app__domain__variable__profiles__DateProfile": {
+        "properties": {
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "missing": {
+            "type": "integer",
+            "title": "Missing"
+          },
+          "distinct": {
+            "type": "integer",
+            "title": "Distinct"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "has_time": {
+            "type": "boolean",
+            "title": "Has Time"
+          },
+          "granularity": {
+            "type": "string",
+            "title": "Granularity"
+          },
+          "step": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step"
+          },
+          "periods": {
+            "type": "integer",
+            "title": "Periods"
+          },
+          "gap_count": {
+            "type": "integer",
+            "title": "Gap Count"
+          },
+          "gaps": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Gaps"
+          },
+          "calendar": {
+            "items": {
+              "$ref": "#/components/schemas/Bar"
+            },
+            "type": "array",
+            "title": "Calendar"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rows",
+          "missing",
+          "distinct",
+          "min",
+          "max",
+          "has_time",
+          "granularity",
+          "step",
+          "periods",
+          "gap_count"
+        ],
+        "title": "DateProfile"
+      },
+      "app__schemas__columns__DateProfile": {
+        "properties": {
+          "has_time": {
+            "type": "boolean",
+            "title": "Has Time"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "step": {
+            "type": "string",
+            "title": "Step"
+          },
+          "parts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Parts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "has_time",
+          "min",
+          "max",
+          "step",
+          "parts"
+        ],
+        "title": "DateProfile"
       }
     }
   }

@@ -30,5 +30,6 @@ def chart(
     top_n: Annotated[int, Query(ge=1, le=50)] = 10,
     full: bool = False,
     step: str | None = None,
+    bins: Annotated[int | None, Query(ge=5, le=200)] = None,
 ) -> Chart:
-    return service.chart(dataset_id, column, ChartParams(view, top_n, full, step))
+    return service.chart(dataset_id, column, ChartParams(view, top_n, full, step, bins))

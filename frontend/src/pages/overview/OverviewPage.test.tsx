@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { column, roles } from "../../test/columns";
 import { dataset, health, mockApi } from "../../test/mockApi";
 import { renderAt } from "../../test/render";
+import { categoricalProfile } from "../../test/variable";
 
 // jsdom can't draw Plotly: render a labelled placeholder instead.
 vi.mock("../../charts/Plot", () => ({
@@ -74,6 +75,7 @@ function setup() {
     "GET /datasets/d1/overview": overview,
     "GET /column-roles": roles,
     "GET /datasets/d1/columns/chart": bars(),
+    "GET /datasets/d1/variable": { ...categoricalProfile, name: "country" },
   });
 }
 
@@ -150,5 +152,18 @@ describe("Overview page", () => {
     const dialog = await screen.findByRole("dialog");
     expect(await within(dialog).findByText("1,200 rows · 8 distinct values")).toBeInTheDocument();
     expect(await within(dialog).findByRole("cell", { name: "FR" })).toBeInTheDocument();
+    expect(await within(dialog).findByText("0.52 bits")).toBeInTheDocument();
+    expect(within(dialog).getByRole("link", { name: "Open variable page" })).toHaveAttribute(
+      "href",
+      "/d/d1/variable/country",
+    );
+  });
+
+  it("links each card to its variable page", async () => {
+    setup();
+    renderAt("/d/d1");
+
+    const links = await screen.findAllByRole("link", { name: "Open variable details" });
+    expect(links[0]).toHaveAttribute("href", "/d/d1/variable/price");
   });
 });

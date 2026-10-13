@@ -6,6 +6,7 @@ import {
   type ColumnChange,
   type Dataset,
   type ImportOptions,
+  type OutlierMethod,
   type SourceOptions,
 } from "./client";
 
@@ -24,6 +25,10 @@ export const queryKeys = {
   overview: (id: string) => ["datasets", id, "overview"] as const,
   chart: (id: string, column: string, params: ChartParams) =>
     ["datasets", id, "chart", column, params] as const,
+  variable: (id: string, column: string) => ["datasets", id, "variable", column] as const,
+  fit: (id: string, column: string) => ["datasets", id, "variable", column, "fit"] as const,
+  outliers: (id: string, column: string, method: OutlierMethod) =>
+    ["datasets", id, "variable", column, "outliers", method] as const,
 };
 
 const isImporting = (datasets: Dataset[] | undefined) =>
@@ -168,6 +173,7 @@ export function useUpdateColumns(id: string) {
       void client.invalidateQueries({ queryKey: queryKeys.dataset(id), exact: true });
       void client.invalidateQueries({ queryKey: queryKeys.overview(id) });
       void client.invalidateQueries({ queryKey: ["datasets", id, "chart"] });
+      void client.invalidateQueries({ queryKey: ["datasets", id, "variable"] });
     },
   });
 }
@@ -199,6 +205,34 @@ export function useChart(id: string, column: string, params: ChartParams, enable
   return useQuery({
     queryKey: queryKeys.chart(id, column, params),
     queryFn: () => api.chart(id, column, params),
+    enabled,
+    staleTime: 60_000,
+    placeholderData: (previous) => previous,
+  });
+}
+
+export function useVariable(id: string, column: string, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.variable(id, column),
+    queryFn: () => api.variable(id, column),
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
+export function useFit(id: string, column: string, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.fit(id, column),
+    queryFn: () => api.fit(id, column),
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
+export function useOutliers(id: string, column: string, method: OutlierMethod, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.outliers(id, column, method),
+    queryFn: () => api.outliers(id, column, method),
     enabled,
     staleTime: 60_000,
     placeholderData: (previous) => previous,

@@ -334,6 +334,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/datasets/{dataset_id}/variable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Profile */
+        get: operations["profile_api_v1_datasets__dataset_id__variable_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/datasets/{dataset_id}/variable/fit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Fit */
+        get: operations["fit_api_v1_datasets__dataset_id__variable_fit_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/datasets/{dataset_id}/variable/outliers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Outliers */
+        get: operations["outliers_api_v1_datasets__dataset_id__variable_outliers_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/modules/hello": {
         parameters: {
             query?: never;
@@ -401,6 +452,34 @@ export interface components {
             outliers: number;
             /** Outlier Values */
             outlier_values: number[];
+        };
+        /** CategoricalProfile */
+        CategoricalProfile: {
+            /** Rows */
+            rows: number;
+            /** Missing */
+            missing: number;
+            /** Distinct */
+            distinct: number;
+            /** Entropy */
+            entropy: number | null;
+            /** Normalized Entropy */
+            normalized_entropy: number | null;
+            /** Herfindahl */
+            herfindahl: number | null;
+            top: components["schemas"]["Bar"] | null;
+            /** Top Share */
+            top_share: number | null;
+            /** Imbalanced */
+            imbalanced: boolean;
+            /** Rare Count */
+            rare_count: number;
+            /** Rare */
+            rare?: components["schemas"]["Bar"][];
+            /** Chi2 */
+            chi2?: number | null;
+            /** Chi2 P */
+            chi2_p?: number | null;
         };
         /** Chart */
         Chart: {
@@ -553,7 +632,7 @@ export interface components {
             examples: string[];
             /** Histogram */
             histogram: components["schemas"]["HistogramBar"][];
-            date?: components["schemas"]["DateProfile"] | null;
+            date?: components["schemas"]["app__schemas__columns__DateProfile"] | null;
         };
         /** ConversionOut */
         ConversionOut: {
@@ -589,6 +668,13 @@ export interface components {
              * @enum {string}
              */
             decimal: "." | ",";
+        };
+        /** Curve */
+        Curve: {
+            /** X */
+            x: number[];
+            /** Y */
+            y: number[];
         };
         /** DatasetOut */
         DatasetOut: {
@@ -637,18 +723,60 @@ export interface components {
             source_state: "ok" | "changed" | "missing";
             job?: components["schemas"]["JobOut"] | null;
         };
-        /** DateProfile */
-        DateProfile: {
-            /** Has Time */
-            has_time: boolean;
+        /** Describe */
+        Describe: {
+            /** Rows */
+            rows: number;
+            /** Count */
+            count: number;
+            /** Missing */
+            missing: number;
+            /** Infinite */
+            infinite: number;
+            /** Zeros */
+            zeros: number;
+            /** Negatives */
+            negatives: number;
+            /** Distinct */
+            distinct: number;
+            /** Mean */
+            mean: number | null;
+            /** Std */
+            std: number | null;
+            /** Cv */
+            cv: number | null;
             /** Min */
-            min: string | null;
+            min: number | null;
+            /** P1 */
+            p1: number | null;
+            /** P5 */
+            p5: number | null;
+            /** P10 */
+            p10: number | null;
+            /** Q1 */
+            q1: number | null;
+            /** Median */
+            median: number | null;
+            /** Q3 */
+            q3: number | null;
+            /** P90 */
+            p90: number | null;
+            /** P95 */
+            p95: number | null;
+            /** P99 */
+            p99: number | null;
             /** Max */
-            max: string | null;
-            /** Step */
-            step: string;
-            /** Parts */
-            parts: string[];
+            max: number | null;
+            /** Iqr */
+            iqr: number | null;
+            /** Mad */
+            mad: number | null;
+            /** Skewness */
+            skewness: number | null;
+            /** Kurtosis */
+            kurtosis: number | null;
+            /** Sum */
+            sum: number | null;
         };
         /** Entry */
         Entry: {
@@ -677,6 +805,21 @@ export interface components {
             format: "csv" | "parquet" | "excel";
             /** Size */
             size: number;
+        };
+        /** Fit */
+        Fit: {
+            /** N */
+            n: number;
+            /** Grid */
+            grid: number[];
+            /** Sample Quantiles */
+            sample_quantiles: number[];
+            /** Laws */
+            laws?: components["schemas"]["Law"][];
+            /** Transforms */
+            transforms?: components["schemas"]["Transform"][];
+            /** Reason */
+            reason?: string | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -716,6 +859,27 @@ export interface components {
             label: string;
             /** Count */
             count: number;
+        };
+        /** IdentifierProfile */
+        IdentifierProfile: {
+            /** Rows */
+            rows: number;
+            /** Missing */
+            missing: number;
+            /** Distinct */
+            distinct: number;
+            /** Unique Pct */
+            unique_pct: number;
+            /** Duplicated Values */
+            duplicated_values: number;
+            /** Duplicates */
+            duplicates?: components["schemas"]["Bar"][];
+            /** Min Length */
+            min_length?: number | null;
+            /** Max Length */
+            max_length?: number | null;
+            /** Patterns */
+            patterns?: components["schemas"]["Bar"][];
         };
         /** ImportOptions */
         ImportOptions: {
@@ -775,6 +939,31 @@ export interface components {
             /** Finished At */
             finished_at: string | null;
         };
+        /** Law */
+        Law: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Discrete */
+            discrete: boolean;
+            /** Params */
+            params: {
+                [key: string]: number;
+            };
+            /** Log Likelihood */
+            log_likelihood: number;
+            /** Aic */
+            aic: number;
+            /** Bic */
+            bic: number;
+            /** Ks */
+            ks: number;
+            /** Density */
+            density: number[];
+            /** Quantiles */
+            quantiles: number[];
+        };
         /** Listing */
         Listing: {
             /** Path */
@@ -786,12 +975,68 @@ export interface components {
             /** Entries */
             entries: components["schemas"]["Entry"][];
         };
+        /** Normality */
+        Normality: {
+            /** N */
+            n: number;
+            /** Sample */
+            sample: number;
+            /** Tests */
+            tests?: components["schemas"]["TestResult"][];
+            /** Reason */
+            reason?: string | null;
+        };
+        /** NumericProfile */
+        NumericProfile: {
+            describe: components["schemas"]["Describe"];
+            normality: components["schemas"]["Normality"];
+            kde: components["schemas"]["Curve"] | null;
+            ecdf: components["schemas"]["Curve"] | null;
+            qq: components["schemas"]["QQ"] | null;
+            /** Sample */
+            sample: number[];
+        };
         /** Others */
         Others: {
             /** Count */
             count: number;
             /** Categories */
             categories: number;
+        };
+        /** OutlierRow */
+        OutlierRow: {
+            /** Row */
+            row: number;
+            /** Value */
+            value: number;
+        };
+        /** OutlierRule */
+        OutlierRule: {
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "iqr" | "iqr3" | "zscore" | "robust";
+            /** Low */
+            low: number | null;
+            /** High */
+            high: number | null;
+            /** Count */
+            count: number;
+            /** Pct */
+            pct: number;
+        };
+        /** Outliers */
+        Outliers: {
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "iqr" | "iqr3" | "zscore" | "robust";
+            /** Rules */
+            rules?: components["schemas"]["OutlierRule"][];
+            /** Rows */
+            rows?: components["schemas"]["OutlierRow"][];
         };
         /** Overview */
         Overview: {
@@ -898,6 +1143,20 @@ export interface components {
             path: string;
             options?: components["schemas"]["SourceOptions"];
         };
+        /**
+         * QQ
+         * @description Sample quantiles against the standard normal's, with the line through Q1 and Q3.
+         */
+        QQ: {
+            /** Theoretical */
+            theoretical: number[];
+            /** Sample */
+            sample: number[];
+            /** Slope */
+            slope: number;
+            /** Intercept */
+            intercept: number;
+        };
         /** RenameRequest */
         RenameRequest: {
             /** Name */
@@ -938,6 +1197,53 @@ export interface components {
              */
             folder_mode: "union" | "intersection";
         };
+        /** TestResult */
+        TestResult: {
+            /** Key */
+            key: string;
+            /** Statistic */
+            statistic: number | null;
+            /** P Value */
+            p_value: number | null;
+            /** N */
+            n: number;
+            /** Note */
+            note?: string | null;
+        };
+        /** TextProfile */
+        TextProfile: {
+            /** Rows */
+            rows: number;
+            /** Missing */
+            missing: number;
+            /** Distinct */
+            distinct: number;
+            /** Min Length */
+            min_length: number | null;
+            /** Max Length */
+            max_length: number | null;
+            /** Mean Length */
+            mean_length: number | null;
+            /** Words */
+            words?: components["schemas"]["Bar"][];
+        };
+        /** Transform */
+        Transform: {
+            /** Key */
+            key: string;
+            /** Lmbda */
+            lmbda: number | null;
+            /** Skewness Before */
+            skewness_before: number | null;
+            /** Skewness After */
+            skewness_after: number | null;
+            /** Shapiro Before */
+            shapiro_before: number | null;
+            /** Shapiro After */
+            shapiro_after: number | null;
+            /** Bins */
+            bins: components["schemas"]["Bin"][];
+        };
         /** UploadOut */
         UploadOut: {
             /** Path */
@@ -957,6 +1263,58 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** VariableProfile */
+        VariableProfile: {
+            /** Name */
+            name: string;
+            /** Type */
+            type: string;
+            numeric?: components["schemas"]["NumericProfile"] | null;
+            categorical?: components["schemas"]["CategoricalProfile"] | null;
+            date?: components["schemas"]["app__domain__variable__profiles__DateProfile"] | null;
+            text?: components["schemas"]["TextProfile"] | null;
+            identifier?: components["schemas"]["IdentifierProfile"] | null;
+        };
+        /** DateProfile */
+        app__domain__variable__profiles__DateProfile: {
+            /** Rows */
+            rows: number;
+            /** Missing */
+            missing: number;
+            /** Distinct */
+            distinct: number;
+            /** Min */
+            min: string | null;
+            /** Max */
+            max: string | null;
+            /** Has Time */
+            has_time: boolean;
+            /** Granularity */
+            granularity: string;
+            /** Step */
+            step: string | null;
+            /** Periods */
+            periods: number;
+            /** Gap Count */
+            gap_count: number;
+            /** Gaps */
+            gaps?: string[];
+            /** Calendar */
+            calendar?: components["schemas"]["Bar"][];
+        };
+        /** DateProfile */
+        app__schemas__columns__DateProfile: {
+            /** Has Time */
+            has_time: boolean;
+            /** Min */
+            min: string | null;
+            /** Max */
+            max: string | null;
+            /** Step */
+            step: string;
+            /** Parts */
+            parts: string[];
         };
     };
     responses: never;
@@ -1628,6 +1986,7 @@ export interface operations {
                 top_n?: number;
                 full?: boolean;
                 step?: string | null;
+                bins?: number | null;
             };
             header?: never;
             path: {
@@ -1644,6 +2003,106 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Chart"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    profile_api_v1_datasets__dataset_id__variable_get: {
+        parameters: {
+            query: {
+                column: string;
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VariableProfile"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    fit_api_v1_datasets__dataset_id__variable_fit_get: {
+        parameters: {
+            query: {
+                column: string;
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Fit"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    outliers_api_v1_datasets__dataset_id__variable_outliers_get: {
+        parameters: {
+            query: {
+                column: string;
+                method?: "iqr" | "iqr3" | "zscore" | "robust";
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Outliers"];
                 };
             };
             /** @description Validation Error */

@@ -21,7 +21,8 @@ Balayer **toutes les variables d'un coup d'œil** et repérer ce qui mérite d'�
 - En-tête : nom, `TypeBadge`, étoile (épingler en tête de grille)
 - Graphique par défaut selon le type (voir [VISUALS.md](../VISUALS.md)) : histogramme pour un continu, barres Top N pour un catégoriel ou un discret, volume par période pour une date, barre 100 % pour un booléen, chiffres clés (distinctes, doublons) pour un identifiant
 - Mini-stats sous le graphique : manquants %, distinctes, et moyenne / médiane ou modalité dominante
-- Actions : plein écran (toutes les modalités pour un catégoriel), changer de visuel, ouvrir la **fiche variable**, exporter
+- Actions : plein écran, changer de visuel, ouvrir la **fiche variable**, exporter
+- **Plein écran** : grand graphique (toutes les modalités pour un catégoriel, qui défile dans 420 px pour laisser le tableau visible), puis les détails de la fiche variable en bref : stats complètes et verdict des 5 tests de normalité pour un numérique, entropie / concentration pour une catégorie, plage / pas / trous pour une date ; bouton « Open variable page »
 
 ## Règles
 

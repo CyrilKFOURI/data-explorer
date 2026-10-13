@@ -65,6 +65,7 @@ class ChartParams:
     top_n: int = DEFAULT_TOP_N
     full: bool = False  # every category, for the fullscreen view
     step: str | None = None  # timeline step override
+    bins: int | None = None  # histogram bin count override (Freedman-Diaconis otherwise)
 
 
 @dataclass
@@ -133,14 +134,18 @@ class ChartBuilder:
             for key, value in zip(keys, row, strict=True)
         }
 
-    def histogram(self, expression: str, stats: dict[str, float | None]) -> list[Bin]:
+    def histogram(
+        self, expression: str, stats: dict[str, float | None], forced: int | None = None
+    ) -> list[Bin]:
         low, high, count = stats["min"], stats["max"], int(stats["count"] or 0)
         if low is None or high is None or count == 0:
             return []
         if low == high:
             return [{"start": low, "end": high, "count": count}]
         iqr = (stats["q3"] or 0) - (stats["q1"] or 0)
-        if iqr > 0:
+        if forced:
+            bins = forced
+        elif iqr > 0:
             width = 2 * iqr / count ** (1 / 3)  # Freedman-Diaconis
             bins = min(max(math.ceil((high - low) / width), MIN_BINS), MAX_BINS)
         else:
@@ -190,7 +195,7 @@ class ChartBuilder:
         stats = self.numeric_stats()
         view = params.view if params.view in ("histogram", "box") else "histogram"
         chart = Chart("histogram", view, ["histogram", "box"], rows, missing, distinct, stats=stats)
-        chart.bins = self.histogram("t", stats)
+        chart.bins = self.histogram("t", stats, params.bins)
         if view == "box":
             chart.box = self.box(stats)
         return chart

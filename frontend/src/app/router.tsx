@@ -13,6 +13,7 @@ import { HomePage } from "../pages/home/HomePage";
 import { NotFoundPage } from "../pages/not-found/NotFoundPage";
 import { OverviewPage } from "../pages/overview/OverviewPage";
 import { SettingsPage } from "../pages/settings/SettingsPage";
+import { VariablePage } from "../pages/variable/VariablePage";
 import { Shell } from "./layout/Shell";
 
 type RouterOptions = {
@@ -45,12 +46,24 @@ export function createAppRouter({
     path: "/d/$datasetId/columns",
     component: ColumnsPage,
   });
+  const variableRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/d/$datasetId/variable/$column",
+    component: VariablePage,
+  });
   const moduleRoutes = modules.map((module) =>
     createRoute({ getParentRoute: () => rootRoute, path: module.path, component: module.component }),
   );
 
   return createRouter({
-    routeTree: rootRoute.addChildren([homeRoute, settingsRoute, datasetRoute, columnsRoute, ...moduleRoutes]),
+    routeTree: rootRoute.addChildren([
+      homeRoute,
+      settingsRoute,
+      datasetRoute,
+      columnsRoute,
+      variableRoute,
+      ...moduleRoutes,
+    ]),
     history,
   });
 }

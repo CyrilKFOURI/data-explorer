@@ -6,7 +6,7 @@ L'analyse **approfondie** d'une seule variable. C'est ici que l'app montre son n
 
 ## Contenu commun
 
-- En-tête : nom, `TypeBadge`, rôle, flèches ←/→ (variable précédente / suivante), « Comparer avec… »
+- En-tête : nom, `TypeBadge`, rôle, flèches ←/→ (variable précédente / suivante, aussi Maj+←/→), « Comparer avec… »
 - Grand graphique principal + sélecteur de visuel
 - Filtre local rapide sur cette variable (s'ajoute aux filtres globaux)
 
@@ -17,11 +17,12 @@ L'analyse **approfondie** d'une seule variable. C'est ici que l'app montre son n
 **Visuels** : histogramme (règle de bins Freedman–Diaconis, ajustable), KDE, ECDF, boîte, violon, **QQ-plot** contre la loi choisie.
 
 **Normalité** (onglet « Tests ») : chaque test est affiché avec un `TestResult` (verdict, statistique, p-value, seuil α réglable à 0,05 par défaut, explication).
-- Shapiro–Wilk (n ≤ 5 000 ; sur échantillon au-delà, signalé)
+- Tous les tests portent sur un échantillon reproductible de 5 000 valeurs au plus (signalé)
+- Shapiro–Wilk
 - D'Agostino–Pearson K²
-- Anderson–Darling (valeurs critiques)
+- Anderson–Darling (p-value interpolée des tables, bornée entre 0,01 et 0,15)
 - Jarque–Bera
-- Kolmogorov–Smirnov / Lilliefors
+- Lilliefors (Kolmogorov–Smirnov à paramètres estimés, p-value par Monte Carlo)
 - Synthèse en une phrase : « 4 tests sur 5 rejettent la normalité. Avec n = 120 000, même de petits écarts sont détectés : regardez le QQ-plot. »
 
 **Ajustement de lois** (onglet « Loi ») :

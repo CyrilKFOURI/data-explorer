@@ -13,7 +13,7 @@ Roadmap en **sprints**, chacun composé de **tranches verticales** : chaque case
 
 ### Sprint 2 — Explorer
 - [x] 003-vue-ensemble — bandeau de résumé + alertes qualité + grille 3 par ligne paginée ; règles d'affichage catégorielles (Top N, « Autres », plein écran)
-- [ ] 004-fiche-variable — stats complètes, tests de normalité, ajustement de lois, transformations, valeurs aberrantes, QQ-plot
+- [x] 004-fiche-variable — stats complètes, tests de normalité, ajustement de lois, transformations, valeurs aberrantes, QQ-plot ; détails dans le plein écran de la Vue d'ensemble
 - [ ] 005-filtres — filtres globaux ET/OU, puces, filtres enregistrés, filtrer depuis un graphique
 
 ### Sprint 3 — Relations et sortie
