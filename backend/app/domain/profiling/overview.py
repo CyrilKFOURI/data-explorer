@@ -1,17 +1,18 @@
 """Summary of a whole dataset and its quality alerts (Overview page)."""
 
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Literal
 
 import duckdb
 
 from app.domain.columns.service import ColumnView
-from app.domain.ingestion.sql import ident, lit
+from app.domain.ingestion.sql import ident
 from app.domain.typing.parsers import typed_sql
 
 SKEW_ALERT = 2.0
 HIGH_CARDINALITY = 0.5
+EXACT_DISTINCT = 200_000
 
 
 @dataclass
@@ -31,7 +32,8 @@ class ColumnStats:
 
 @dataclass
 class Overview:
-    rows: int
+    rows: int  # after filters
+    total_rows: int  # whole dataset
     columns: int
     used_columns: int
     missing_cells: int
@@ -61,7 +63,7 @@ def duplicate_rows(connection: duckdb.DuckDBPyConnection, source: str) -> int:
 
 
 def duplicate_columns(
-    connection: duckdb.DuckDBPyConnection, storage_path: str, names: list[str]
+    connection: duckdb.DuckDBPyConnection, numbered: str, names: list[str]
 ) -> list[list[str]]:
     """Groups of columns with identical content (compared as text, row by row)."""
     if len(names) < 2:
@@ -73,12 +75,7 @@ def duplicate_columns(
         f"coalesce(CAST({ident(name)} AS VARCHAR), chr(0)))::HUGEINT)"
         for name in names
     )
-    row = (
-        connection.execute(
-            f"SELECT {hashes} FROM read_parquet({lit(storage_path)}, file_row_number = true)"
-        ).fetchone()
-        or ()
-    )
+    row = connection.execute(f"SELECT {hashes} FROM {numbered}").fetchone() or ()
     groups: dict[Any, list[str]] = {}
     for name, digest in zip(names, row, strict=True):
         groups.setdefault(digest, []).append(name)
@@ -175,19 +172,59 @@ def alerts_for(
     return alerts
 
 
+def filtered_summaries(
+    connection: duckdb.DuckDBPyConnection, source: str, columns: list[ColumnView], rows: int
+) -> list[ColumnView]:
+    """Columns whose summary counts (rows, missing, distinct) describe the filtered rows.
+
+    Distinct counts are approximate (HyperLogLog, ~2%) beyond EXACT_DISTINCT rows: they only
+    sort cards and flag high cardinality.
+    """
+    used = [c for c in columns if c.summary is not None]
+    if not used:
+        return columns
+    distinct = "count(DISTINCT {})" if rows <= EXACT_DISTINCT else "approx_count_distinct({})"
+    expressions = ", ".join(
+        f"count({typed_sql(c.name, c.parser)}), " + distinct.format(typed_sql(c.name, c.parser))
+        for c in used
+    )
+    row = connection.execute(f"SELECT count(*), {expressions} FROM {source}").fetchone() or ()
+    rows = int(row[0]) if row else 0
+    counts = {c.name: (int(row[1 + 2 * i]), int(row[2 + 2 * i])) for i, c in enumerate(used)}
+    result = []
+    for column in columns:
+        if column.name not in counts or column.summary is None:
+            result.append(column)
+            continue
+        valid, distinct = counts[column.name]
+        summary = {
+            **column.summary,
+            "rows": rows,
+            "null_count": rows - valid,
+            "distinct_count": distinct,
+        }
+        result.append(replace(column, summary=summary))
+    return result
+
+
 def dataset_overview(
     connection: duckdb.DuckDBPyConnection,
-    storage_path: str,
+    numbered: str,
     size_bytes: int,
     columns: list[ColumnView],
+    total_rows: int | None = None,
+    filtered: bool = False,
 ) -> Overview:
-    source = f"read_parquet({lit(storage_path)})"
+    """`numbered`: the (filtered) rows, with their `file_row_number`."""
+    source = f"(SELECT * EXCLUDE (file_row_number) FROM {numbered})"
     rows = int((connection.execute(f"SELECT count(*) FROM {source}").fetchone() or (0,))[0])
+    if filtered:
+        columns = filtered_summaries(connection, source, columns, rows)
     used = [c for c in columns if not c.excluded]
     missing = sum(int(c.summary["null_count"]) for c in used if c.summary)
     duplicates = duplicate_rows(connection, source)
     comparable = [c.name for c in used if c.type != "ignored"]
-    groups = duplicate_columns(connection, storage_path, comparable)
+    groups = duplicate_columns(connection, numbered, comparable)
     skews = skewness(connection, source, used)
     stats = {
         c.name: ColumnStats(
@@ -199,6 +236,7 @@ def dataset_overview(
     }
     return Overview(
         rows=rows,
+        total_rows=total_rows if total_rows is not None else rows,
         columns=len(columns),
         used_columns=len(used),
         missing_cells=missing,

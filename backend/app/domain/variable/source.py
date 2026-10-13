@@ -14,6 +14,7 @@ from app.domain.typing.parsers import typed_sql
 from app.domain.typing.types import AnalysisType, Parser
 
 SEED = 42
+PREFETCH = 20_000
 
 
 @dataclass
@@ -43,6 +44,8 @@ class VariableSource:
             f"(SELECT CAST(t AS DOUBLE) AS x, row FROM {self.values} "
             "WHERE t IS NOT NULL AND isfinite(CAST(t AS DOUBLE)))"
         )
+        self._sampled: np.ndarray | None = None
+        self._complete = False  # the cached sample holds every value
 
     def one(self, sql: str) -> tuple:
         return self.connection.execute(sql).fetchone() or ()
@@ -51,13 +54,16 @@ class VariableSource:
         return self.connection.execute(sql).fetchall()
 
     def sample(self, size: int) -> np.ndarray:
-        """Finite values, at most `size` of them, drawn reproducibly."""
-        (count,) = self.one(f"SELECT count(*) FROM {self.numbers}")
-        if count <= size:
-            rows = self.all(f"SELECT x FROM {self.numbers}")
-        else:
-            # Hash of the row number: the same rows on every call, whatever the thread count.
+        """Finite values, at most `size` of them, drawn reproducibly.
+
+        Rows are ordered by a hash of their row number, so a smaller sample is the start of a
+        larger one: one query serves every size up to PREFETCH.
+        """
+        if self._sampled is None or (len(self._sampled) < size and not self._complete):
+            limit = max(size, PREFETCH)
             rows = self.all(
-                f"SELECT x FROM {self.numbers} ORDER BY hash(row + {SEED}) LIMIT {size}"
+                f"SELECT x FROM {self.numbers} ORDER BY hash(row + {SEED}) LIMIT {limit}"
             )
-        return np.array([value for (value,) in rows], dtype=float)
+            self._sampled = np.array([value for (value,) in rows], dtype=float)
+            self._complete = len(self._sampled) < limit
+        return self._sampled[:size]

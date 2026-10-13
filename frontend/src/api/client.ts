@@ -1,3 +1,4 @@
+import { filtersParam, type Condition } from "./filters";
 import type { components } from "./schema";
 
 type Schemas = components["schemas"];
@@ -51,10 +52,12 @@ export type Fit = Complete<Schemas["Fit"]>;
 export type Law = Fit["laws"][number];
 export type Transform = Fit["transforms"][number];
 export type Outliers = Complete<Schemas["Outliers"]>;
+export type ColumnSummary = Schemas["ColumnSummary"];
+export type SavedFilter = Schemas["SavedFilter"];
 export type OutlierMethod = Outliers["method"];
 
-function chartQuery(column: string, params: ChartParams): string {
-  const query = new URLSearchParams({ column });
+function chartQuery(column: string, params: ChartParams, filters?: Condition[]): string {
+  const query = new URLSearchParams({ column, ...filtersParam(filters) });
   if (params.view) query.set("view", params.view);
   if (params.topN) query.set("top_n", String(params.topN));
   if (params.full) query.set("full", "true");
@@ -122,18 +125,32 @@ export const api = {
     ),
   reviewTypes: (id: string) => request<Dataset>("POST", `/datasets/${id}/columns/review`),
   roles: () => request<Role[]>("GET", "/column-roles"),
-  overview: (id: string) => request<Overview>("GET", `/datasets/${id}/overview`),
-  chart: (id: string, column: string, params: ChartParams) =>
-    request<Chart>("GET", `/datasets/${id}/columns/chart?${chartQuery(column, params)}`),
-  variable: (id: string, column: string) =>
-    request<VariableProfile>("GET", `/datasets/${id}/variable?${new URLSearchParams({ column })}`),
-  fit: (id: string, column: string) =>
-    request<Fit>("GET", `/datasets/${id}/variable/fit?${new URLSearchParams({ column })}`),
-  outliers: (id: string, column: string, method: OutlierMethod) =>
+  overview: (id: string, filters?: Condition[]) =>
+    request<Overview>("GET", `/datasets/${id}/overview?${new URLSearchParams(filtersParam(filters))}`),
+  chart: (id: string, column: string, params: ChartParams, filters?: Condition[]) =>
+    request<Chart>("GET", `/datasets/${id}/columns/chart?${chartQuery(column, params, filters)}`),
+  summaries: (id: string, filters: Condition[]) =>
+    request<Record<string, ColumnSummary>>(
+      "GET",
+      `/datasets/${id}/columns/summaries?${new URLSearchParams(filtersParam(filters))}`,
+    ),
+  variable: (id: string, column: string, filters?: Condition[]) =>
+    request<VariableProfile>(
+      "GET",
+      `/datasets/${id}/variable?${new URLSearchParams({ column, ...filtersParam(filters) })}`,
+    ),
+  fit: (id: string, column: string, filters?: Condition[]) =>
+    request<Fit>("GET", `/datasets/${id}/variable/fit?${new URLSearchParams({ column, ...filtersParam(filters) })}`),
+  outliers: (id: string, column: string, method: OutlierMethod, filters?: Condition[]) =>
     request<Outliers>(
       "GET",
-      `/datasets/${id}/variable/outliers?${new URLSearchParams({ column, method })}`,
+      `/datasets/${id}/variable/outliers?${new URLSearchParams({ column, method, ...filtersParam(filters) })}`,
     ),
+  savedFilters: (id: string) => request<SavedFilter[]>("GET", `/datasets/${id}/saved-filters`),
+  saveFilter: (id: string, name: string, conditions: Condition[]) =>
+    request<SavedFilter>("POST", `/datasets/${id}/saved-filters`, { name, conditions }),
+  deleteSavedFilter: (id: string, filterId: string) =>
+    request<void>("DELETE", `/datasets/${id}/saved-filters/${filterId}`),
 
   job: (id: string) => request<Job>("GET", `/jobs/${id}`),
 

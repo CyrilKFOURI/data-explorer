@@ -35,16 +35,34 @@ export type Figure = (tokens: ChartTokens) => { data: Data[]; layout?: Partial<L
 
 export type PlotHandle = { toImage: (filename: string) => Promise<void> };
 
+/** The clicked point: its index in its trace, its x / y, and where the click happened. */
+export type PointClick = { index: number; x: unknown; y: unknown; customdata: unknown; clientX: number; clientY: number };
+
 type PlotProps = {
   figure: Figure;
   height: number;
   label: string;
+  onPointClick?: (point: PointClick) => void;
+};
+
+type PlotlyClick = {
+  points: { pointIndex?: number; pointNumber?: number; x: unknown; y: unknown; customdata: unknown }[];
+  event: MouseEvent;
+};
+type ClickableElement = HTMLDivElement & {
+  on?: (event: string, handler: (data: PlotlyClick) => void) => void;
+  removeAllListeners?: (event: string) => void;
 };
 
 /** A Plotly chart themed with the design tokens. `figure` builds traces from the tokens. */
-export const Plot = forwardRef<PlotHandle, PlotProps>(function Plot({ figure, height, label }, ref) {
+export const Plot = forwardRef<PlotHandle, PlotProps>(function Plot({ figure, height, label, onPointClick }, ref) {
   const container = useRef<HTMLDivElement>(null);
   const themeVersion = useThemeVersion();
+  const clickHandler = useRef(onPointClick);
+  useEffect(() => {
+    clickHandler.current = onPointClick;
+  });
+  const clickable = Boolean(onPointClick);
 
   useImperativeHandle(ref, () => ({
     toImage: async (filename) => {
@@ -75,12 +93,28 @@ export const Plot = forwardRef<PlotHandle, PlotProps>(function Plot({ figure, he
           height,
         },
         plotConfig,
-      );
+      ).then(() => {
+        const plot = element as ClickableElement;
+        plot.removeAllListeners?.("plotly_click");
+        if (!clickable) return;
+        plot.on?.("plotly_click", (data) => {
+          const point = data.points[0];
+          if (!point) return;
+          clickHandler.current?.({
+            index: point.pointIndex ?? point.pointNumber ?? 0,
+            x: point.x,
+            y: point.y,
+            customdata: point.customdata,
+            clientX: data.event.clientX,
+            clientY: data.event.clientY,
+          });
+        });
+      });
     });
     return () => {
       cancelled = true;
     };
-  }, [figure, height, themeVersion]);
+  }, [figure, height, themeVersion, clickable]);
 
   useEffect(() => {
     const element = container.current;
@@ -89,5 +123,13 @@ export const Plot = forwardRef<PlotHandle, PlotProps>(function Plot({ figure, he
     };
   }, []);
 
-  return <div ref={container} role="img" aria-label={label} style={{ height }} className="w-full" />;
+  return (
+    <div
+      ref={container}
+      role="img"
+      aria-label={label}
+      style={{ height }}
+      className={`w-full ${clickable ? "[&_.cursor-crosshair]:cursor-pointer [&_.nsewdrag]:cursor-pointer" : ""}`}
+    />
+  );
 });

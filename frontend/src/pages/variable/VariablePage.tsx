@@ -3,7 +3,9 @@ import { ArrowLeft, ChevronLeft, ChevronRight, ScatterChart } from "lucide-react
 import { useEffect, useMemo, useState } from "react";
 
 import type { AnalysisType, Column, VariableProfile } from "../../api/client";
+import { useActiveFilters } from "../../api/filters";
 import { useChart, useColumns, useDataset, useUpdateColumns, useVariable } from "../../api/hooks";
+import { NoRows } from "../../features/filters/NoRows";
 import { formatNumber } from "../../charts/figures";
 import { TypeBadge } from "../../features/columns/TypeBadge";
 import { CategoryTable } from "../../features/variable/CategoryTable";
@@ -164,6 +166,25 @@ function NavButton({
 }
 
 function VariableBody({ datasetId, column, profile }: { datasetId: string; column: Column; profile: VariableProfile }) {
+  const filtered = useActiveFilters(datasetId).length > 0;
+  const rows = rowsOf(profile);
+  if (filtered && rows === 0) return <NoRows datasetId={datasetId} />;
+  return (
+    <div className="space-y-3">
+      {filtered && rows !== null && (
+        <p className="text-xs text-accent">{t("filters.filteredNote", { rows: formatCount(rows) })}</p>
+      )}
+      <VariableSections datasetId={datasetId} column={column} profile={profile} />
+    </div>
+  );
+}
+
+function rowsOf(profile: VariableProfile): number | null {
+  const section = profile.numeric?.describe ?? profile.categorical ?? profile.date ?? profile.text ?? profile.identifier;
+  return section ? section.rows : null;
+}
+
+function VariableSections({ datasetId, column, profile }: { datasetId: string; column: Column; profile: VariableProfile }) {
   if (profile.numeric) return <NumericBody datasetId={datasetId} column={column} profile={profile} />;
   return (
     <div className="space-y-5">
@@ -252,7 +273,7 @@ function ChartBlock({ datasetId, column }: { datasetId: string; column: Column }
       )}
       {data ? (
         <div className="max-h-[440px] overflow-y-auto">
-          <ChartView chart={data} type={column.type} name={column.name} height={height} />
+          <ChartView chart={data} type={column.type} name={column.name} height={height} datasetId={datasetId} />
         </div>
       ) : (
         <div className="h-80 animate-pulse rounded-md bg-surface-2" aria-busy="true" />

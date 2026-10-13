@@ -114,6 +114,23 @@ describe("Variable page", () => {
     expect(screen.getByText(/Iglewicz & Hoaglin/)).toBeInTheDocument();
   });
 
+  it("filters the dataset on the outliers of a rule", async () => {
+    setup();
+    const router = renderAt("/d/d1/variable/price");
+    fireEvent.click(await screen.findByRole("tab", { name: "Outliers" }));
+
+    fireEvent.click(await screen.findByRole("button", { name: "Show only these rows" }));
+
+    await waitFor(() =>
+      expect(router.state.location.search).toEqual({
+        filters: {
+          dataset: "d1",
+          conditions: [{ column: "price", op: "between", low: -114, high: 317, negate: true }],
+        },
+      }),
+    );
+  });
+
   it("profiles a category and warns about imbalance", async () => {
     setup(categoricalProfile);
     renderAt("/d/d1/variable/city");

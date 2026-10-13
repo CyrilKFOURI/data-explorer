@@ -3,9 +3,11 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  retainSearchParams,
   type RouterHistory,
 } from "@tanstack/react-router";
 
+import { validateFilterSearch, type FilterSearch } from "../api/filters";
 import { modules as registeredModules } from "../modules/registry";
 import type { ModuleManifest } from "../modules/types";
 import { ColumnsPage } from "../pages/columns/ColumnsPage";
@@ -26,6 +28,9 @@ export function createAppRouter({
   modules = registeredModules,
 }: RouterOptions = {}) {
   const rootRoute = createRootRoute({
+    // Filters follow the user from page to page (see api/filters.ts).
+    validateSearch: validateFilterSearch,
+    search: { middlewares: [retainSearchParams<FilterSearch>(["filters"])] },
     component: () => <Shell modules={modules} />,
     notFoundComponent: NotFoundPage,
   });

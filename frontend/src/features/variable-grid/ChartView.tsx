@@ -1,8 +1,11 @@
-import { forwardRef, useMemo } from "react";
+import { forwardRef, useCallback, useMemo, useState } from "react";
 
 import type { AnalysisType, Chart } from "../../api/client";
 import { boxFigure, barsFigure, histogramFigure, pieFigure, timelineFigure } from "../../charts/figures";
-import { Plot, type PlotHandle } from "../../charts/Plot";
+import { Plot, type PlotHandle, type PointClick } from "../../charts/Plot";
+import { ChartFilterMenu } from "../filters/ChartFilterMenu";
+import { actionsFor, type ChartAction } from "../filters/fromChart";
+import { useFilters } from "../filters/useFilters";
 import { formatCount } from "../../lib/format";
 import { t } from "../../lib/i18n";
 
@@ -11,13 +14,25 @@ type ChartViewProps = {
   type: AnalysisType;
   name: string;
   height: number;
+  /** Set to let a click on a bar or bin filter the dataset. */
+  datasetId?: string;
 };
 
 /** Draws prepared chart data; non-chart kinds (identifier, high cardinality) get a short summary. */
 export const ChartView = forwardRef<PlotHandle, ChartViewProps>(function ChartView(
-  { chart, type, name, height },
+  { chart, type, name, height, datasetId },
   ref,
 ) {
+  const [menu, setMenu] = useState<{ x: number; y: number; actions: ChartAction[] } | null>(null);
+  const filters = useFilters(datasetId ?? "");
+  const onPointClick = useCallback(
+    (point: PointClick) => {
+      const actions = actionsFor(name, chart, point);
+      if (actions.length) setMenu({ x: point.clientX, y: point.clientY, actions });
+    },
+    [name, chart],
+  );
+  const closeMenu = useCallback(() => setMenu(null), []);
   const figure = useMemo(() => {
     if (chart.kind === "histogram") {
       if (chart.view === "box") return boxFigure(chart, type);
@@ -28,7 +43,31 @@ export const ChartView = forwardRef<PlotHandle, ChartViewProps>(function ChartVi
     return null;
   }, [chart, type]);
 
-  if (figure) return <Plot ref={ref} figure={figure} height={height} label={t("chart.label", { name })} />;
+  if (figure) {
+    return (
+      <>
+        <Plot
+          ref={ref}
+          figure={figure}
+          height={height}
+          label={t("chart.label", { name })}
+          onPointClick={datasetId ? onPointClick : undefined}
+        />
+        {menu && (
+          <ChartFilterMenu
+            x={menu.x}
+            y={menu.y}
+            actions={menu.actions}
+            onClose={closeMenu}
+            onPick={(action) => {
+              filters.add(action.condition);
+              setMenu(null);
+            }}
+          />
+        )}
+      </>
+    );
+  }
 
   if (chart.kind === "identifier") {
     return (

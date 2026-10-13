@@ -11,8 +11,16 @@ def test_migrations_create_tables(tmp_path: Path) -> None:
     }
     connection.close()
 
-    assert applied == ["0001_init", "0002_datasets", "0003_columns"]
-    expected = {"schema_migrations", "settings", "datasets", "dataset_files", "jobs", "columns"}
+    assert applied == ["0001_init", "0002_datasets", "0003_columns", "0004_saved_filters"]
+    expected = {
+        "schema_migrations",
+        "settings",
+        "datasets",
+        "dataset_files",
+        "jobs",
+        "columns",
+        "saved_filters",
+    }
     assert expected <= tables
 
 

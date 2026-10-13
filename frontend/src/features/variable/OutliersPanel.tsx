@@ -4,7 +4,9 @@ import { formatNumber } from "../../charts/figures";
 import { formatCount } from "../../lib/format";
 import { t } from "../../lib/i18n";
 import { useStoredState } from "../../lib/useStoredState";
+import { Button } from "../../ui/Button";
 import { SegmentedControl } from "../../ui/SegmentedControl";
+import { useFilters } from "../filters/useFilters";
 
 const METHODS: OutlierMethod[] = ["iqr", "iqr3", "zscore", "robust"];
 
@@ -13,6 +15,12 @@ export function OutliersPanel({ datasetId, column }: { datasetId: string; column
   const outliers = useOutliers(datasetId, column, method, true);
   const data = outliers.data;
   const rule = data?.rules.find((item) => item.method === method);
+  const filters = useFilters(datasetId);
+  const filterRows = (negate: boolean) => {
+    if (!rule || rule.low === null || rule.high === null) return;
+    // Outliers lie outside [low, high]: "show only" = outside (negated range), "exclude" = inside.
+    filters.add({ column, op: "between", low: rule.low, high: rule.high, negate });
+  };
 
   if (outliers.isError) return <p className="text-bad">{outliers.error.message}</p>;
 
@@ -64,7 +72,15 @@ export function OutliersPanel({ datasetId, column }: { datasetId: string; column
           </div>
 
           <section>
-            <h3 className="mb-1.5 text-xs font-medium text-ink-3">{t("outliers.rows")}</h3>
+            <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-xs font-medium text-ink-3">{t("outliers.rows")}</h3>
+              {rule && rule.count > 0 && (
+                <div className="flex gap-1.5">
+                  <Button onClick={() => filterRows(true)}>{t("outliers.keep")}</Button>
+                  <Button onClick={() => filterRows(false)}>{t("outliers.drop")}</Button>
+                </div>
+              )}
+            </div>
             {data.rows.length === 0 ? (
               <p className="text-ink-2">{t("outliers.none")}</p>
             ) : (

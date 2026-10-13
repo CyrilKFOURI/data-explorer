@@ -334,6 +334,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/datasets/{dataset_id}/columns/summaries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Summaries
+         * @description Column summaries over the filtered rows (types and detection are not affected).
+         */
+        get: operations["summaries_api_v1_datasets__dataset_id__columns_summaries_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/datasets/{dataset_id}/variable": {
         parameters: {
             query?: never;
@@ -380,6 +400,41 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/datasets/{dataset_id}/saved-filters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Saved */
+        get: operations["list_saved_api_v1_datasets__dataset_id__saved_filters_get"];
+        put?: never;
+        /** Save */
+        post: operations["save_api_v1_datasets__dataset_id__saved_filters_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/datasets/{dataset_id}/saved-filters/{filter_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete */
+        delete: operations["delete_api_v1_datasets__dataset_id__saved_filters__filter_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -633,6 +688,31 @@ export interface components {
             /** Histogram */
             histogram: components["schemas"]["HistogramBar"][];
             date?: components["schemas"]["app__schemas__columns__DateProfile"] | null;
+        };
+        /** Condition */
+        Condition: {
+            /** Column */
+            column: string;
+            /**
+             * Op
+             * @enum {string}
+             */
+            op: "eq" | "gt" | "gte" | "lt" | "lte" | "between" | "in" | "contains" | "starts_with" | "is_null" | "part_in";
+            /** Value */
+            value?: string | number | null;
+            /** Low */
+            low?: string | number | null;
+            /** High */
+            high?: string | number | null;
+            /** Values */
+            values?: string[];
+            /** Part */
+            part?: ("year" | "quarter" | "month" | "year_month" | "week" | "day_of_week" | "day_of_month" | "hour") | null;
+            /**
+             * Negate
+             * @default false
+             */
+            negate: boolean;
         };
         /** ConversionOut */
         ConversionOut: {
@@ -1042,6 +1122,8 @@ export interface components {
         Overview: {
             /** Rows */
             rows: number;
+            /** Total Rows */
+            total_rows: number;
             /** Columns */
             columns: number;
             /** Used Columns */
@@ -1179,6 +1261,24 @@ export interface components {
             format: string;
             /** Size */
             size: number;
+        };
+        /** SaveFilterRequest */
+        SaveFilterRequest: {
+            /** Name */
+            name: string;
+            /** Conditions */
+            conditions: components["schemas"]["Condition"][];
+        };
+        /** SavedFilter */
+        SavedFilter: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Conditions */
+            conditions: components["schemas"]["Condition"][];
+            /** Created At */
+            created_at: string;
         };
         /**
          * SourceOptions
@@ -1949,7 +2049,10 @@ export interface operations {
     };
     overview_api_v1_datasets__dataset_id__overview_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description JSON list of conditions, combined with AND. */
+                filters?: string | null;
+            };
             header?: never;
             path: {
                 dataset_id: string;
@@ -1987,6 +2090,8 @@ export interface operations {
                 full?: boolean;
                 step?: string | null;
                 bins?: number | null;
+                /** @description JSON list of conditions, combined with AND. */
+                filters?: string | null;
             };
             header?: never;
             path: {
@@ -2016,10 +2121,48 @@ export interface operations {
             };
         };
     };
+    summaries_api_v1_datasets__dataset_id__columns_summaries_get: {
+        parameters: {
+            query?: {
+                /** @description JSON list of conditions, combined with AND. */
+                filters?: string | null;
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: components["schemas"]["ColumnSummary"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     profile_api_v1_datasets__dataset_id__variable_get: {
         parameters: {
             query: {
                 column: string;
+                /** @description JSON list of conditions, combined with AND. */
+                filters?: string | null;
             };
             header?: never;
             path: {
@@ -2053,6 +2196,8 @@ export interface operations {
         parameters: {
             query: {
                 column: string;
+                /** @description JSON list of conditions, combined with AND. */
+                filters?: string | null;
             };
             header?: never;
             path: {
@@ -2087,6 +2232,8 @@ export interface operations {
             query: {
                 column: string;
                 method?: "iqr" | "iqr3" | "zscore" | "robust";
+                /** @description JSON list of conditions, combined with AND. */
+                filters?: string | null;
             };
             header?: never;
             path: {
@@ -2104,6 +2251,102 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Outliers"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_saved_api_v1_datasets__dataset_id__saved_filters_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedFilter"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_api_v1_datasets__dataset_id__saved_filters_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveFilterRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedFilter"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_api_v1_datasets__dataset_id__saved_filters__filter_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+                filter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

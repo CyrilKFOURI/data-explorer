@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Alert, AnalysisType, Column, Overview } from "../../api/client";
 import { useColumns, useDataset, useOpenDataset, useOverview, useUpdateColumns } from "../../api/hooks";
 import { ANALYSIS_TYPES, TYPE_META } from "../../features/columns/columnTypes";
+import { NoRows } from "../../features/filters/NoRows";
 import { SummaryStrip } from "../../features/summary-strip/SummaryStrip";
 import { VariableCard } from "../../features/variable-grid/VariableCard";
 import { t } from "../../lib/i18n";
@@ -128,6 +129,7 @@ export function OverviewPage() {
       ) : (
         <div className="h-36 animate-pulse rounded-lg bg-surface-1" aria-busy="true" />
       )}
+      {overview.data && overview.data.rows === 0 && overview.data.total_rows > 0 && <NoRows datasetId={datasetId} />}
       {overview.data && overview.data.alerts.length > 0 && (
         <Alerts alerts={overview.data.alerts} onColumn={focusColumn} />
       )}

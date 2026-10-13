@@ -901,6 +901,25 @@
               "type": "string",
               "title": "Dataset Id"
             }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON list of conditions, combined with AND.",
+              "title": "Filters"
+            },
+            "description": "JSON list of conditions, combined with AND."
           }
         ],
         "responses": {
@@ -1025,6 +1044,25 @@
               ],
               "title": "Bins"
             }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON list of conditions, combined with AND.",
+              "title": "Filters"
+            },
+            "description": "JSON list of conditions, combined with AND."
           }
         ],
         "responses": {
@@ -1034,6 +1072,72 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Chart"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{dataset_id}/columns/summaries": {
+      "get": {
+        "tags": [
+          "profiling"
+        ],
+        "summary": "Summaries",
+        "description": "Column summaries over the filtered rows (types and detection are not affected).",
+        "operationId": "summaries_api_v1_datasets__dataset_id__columns_summaries_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON list of conditions, combined with AND.",
+              "title": "Filters"
+            },
+            "description": "JSON list of conditions, combined with AND."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/ColumnSummary"
+                  },
+                  "title": "Response Summaries Api V1 Datasets  Dataset Id  Columns Summaries Get"
                 }
               }
             }
@@ -1077,6 +1181,25 @@
               "minLength": 1,
               "title": "Column"
             }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON list of conditions, combined with AND.",
+              "title": "Filters"
+            },
+            "description": "JSON list of conditions, combined with AND."
           }
         ],
         "responses": {
@@ -1129,6 +1252,25 @@
               "minLength": 1,
               "title": "Column"
             }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON list of conditions, combined with AND.",
+              "title": "Filters"
+            },
+            "description": "JSON list of conditions, combined with AND."
           }
         ],
         "responses": {
@@ -1197,6 +1339,25 @@
               "default": "iqr",
               "title": "Method"
             }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON list of conditions, combined with AND.",
+              "title": "Filters"
+            },
+            "description": "JSON list of conditions, combined with AND."
           }
         ],
         "responses": {
@@ -1209,6 +1370,146 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{dataset_id}/saved-filters": {
+      "get": {
+        "tags": [
+          "filters"
+        ],
+        "summary": "List Saved",
+        "operationId": "list_saved_api_v1_datasets__dataset_id__saved_filters_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SavedFilter"
+                  },
+                  "title": "Response List Saved Api V1 Datasets  Dataset Id  Saved Filters Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "filters"
+        ],
+        "summary": "Save",
+        "operationId": "save_api_v1_datasets__dataset_id__saved_filters_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveFilterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedFilter"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{dataset_id}/saved-filters/{filter_id}": {
+      "delete": {
+        "tags": [
+          "filters"
+        ],
+        "summary": "Delete",
+        "operationId": "delete_api_v1_datasets__dataset_id__saved_filters__filter_id__delete",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "filter_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Filter Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -1981,6 +2282,114 @@
           "histogram"
         ],
         "title": "ColumnSummary"
+      },
+      "Condition": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Column"
+          },
+          "op": {
+            "type": "string",
+            "enum": [
+              "eq",
+              "gt",
+              "gte",
+              "lt",
+              "lte",
+              "between",
+              "in",
+              "contains",
+              "starts_with",
+              "is_null",
+              "part_in"
+            ],
+            "title": "Op"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "low": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Low"
+          },
+          "high": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High"
+          },
+          "values": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 1000,
+            "title": "Values"
+          },
+          "part": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "year",
+                  "quarter",
+                  "month",
+                  "year_month",
+                  "week",
+                  "day_of_week",
+                  "day_of_month",
+                  "hour"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Part"
+          },
+          "negate": {
+            "type": "boolean",
+            "title": "Negate",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "column",
+          "op"
+        ],
+        "title": "Condition"
       },
       "ConversionOut": {
         "properties": {
@@ -3359,6 +3768,10 @@
             "type": "integer",
             "title": "Rows"
           },
+          "total_rows": {
+            "type": "integer",
+            "title": "Total Rows"
+          },
           "columns": {
             "type": "integer",
             "title": "Columns"
@@ -3418,6 +3831,7 @@
         "type": "object",
         "required": [
           "rows",
+          "total_rows",
           "columns",
           "used_columns",
           "missing_cells",
@@ -3720,6 +4134,62 @@
           "size"
         ],
         "title": "SampleOut"
+      },
+      "SaveFilterRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "conditions": {
+            "items": {
+              "$ref": "#/components/schemas/Condition"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Conditions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "conditions"
+        ],
+        "title": "SaveFilterRequest"
+      },
+      "SavedFilter": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "conditions": {
+            "items": {
+              "$ref": "#/components/schemas/Condition"
+            },
+            "type": "array",
+            "title": "Conditions"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "conditions",
+          "created_at"
+        ],
+        "title": "SavedFilter"
       },
       "SourceOptions": {
         "properties": {

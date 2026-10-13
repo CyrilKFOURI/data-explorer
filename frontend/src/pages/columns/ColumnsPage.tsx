@@ -3,7 +3,7 @@ import { Check, Info, RefreshCw, Search, TriangleAlert, Undo2 } from "lucide-rea
 import { useMemo, useState } from "react";
 
 import type { AnalysisType, Column, Role } from "../../api/client";
-import { useColumns, useDataset, useDetectColumns, useReviewTypes, useRoles } from "../../api/hooks";
+import { useColumnSummaries, useColumns, useDataset, useDetectColumns, useReviewTypes, useRoles } from "../../api/hooks";
 import { ANALYSIS_TYPES, TYPE_META } from "../../features/columns/columnTypes";
 import { OrderDialog } from "../../features/columns/OrderDialog";
 import { Sparkline } from "../../features/columns/Sparkline";
@@ -36,7 +36,16 @@ export function ColumnsPage() {
   const roles = useRoles();
   const detect = useDetectColumns(datasetId);
   const review = useReviewTypes(datasetId);
-  const all = useMemo(() => columns.data ?? [], [columns.data]);
+  const summaries = useColumnSummaries(datasetId, ready);
+  const all = useMemo(() => {
+    const filtered = summaries.data;
+    if (!filtered) return columns.data ?? [];
+    return (columns.data ?? []).map((column): Column => {
+      const summary = filtered[column.name];
+      return summary ? { ...column, summary } : column;
+    });
+  }, [columns.data, summaries.data]);
+  const filteredRows = summaries.data ? Object.values(summaries.data)[0]?.rows : undefined;
   const history = useColumnHistory(datasetId, all);
 
   const [query, setQuery] = useState("");
@@ -105,6 +114,9 @@ export function ColumnsPage() {
               review: String(reviewCount),
             })}
           </p>
+          {filteredRows !== undefined && (
+            <p className="mt-0.5 text-xs text-accent">{t("filters.columnsNote", { rows: formatCount(filteredRows) })}</p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Button

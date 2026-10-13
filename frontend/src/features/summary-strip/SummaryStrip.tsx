@@ -13,7 +13,12 @@ export function SummaryStrip({ overview }: { overview: Overview }) {
       aria-label={t("summary.label")}
       className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-3 lg:grid-cols-6"
     >
-      <Tile label={t("summary.rows")} value={formatCount(overview.rows)} />
+      <Tile
+        label={t("summary.rows")}
+        value={formatCount(overview.rows)}
+        hint={overview.rows !== overview.total_rows ? t("summary.filtered", { total: formatCount(overview.total_rows) }) : undefined}
+        tone={overview.rows !== overview.total_rows ? "text-accent" : undefined}
+      />
       <Tile
         label={t("summary.columns")}
         value={formatCount(used)}

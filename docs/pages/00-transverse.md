@@ -27,18 +27,22 @@ Toujours visible, et il tient compte des filtres actifs.
 | Mémoire | Taille totale, moyenne par ligne |
 | Types | Mini-barre de répartition : numérique / catégoriel / date / booléen / texte / identifiant |
 
-## Barre de filtres globaux
+## Filtres globaux
 
-- Filtres actifs affichés en puces : `pays ∈ {FR, BE}` · `âge ≥ 18` · bouton ✕ sur chaque puce
-- **+ Filtre** : colonne → opérateur → valeur. Le formulaire s'adapte au type de la colonne :
-  - numérique : =, ≠, >, ≥, <, ≤, entre, est vide
-  - date : avant, après, entre, période relative (« 12 derniers mois »)
-  - catégoriel : est parmi (multi-sélection avec recherche et « tout sélectionner »), contient, commence par, est vide
-  - booléen : vrai / faux / vide
-- Logique **ET / OU** entre les règles
-- Toujours visible : « 12 340 lignes sur 1 200 000 », « Tout effacer »
-- Filtres **enregistrables** sous un nom et réutilisables
-- Raccourci : depuis un graphique, clic sur une barre ou une zone → « Filtrer sur cette valeur » ou « Exclure »
+Discrets par défaut : un **bouton `Filter`** dans la barre du haut (raccourci `F`), présent sur toutes les pages du dataset.
+
+- Le bouton affiche le nombre de filtres actifs ; à côté, « 12 340 / 1 200 000 lignes » dès qu'un filtre est actif.
+- Un clic ouvre un **panneau** : filtres actifs (modifier, retirer), **+ Add filter** (colonne → condition → valeur), « Clear all ». Le formulaire s'adapte au type :
+  - numérique : =, >, ≥, <, ≤, entre, est vide
+  - catégoriel / booléen : est parmi (cases à cocher avec recherche, tout cocher / décocher)
+  - texte / identifiant : contient, commence par, égal, est vide
+  - date : avant, après, entre, ou partie de date (année, mois, jour de semaine, heure)
+  - chaque filtre a une option « n'est pas »
+- Logique : **ET entre les filtres**, **OU entre les valeurs cochées** d'un même filtre. Le OU entre colonnes différentes est hors V1.
+- **Puces** sous la barre du haut (`pays ∈ {FR, BE}` ✕) : optionnelles, masquées par défaut, activables dans le panneau.
+- Filtres **enregistrables** sous un nom et réutilisables.
+- Raccourcis : clic sur une barre d'un graphique → « Keep only » / « Exclude » ; plage d'histogramme → « Keep this range » ; onglet Outliers → « Filter these rows » / « Exclude them ».
+- Les filtres suivent la navigation entre les pages, sont dans l'URL et propres à chaque dataset.
 
 ## Comportements communs
 

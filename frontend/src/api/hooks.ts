@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { useActiveFilters, type Condition } from "./filters";
 import {
   api,
   type ChartParams,
@@ -22,13 +23,17 @@ export const queryKeys = {
   samples: ["samples"] as const,
   columns: (id: string) => ["datasets", id, "columns"] as const,
   roles: ["column-roles"] as const,
-  overview: (id: string) => ["datasets", id, "overview"] as const,
-  chart: (id: string, column: string, params: ChartParams) =>
-    ["datasets", id, "chart", column, params] as const,
-  variable: (id: string, column: string) => ["datasets", id, "variable", column] as const,
-  fit: (id: string, column: string) => ["datasets", id, "variable", column, "fit"] as const,
-  outliers: (id: string, column: string, method: OutlierMethod) =>
-    ["datasets", id, "variable", column, "outliers", method] as const,
+  overview: (id: string, filters: Condition[] = []) => ["datasets", id, "overview", filters] as const,
+  chart: (id: string, column: string, params: ChartParams, filters: Condition[] = []) =>
+    ["datasets", id, "chart", column, params, filters] as const,
+  summaries: (id: string, filters: Condition[]) => ["datasets", id, "summaries", filters] as const,
+  variable: (id: string, column: string, filters: Condition[] = []) =>
+    ["datasets", id, "variable", column, filters] as const,
+  fit: (id: string, column: string, filters: Condition[] = []) =>
+    ["datasets", id, "variable", column, "fit", filters] as const,
+  outliers: (id: string, column: string, method: OutlierMethod, filters: Condition[] = []) =>
+    ["datasets", id, "variable", column, "outliers", method, filters] as const,
+  savedFilters: (id: string) => ["datasets", id, "saved-filters"] as const,
 };
 
 const isImporting = (datasets: Dataset[] | undefined) =>
@@ -197,14 +202,30 @@ export function useReviewTypes(id: string) {
   });
 }
 
+/** Overview of the rows that pass the active filters. */
 export function useOverview(id: string, enabled: boolean) {
-  return useQuery({ queryKey: queryKeys.overview(id), queryFn: () => api.overview(id), enabled });
+  const filters = useActiveFilters(id);
+  return useQuery({
+    queryKey: queryKeys.overview(id, filters),
+    queryFn: () => api.overview(id, filters),
+    enabled,
+    placeholderData: (previous) => previous,
+  });
 }
 
-export function useChart(id: string, column: string, params: ChartParams, enabled: boolean) {
+/** Chart data over the filtered rows; `unfiltered` reads every row (e.g. values to pick from). */
+export function useChart(
+  id: string,
+  column: string,
+  params: ChartParams,
+  enabled: boolean,
+  options: { unfiltered?: boolean } = {},
+) {
+  const active = useActiveFilters(id);
+  const filters = options.unfiltered ? [] : active;
   return useQuery({
-    queryKey: queryKeys.chart(id, column, params),
-    queryFn: () => api.chart(id, column, params),
+    queryKey: queryKeys.chart(id, column, params, filters),
+    queryFn: () => api.chart(id, column, params, filters),
     enabled,
     staleTime: 60_000,
     placeholderData: (previous) => previous,
@@ -212,29 +233,64 @@ export function useChart(id: string, column: string, params: ChartParams, enable
 }
 
 export function useVariable(id: string, column: string, enabled = true) {
+  const filters = useActiveFilters(id);
   return useQuery({
-    queryKey: queryKeys.variable(id, column),
-    queryFn: () => api.variable(id, column),
+    queryKey: queryKeys.variable(id, column, filters),
+    queryFn: () => api.variable(id, column, filters),
     enabled,
     staleTime: 60_000,
   });
 }
 
 export function useFit(id: string, column: string, enabled: boolean) {
+  const filters = useActiveFilters(id);
   return useQuery({
-    queryKey: queryKeys.fit(id, column),
-    queryFn: () => api.fit(id, column),
+    queryKey: queryKeys.fit(id, column, filters),
+    queryFn: () => api.fit(id, column, filters),
     enabled,
     staleTime: 60_000,
   });
 }
 
 export function useOutliers(id: string, column: string, method: OutlierMethod, enabled: boolean) {
+  const filters = useActiveFilters(id);
   return useQuery({
-    queryKey: queryKeys.outliers(id, column, method),
-    queryFn: () => api.outliers(id, column, method),
+    queryKey: queryKeys.outliers(id, column, method, filters),
+    queryFn: () => api.outliers(id, column, method, filters),
     enabled,
     staleTime: 60_000,
     placeholderData: (previous) => previous,
+  });
+}
+
+/** Column summaries over the filtered rows (only fetched while filters are active). */
+export function useColumnSummaries(id: string, enabled: boolean) {
+  const filters = useActiveFilters(id);
+  return useQuery({
+    queryKey: queryKeys.summaries(id, filters),
+    queryFn: () => api.summaries(id, filters),
+    enabled: enabled && filters.length > 0,
+    placeholderData: (previous) => previous,
+  });
+}
+
+export function useSavedFilters(id: string) {
+  return useQuery({ queryKey: queryKeys.savedFilters(id), queryFn: () => api.savedFilters(id) });
+}
+
+export function useSaveFilter(id: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { name: string; conditions: Condition[] }) =>
+      api.saveFilter(id, input.name, input.conditions),
+    onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.savedFilters(id) }),
+  });
+}
+
+export function useDeleteSavedFilter(id: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (filterId: string) => api.deleteSavedFilter(id, filterId),
+    onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.savedFilters(id) }),
   });
 }
