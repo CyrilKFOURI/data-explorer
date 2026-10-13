@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useParams } from "@tanstack/react-router";
 import {
   Columns3,
   Grid3x3,
@@ -16,9 +16,9 @@ import { ThemeSwitcher } from "../../features/theme/ThemeSwitcher";
 import { t, type MessageKey } from "../../lib/i18n";
 import type { ModuleManifest } from "../../modules/types";
 
-/** Dataset pages arrive with features 002–008; until a dataset is open they are disabled. */
-const DATASET_PAGES: { labelKey: MessageKey; icon: LucideIcon }[] = [
-  { labelKey: "nav.columns", icon: Columns3 },
+/** Pages of the open dataset; those without a route yet arrive with features 003–008. */
+const DATASET_PAGES: { labelKey: MessageKey; icon: LucideIcon; to?: "/d/$datasetId/columns" }[] = [
+  { labelKey: "nav.columns", icon: Columns3, to: "/d/$datasetId/columns" },
   { labelKey: "nav.overview", icon: LayoutGrid },
   { labelKey: "nav.compare", icon: ScatterChart },
   { labelKey: "nav.correlations", icon: Grid3x3 },
@@ -35,6 +35,7 @@ type SidebarProps = {
 };
 
 export function Sidebar({ collapsed, onToggle, modules }: SidebarProps) {
+  const { datasetId } = useParams({ strict: false });
   return (
     <nav
       aria-label={t("nav.label")}
@@ -60,16 +61,30 @@ export function Sidebar({ collapsed, onToggle, modules }: SidebarProps) {
         </ul>
 
         <NavSection title={t("nav.section.dataset")} collapsed={collapsed}>
-          {DATASET_PAGES.map(({ labelKey, icon: Icon }) => (
+          {DATASET_PAGES.map(({ labelKey, icon: Icon, to }) => (
             <li key={labelKey}>
+              {datasetId && to ? (
+                <Link
+                  to={to}
+                  params={{ datasetId }}
+                  title={collapsed ? t(labelKey) : undefined}
+                  aria-label={collapsed ? t(labelKey) : undefined}
+                  className={`${itemClass} hover:bg-surface-2 hover:text-ink-1`}
+                  activeProps={{ className: "bg-accent-soft !text-ink-1 font-medium" }}
+                >
+                  <Icon size={16} strokeWidth={1.5} aria-hidden />
+                  {!collapsed && t(labelKey)}
+                </Link>
+              ) : (
               <span
                 aria-disabled="true"
-                title={t("nav.needsDataset")}
+                title={datasetId ? t("nav.comingSoon") : t("nav.needsDataset")}
                 className={`${itemClass} cursor-not-allowed opacity-45`}
               >
                 <Icon size={16} strokeWidth={1.5} aria-hidden />
                 {!collapsed && t(labelKey)}
               </span>
+              )}
             </li>
           ))}
         </NavSection>

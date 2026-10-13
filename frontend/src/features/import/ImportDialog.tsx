@@ -43,9 +43,10 @@ export function ImportDialog({ path, onClose }: ImportDialogProps) {
   const job = useJob(jobId);
   const data = preview.data;
 
-  const openDataset = (datasetId: string) => {
+  /** A dataset whose types were never reviewed opens on the Columns page. */
+  const openDataset = (datasetId: string, reviewed = false) => {
     onClose();
-    void navigate({ to: "/d/$datasetId", params: { datasetId } });
+    void navigate({ to: reviewed ? "/d/$datasetId" : "/d/$datasetId/columns", params: { datasetId } });
   };
 
   const jobFailed = job.data?.status === "failed";
@@ -76,7 +77,7 @@ export function ImportDialog({ path, onClose }: ImportDialogProps) {
       {
         onSuccess: (response) => {
           if (response.reused || response.job?.status === "done") {
-            openDataset(response.dataset.id);
+            openDataset(response.dataset.id, Boolean(response.dataset.types_reviewed_at));
           } else if (response.job?.status === "failed") {
             setImportError(response.dataset.error ?? t("import.failed"));
           } else if (response.job) {

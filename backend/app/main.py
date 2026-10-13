@@ -8,13 +8,14 @@ from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api import datasets, health, jobs, sources
+from app.api import columns, datasets, health, jobs, sources
 from app.api.errors import register_error_handlers
 from app.api.security import protect
 from app.config import Settings
 from app.core import db
 from app.core.jobs import JobRunner, ThreadJobRunner
 from app.core.storage import Workspace
+from app.domain.columns.service import ColumnService
 from app.domain.datasets.service import DatasetService
 from app.modules.registry import mount_modules
 
@@ -26,6 +27,8 @@ def create_app(settings: Settings | None = None, job_runner: JobRunner | None = 
     workspace = Workspace(settings.home)
     runner = job_runner or ThreadJobRunner()
     dataset_service = DatasetService(workspace, settings, runner)
+    column_service = ColumnService(workspace, dataset_service)
+    dataset_service.after_import.append(column_service.detect_storage)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -42,11 +45,12 @@ def create_app(settings: Settings | None = None, job_runner: JobRunner | None = 
     app = FastAPI(title="Data Explorer", version=health.app_version(), lifespan=lifespan)
     app.state.workspace = workspace
     app.state.datasets = dataset_service
+    app.state.columns = column_service
     register_error_handlers(app)
     protect(app, tuple(settings.allowed_hosts))
 
     api = APIRouter(prefix=API_PREFIX)
-    for module in (health, datasets, sources, jobs):
+    for module in (health, datasets, sources, jobs, columns):
         api.include_router(module.router)
     app.include_router(api)
     mount_modules(app, API_PREFIX)

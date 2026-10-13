@@ -34,6 +34,8 @@ class DatasetRecord:
     error: str | None = None
     imported_at: str | None = None
     last_opened_at: str | None = None
+    types_version: int = 0
+    types_reviewed_at: str | None = None
 
 
 @dataclass

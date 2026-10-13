@@ -1,9 +1,10 @@
 """Dataset lifecycle: preview a source, import it in the background, list, rename, delete."""
 
+import logging
 import shutil
 import sqlite3
 import uuid
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Literal
@@ -28,6 +29,8 @@ from app.domain.ingestion.sql import lit
 
 SourceState = Literal["ok", "changed", "missing"]
 
+logger = logging.getLogger(__name__)
+
 
 class NotFoundError(AppError):
     def __init__(self, what: str) -> None:
@@ -39,6 +42,8 @@ class DatasetService:
         self.workspace = workspace
         self.settings = settings
         self.jobs = jobs
+        # Steps run after the Parquet copy is written (e.g. type detection), in order.
+        self.after_import: list[Callable[[str, str], object]] = []
 
     @contextmanager
     def _db(self) -> Iterator[sqlite3.Connection]:
@@ -167,6 +172,13 @@ class DatasetService:
                     connection, job_id, status="failed", message=message, finished_at=now()
                 )
                 return
+            progress(0.92, "Detecting column types")
+            for step in self.after_import:
+                try:
+                    step(dataset_id, str(target))
+                except Exception:
+                    # Not fatal: the dataset is usable and the step runs again on demand.
+                    logger.exception("Post-import step failed for dataset %s", dataset_id)
             stamp = now()
             repo.update_dataset(
                 connection,

@@ -8,6 +8,7 @@ import {
 
 import { modules as registeredModules } from "../modules/registry";
 import type { ModuleManifest } from "../modules/types";
+import { ColumnsPage } from "../pages/columns/ColumnsPage";
 import { DatasetPage } from "../pages/dataset/DatasetPage";
 import { HomePage } from "../pages/home/HomePage";
 import { NotFoundPage } from "../pages/not-found/NotFoundPage";
@@ -39,12 +40,17 @@ export function createAppRouter({
     path: "/d/$datasetId",
     component: DatasetPage,
   });
+  const columnsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/d/$datasetId/columns",
+    component: ColumnsPage,
+  });
   const moduleRoutes = modules.map((module) =>
     createRoute({ getParentRoute: () => rootRoute, path: module.path, component: module.component }),
   );
 
   return createRouter({
-    routeTree: rootRoute.addChildren([homeRoute, settingsRoute, datasetRoute, ...moduleRoutes]),
+    routeTree: rootRoute.addChildren([homeRoute, settingsRoute, datasetRoute, columnsRoute, ...moduleRoutes]),
     history,
   });
 }

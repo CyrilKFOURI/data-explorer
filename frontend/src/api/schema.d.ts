@@ -214,6 +214,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/datasets/{dataset_id}/columns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Columns */
+        get: operations["list_columns_api_v1_datasets__dataset_id__columns_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Columns */
+        patch: operations["update_columns_api_v1_datasets__dataset_id__columns_patch"];
+        trace?: never;
+    };
+    "/api/v1/datasets/{dataset_id}/columns/detect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Detect Columns */
+        post: operations["detect_columns_api_v1_datasets__dataset_id__columns_detect_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/datasets/{dataset_id}/columns/conversion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Conversion Preview */
+        get: operations["conversion_preview_api_v1_datasets__dataset_id__columns_conversion_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/datasets/{dataset_id}/columns/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Review Types */
+        post: operations["review_types_api_v1_datasets__dataset_id__columns_review_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/column-roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Roles */
+        get: operations["list_roles_api_v1_column_roles_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/modules/hello": {
         parameters: {
             query?: never;
@@ -235,12 +321,103 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * ColumnChange
+         * @description A correction of one column. `None` fields are left unchanged.
+         */
+        ColumnChange: {
+            /** Name */
+            name: string;
+            /** Type */
+            type?: ("numeric_continuous" | "numeric_discrete" | "categorical_nominal" | "categorical_ordinal" | "boolean" | "datetime" | "text" | "identifier" | "ignored") | null;
+            /** Role */
+            role?: string | null;
+            /** Excluded */
+            excluded?: boolean | null;
+            /** Order */
+            order?: string[] | null;
+            /**
+             * Reset
+             * @default false
+             */
+            reset: boolean;
+        };
+        /** ColumnChangesRequest */
+        ColumnChangesRequest: {
+            /** Changes */
+            changes: components["schemas"]["ColumnChange"][];
+        };
         /** ColumnInfo */
         ColumnInfo: {
             /** Name */
             name: string;
             /** Dtype */
             dtype: string;
+        };
+        /** ColumnOut */
+        ColumnOut: {
+            /** Name */
+            name: string;
+            /** Position */
+            position: number;
+            /** Storage Dtype */
+            storage_dtype: string;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "numeric_continuous" | "numeric_discrete" | "categorical_nominal" | "categorical_ordinal" | "boolean" | "datetime" | "text" | "identifier" | "ignored";
+            /** Role */
+            role: string | null;
+            /** Role Label */
+            role_label: string | null;
+            parser: components["schemas"]["Parser"];
+            /** Order */
+            order: string[] | null;
+            /**
+             * Detected Type
+             * @enum {string}
+             */
+            detected_type: "numeric_continuous" | "numeric_discrete" | "categorical_nominal" | "categorical_ordinal" | "boolean" | "datetime" | "text" | "identifier" | "ignored";
+            /** Detected Role */
+            detected_role: string | null;
+            /**
+             * Confidence
+             * @enum {string}
+             */
+            confidence: "high" | "medium" | "low";
+            /** Reasons */
+            reasons: string[];
+            /** Overridden */
+            overridden: boolean;
+            /** Excluded */
+            excluded: boolean;
+            summary: components["schemas"]["ColumnSummary"] | null;
+        };
+        /** ColumnSummary */
+        ColumnSummary: {
+            /** Rows */
+            rows: number;
+            /** Null Count */
+            null_count: number;
+            /** Invalid Count */
+            invalid_count: number;
+            /** Distinct Count */
+            distinct_count: number;
+            /** Examples */
+            examples: string[];
+            /** Histogram */
+            histogram: components["schemas"]["HistogramBar"][];
+        };
+        /** ConversionOut */
+        ConversionOut: {
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "numeric_continuous" | "numeric_discrete" | "categorical_nominal" | "categorical_ordinal" | "boolean" | "datetime" | "text" | "identifier" | "ignored";
+            parser: components["schemas"]["Parser"];
+            summary: components["schemas"]["ColumnSummary"];
         };
         /** CsvOptions */
         CsvOptions: {
@@ -303,6 +480,10 @@ export interface components {
             imported_at: string | null;
             /** Last Opened At */
             last_opened_at: string | null;
+            /** Types Version */
+            types_version: number;
+            /** Types Reviewed At */
+            types_reviewed_at: string | null;
             /**
              * Source State
              * @enum {string}
@@ -369,6 +550,13 @@ export interface components {
         HelloOut: {
             /** Message */
             message: string;
+        };
+        /** HistogramBar */
+        HistogramBar: {
+            /** Label */
+            label: string;
+            /** Count */
+            count: number;
         };
         /** ImportOptions */
         ImportOptions: {
@@ -439,6 +627,43 @@ export interface components {
             /** Entries */
             entries: components["schemas"]["Entry"][];
         };
+        /**
+         * Parser
+         * @description How to read a stored value in its analysis type, applied at query time.
+         *
+         *     - raw: the stored value as is
+         *     - number: text with a given decimal separator (thousands separators, %, currency stripped)
+         *     - date: text with a strptime format
+         *     - boolean: text mapped with true/false vocabularies (empty lists: cast the value)
+         *     - year: integer year → date (January 1st)
+         *     - text: the value as text, null tokens removed
+         */
+        Parser: {
+            /**
+             * Kind
+             * @default raw
+             * @enum {string}
+             */
+            kind: "raw" | "number" | "date" | "boolean" | "year" | "text";
+            /**
+             * Decimal
+             * @default .
+             * @enum {string}
+             */
+            decimal: "." | ",";
+            /** Format */
+            format?: string | null;
+            /**
+             * True Values
+             * @default []
+             */
+            true_values: string[];
+            /**
+             * False Values
+             * @default []
+             */
+            false_values: string[];
+        };
         /** Preview */
         Preview: {
             /**
@@ -482,6 +707,13 @@ export interface components {
         RenameRequest: {
             /** Name */
             name: string;
+        };
+        /** RoleOut */
+        RoleOut: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
         };
         /** SampleOut */
         SampleOut: {
@@ -976,6 +1208,188 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_columns_api_v1_datasets__dataset_id__columns_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ColumnOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_columns_api_v1_datasets__dataset_id__columns_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ColumnChangesRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ColumnOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    detect_columns_api_v1_datasets__dataset_id__columns_detect_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ColumnOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    conversion_preview_api_v1_datasets__dataset_id__columns_conversion_get: {
+        parameters: {
+            query: {
+                column: string;
+                type: "numeric_continuous" | "numeric_discrete" | "categorical_nominal" | "categorical_ordinal" | "boolean" | "datetime" | "text" | "identifier" | "ignored";
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_types_api_v1_datasets__dataset_id__columns_review_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_roles_api_v1_column_roles_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleOut"][];
                 };
             };
         };

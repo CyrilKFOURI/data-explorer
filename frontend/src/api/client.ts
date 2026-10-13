@@ -14,6 +14,12 @@ export type Sample = Schemas["SampleOut"];
 export type Upload = Schemas["UploadOut"];
 export type ColumnInfo = Schemas["ColumnInfo"];
 export type Head = Schemas["HeadOut"];
+export type Column = Schemas["ColumnOut"];
+/** Fields with a server default (like `reset`) are optional when sending a change. */
+export type ColumnChange = Partial<Omit<Schemas["ColumnChange"], "name">> & { name: string };
+export type AnalysisType = Column["type"];
+export type Role = Schemas["RoleOut"];
+export type Conversion = Schemas["ConversionOut"];
 
 export class ApiError extends Error {
   readonly status: number;
@@ -62,6 +68,18 @@ export const api = {
   openDataset: (id: string) => request<Dataset>("POST", `/datasets/${id}/open`),
   schema: (id: string) => request<ColumnInfo[]>("GET", `/datasets/${id}/schema`),
   head: (id: string, limit = 20) => request<Head>("GET", `/datasets/${id}/head?limit=${limit}`),
+
+  columns: (id: string) => request<Column[]>("GET", `/datasets/${id}/columns`),
+  updateColumns: (id: string, changes: ColumnChange[]) =>
+    request<Column[]>("PATCH", `/datasets/${id}/columns`, { changes }),
+  detectColumns: (id: string) => request<Column[]>("POST", `/datasets/${id}/columns/detect`),
+  conversion: (id: string, column: string, type: AnalysisType) =>
+    request<Conversion>(
+      "GET",
+      `/datasets/${id}/columns/conversion?column=${encodeURIComponent(column)}&type=${type}`,
+    ),
+  reviewTypes: (id: string) => request<Dataset>("POST", `/datasets/${id}/columns/review`),
+  roles: () => request<Role[]>("GET", "/column-roles"),
 
   job: (id: string) => request<Job>("GET", `/jobs/${id}`),
 

@@ -1,0 +1,72 @@
+import {
+  AlignLeft,
+  ArrowUpNarrowWide,
+  Calendar,
+  ChartColumn,
+  EyeOff,
+  Fingerprint,
+  Hash,
+  Tags,
+  ToggleLeft,
+  type LucideIcon,
+} from "lucide-react";
+
+import type { AnalysisType } from "../../api/client";
+import type { MessageKey } from "../../lib/i18n";
+
+type TypeMeta = {
+  label: MessageKey;
+  description: MessageKey;
+  icon: LucideIcon;
+  /** Text color utility bound to a type token (docs/UI_UX.md). */
+  tone: string;
+};
+
+export const TYPE_META: Record<AnalysisType, TypeMeta> = {
+  numeric_continuous: {
+    label: "type.numeric_continuous",
+    description: "type.numeric_continuous.hint",
+    icon: Hash,
+    tone: "text-type-numeric",
+  },
+  numeric_discrete: {
+    label: "type.numeric_discrete",
+    description: "type.numeric_discrete.hint",
+    icon: ChartColumn,
+    tone: "text-type-numeric",
+  },
+  categorical_nominal: {
+    label: "type.categorical_nominal",
+    description: "type.categorical_nominal.hint",
+    icon: Tags,
+    tone: "text-type-categorical",
+  },
+  categorical_ordinal: {
+    label: "type.categorical_ordinal",
+    description: "type.categorical_ordinal.hint",
+    icon: ArrowUpNarrowWide,
+    tone: "text-type-categorical",
+  },
+  boolean: {
+    label: "type.boolean",
+    description: "type.boolean.hint",
+    icon: ToggleLeft,
+    tone: "text-type-bool",
+  },
+  datetime: {
+    label: "type.datetime",
+    description: "type.datetime.hint",
+    icon: Calendar,
+    tone: "text-type-date",
+  },
+  text: { label: "type.text", description: "type.text.hint", icon: AlignLeft, tone: "text-type-text" },
+  identifier: {
+    label: "type.identifier",
+    description: "type.identifier.hint",
+    icon: Fingerprint,
+    tone: "text-type-id",
+  },
+  ignored: { label: "type.ignored", description: "type.ignored.hint", icon: EyeOff, tone: "text-ink-3" },
+};
+
+export const ANALYSIS_TYPES = Object.keys(TYPE_META) as AnalysisType[];

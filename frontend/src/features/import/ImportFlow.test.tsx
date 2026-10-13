@@ -2,6 +2,7 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { renderAt } from "../../test/render";
+import { column, roles } from "../../test/columns";
 import { dataset, health, mockApi } from "../../test/mockApi";
 
 const preview = {
@@ -42,6 +43,8 @@ describe("import flow", () => {
       "POST /datasets/d9/open": imported,
       "GET /datasets/d9/schema": [{ name: "customer_id", dtype: "VARCHAR" }],
       "GET /datasets/d9/head": { columns: ["customer_id"], rows: [["C00001"]] },
+      "GET /datasets/d9/columns": [column({ name: "customer_id" })],
+      "GET /column-roles": roles,
     });
     renderAt("/");
 
@@ -55,7 +58,8 @@ describe("import flow", () => {
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "traps" } });
     fireEvent.click(screen.getByRole("button", { name: "Import" }));
 
-    expect(await screen.findByRole("heading", { name: "traps" })).toBeInTheDocument();
+    // A fresh import opens on the Columns page to review the detected types.
+    expect(await screen.findByRole("heading", { name: "Columns" })).toBeInTheDocument();
     const request = calls.find((call) => call.key === "POST /datasets")?.body as {
       name: string;
       options: { columns: string[]; sample_pct: number };

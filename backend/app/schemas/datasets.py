@@ -36,6 +36,8 @@ class DatasetOut(BaseModel):
     created_at: str
     imported_at: str | None
     last_opened_at: str | None
+    types_version: int
+    types_reviewed_at: str | None
     source_state: Literal["ok", "changed", "missing"]
     job: JobOut | None = None
 

@@ -1,6 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { api, type Dataset, type ImportOptions, type SourceOptions } from "./client";
+import {
+  api,
+  type ColumnChange,
+  type Dataset,
+  type ImportOptions,
+  type SourceOptions,
+} from "./client";
 
 export const queryKeys = {
   health: ["health"] as const,
@@ -12,6 +18,8 @@ export const queryKeys = {
   preview: (path: string, options: SourceOptions) => ["preview", path, options] as const,
   browse: (path: string | null) => ["browse", path] as const,
   samples: ["samples"] as const,
+  columns: (id: string) => ["datasets", id, "columns"] as const,
+  roles: ["column-roles"] as const,
 };
 
 const isImporting = (datasets: Dataset[] | undefined) =>
@@ -31,6 +39,7 @@ export function useDatasets() {
     queryKey: queryKeys.datasets,
     queryFn: api.datasets,
     refetchInterval: (query) => (isImporting(query.state.data) ? 1_000 : false),
+    refetchIntervalInBackground: true,
   });
 }
 
@@ -60,6 +69,8 @@ export function useJob(id: string | null) {
       const status = query.state.data?.status;
       return status === "done" || status === "failed" ? false : 500;
     },
+    // Keep following an import when the user switches to another tab.
+    refetchIntervalInBackground: true,
   });
 }
 
@@ -130,6 +141,45 @@ export function useOpenDataset() {
     mutationFn: api.openDataset,
     onSuccess: (dataset) => {
       client.setQueryData(queryKeys.dataset(dataset.id), dataset);
+      void client.invalidateQueries({ queryKey: queryKeys.datasets, exact: true });
+    },
+  });
+}
+
+export function useColumns(id: string, enabled: boolean) {
+  return useQuery({ queryKey: queryKeys.columns(id), queryFn: () => api.columns(id), enabled });
+}
+
+export function useRoles() {
+  return useQuery({ queryKey: queryKeys.roles, queryFn: api.roles, staleTime: Infinity });
+}
+
+/** Column corrections; the server answers with all columns, written straight to the cache. */
+export function useUpdateColumns(id: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (changes: ColumnChange[]) => api.updateColumns(id, changes),
+    onSuccess: (columns) => {
+      client.setQueryData(queryKeys.columns(id), columns);
+      void client.invalidateQueries({ queryKey: queryKeys.dataset(id), exact: true });
+    },
+  });
+}
+
+export function useDetectColumns(id: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.detectColumns(id),
+    onSuccess: (columns) => client.setQueryData(queryKeys.columns(id), columns),
+  });
+}
+
+export function useReviewTypes(id: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.reviewTypes(id),
+    onSuccess: (dataset) => {
+      client.setQueryData(queryKeys.dataset(id), dataset);
       void client.invalidateQueries({ queryKey: queryKeys.datasets, exact: true });
     },
   });

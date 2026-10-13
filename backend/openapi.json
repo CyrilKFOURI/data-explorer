@@ -600,6 +600,291 @@
         }
       }
     },
+    "/api/v1/datasets/{dataset_id}/columns": {
+      "get": {
+        "tags": [
+          "columns"
+        ],
+        "summary": "List Columns",
+        "operationId": "list_columns_api_v1_datasets__dataset_id__columns_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ColumnOut"
+                  },
+                  "title": "Response List Columns Api V1 Datasets  Dataset Id  Columns Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "columns"
+        ],
+        "summary": "Update Columns",
+        "operationId": "update_columns_api_v1_datasets__dataset_id__columns_patch",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ColumnChangesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ColumnOut"
+                  },
+                  "title": "Response Update Columns Api V1 Datasets  Dataset Id  Columns Patch"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{dataset_id}/columns/detect": {
+      "post": {
+        "tags": [
+          "columns"
+        ],
+        "summary": "Detect Columns",
+        "operationId": "detect_columns_api_v1_datasets__dataset_id__columns_detect_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ColumnOut"
+                  },
+                  "title": "Response Detect Columns Api V1 Datasets  Dataset Id  Columns Detect Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{dataset_id}/columns/conversion": {
+      "get": {
+        "tags": [
+          "columns"
+        ],
+        "summary": "Conversion Preview",
+        "operationId": "conversion_preview_api_v1_datasets__dataset_id__columns_conversion_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "column",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Column"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "numeric_continuous",
+                "numeric_discrete",
+                "categorical_nominal",
+                "categorical_ordinal",
+                "boolean",
+                "datetime",
+                "text",
+                "identifier",
+                "ignored"
+              ],
+              "type": "string",
+              "title": "Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{dataset_id}/columns/review": {
+      "post": {
+        "tags": [
+          "columns"
+        ],
+        "summary": "Review Types",
+        "operationId": "review_types_api_v1_datasets__dataset_id__columns_review_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/column-roles": {
+      "get": {
+        "tags": [
+          "columns"
+        ],
+        "summary": "List Roles",
+        "operationId": "list_roles_api_v1_column_roles_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RoleOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Roles Api V1 Column Roles Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/modules/hello": {
       "get": {
         "tags": [
@@ -624,6 +909,99 @@
   },
   "components": {
     "schemas": {
+      "ColumnChange": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "numeric_continuous",
+                  "numeric_discrete",
+                  "categorical_nominal",
+                  "categorical_ordinal",
+                  "boolean",
+                  "datetime",
+                  "text",
+                  "identifier",
+                  "ignored"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "excluded": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Excluded"
+          },
+          "order": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order"
+          },
+          "reset": {
+            "type": "boolean",
+            "title": "Reset",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "ColumnChange",
+        "description": "A correction of one column. `None` fields are left unchanged."
+      },
+      "ColumnChangesRequest": {
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/ColumnChange"
+            },
+            "type": "array",
+            "title": "Changes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "changes"
+        ],
+        "title": "ColumnChangesRequest"
+      },
       "ColumnInfo": {
         "properties": {
           "name": {
@@ -641,6 +1019,231 @@
           "dtype"
         ],
         "title": "ColumnInfo"
+      },
+      "ColumnOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "position": {
+            "type": "integer",
+            "title": "Position"
+          },
+          "storage_dtype": {
+            "type": "string",
+            "title": "Storage Dtype"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "numeric_continuous",
+              "numeric_discrete",
+              "categorical_nominal",
+              "categorical_ordinal",
+              "boolean",
+              "datetime",
+              "text",
+              "identifier",
+              "ignored"
+            ],
+            "title": "Type"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "role_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Label"
+          },
+          "parser": {
+            "$ref": "#/components/schemas/Parser"
+          },
+          "order": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order"
+          },
+          "detected_type": {
+            "type": "string",
+            "enum": [
+              "numeric_continuous",
+              "numeric_discrete",
+              "categorical_nominal",
+              "categorical_ordinal",
+              "boolean",
+              "datetime",
+              "text",
+              "identifier",
+              "ignored"
+            ],
+            "title": "Detected Type"
+          },
+          "detected_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detected Role"
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ],
+            "title": "Confidence"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons"
+          },
+          "overridden": {
+            "type": "boolean",
+            "title": "Overridden"
+          },
+          "excluded": {
+            "type": "boolean",
+            "title": "Excluded"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ColumnSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "position",
+          "storage_dtype",
+          "type",
+          "role",
+          "role_label",
+          "parser",
+          "order",
+          "detected_type",
+          "detected_role",
+          "confidence",
+          "reasons",
+          "overridden",
+          "excluded",
+          "summary"
+        ],
+        "title": "ColumnOut"
+      },
+      "ColumnSummary": {
+        "properties": {
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "null_count": {
+            "type": "integer",
+            "title": "Null Count"
+          },
+          "invalid_count": {
+            "type": "integer",
+            "title": "Invalid Count"
+          },
+          "distinct_count": {
+            "type": "integer",
+            "title": "Distinct Count"
+          },
+          "examples": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Examples"
+          },
+          "histogram": {
+            "items": {
+              "$ref": "#/components/schemas/HistogramBar"
+            },
+            "type": "array",
+            "title": "Histogram"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rows",
+          "null_count",
+          "invalid_count",
+          "distinct_count",
+          "examples",
+          "histogram"
+        ],
+        "title": "ColumnSummary"
+      },
+      "ConversionOut": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "numeric_continuous",
+              "numeric_discrete",
+              "categorical_nominal",
+              "categorical_ordinal",
+              "boolean",
+              "datetime",
+              "text",
+              "identifier",
+              "ignored"
+            ],
+            "title": "Type"
+          },
+          "parser": {
+            "$ref": "#/components/schemas/Parser"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/ColumnSummary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "parser",
+          "summary"
+        ],
+        "title": "ConversionOut"
       },
       "CsvOptions": {
         "properties": {
@@ -788,6 +1391,21 @@
             ],
             "title": "Last Opened At"
           },
+          "types_version": {
+            "type": "integer",
+            "title": "Types Version"
+          },
+          "types_reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Types Reviewed At"
+          },
           "source_state": {
             "type": "string",
             "enum": [
@@ -824,6 +1442,8 @@
           "created_at",
           "imported_at",
           "last_opened_at",
+          "types_version",
+          "types_reviewed_at",
           "source_state"
         ],
         "title": "DatasetOut"
@@ -1000,6 +1620,24 @@
           "message"
         ],
         "title": "HelloOut"
+      },
+      "HistogramBar": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "count"
+        ],
+        "title": "HistogramBar"
       },
       "ImportOptions": {
         "properties": {
@@ -1246,6 +1884,62 @@
         ],
         "title": "Listing"
       },
+      "Parser": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "raw",
+              "number",
+              "date",
+              "boolean",
+              "year",
+              "text"
+            ],
+            "title": "Kind",
+            "default": "raw"
+          },
+          "decimal": {
+            "type": "string",
+            "enum": [
+              ".",
+              ","
+            ],
+            "title": "Decimal",
+            "default": "."
+          },
+          "format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Format"
+          },
+          "true_values": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "True Values",
+            "default": []
+          },
+          "false_values": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "False Values",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "Parser",
+        "description": "How to read a stored value in its analysis type, applied at query time.\n\n- raw: the stored value as is\n- number: text with a given decimal separator (thousands separators, %, currency stripped)\n- date: text with a strptime format\n- boolean: text mapped with true/false vocabularies (empty lists: cast the value)\n- year: integer year \u2192 date (January 1st)\n- text: the value as text, null tokens removed"
+      },
       "Preview": {
         "properties": {
           "kind": {
@@ -1398,6 +2092,24 @@
           "name"
         ],
         "title": "RenameRequest"
+      },
+      "RoleOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "RoleOut"
       },
       "SampleOut": {
         "properties": {

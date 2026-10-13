@@ -9,7 +9,7 @@ Roadmap en **sprints**, chacun composé de **tranches verticales** : chaque case
 
 ### Sprint 1 — Données et types
 - [x] 001-import — fichier ou dossier (CSV, Parquet, Excel) → aperçu → options → copie Parquet ; datasets récents ; réimport instantané si la source n'a pas changé ; upload + dossier monté `/data` ; jeux de démo dans `samples/`
-- [ ] 002-detection-types — moteur de règles + base de connaissances (YAML) + page Colonnes (revue, correction persistée, annulation) ; jeu de tests de détection
+- [x] 002-detection-types — moteur de règles + base de connaissances (TOML) + page Colonnes (revue, correction persistée, annulation) ; jeu de tests de détection
 
 ### Sprint 2 — Explorer
 - [ ] 003-vue-ensemble — bandeau de résumé + alertes qualité + grille 3 par ligne paginée ; règles d'affichage catégorielles (Top N, « Autres », plein écran)

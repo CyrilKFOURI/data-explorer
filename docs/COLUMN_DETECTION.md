@@ -49,32 +49,46 @@ Elle tourne sur un échantillon d'environ 10 000 lignes, puis est confirmée sur
    - Taux de conversion en nombre ≥ 95 % → numérique.
    - Motifs reconnus : e-mail, URL, téléphone, code postal, UUID.
 4. **Détecteurs sur le nom** (base de connaissances) : le nom est normalisé (minuscules, sans accents, `camelCase` et `snake_case` découpés en mots), puis comparé aux motifs FR et EN de chaque rôle.
-5. **Règles de sous-type** (seuils réglables dans les Paramètres) :
-   - 2 valeurs distinctes → **booléen**
-   - Entiers avec ≤ 20 valeurs distinctes (ou distinctes / lignes ≤ 5 %) → **numérique discret**
-   - Entiers entre 1900 et 2100, avec un nom qui évoque une année → **année** (temporel)
-   - Valeurs distinctes / lignes ≥ 95 % et nom qui évoque un identifiant (ou chaîne courte unique) → **identifiant**
-   - Texte avec longueur moyenne > 50 caractères ou forte cardinalité sans motif → **texte libre**
-   - Catégoriel dont les valeurs sont dans un ordre connu de la base (S < M < L, jan < fév…) → **ordinal**
-   - 1 seule valeur ou ≥ 95 % de nuls → **ignorée** (signalée, jamais supprimée)
-6. **Score et confiance** : chaque candidat cumule des points (valeurs + nom + règles). On retient le meilleur score, avec une confiance **haute / moyenne / faible** et la **liste des raisons**, affichée dans l'interface.
-7. **Correction par l'utilisateur** : enregistrée, prioritaire sur la détection, retrouvée à la réouverture du dataset, et annulable.
+5. **Règles ordonnées** (implémentées dans `backend/app/domain/typing/engine.py`, seuils en constantes en attendant la page Paramètres). La première règle qui s'applique décide :
+   - ≥ 95 % de vides ou une seule valeur → **ignorée** (signalée, jamais supprimée)
+   - Nom évoquant du texte libre (comment, description…) → **texte libre**
+   - Deux valeurs d'un même vocabulaire (oui/non, 0/1, true/false…) → **booléen**
+   - Nom évoquant un code postal ou un téléphone → **catégoriel**, gardé en texte (zéros initiaux)
+   - ≥ 95 % de valeurs lues comme des nombres → **numérique** ; entiers avec ≤ 20 valeurs distinctes → **discret**, sinon **continu** (un rôle comme âge, montant ou latitude impose continu)
+   - Entiers entre 1800 et 2100 avec un nom évoquant une année → **date** (rôle année)
+   - ≥ 95 % de valeurs lues comme des dates → **date** (si `jj/mm` et `mm/jj` marchent tous deux : confiance moyenne, raison « ambigu »)
+   - Valeurs dans un ordre connu (low < medium < high, S < M < L, mois, jours…) → **ordinal**, avec l'ordre
+   - ≥ 95 % d'e-mails, d'URL ou d'UUID → **identifiant** si les valeurs sont uniques, sinon catégoriel
+   - Nom évoquant un identifiant : ≥ 90 % de valeurs uniques → **identifiant** ; sinon référence partagée (ex. `store_id`) → **catégoriel**
+   - Valeurs longues (moyenne > 50 caractères, ou majoritairement des phrases uniques) → **texte libre**
+   - ≥ 95 % de valeurs uniques, courtes et sans espaces → **identifiant**
+   - Sinon → **catégoriel**
+6. **Confiance et raisons** : chaque règle fixe une confiance **haute / moyenne / faible** et produit des raisons lisibles (« 100 % des valeurs lues comme des nombres · virgule décimale · le nom évoque un montant »), affichées dans l'interface.
+7. **Correction par l'utilisateur** : enregistrée, prioritaire sur la détection, retrouvée à la réouverture du dataset, conservée si on relance la détection, et annulable.
+
+## Parseurs : la donnée n'est jamais modifiée
+
+La copie Parquet garde les valeurs telles qu'importées. Chaque colonne a un **parseur** (`raw`, `number` avec séparateur décimal, `date` avec format, `boolean` avec vocabulaire, `year`, `text`), traduit en expression SQL DuckDB (`backend/app/domain/typing/parsers.py`) et appliqué à la lecture. La détection évalue les candidats avec ce même SQL : détection et conversion ne peuvent pas diverger. Quand l'utilisateur change de type, le meilleur parseur mesuré pendant la détection est réutilisé. Les valeurs présentes mais illisibles dans le type choisi sont comptées et signalées.
 
 ## Base de connaissances
 
-Des fichiers YAML versionnés dans `backend/app/domain/typing/knowledge_base/`, un fichier par famille de rôles. Ajouter un rôle = ajouter une entrée, sans toucher au code.
+Des fichiers **TOML** (lus avec `tomllib`, sans dépendance) dans `backend/app/domain/typing/knowledge_base/` :
 
-```yaml
-# knowledge_base/personne.yaml
-- role: age
-  noms: [age, âge, age_client, customer_age, years_old]   # motifs, après normalisation
-  valeurs: { type: entier, min: 0, max: 120 }
-  type_analyse: numerique_continu     # ou numerique_discret si peu de valeurs
-  affichage: { unite: "ans" }
-  visuels_preferes: [histogramme, boite]
-  explication: "Le nom évoque un âge et les valeurs sont des entiers entre 0 et 120."
+- `roles.toml` : les rôles (noms FR/EN, type imposé, plage plausible) ;
+- `vocabulary.toml` : valeurs nulles, paires booléennes, ordres connus.
+
+Ajouter un rôle = ajouter une entrée, sans toucher au code. En cas d'égalité, le nom le plus long l'emporte, puis celui qui finit le nom de colonne (dans `long_description`, c'est « description » qui compte, pas « long »).
+
+```toml
+[[role]]
+id = "age"
+label = "Age"
+names = ["age", "ages", "years old", "age years"]
+type = "numeric_continuous"
+min = 0
+max = 130
 ```
 
 ## Tests
 
-Un jeu de fichiers de test (`backend/tests/fixtures/typing/`) avec, pour chaque colonne, le type attendu. Un taux de bonne détection se mesure à chaque modification des règles. Un piège corrigé devient un nouveau cas de test.
+`backend/tests/unit/test_typing.py` contient le tableau des réponses attendues pour `samples/typing_traps.csv` (21 colonnes pièges) et `samples/sales_timeseries.csv` : 100 % de bonnes réponses exigées. Un piège corrigé devient un nouveau cas de test.

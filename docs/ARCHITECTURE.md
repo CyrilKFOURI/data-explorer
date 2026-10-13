@@ -29,10 +29,11 @@ New App/
 │   │   ├── domain/               ← LOGIQUE PURE : ni FastAPI ni HTTP, testable seule
 │   │   │   ├── ingestion/        ← sources, détection CSV, lecture DuckDB, aperçu, import Parquet, navigation
 │   │   │   ├── datasets/         ← dépôt SQLite + service (cycle de vie des datasets, jobs d'import)
+│   │   │   ├── columns/          ← détections + corrections persistées, résumés par colonne
 │   │   │   ├── typing/           ← moteur de détection
 │   │   │   │   ├── engine.py
 │   │   │   │   ├── detectors/    ← un détecteur par fichier (dates, nombres, motifs, noms…)
-│   │   │   │   └── knowledge_base/  ← *.yaml des rôles sémantiques
+│   │   │   │   └── knowledge_base/  ← roles.toml, vocabulary.toml (rôles, valeurs nulles, booléens, ordres)
 │   │   │   ├── profiling/        ← résumé du dataset, stats univariées
 │   │   │   ├── stats/            ← tests statistiques, un fichier par famille + registry.py
 │   │   │   │   ├── normality.py · distribution_fit.py · outliers.py
@@ -99,6 +100,6 @@ Backend  :  api ─▶ domain ─▶ core                       modules ─▶ (
 | Un module (ex. séries temporelles) | `backend/app/modules/<nom>/` (router, service, schemas) + l'enregistrer dans `modules/registry.py` ; `frontend/src/modules/<nom>/manifest.ts` (id, libellé, icône, routes, types de colonnes requis) + l'enregistrer dans `modules/registry.ts`. La barre latérale et les routes apparaissent seules. |
 | Un visuel | `frontend/src/charts/builders/<visuel>.ts` (+ préparation dans `backend/app/domain/charts/` si besoin), voir [VISUALS.md](VISUALS.md) |
 | Un test statistique | Une fonction dans `domain/stats/<famille>.py` enregistrée dans `stats/registry.py` (nom, types d'entrée, résultat + phrase d'explication). L'interface le liste automatiquement. |
-| Un rôle de colonne | Une entrée YAML dans `domain/typing/knowledge_base/` + un cas de test, voir [COLUMN_DETECTION.md](COLUMN_DETECTION.md) |
+| Un rôle de colonne | Une entrée TOML dans `domain/typing/knowledge_base/roles.toml` + un cas de test, voir [COLUMN_DETECTION.md](COLUMN_DETECTION.md) |
 | Une table SQLite | Une migration numérotée dans `core/migrations/` + mise à jour de [BACKEND_SCHEMA.md](BACKEND_SCHEMA.md) |
 | Modifier une fonctionnalité existante | Mettre à jour d'abord sa doc (`docs/pages/…`), ensuite le code et les tests |
