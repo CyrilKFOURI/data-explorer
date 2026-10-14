@@ -6,17 +6,14 @@ from typing import Literal
 import numpy as np
 from scipy import stats
 
+from app.domain.correlations.evidence import SIGNIFICANT
 from app.domain.correlations.matrix import ROLES, Loaded, Matrix, MatrixColumn, Pair
 
 SKEWED = 2.0
 DOMINANT = 0.7
 MISSING = 0.2
-STRONG = 0.7
 REDUNDANT = 0.95
-GROUP_EFFECT = 0.4
-ASSOCIATED = 0.3
-MAX_INSIGHTS = 30
-SIGNIFICANT = 0.05
+MAX_INSIGHTS = 30  # column insights, and links per level of evidence
 
 Kind = Literal[
     "skewed", "imbalanced", "missing", "correlated", "redundant", "group_difference", "associated"
@@ -32,13 +29,14 @@ class InsightLink:
 
 @dataclass
 class Insight:
-    id: str  # stable across recomputations, to remember dismissals
+    id: str  # stable across recomputations
     kind: Kind
     severity: Literal["warning", "info"]
     text: str
     columns: list[str]
     link: InsightLink
     score: float  # importance, for sorting
+    evidence: Literal["strong", "moderate", "weak"] | None = None  # links only
 
 
 def _pct(share: float) -> str:
@@ -113,16 +111,56 @@ def column_insights(
     return insights
 
 
+# Wording per level; "chance" = notable effect but the adjusted p-value does not rule out luck.
+CORRELATED = {
+    "strong": ("{b} rises strongly with {a}", "{b} falls strongly as {a} rises"),
+    "moderate": ("{b} tends to rise with {a}", "{b} tends to fall as {a} rises"),
+    "small": ("{b} rises slightly with {a}", "{b} falls slightly as {a} rises"),
+    "chance": (
+        "{b} may rise with {a}, but this could be chance",
+        "{b} may fall as {a} rises, but this could be chance",
+    ),
+}
+GROUPS = {
+    "strong": "{num} differs strongly across the groups of {groups}",
+    "moderate": "{num} differs clearly across the groups of {groups}",
+    "small": "{num} differs slightly across the groups of {groups}",
+    "chance": "{num} seems to differ across the groups of {groups}, but this could be chance",
+}
+ASSOCIATIONS = {
+    "strong": "{a} and {b} are strongly associated",
+    "moderate": "{a} and {b} are associated",
+    "small": "{a} and {b} are slightly associated",
+    "chance": "{a} and {b} seem associated, but this could be chance",
+}
+LEVEL_SCORE = {"strong": 3.0, "moderate": 2.0, "weak": 1.0}
+
+
+def _wording(pair: Pair) -> str:
+    if pair.evidence != "weak":
+        return pair.evidence
+    return "chance" if pair.q_value is None or pair.q_value >= SIGNIFICANT else "small"
+
+
+def _adj(q: float | None) -> str:
+    if q is None:
+        return ""
+    return "adj. p < 0.001" if q < 0.001 else f"adj. p = {q:.3f}"
+
+
 def pair_insight(pair: Pair, roles: dict[str, str]) -> Insight | None:
-    a, b, value = pair.a, pair.b, pair.value
-    # A strong-looking value on few rows per group can be chance: only significant links count.
-    if pair.p_value is None or pair.p_value >= SIGNIFICANT:
+    """One sentence per link worth a look, worded by its level of evidence."""
+    if pair.evidence == "none":
         return None
+    a, b, value, level = pair.a, pair.b, pair.value, pair.evidence
     link = InsightLink("compare", a, b)
     key = f"{a}|{b}"
+    reliable = pair.q_value is not None and pair.q_value < SIGNIFICANT
+    score = LEVEL_SCORE[level] + abs(value)
+    wording = _wording(pair)
     if pair.metric in ("pearson", "spearman"):
         symbol = "r" if pair.metric == "pearson" else "ρ"
-        if abs(value) > REDUNDANT:
+        if abs(value) > REDUNDANT and reliable:
             return Insight(
                 f"redundant:{key}",
                 "redundant",
@@ -131,33 +169,35 @@ def pair_insight(pair: Pair, roles: dict[str, str]) -> Insight | None:
                 "keep one of them in models.",
                 [a, b],
                 link,
-                2 + abs(value),
+                4 + abs(value),
+                level,
             )
-        if abs(value) >= STRONG:
-            direction = "rises with" if value > 0 else "falls as"
-            return Insight(
-                f"correlated:{key}",
-                "correlated",
-                "info",
-                f"{b} {direction} {a} ({symbol} = {value:.2f}, {_p(pair.p_value)}).",
-                [a, b],
-                link,
-                1 + abs(value),
-            )
-        return None
-    if pair.metric == "eta" and value >= GROUP_EFFECT:
+        rising, falling = CORRELATED[wording]
+        sentence = (rising if value > 0 else falling).format(a=a, b=b)
+        return Insight(
+            f"correlated:{key}",
+            "correlated",
+            "info",
+            f"{sentence} ({symbol} = {value:.2f}, {_adj(pair.q_value)}).",
+            [a, b],
+            link,
+            score,
+            level,
+        )
+    if pair.metric == "eta":
         numeric, groups = (a, b) if roles.get(a) == "num" else (b, a)
+        sentence = GROUPS[wording].format(num=numeric, groups=groups)
         return Insight(
             f"group_difference:{key}",
             "group_difference",
             "info",
-            f"{numeric} differs strongly across the groups of {groups} "
-            f"(η = {value:.2f}, {_p(pair.p_value)}).",
+            f"{sentence} (η = {value:.2f}, {_adj(pair.q_value)}).",
             [a, b],
             InsightLink("compare", groups, numeric),
-            1 + value,
+            score,
+            level,
         )
-    if pair.metric == "cramers_v" and value > REDUNDANT:
+    if value > REDUNDANT and reliable:
         return Insight(
             f"redundant:{key}",
             "redundant",
@@ -166,19 +206,20 @@ def pair_insight(pair: Pair, roles: dict[str, str]) -> Insight | None:
             "one probably determines the other.",
             [a, b],
             link,
-            2 + value,
+            4 + value,
+            level,
         )
-    if pair.metric == "cramers_v" and value >= ASSOCIATED:
-        return Insight(
-            f"associated:{key}",
-            "associated",
-            "info",
-            f"{a} and {b} are associated (Cramér's V = {value:.2f}, {_p(pair.p_value)}).",
-            [a, b],
-            link,
-            1 + value,
-        )
-    return None
+    sentence = ASSOCIATIONS[wording].format(a=a, b=b)
+    return Insight(
+        f"associated:{key}",
+        "associated",
+        "info",
+        f"{sentence} (Cramér's V = {value:.2f}, {_adj(pair.q_value)}).",
+        [a, b],
+        link,
+        score,
+        level,
+    )
 
 
 def top_shares(loaded: Loaded) -> dict[str, tuple[str, float]]:
@@ -193,8 +234,15 @@ def top_shares(loaded: Loaded) -> dict[str, tuple[str, float]]:
 
 
 def insights_for(columns: list[MatrixColumn], matrix: Matrix, loaded: Loaded) -> list[Insight]:
-    found = column_insights(loaded, columns, top_shares(loaded))
+    """Column insights, then links: every level is sent, the page chooses which to show."""
+    found = sorted(column_insights(loaded, columns, top_shares(loaded)), key=lambda i: -i.score)
+    found = found[:MAX_INSIGHTS]
     roles = {column.name: column.role for column in matrix.columns}
-    found += [insight for pair in matrix.pairs if (insight := pair_insight(pair, roles))]
+    links = sorted(
+        (insight for pair in matrix.pairs if (insight := pair_insight(pair, roles))),
+        key=lambda insight: -insight.score,
+    )
+    for level in LEVEL_SCORE:
+        found += [insight for insight in links if insight.evidence == level][:MAX_INSIGHTS]
     found.sort(key=lambda insight: -insight.score)
-    return found[:MAX_INSIGHTS]
+    return found

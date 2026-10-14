@@ -154,6 +154,11 @@ def test_insights(connection: duckdb.DuckDBPyConnection) -> None:
     assert any(kind == "associated" for kind, _ in kinds)
     assert found == sorted(found, key=lambda insight: -insight.score)
     assert len({i.id for i in found}) == len(found)
+    assert all(i.evidence for i in found if i.kind in ("correlated", "group_difference"))
+    assert all(i.evidence is None for i in found if i.kind in ("missing", "skewed"))
+    assert all(
+        pair.q_value is not None and pair.q_value >= (pair.p_value or 0) for pair in matrix.pairs
+    )
     redundant = next(i for i in found if i.kind == "redundant")
     assert redundant.link.page == "compare" and redundant.link.y == "twin"
 
@@ -193,14 +198,64 @@ def test_near_unique_categories_are_left_out(connection: duckdb.DuckDBPyConnecti
     assert "identifier" in matrix.excluded[0].reason
 
 
-def test_links_must_be_significant() -> None:
-    from app.domain.correlations.insights import pair_insight
+def graded(a: str, b: str, metric, value: float, p: float):
+    from app.domain.correlations.evidence import effect_size, grade
     from app.domain.correlations.matrix import Pair
 
-    roles = {"price": "num", "city": "cat"}
-    chance = Pair("price", "city", "eta", 0.57, 0.426, 600)  # many small groups
-    real = Pair("price", "city", "eta", 0.57, 0.0001, 600)
+    return Pair(a, b, metric, value, p, 600, p, grade(effect_size(metric, value), p))
 
-    assert pair_insight(chance, roles) is None
-    insight = pair_insight(real, roles)
-    assert insight is not None and insight.text.startswith("price differs strongly across")
+
+def test_effect_sizes_follow_cohen() -> None:
+    from app.domain.correlations.evidence import effect_size
+
+    assert [effect_size("pearson", v) for v in (0.05, -0.2, 0.35, -0.6)] == [
+        "negligible",
+        "small",
+        "medium",
+        "large",
+    ]
+    assert effect_size("eta", 0.25) == "medium" and effect_size("eta", 0.37) == "large"
+
+
+def test_evidence_crosses_size_and_adjusted_p() -> None:
+    from app.domain.correlations.evidence import grade
+
+    assert grade("large", 0.0001) == "strong"
+    assert grade("large", 0.01) == "moderate"  # big, real, but not beyond doubt
+    assert grade("medium", 0.01) == "moderate"
+    assert grade("medium", 0.4) == "weak"  # notable, could be chance
+    assert grade("small", 0.001) == "weak"  # real but minor
+    assert grade("small", 0.4) == "none"
+    assert grade("negligible", 0.0) == "none"
+    assert grade("large", None) == "none"
+
+
+def test_p_values_are_adjusted_for_testing_every_pair() -> None:
+    from app.domain.correlations.evidence import adjusted
+
+    q = adjusted([0.01, 0.04, None, 0.03, 0.5])
+
+    assert q[2] is None
+    assert q[0] == pytest.approx(0.04)  # 0.01 * 4 tests / rank 1
+    assert q[1] == q[3] == pytest.approx(0.04 * 4 / 3)  # monotone: 0.03 shares 0.04's bound
+    assert q[4] == pytest.approx(0.5)
+
+
+def test_link_wording_follows_the_evidence() -> None:
+    from app.domain.correlations.insights import pair_insight
+
+    roles = {"price": "num", "city": "cat", "x": "num", "y": "num"}
+    chance = pair_insight(graded("price", "city", "eta", 0.57, 0.426), roles)  # many small groups
+    real = pair_insight(graded("price", "city", "eta", 0.57, 0.0001), roles)
+    small = pair_insight(graded("x", "y", "pearson", -0.15, 0.001), roles)
+
+    assert chance is not None and chance.evidence == "weak"
+    assert chance.text.startswith("price seems to differ across the groups of city")
+    assert "could be chance" in chance.text and "adj. p = 0.426" in chance.text
+    assert real is not None and real.evidence == "strong"
+    assert real.text.startswith("price differs strongly across the groups of city")
+    assert small is not None and small.evidence == "weak"
+    assert small.text.startswith("y falls slightly as x rises")
+    assert pair_insight(graded("x", "y", "pearson", 0.02, 0.9), roles) is None
+    redundant = pair_insight(graded("x", "y", "pearson", 0.99, 0.0001), roles)
+    assert redundant is not None and redundant.kind == "redundant"

@@ -48,8 +48,9 @@ const correlations = {
     excluded: [{ name: "date", reason: "Dates: compare them with a numeric or category on the Compare page." }],
     truncated: 0,
     pairs: [
-      { a: "units", b: "revenue", metric: "pearson", value: 0.997, p_value: 0.0001, n: 100 },
-      { a: "units", b: "store", metric: "eta", value: 0.7, p_value: 0.0001, n: 100 },
+      { a: "units", b: "revenue", metric: "pearson", value: 0.997, p_value: 0.0001, n: 100, q_value: 0.0002, evidence: "strong" },
+      { a: "units", b: "store", metric: "eta", value: 0.7, p_value: 0.0001, n: 100, q_value: 0.0002, evidence: "strong" },
+      { a: "revenue", b: "store", metric: "eta", value: 0.3, p_value: 0.2, n: 100, q_value: 0.2, evidence: "weak" },
     ],
   },
   insights: [
@@ -60,7 +61,18 @@ const correlations = {
       text: "units and revenue are almost identical (r = 0.997): probably redundant, keep one of them in models.",
       columns: ["units", "revenue"],
       link: { page: "compare", x: "units", y: "revenue" },
-      score: 2.9,
+      score: 4.9,
+      evidence: "strong",
+    },
+    {
+      id: "group_difference:revenue|store",
+      kind: "group_difference",
+      severity: "info",
+      text: "revenue seems to differ across the groups of store, but this could be chance (η = 0.30, adj. p = 0.200).",
+      columns: ["revenue", "store"],
+      link: { page: "compare", x: "store", y: "revenue" },
+      score: 1.3,
+      evidence: "weak",
     },
     {
       id: "skewed:revenue",
@@ -118,9 +130,29 @@ describe("Correlations page", () => {
 
     expect(await screen.findByRole("img", { name: "Association matrix" })).toBeInTheDocument();
     const table = screen.getByRole("table");
-    expect(within(table).getAllByRole("row")).toHaveLength(3);
+    expect(within(table).getAllByRole("row")).toHaveLength(4);
+    expect(within(within(table).getAllByRole("row")[3] as HTMLElement).getByText("Weak")).toBeInTheDocument();
     expect(within(table).getByText("0.997")).toBeInTheDocument();
     expect(screen.getByText("Columns left out (1)")).toBeInTheDocument();
+  });
+
+  it("shows links by level of evidence and remembers the choice", async () => {
+    setup();
+    renderAt("/d/d1/correlations");
+
+    await screen.findByText(/almost identical/);
+    expect(screen.queryByText(/could be chance/)).not.toBeInTheDocument();
+    expect(screen.getByText(/1 weaker links hidden/)).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "+ Moderate · 1" })).toHaveAttribute("aria-checked", "true");
+
+    fireEvent.click(screen.getByRole("radio", { name: "+ Weak · 2" }));
+    const weak = (await screen.findByText(/could be chance/)).closest("li") as HTMLElement;
+    expect(within(weak).getByText("Weak")).toBeInTheDocument();
+    expect(screen.getByText(/strongly skewed/)).toBeInTheDocument(); // distributions are never filtered
+    expect(localStorage.getItem("de.insights.evidence")).toBe('"weak"');
+
+    fireEvent.click(screen.getByRole("radio", { name: "Strong · 1" }));
+    expect(screen.queryByText(/could be chance/)).not.toBeInTheDocument();
   });
 
   it("focuses on a variable and switches method", async () => {

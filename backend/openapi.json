@@ -4158,6 +4158,22 @@
           "score": {
             "type": "number",
             "title": "Score"
+          },
+          "evidence": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "strong",
+                  "moderate",
+                  "weak"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence"
           }
         },
         "type": "object",
@@ -4871,6 +4887,28 @@
           "n": {
             "type": "integer",
             "title": "N"
+          },
+          "q_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q Value"
+          },
+          "evidence": {
+            "type": "string",
+            "enum": [
+              "strong",
+              "moderate",
+              "weak",
+              "none"
+            ],
+            "title": "Evidence",
+            "default": "none"
           }
         },
         "type": "object",

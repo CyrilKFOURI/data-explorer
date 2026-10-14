@@ -4,7 +4,9 @@ import type { ReactNode } from "react";
 
 import type { AnalysisType, Insight } from "../../api/client";
 import { t, type MessageKey } from "../../lib/i18n";
+import { SegmentedControl } from "../../ui/SegmentedControl";
 import { TYPE_META } from "../columns/columnTypes";
+import { EvidenceBadge, isShown, type ShownLevels, useShownLevels } from "./evidence";
 
 type Group = { id: string; title: MessageKey; icon: LucideIcon; kinds: Insight["kind"][] };
 
@@ -41,15 +43,37 @@ type InsightsListProps = {
 
 /** Insights grouped by theme; each sentence links to the chart that backs it. */
 export function InsightsList({ datasetId, insights, typeOf }: InsightsListProps) {
-  const groups = GROUPS.map((group) => ({ ...group, items: insights.filter((i) => group.kinds.includes(i.kind)) })).filter(
+  const [shown, setShown] = useShownLevels();
+  const links = insights.filter((i) => i.evidence);
+  const count = (level: ShownLevels) => links.filter((i) => i.evidence && isShown(i.evidence, level)).length;
+  const visible = insights.filter((i) => !i.evidence || isShown(i.evidence, shown));
+  const hidden = insights.length - visible.length;
+  const groups = GROUPS.map((group) => ({ ...group, items: visible.filter((i) => group.kinds.includes(i.kind)) })).filter(
     (group) => group.items.length,
   );
 
   return (
     <section aria-label={t("insights.title")} className="space-y-2.5">
-      <div className="flex items-baseline gap-2">
-        <h2 className="text-sm font-semibold">{t("insights.title")}</h2>
-        <span className="text-xs text-ink-3 tabular-nums">{insights.length}</span>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <div className="flex items-baseline gap-2">
+          <h2 className="text-sm font-semibold">{t("insights.title")}</h2>
+          <span className="text-xs text-ink-3 tabular-nums">{visible.length}</span>
+        </div>
+        {links.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+            <span className="text-xs text-ink-3">{t("evidence.show")}</span>
+            <SegmentedControl
+              label={t("evidence.showLabel")}
+              value={shown}
+              options={[
+                { value: "strong", label: t("evidence.showStrong", { count: String(count("strong")) }) },
+                { value: "moderate", label: t("evidence.showModerate", { count: String(count("moderate")) }) },
+                { value: "weak", label: t("evidence.showAll", { count: String(count("weak")) }) },
+              ]}
+              onChange={setShown}
+            />
+          </div>
+        )}
       </div>
       {groups.length === 0 ? (
         <p className="rounded-lg border border-line bg-surface-1 px-4 py-3 text-ink-2">{t("insights.none")}</p>
@@ -74,6 +98,11 @@ export function InsightsList({ datasetId, insights, typeOf }: InsightsListProps)
                       <p className="min-w-0 flex-1 text-[13px] leading-relaxed text-ink-1">
                         {highlight(insight.text, insight.columns, typeOf)}
                       </p>
+                      {insight.evidence && (
+                        <span className="mt-0.5">
+                          <EvidenceBadge level={insight.evidence} />
+                        </span>
+                      )}
                       <InsightLink datasetId={datasetId} insight={insight} />
                     </li>
                   ))}
@@ -82,6 +111,14 @@ export function InsightsList({ datasetId, insights, typeOf }: InsightsListProps)
             );
           })}
         </div>
+      )}
+      {hidden > 0 && (
+        <p className="text-xs text-ink-3">
+          {t("evidence.hidden", { count: String(hidden) })}{" "}
+          <button type="button" className="text-ink-2 underline-offset-2 hover:text-accent hover:underline" onClick={() => setShown("weak")}>
+            {t("evidence.showEverything")}
+          </button>
+        </p>
       )}
     </section>
   );

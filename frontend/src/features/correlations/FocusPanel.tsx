@@ -7,6 +7,7 @@ import { formatCount } from "../../lib/format";
 import { t } from "../../lib/i18n";
 import { Select } from "../../ui/fields";
 import { TYPE_META } from "../columns/columnTypes";
+import { EvidenceBadge, evidenceRank, type Evidence } from "./evidence";
 import { METRIC_LABELS } from "./figures";
 
 const SHOWN = 15;
@@ -22,11 +23,11 @@ type FocusPanelProps = {
 /** Pick one variable: the others ranked by how strongly they relate to it. */
 export function FocusPanel({ datasetId, matrix, focus, onFocus, typeOf }: FocusPanelProps) {
   const index = matrix.columns.findIndex((c) => c.name === focus);
-  const pValues = useMemo(() => {
-    const map = new Map<string, number | null>();
+  const levels = useMemo(() => {
+    const map = new Map<string, Evidence>();
     for (const pair of matrix.pairs) {
-      if (pair.a === focus) map.set(pair.b, pair.p_value);
-      if (pair.b === focus) map.set(pair.a, pair.p_value);
+      if (pair.a === focus) map.set(pair.b, pair.evidence);
+      if (pair.b === focus) map.set(pair.a, pair.evidence);
     }
     return map;
   }, [matrix.pairs, focus]);
@@ -38,11 +39,12 @@ export function FocusPanel({ datasetId, matrix, focus, onFocus, typeOf }: FocusP
         value: matrix.values[index]?.[j] ?? null,
         metric: matrix.metrics[index]?.[j] ?? "",
         n: matrix.n[index]?.[j] ?? 0,
+        evidence: levels.get(column.name) ?? "none",
       }))
       .filter((item, j) => j !== index && item.value !== null)
       .map((item) => ({ ...item, value: item.value as number }))
-      .sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
-  }, [matrix, index]);
+      .sort((a, b) => evidenceRank(b.evidence) - evidenceRank(a.evidence) || Math.abs(b.value) - Math.abs(a.value));
+  }, [matrix, index, levels]);
 
   return (
     <section className="rounded-lg border border-line bg-surface-1">
@@ -84,12 +86,10 @@ export function FocusPanel({ datasetId, matrix, focus, onFocus, typeOf }: FocusP
             const type = typeOf(item.name);
             const signed = item.metric === "pearson" || item.metric === "spearman";
             const strength = Math.min(Math.abs(item.value), 1);
-            const p = pValues.get(item.name) ?? null;
-            const significant = p !== null && p < 0.05;
             return (
               <li
                 key={item.name}
-                className={`grid grid-cols-[1.5rem_minmax(0,12rem)_minmax(0,1fr)_5rem_auto] items-center gap-3 px-4 py-2 ${significant ? "" : "opacity-55"}`}
+                className={`grid grid-cols-[1.5rem_minmax(0,12rem)_minmax(0,1fr)_3.5rem_5.5rem_auto] items-center gap-3 px-4 py-2 ${item.evidence === "none" ? "opacity-55" : ""}`}
               >
                 <span className="text-xs text-ink-3 tabular-nums">{rank + 1}</span>
                 <span className={`truncate font-mono text-[13px] font-medium ${type ? TYPE_META[type].tone : "text-ink-1"}`} title={item.name}>
@@ -105,9 +105,9 @@ export function FocusPanel({ datasetId, matrix, focus, onFocus, typeOf }: FocusP
                   <span className="hidden w-28 truncate text-xs text-ink-3 sm:inline">{METRIC_LABELS[item.metric]}</span>
                 </div>
                 <span className="text-right text-[13px] text-ink-1 tabular-nums" title={`n = ${formatCount(item.n)}`}>
-                  {!significant && <span className="mr-1.5 text-[11px] text-ink-3">n.s.</span>}
                   {item.value.toFixed(2)}
                 </span>
+                <EvidenceBadge level={item.evidence} />
                 <Link
                   to="/d/$datasetId/compare"
                   params={{ datasetId }}

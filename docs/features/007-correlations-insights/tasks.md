@@ -14,6 +14,12 @@
 - [x] Insights : regroupés par thème, noms de variables colorés par type, « View » ; masquage retiré (peu utile) ; liens entre variables seulement si p < 0,05
 - [x] Tests : insights (liens, masquage mémorisé), matrice, paires, cible, méthode (64 tests frontend)
 
+## Niveau de preuve (retour utilisateur : moins d'insights depuis le filtre p < 0,05)
+- [x] `domain/correlations/evidence.py` : taille d'effet de Cohen, Benjamini-Hochberg, niveau ; porté par chaque paire (`q_value`, `evidence`)
+- [x] Insights de lien selon le niveau, libellés adaptés, plafond par niveau ; tests (hasard → faible, réel → fort, petit → faible)
+- [x] Front : sélecteur Show (mémorisé, comptes), pastilles sur insights, paires et focus ; tests
+- [x] Docs, client typé, vérification navigateur (`sales_timeseries` : 3 forts, 2 faibles ; `typing_traps` : 1 fort, 1 faible)
+
 ## Vérification
 - [x] Navigateur : `typing_traps` (country/city redondants, price_eur asymétrique) et `sales_timeseries` (units ≈ revenue, différences par magasin, promo déséquilibrée), cible revenue
 - [ ] Clic sur une case → Compare vérifié à l'œil (couvert par le code du clic Plotly déjà testé en 005)

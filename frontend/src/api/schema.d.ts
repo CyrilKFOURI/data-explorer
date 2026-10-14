@@ -1182,6 +1182,8 @@ export interface components {
             link: components["schemas"]["InsightLink"];
             /** Score */
             score: number;
+            /** Evidence */
+            evidence?: ("strong" | "moderate" | "weak") | null;
         };
         /** InsightLink */
         InsightLink: {
@@ -1409,6 +1411,14 @@ export interface components {
             p_value: number | null;
             /** N */
             n: number;
+            /** Q Value */
+            q_value?: number | null;
+            /**
+             * Evidence
+             * @default none
+             * @enum {string}
+             */
+            evidence: "strong" | "moderate" | "weak" | "none";
         };
         /**
          * Parser

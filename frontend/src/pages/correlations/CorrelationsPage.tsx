@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import type { AnalysisType, AssociationMatrix, CorrelationMethod } from "../../api/client";
 import { useColumns, useCorrelations, useDataset } from "../../api/hooks";
 import { Plot, type PointClick } from "../../charts/Plot";
+import { EvidenceBadge, evidenceRank } from "../../features/correlations/evidence";
 import { FocusPanel } from "../../features/correlations/FocusPanel";
 import { matrixFigure, METRIC_LABELS } from "../../features/correlations/figures";
 import { TYPE_META } from "../../features/columns/columnTypes";
@@ -195,9 +196,9 @@ function StrongestPairs({
   matrix: AssociationMatrix;
   typeOf: (name: string) => AnalysisType | undefined;
 }) {
-  // Significant links first: a strong-looking value on few rows per group can be chance.
+  // Best evidence first: a strong-looking value on few rows per group can be chance.
   const pairs = [...matrix.pairs]
-    .sort((a, b) => Number(isSignificant(b.p_value)) - Number(isSignificant(a.p_value)) || Math.abs(b.value) - Math.abs(a.value))
+    .sort((a, b) => evidenceRank(b.evidence) - evidenceRank(a.evidence) || Math.abs(b.value) - Math.abs(a.value))
     .slice(0, PAIR_ROWS);
   const tone = (name: string) => {
     const type = typeOf(name);
@@ -217,23 +218,25 @@ function StrongestPairs({
               <th scope="col" className="px-3 py-1.5 font-normal">B</th>
               <th scope="col" className="px-3 py-1.5 font-normal">{t("correlations.metric")}</th>
               <th scope="col" className="px-3 py-1.5 text-right font-normal">{t("correlations.value")}</th>
-              <th scope="col" className="px-3 py-1.5 text-right font-normal">p</th>
+              <th scope="col" className="px-3 py-1.5 text-right font-normal">adj. p</th>
+              <th scope="col" className="px-3 py-1.5 font-normal">{t("evidence.title")}</th>
               <th scope="col" className="px-3 py-1.5 text-right font-normal">n</th>
               <th scope="col" className="px-3 py-1.5 font-normal"><span className="sr-only">{t("insights.view")}</span></th>
             </tr>
           </thead>
           <tbody>
             {pairs.map((pair) => {
-              const significant = isSignificant(pair.p_value);
               return (
-                <tr key={`${pair.a}|${pair.b}`} className={`border-t border-line ${significant ? "" : "opacity-55"}`}>
+                <tr key={`${pair.a}|${pair.b}`} className={`border-t border-line ${pair.evidence === "none" ? "opacity-55" : ""}`}>
                   <td className={`px-3 py-1.5 font-mono text-xs font-medium ${tone(pair.a)}`}>{pair.a}</td>
                   <td className={`px-3 py-1.5 font-mono text-xs font-medium ${tone(pair.b)}`}>{pair.b}</td>
                   <td className="px-3 py-1.5 text-ink-2">{METRIC_LABELS[pair.metric]}</td>
                   <td className={`px-3 py-1.5 text-right tabular-nums ${pair.value < 0 ? "text-bad" : "text-ink-1"}`}>{pair.value.toFixed(3)}</td>
-                  <td className="px-3 py-1.5 text-right text-ink-2 tabular-nums">
-                    {formatP(pair.p_value)}
-                    {!significant && <span className="ml-1.5 text-[11px] text-ink-3">n.s.</span>}
+                  <td className="px-3 py-1.5 text-right text-ink-2 tabular-nums" title={`p = ${formatP(pair.p_value)}`}>
+                    {formatP(pair.q_value ?? null)}
+                  </td>
+                  <td className="px-3 py-1.5">
+                    <EvidenceBadge level={pair.evidence} />
                   </td>
                   <td className="px-3 py-1.5 text-right text-ink-3 tabular-nums">{formatCount(pair.n)}</td>
                   <td className="px-3 py-1.5 text-right">
@@ -254,8 +257,4 @@ function StrongestPairs({
       </div>
     </section>
   );
-}
-
-function isSignificant(p: number | null): boolean {
-  return p !== null && p < 0.05;
 }

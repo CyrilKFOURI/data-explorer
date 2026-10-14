@@ -17,6 +17,7 @@ from scipy.cluster.hierarchy import leaves_list, linkage
 from scipy.spatial.distance import squareform
 
 from app.domain.compare.analyze import label_sql, number_sql
+from app.domain.correlations.evidence import Evidence, adjusted, effect_size, grade
 from app.domain.typing.types import AnalysisType, Parser
 from app.domain.variable.source import SEED
 
@@ -72,6 +73,8 @@ class Pair:
     value: float  # signed for num × num, 0..1 otherwise
     p_value: float | None
     n: int
+    q_value: float | None = None  # p adjusted over every pair (Benjamini-Hochberg)
+    evidence: Evidence = "none"
 
 
 @dataclass
@@ -336,6 +339,9 @@ def association_matrix(
             if value is not None:
                 pairs.append(Pair(first.name, second.name, metric, value, p, n))
     pairs.sort(key=lambda pair: -abs(pair.value))
+    for pair, q in zip(pairs, adjusted([pair.p_value for pair in pairs]), strict=True):
+        pair.q_value = q
+        pair.evidence = grade(effect_size(pair.metric, pair.value), q)
     matrix = Matrix(
         method,
         [MatrixMember(c.name, c.type, roles[c.name]) for c in usable],

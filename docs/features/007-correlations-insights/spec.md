@@ -11,7 +11,7 @@ Trouver **automatiquement** les liens entre toutes les variables, quels que soie
 3. Un clic sur une case ouvre **Compare** prérempli ; le survol donne valeur, métrique et n.
 4. Sous la matrice (pleine largeur), je fais un **focus sur une variable** : liste classée des variables les plus liées, avec barre, mesure et lien vers Compare.
 5. Un tableau classe les **paires les plus fortes** (métrique, valeur, p-value, n, bouton « View »).
-6. Des **insights** en phrases (règles, pas de LLM), regroupés par thème (redondances, relations, distributions, qualité), avec les noms de variables colorés selon leur type et un lien « View » vers le graphique qui les justifie. Un lien entre variables n'est signalé que s'il est significatif (p < 0,05).
+6. Des **insights** en phrases (règles, pas de LLM), regroupés par thème (redondances, relations, distributions, qualité), avec les noms de variables colorés selon leur type et un lien « View » vers le graphique qui les justifie. Les liens entre variables portent un **niveau de preuve** (fort, modéré, faible) et je choisis lesquels afficher.
 
 ## Métriques
 
@@ -31,9 +31,12 @@ Numérique = continu ou discret ; catégorie = nominal, ordinal, booléen (30 mo
 - Clustering hiérarchique (lien moyen sur 1 − |association|) : ordre des variables renvoyé avec la matrice.
 - Insights, seuils :
   - asymétrie |skewness| > 2 ; modalité dominante > 70 % ; manquants ≥ 20 % ;
-  - corrélation forte |r| ou |ρ| ≥ 0,7 ; **redondance** |r| > 0,95 ou V > 0,95 (remplace « forte » / « associées ») ;
-  - différence entre groupes η ≥ 0,4 ; association V ≥ 0,3 ;
-  - triés par importance, 30 au plus ; identifiant stable pour masquer.
+  - **redondance** |r| > 0,95 ou V > 0,95 ;
+  - autres liens selon le **niveau de preuve** : taille d'effet de Cohen (r, ρ, V : 0,1 / 0,3 / 0,5 ; η : 0,10 / 0,24 / 0,37) croisée avec la p-value ajustée par Benjamini-Hochberg sur toutes les paires. Fort = effet grand et adj. p < 0,001 ; modéré = effet ≥ moyen et adj. p < 0,05 ; faible = effet petit et adj. p < 0,05, ou effet ≥ moyen et adj. p ≥ 0,05 (« peut-être du hasard ») ; sinon pas d'insight ;
+  - GIVEN η = 0,57 avec p = 0,43 THEN insight faible « could be chance » ; GIVEN η = 0,57 avec p = 0,0001 THEN insight fort ;
+  - le libellé suit le niveau (« strongly », « clearly », « slightly », « may … could be chance ») ;
+  - triés par niveau puis importance ; 30 insights de colonne et 30 liens par niveau au plus ; identifiant stable.
+- Sélecteur « Show: Strong · Strong + moderate · All » (compte par niveau), mémorisé pour toute l'application, défaut fort + modéré ; n'agit que sur les liens. Pastille de niveau sur les phrases, le tableau des paires et le focus.
 - Performance : 60 colonnes × 5 M lignes en moins de 10 s ; résultat mis en cache par (dataset, types, filtres, colonnes, méthode).
 
 ## Hors scope
