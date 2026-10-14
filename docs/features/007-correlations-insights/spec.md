@@ -9,9 +9,9 @@ Trouver **automatiquement** les liens entre toutes les variables, quels que soie
 1. Sur `/d/:id/correlations`, je vois une **matrice d'association** de toutes les variables numériques et catégorielles, chaque paire mesurée avec la bonne métrique.
 2. Je choisis Pearson ou Spearman pour les paires numériques, je réordonne la matrice par **clustering**, je limite les colonnes.
 3. Un clic sur une case ouvre **Compare** prérempli ; le survol donne valeur, métrique et n.
-4. Je choisis une **variable cible** : les variables les plus liées à elle s'affichent en barres triées.
+4. Sous la matrice (pleine largeur), je fais un **focus sur une variable** : liste classée des variables les plus liées, avec barre, mesure et lien vers Compare.
 5. Un tableau classe les **paires les plus fortes** (métrique, valeur, p-value, n, bouton « View »).
-6. Des **insights** en phrases (règles, pas de LLM) signalent asymétries, déséquilibres, valeurs manquantes, corrélations fortes, redondances, différences entre groupes et associations ; chacun a un lien « View » vers le graphique qui le justifie et peut être masqué (mémorisé pour ce dataset).
+6. Des **insights** en phrases (règles, pas de LLM), regroupés par thème (redondances, relations, distributions, qualité), avec les noms de variables colorés selon leur type et un lien « View » vers le graphique qui les justifie. Un lien entre variables n'est signalé que s'il est significatif (p < 0,05).
 
 ## Métriques
 

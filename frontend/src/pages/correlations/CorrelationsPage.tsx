@@ -2,16 +2,18 @@ import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { Columns3 } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import type { AssociationMatrix, CorrelationMethod } from "../../api/client";
+import type { AnalysisType, AssociationMatrix, CorrelationMethod } from "../../api/client";
 import { useColumns, useCorrelations, useDataset } from "../../api/hooks";
 import { Plot, type PointClick } from "../../charts/Plot";
-import { matrixFigure, METRIC_LABELS, targetFigure } from "../../features/correlations/figures";
+import { FocusPanel } from "../../features/correlations/FocusPanel";
+import { matrixFigure, METRIC_LABELS } from "../../features/correlations/figures";
+import { TYPE_META } from "../../features/columns/columnTypes";
 import { InsightsList } from "../../features/correlations/InsightsList";
 import { formatP } from "../../features/variable/normality";
 import { formatCount } from "../../lib/format";
 import { t } from "../../lib/i18n";
 import { useStoredState } from "../../lib/useStoredState";
-import { Checkbox, ErrorNote, Field, Select } from "../../ui/fields";
+import { Checkbox, ErrorNote } from "../../ui/fields";
 import { Popover } from "../../ui/Popover";
 import { SegmentedControl } from "../../ui/SegmentedControl";
 
@@ -28,7 +30,7 @@ export function CorrelationsPage() {
   const [method, setMethod] = useStoredState<CorrelationMethod>(key("method"), "pearson");
   const [clustered, setClustered] = useStoredState(key("clustered"), true);
   const [chosen, setChosen] = useStoredState<string[] | null>(key("columns"), null);
-  const [target, setTarget] = useState("");
+  const [focus, setFocus] = useState("");
   const correlations = useCorrelations(datasetId, method, chosen, ready);
   const matrix = correlations.data?.matrix;
 
@@ -41,6 +43,8 @@ export function CorrelationsPage() {
     [matrix, clustered],
   );
   const figure = useMemo(() => (matrix ? matrixFigure(matrix, order) : null), [matrix, order]);
+  const types = useMemo(() => new Map((columns.data ?? []).map((c) => [c.name, c.type])), [columns.data]);
+  const typeOf = (name: string): AnalysisType | undefined => types.get(name);
 
   const openPair = (point: PointClick) => {
     const x = String(point.x);
@@ -61,7 +65,7 @@ export function CorrelationsPage() {
       </header>
 
       {correlations.isError && <ErrorNote>{correlations.error.message}</ErrorNote>}
-      {correlations.data && <InsightsList datasetId={datasetId} insights={correlations.data.insights} />}
+      {correlations.data && <InsightsList datasetId={datasetId} insights={correlations.data.insights} typeOf={typeOf} />}
 
       <div className="flex flex-wrap items-center gap-3">
         <SegmentedControl
@@ -89,12 +93,12 @@ export function CorrelationsPage() {
       ) : matrix.columns.length < 2 ? (
         <p className="rounded-lg border border-dashed border-line px-4 py-10 text-center text-ink-2">{t("correlations.tooFew")}</p>
       ) : (
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,380px)]">
-          <section className="min-w-0 rounded-lg border border-line bg-surface-1 p-3">
+        <>
+          <section className="rounded-lg border border-line bg-surface-1 p-3">
             {figure && (
               <Plot
                 figure={figure}
-                height={Math.min(Math.max(360, matrix.columns.length * 26 + 120), 1100)}
+                height={Math.min(Math.max(420, matrix.columns.length * 30 + 140), 1400)}
                 label={t("correlations.matrix")}
                 onPointClick={openPair}
               />
@@ -102,13 +106,11 @@ export function CorrelationsPage() {
             <p className="mt-1.5 text-xs text-ink-3">{t("correlations.legend")}</p>
             {(matrix.excluded.length > 0 || matrix.truncated > 0) && <Excluded matrix={matrix} />}
           </section>
-          <div className="space-y-5">
-            <TargetPanel matrix={matrix} target={target} onTarget={setTarget} />
-          </div>
-        </div>
+          <FocusPanel datasetId={datasetId} matrix={matrix} focus={focus} onFocus={setFocus} typeOf={typeOf} />
+        </>
       )}
 
-      {matrix && matrix.pairs.length > 0 && <StrongestPairs datasetId={datasetId} matrix={matrix} />}
+      {matrix && matrix.pairs.length > 0 && <StrongestPairs datasetId={datasetId} matrix={matrix} typeOf={typeOf} />}
     </div>
   );
 }
@@ -184,44 +186,29 @@ function Excluded({ matrix }: { matrix: AssociationMatrix }) {
   );
 }
 
-function TargetPanel({ matrix, target, onTarget }: { matrix: AssociationMatrix; target: string; onTarget: (name: string) => void }) {
-  const index = matrix.columns.findIndex((c) => c.name === target);
-  const items = useMemo(() => {
-    if (index < 0) return [];
-    return matrix.columns
-      .map((column, j) => ({ name: column.name, value: matrix.values[index]?.[j] ?? null, metric: matrix.metrics[index]?.[j] ?? "" }))
-      .filter((item, j) => j !== index && item.value !== null)
-      .map((item) => ({ ...item, value: item.value as number }))
-      .sort((a, b) => Math.abs(b.value) - Math.abs(a.value))
-      .slice(0, 20);
-  }, [matrix, index]);
-  const figure = useMemo(() => targetFigure(items), [items]);
-
-  return (
-    <section className="rounded-lg border border-line bg-surface-1 p-3">
-      <Field label={t("correlations.target")}>
-        <Select value={target} onChange={(event) => onTarget(event.target.value)}>
-          <option value="">{t("correlations.targetNone")}</option>
-          {matrix.columns.map((column) => (
-            <option key={column.name} value={column.name}>
-              {column.name}
-            </option>
-          ))}
-        </Select>
-      </Field>
-      {index < 0 ? (
-        <p className="mt-3 text-xs text-ink-3">{t("correlations.targetHint")}</p>
-      ) : (
-        <Plot figure={figure} height={Math.max(200, items.length * 24 + 60)} label={t("correlations.targetLabel", { name: target })} />
-      )}
-    </section>
-  );
-}
-
-function StrongestPairs({ datasetId, matrix }: { datasetId: string; matrix: AssociationMatrix }) {
+function StrongestPairs({
+  datasetId,
+  matrix,
+  typeOf,
+}: {
+  datasetId: string;
+  matrix: AssociationMatrix;
+  typeOf: (name: string) => AnalysisType | undefined;
+}) {
+  // Significant links first: a strong-looking value on few rows per group can be chance.
+  const pairs = [...matrix.pairs]
+    .sort((a, b) => Number(isSignificant(b.p_value)) - Number(isSignificant(a.p_value)) || Math.abs(b.value) - Math.abs(a.value))
+    .slice(0, PAIR_ROWS);
+  const tone = (name: string) => {
+    const type = typeOf(name);
+    return type ? TYPE_META[type].tone : "text-ink-1";
+  };
   return (
     <section>
-      <h2 className="mb-2 text-sm font-semibold">{t("correlations.pairs")}</h2>
+      <div className="mb-2 flex flex-wrap items-baseline gap-x-3">
+        <h2 className="text-sm font-semibold">{t("correlations.pairs")}</h2>
+        <span className="text-xs text-ink-3">{t("correlations.pairsHint")}</span>
+      </div>
       <div className="overflow-x-auto rounded-md border border-line">
         <table className="w-full border-collapse text-[13px]">
           <thead className="bg-surface-2 text-left text-xs text-ink-3">
@@ -236,29 +223,39 @@ function StrongestPairs({ datasetId, matrix }: { datasetId: string; matrix: Asso
             </tr>
           </thead>
           <tbody>
-            {matrix.pairs.slice(0, PAIR_ROWS).map((pair) => (
-              <tr key={`${pair.a}|${pair.b}`} className="border-t border-line">
-                <td className="px-3 py-1.5 font-mono text-xs text-ink-1">{pair.a}</td>
-                <td className="px-3 py-1.5 font-mono text-xs text-ink-1">{pair.b}</td>
-                <td className="px-3 py-1.5 text-ink-2">{METRIC_LABELS[pair.metric]}</td>
-                <td className={`px-3 py-1.5 text-right tabular-nums ${pair.value < 0 ? "text-bad" : "text-ink-1"}`}>{pair.value.toFixed(3)}</td>
-                <td className="px-3 py-1.5 text-right text-ink-2 tabular-nums">{formatP(pair.p_value)}</td>
-                <td className="px-3 py-1.5 text-right text-ink-3 tabular-nums">{formatCount(pair.n)}</td>
-                <td className="px-3 py-1.5 text-right">
-                  <Link
-                    to="/d/$datasetId/compare"
-                    params={{ datasetId }}
-                    search={(previous) => ({ ...previous, x: pair.a, y: pair.b, z: undefined, color: undefined })}
-                    className="text-xs text-accent hover:underline"
-                  >
-                    {t("insights.view")}
-                  </Link>
-                </td>
-              </tr>
-            ))}
+            {pairs.map((pair) => {
+              const significant = isSignificant(pair.p_value);
+              return (
+                <tr key={`${pair.a}|${pair.b}`} className={`border-t border-line ${significant ? "" : "opacity-55"}`}>
+                  <td className={`px-3 py-1.5 font-mono text-xs font-medium ${tone(pair.a)}`}>{pair.a}</td>
+                  <td className={`px-3 py-1.5 font-mono text-xs font-medium ${tone(pair.b)}`}>{pair.b}</td>
+                  <td className="px-3 py-1.5 text-ink-2">{METRIC_LABELS[pair.metric]}</td>
+                  <td className={`px-3 py-1.5 text-right tabular-nums ${pair.value < 0 ? "text-bad" : "text-ink-1"}`}>{pair.value.toFixed(3)}</td>
+                  <td className="px-3 py-1.5 text-right text-ink-2 tabular-nums">
+                    {formatP(pair.p_value)}
+                    {!significant && <span className="ml-1.5 text-[11px] text-ink-3">n.s.</span>}
+                  </td>
+                  <td className="px-3 py-1.5 text-right text-ink-3 tabular-nums">{formatCount(pair.n)}</td>
+                  <td className="px-3 py-1.5 text-right">
+                    <Link
+                      to="/d/$datasetId/compare"
+                      params={{ datasetId }}
+                      search={(previous) => ({ ...previous, x: pair.a, y: pair.b, z: undefined, color: undefined })}
+                      className="text-xs text-accent hover:underline"
+                    >
+                      {t("insights.view")}
+                    </Link>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
     </section>
   );
+}
+
+function isSignificant(p: number | null): boolean {
+  return p !== null && p < 0.05;
 }

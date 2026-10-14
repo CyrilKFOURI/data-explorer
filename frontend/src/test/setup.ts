@@ -1,7 +1,10 @@
 import "@testing-library/jest-dom/vitest";
 
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterEach } from "vitest";
+
+// The suite runs files in parallel: on a busy machine, 1 s is too short to wait for a render.
+configure({ asyncUtilTimeout: 5_000 });
 
 afterEach(() => {
   cleanup();

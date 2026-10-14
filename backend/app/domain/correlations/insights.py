@@ -16,6 +16,7 @@ REDUNDANT = 0.95
 GROUP_EFFECT = 0.4
 ASSOCIATED = 0.3
 MAX_INSIGHTS = 30
+SIGNIFICANT = 0.05
 
 Kind = Literal[
     "skewed", "imbalanced", "missing", "correlated", "redundant", "group_difference", "associated"
@@ -114,6 +115,9 @@ def column_insights(
 
 def pair_insight(pair: Pair, roles: dict[str, str]) -> Insight | None:
     a, b, value = pair.a, pair.b, pair.value
+    # A strong-looking value on few rows per group can be chance: only significant links count.
+    if pair.p_value is None or pair.p_value >= SIGNIFICANT:
+        return None
     link = InsightLink("compare", a, b)
     key = f"{a}|{b}"
     if pair.metric in ("pearson", "spearman"):

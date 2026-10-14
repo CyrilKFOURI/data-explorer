@@ -102,16 +102,14 @@ describe("Correlations page", () => {
     expect(within(skewed).getByRole("link", { name: "View" })).toHaveAttribute("href", "/d/d1/variable/revenue");
   });
 
-  it("hides an insight and remembers it", async () => {
+  it("groups insights by theme and colours variable names", async () => {
     setup();
     renderAt("/d/d1/correlations");
-    const card = (await screen.findByText(/strongly skewed/)).closest("li") as HTMLElement;
 
-    fireEvent.click(within(card).getByRole("button", { name: "Not useful: hide" }));
-
-    expect(screen.queryByText(/strongly skewed/)).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Show 1 hidden" })).toBeInTheDocument();
-    expect(localStorage.getItem("de.insights.d1.hidden")).toBe('["skewed:revenue"]');
+    expect(await screen.findByRole("heading", { name: "Redundant variables" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Distributions" })).toBeInTheDocument();
+    const names = screen.getAllByText("revenue", { selector: "span" });
+    expect(names.some((name) => name.className.includes("text-type-numeric"))).toBe(true);
   });
 
   it("draws the matrix, ranks pairs and lists excluded columns", async () => {
@@ -125,13 +123,18 @@ describe("Correlations page", () => {
     expect(screen.getByText("Columns left out (1)")).toBeInTheDocument();
   });
 
-  it("ranks variables against a target and switches method", async () => {
+  it("focuses on a variable and switches method", async () => {
     const calls = setup();
     renderAt("/d/d1/correlations");
     await screen.findByRole("img", { name: "Association matrix" });
 
-    fireEvent.change(screen.getByLabelText("Target variable"), { target: { value: "units" } });
-    expect(screen.getByRole("img", { name: "Variables most linked to units" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "store" }));
+    const ranked = screen.getByRole("list", { name: "Variables most related to store" });
+    expect(within(ranked).getAllByRole("listitem")[0]).toHaveTextContent("units");
+    expect(within(ranked).getByRole("link", { name: "Compare store with units" })).toHaveAttribute(
+      "href",
+      "/d/d1/compare?x=store&y=units",
+    );
 
     fireEvent.click(screen.getByRole("radio", { name: "Spearman" }));
     await waitFor(() =>

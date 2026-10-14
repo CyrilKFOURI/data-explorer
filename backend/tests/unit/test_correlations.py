@@ -191,3 +191,16 @@ def test_near_unique_categories_are_left_out(connection: duckdb.DuckDBPyConnecti
 
     assert [c.name for c in matrix.columns] == ["x"]
     assert "identifier" in matrix.excluded[0].reason
+
+
+def test_links_must_be_significant() -> None:
+    from app.domain.correlations.insights import pair_insight
+    from app.domain.correlations.matrix import Pair
+
+    roles = {"price": "num", "city": "cat"}
+    chance = Pair("price", "city", "eta", 0.57, 0.426, 600)  # many small groups
+    real = Pair("price", "city", "eta", 0.57, 0.0001, 600)
+
+    assert pair_insight(chance, roles) is None
+    insight = pair_insight(real, roles)
+    assert insight is not None and insight.text.startswith("price differs strongly across")

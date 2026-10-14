@@ -9,9 +9,9 @@
 ## Frontend
 - [x] Route `/d/$datasetId/correlations`, entrée Correlations active
 - [x] Matrice (palette divergente validée), méthode, clustering, choix des colonnes, clic → Compare
-- [x] Variable cible : barres triées
-- [x] Paires les plus fortes
-- [x] Insights : liste, « View », masquer / réafficher
+- [x] Focus sur une variable (sous la matrice pleine largeur) : liste classée avec barre, mesure, lien Compare ; n.s. atténués
+- [x] Paires les plus fortes : significatives d'abord, n.s. atténuées, variables colorées
+- [x] Insights : regroupés par thème, noms de variables colorés par type, « View » ; masquage retiré (peu utile) ; liens entre variables seulement si p < 0,05
 - [x] Tests : insights (liens, masquage mémorisé), matrice, paires, cible, méthode (64 tests frontend)
 
 ## Vérification

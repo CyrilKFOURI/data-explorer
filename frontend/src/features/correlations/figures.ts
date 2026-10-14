@@ -59,25 +59,3 @@ export function matrixFigure(matrix: AssociationMatrix, order: number[]): (token
     };
   };
 }
-
-/** Variables most linked to a target, strongest first; colour carries the sign. */
-export function targetFigure(items: { name: string; value: number; metric: string }[]): (tokens: ChartTokens) => Built {
-  return (tokens) => ({
-    data: [
-      {
-        type: "bar",
-        orientation: "h",
-        x: items.map((item) => Math.abs(item.value)),
-        y: items.map((item) => item.name),
-        customdata: items.map((item) => [item.value.toFixed(3), METRIC_LABELS[item.metric] ?? item.metric]),
-        marker: { color: items.map((item) => (item.value < 0 ? tokens.palette[7] : tokens.palette[0])) },
-        hovertemplate: "%{y}<br>%{customdata[1]} = %{customdata[0]}<extra></extra>",
-      } as Data,
-    ],
-    layout: {
-      xaxis: { range: [0, 1], showgrid: true, title: { text: "strength (|value|)", font: { size: 11 } } },
-      yaxis: { type: "category", autorange: "reversed", showgrid: false },
-      barcornerradius: 3,
-    },
-  });
-}
