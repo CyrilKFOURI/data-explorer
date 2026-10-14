@@ -63,6 +63,33 @@ export type Insight = Correlations["insights"][number];
 export type CorrelationMethod = AssociationMatrix["method"];
 export type CompareParams = { x: string; y: string; z?: string | null; color?: string | null };
 export type OutlierMethod = Outliers["method"];
+export type RowsColumn = Schemas["RowsColumn"];
+/** A cell: the typed value, or the stored text when the column's type cannot read it. */
+export type Cell = string | number | boolean | null | { invalid: string };
+export type RowsPage = Omit<Schemas["RowsPage"], "rows"> & { rows: [number, ...Cell[]][] };
+export type RowsMode = "first" | "sample" | "duplicates" | "missing";
+export type RowsView = { mode: RowsMode; search: string; sort: string | null; desc: boolean };
+export type ExportFormat = "csv" | "parquet" | "xlsx";
+
+function viewQuery(view: RowsView, filters?: Condition[]): URLSearchParams {
+  const query = new URLSearchParams({ mode: view.mode, ...filtersParam(filters) });
+  if (view.search.trim()) query.set("search", view.search.trim());
+  if (view.sort) query.set("sort", view.sort);
+  if (view.sort && view.desc) query.set("desc", "true");
+  return query;
+}
+
+/** Download links: the browser streams the file (no copy of a large export in memory). */
+export function exportUrl(id: string, format: ExportFormat, view: RowsView, columns: string[] | null, filters?: Condition[]) {
+  const query = viewQuery(view, filters);
+  query.set("format", format);
+  if (columns) query.set("columns", columns.join(","));
+  return `/api/v1/datasets/${id}/export?${query}`;
+}
+
+export function summaryUrl(id: string, filters?: Condition[]) {
+  return `/api/v1/datasets/${id}/export/summary?${new URLSearchParams(filtersParam(filters))}`;
+}
 
 function chartQuery(column: string, params: ChartParams, filters?: Condition[]): string {
   const query = new URLSearchParams({ column, ...filtersParam(filters) });
@@ -164,6 +191,12 @@ export const api = {
     const query = new URLSearchParams({ method, ...filtersParam(filters) });
     if (columns) query.set("columns", columns.join(","));
     return request<Correlations>("GET", `/datasets/${id}/correlations?${query}`);
+  },
+  rows: (id: string, view: RowsView, offset: number, limit: number, filters?: Condition[]) => {
+    const query = viewQuery(view, filters);
+    query.set("offset", String(offset));
+    query.set("limit", String(limit));
+    return request<RowsPage>("GET", `/datasets/${id}/rows?${query}`);
   },
   savedFilters: (id: string) => request<SavedFilter[]>("GET", `/datasets/${id}/saved-filters`),
   saveFilter: (id: string, name: string, conditions: Condition[]) =>

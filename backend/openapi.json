@@ -1732,6 +1732,339 @@
         }
       }
     },
+    "/api/v1/datasets/{dataset_id}/rows": {
+      "get": {
+        "tags": [
+          "rows"
+        ],
+        "summary": "Rows",
+        "operationId": "rows_api_v1_datasets__dataset_id__rows_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 0,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON list of conditions, combined with AND.",
+              "title": "Filters"
+            },
+            "description": "JSON list of conditions, combined with AND."
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "first",
+                "sample",
+                "duplicates",
+                "missing"
+              ],
+              "type": "string",
+              "default": "first",
+              "title": "Mode"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "default": "",
+              "title": "Search"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sort"
+            }
+          },
+          {
+            "name": "desc",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Desc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RowsPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{dataset_id}/export": {
+      "get": {
+        "tags": [
+          "rows"
+        ],
+        "summary": "Export",
+        "operationId": "export_api_v1_datasets__dataset_id__export_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "csv",
+                "parquet",
+                "xlsx"
+              ],
+              "type": "string",
+              "default": "csv",
+              "title": "Format"
+            }
+          },
+          {
+            "name": "columns",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated column names (default: every column).",
+              "title": "Columns"
+            },
+            "description": "Comma-separated column names (default: every column)."
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON list of conditions, combined with AND.",
+              "title": "Filters"
+            },
+            "description": "JSON list of conditions, combined with AND."
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "first",
+                "sample",
+                "duplicates",
+                "missing"
+              ],
+              "type": "string",
+              "default": "first",
+              "title": "Mode"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "default": "",
+              "title": "Search"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sort"
+            }
+          },
+          {
+            "name": "desc",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Desc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{dataset_id}/export/summary": {
+      "get": {
+        "tags": [
+          "rows"
+        ],
+        "summary": "Export Summary",
+        "operationId": "export_summary_api_v1_datasets__dataset_id__export_summary_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON list of conditions, combined with AND.",
+              "title": "Filters"
+            },
+            "description": "JSON list of conditions, combined with AND."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/modules/hello": {
       "get": {
         "tags": [
@@ -5265,6 +5598,75 @@
           "label"
         ],
         "title": "RoleOut"
+      },
+      "RowsColumn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "numeric_continuous",
+              "numeric_discrete",
+              "categorical_nominal",
+              "categorical_ordinal",
+              "boolean",
+              "datetime",
+              "text",
+              "identifier",
+              "ignored"
+            ],
+            "title": "Type"
+          },
+          "excluded": {
+            "type": "boolean",
+            "title": "Excluded"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "type",
+          "excluded"
+        ],
+        "title": "RowsColumn"
+      },
+      "RowsPage": {
+        "properties": {
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/RowsColumn"
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "rows": {
+            "items": {
+              "items": {},
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          }
+        },
+        "type": "object",
+        "required": [
+          "columns",
+          "rows",
+          "total",
+          "offset"
+        ],
+        "title": "RowsPage"
       },
       "SampleOut": {
         "properties": {

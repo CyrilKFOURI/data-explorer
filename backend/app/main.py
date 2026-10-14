@@ -17,6 +17,7 @@ from app.api import (
     health,
     jobs,
     profiling,
+    rows,
     sources,
     variable,
 )
@@ -32,6 +33,7 @@ from app.domain.correlations.service import CorrelationService
 from app.domain.datasets.service import DatasetService
 from app.domain.filters.saved import SavedFilterService
 from app.domain.profiling.service import ProfilingService
+from app.domain.rows.service import RowService
 from app.domain.variable.service import VariableService
 from app.modules.registry import mount_modules
 
@@ -67,12 +69,13 @@ def create_app(settings: Settings | None = None, job_runner: JobRunner | None = 
     app.state.saved_filters = SavedFilterService(workspace, column_service)
     app.state.compare = CompareService(column_service)
     app.state.correlations = CorrelationService(column_service)
+    app.state.rows = RowService(column_service)
     register_error_handlers(app)
     protect(app, tuple(settings.allowed_hosts))
 
     api = APIRouter(prefix=API_PREFIX)
     routers = (health, datasets, sources, jobs, columns, profiling, variable, filters, compare)
-    for module in (*routers, correlations):
+    for module in (*routers, correlations, rows):
         api.include_router(module.router)
     app.include_router(api)
     mount_modules(app, API_PREFIX)

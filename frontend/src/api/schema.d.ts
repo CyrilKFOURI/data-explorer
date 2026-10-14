@@ -474,6 +474,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/datasets/{dataset_id}/rows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Rows */
+        get: operations["rows_api_v1_datasets__dataset_id__rows_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/datasets/{dataset_id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export */
+        get: operations["export_api_v1_datasets__dataset_id__export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/datasets/{dataset_id}/export/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Summary */
+        get: operations["export_summary_api_v1_datasets__dataset_id__export_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/modules/hello": {
         parameters: {
             query?: never;
@@ -1541,6 +1592,29 @@ export interface components {
             id: string;
             /** Label */
             label: string;
+        };
+        /** RowsColumn */
+        RowsColumn: {
+            /** Name */
+            name: string;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "numeric_continuous" | "numeric_discrete" | "categorical_nominal" | "categorical_ordinal" | "boolean" | "datetime" | "text" | "identifier" | "ignored";
+            /** Excluded */
+            excluded: boolean;
+        };
+        /** RowsPage */
+        RowsPage: {
+            /** Columns */
+            columns: components["schemas"]["RowsColumn"][];
+            /** Rows */
+            rows: unknown[][];
+            /** Total */
+            total: number;
+            /** Offset */
+            offset: number;
         };
         /** SampleOut */
         SampleOut: {
@@ -2726,6 +2800,117 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Correlations"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rows_api_v1_datasets__dataset_id__rows_get: {
+        parameters: {
+            query?: {
+                offset?: number;
+                limit?: number;
+                /** @description JSON list of conditions, combined with AND. */
+                filters?: string | null;
+                mode?: "first" | "sample" | "duplicates" | "missing";
+                search?: string;
+                sort?: string | null;
+                desc?: boolean;
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RowsPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_api_v1_datasets__dataset_id__export_get: {
+        parameters: {
+            query?: {
+                format?: "csv" | "parquet" | "xlsx";
+                /** @description Comma-separated column names (default: every column). */
+                columns?: string | null;
+                /** @description JSON list of conditions, combined with AND. */
+                filters?: string | null;
+                mode?: "first" | "sample" | "duplicates" | "missing";
+                search?: string;
+                sort?: string | null;
+                desc?: boolean;
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_summary_api_v1_datasets__dataset_id__export_summary_get: {
+        parameters: {
+            query?: {
+                /** @description JSON list of conditions, combined with AND. */
+                filters?: string | null;
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

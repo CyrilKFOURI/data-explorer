@@ -16,17 +16,22 @@ import { ThemeSwitcher } from "../../features/theme/ThemeSwitcher";
 import { t, type MessageKey } from "../../lib/i18n";
 import type { ModuleManifest } from "../../modules/types";
 
-/** Pages of the open dataset; those without a route yet arrive with features 003–008. */
+/** Pages of the open dataset. */
 const DATASET_PAGES: {
   labelKey: MessageKey;
   icon: LucideIcon;
-  to?: "/d/$datasetId" | "/d/$datasetId/columns" | "/d/$datasetId/compare" | "/d/$datasetId/correlations";
+  to?:
+    | "/d/$datasetId"
+    | "/d/$datasetId/columns"
+    | "/d/$datasetId/compare"
+    | "/d/$datasetId/correlations"
+    | "/d/$datasetId/data";
 }[] = [
   { labelKey: "nav.overview", icon: LayoutGrid, to: "/d/$datasetId" },
   { labelKey: "nav.columns", icon: Columns3, to: "/d/$datasetId/columns" },
   { labelKey: "nav.compare", icon: ScatterChart, to: "/d/$datasetId/compare" },
   { labelKey: "nav.correlations", icon: Grid3x3, to: "/d/$datasetId/correlations" },
-  { labelKey: "nav.data", icon: Rows3 },
+  { labelKey: "nav.data", icon: Rows3, to: "/d/$datasetId/data" },
 ];
 
 const itemClass =
@@ -71,7 +76,7 @@ export function Sidebar({ collapsed, onToggle, modules }: SidebarProps) {
                 <Link
                   to={to}
                   params={{ datasetId }}
-                  activeOptions={{ exact: true }}
+                  activeOptions={{ exact: true, includeSearch: false }}
                   title={collapsed ? t(labelKey) : undefined}
                   aria-label={collapsed ? t(labelKey) : undefined}
                   className={`${itemClass} hover:bg-surface-2 hover:text-ink-1`}

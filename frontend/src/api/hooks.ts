@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useActiveFilters, type Condition } from "./filters";
 import {
@@ -10,6 +10,7 @@ import {
   type Dataset,
   type ImportOptions,
   type OutlierMethod,
+  type RowsView,
   type SourceOptions,
 } from "./client";
 
@@ -40,6 +41,8 @@ export const queryKeys = {
     ["datasets", id, "correlations", method, columns, filters] as const,
   compare: (id: string, params: CompareParams, filters: Condition[]) =>
     ["datasets", id, "compare", params, filters] as const,
+  rows: (id: string, view: RowsView, filters: Condition[], block: number) =>
+    ["datasets", id, "rows", view, filters, block] as const,
 };
 
 const isImporting = (datasets: Dataset[] | undefined) =>
@@ -323,5 +326,21 @@ export function useCorrelations(id: string, method: CorrelationMethod, columns: 
     enabled,
     staleTime: 60_000,
     placeholderData: (previous) => previous,
+  });
+}
+
+export const ROW_BLOCK = 100;
+
+/** Blocks of rows of the Data page (block k = rows k*100 … k*100+99 of the view). */
+export function useRowBlocks(id: string, view: RowsView, blocks: number[], enabled: boolean) {
+  const filters = useActiveFilters(id);
+  return useQueries({
+    queries: blocks.map((block) => ({
+      queryKey: queryKeys.rows(id, view, filters, block),
+      queryFn: () => api.rows(id, view, block * ROW_BLOCK, ROW_BLOCK, filters),
+      enabled,
+      staleTime: 60_000,
+      placeholderData: block === 0 ? keepPreviousData : undefined,
+    })),
   });
 }
