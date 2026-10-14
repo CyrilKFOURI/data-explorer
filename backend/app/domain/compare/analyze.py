@@ -18,6 +18,7 @@ from app.domain.compare.stats import (
     pearson,
     rank_correlations,
 )
+from app.domain.filters.scope import TypedColumn
 from app.domain.ingestion.sql import lit
 from app.domain.typing.dates import STEP_FORMATS, auto_step
 from app.domain.typing.parsers import typed_sql
@@ -142,7 +143,7 @@ class Comparison:
     message: str | None = None
 
 
-def label_sql(column: CompareColumn) -> str:
+def label_sql(column: TypedColumn) -> str:
     """Category label, as the charts and filters show it."""
     typed = typed_sql(column.name, column.parser)
     if column.type == "boolean":
@@ -150,7 +151,7 @@ def label_sql(column: CompareColumn) -> str:
     return f"CAST({typed} AS VARCHAR)"
 
 
-def number_sql(column: CompareColumn) -> str:
+def number_sql(column: TypedColumn) -> str:
     return f"CAST({typed_sql(column.name, column.parser)} AS DOUBLE)"
 
 

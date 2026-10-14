@@ -1639,6 +1639,99 @@
         }
       }
     },
+    "/api/v1/datasets/{dataset_id}/correlations": {
+      "get": {
+        "tags": [
+          "correlations"
+        ],
+        "summary": "Correlations",
+        "operationId": "correlations_api_v1_datasets__dataset_id__correlations_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "method",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "pearson",
+                "spearman"
+              ],
+              "type": "string",
+              "default": "pearson",
+              "title": "Method"
+            }
+          },
+          {
+            "name": "columns",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated column names (default: every column).",
+              "title": "Columns"
+            },
+            "description": "Comma-separated column names (default: every column)."
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON list of conditions, combined with AND.",
+              "title": "Filters"
+            },
+            "description": "JSON list of conditions, combined with AND."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Correlations"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/modules/hello": {
       "get": {
         "tags": [
@@ -2827,6 +2920,25 @@
         ],
         "title": "ConversionOut"
       },
+      "Correlations": {
+        "properties": {
+          "matrix": {
+            "$ref": "#/components/schemas/Matrix"
+          },
+          "insights": {
+            "items": {
+              "$ref": "#/components/schemas/Insight"
+            },
+            "type": "array",
+            "title": "Insights"
+          }
+        },
+        "type": "object",
+        "required": [
+          "matrix"
+        ],
+        "title": "Correlations"
+      },
       "CsvOptions": {
         "properties": {
           "delimiter": {
@@ -3462,6 +3574,24 @@
         ],
         "title": "Entry"
       },
+      "Excluded": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "reason"
+        ],
+        "title": "Excluded"
+      },
       "FileInfo": {
         "properties": {
           "name": {
@@ -3984,6 +4114,97 @@
         ],
         "title": "ImportResponse"
       },
+      "Insight": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "skewed",
+              "imbalanced",
+              "missing",
+              "correlated",
+              "redundant",
+              "group_difference",
+              "associated"
+            ],
+            "title": "Kind"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "warning",
+              "info"
+            ],
+            "title": "Severity"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "link": {
+            "$ref": "#/components/schemas/InsightLink"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "severity",
+          "text",
+          "columns",
+          "link",
+          "score"
+        ],
+        "title": "Insight"
+      },
+      "InsightLink": {
+        "properties": {
+          "page": {
+            "type": "string",
+            "enum": [
+              "variable",
+              "compare"
+            ],
+            "title": "Page"
+          },
+          "x": {
+            "type": "string",
+            "title": "X"
+          },
+          "y": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Y"
+          }
+        },
+        "type": "object",
+        "required": [
+          "page",
+          "x"
+        ],
+        "title": "InsightLink"
+      },
       "JobOut": {
         "properties": {
           "id": {
@@ -4166,6 +4387,153 @@
           "entries"
         ],
         "title": "Listing"
+      },
+      "Matrix": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "pearson",
+              "spearman"
+            ],
+            "title": "Method"
+          },
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/MatrixMember"
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "values": {
+            "items": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Values"
+          },
+          "metrics": {
+            "items": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "pearson",
+                      "spearman",
+                      "cramers_v",
+                      "eta"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Metrics"
+          },
+          "n": {
+            "items": {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "N"
+          },
+          "clustered": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Clustered"
+          },
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "sampled": {
+            "type": "boolean",
+            "title": "Sampled"
+          },
+          "excluded": {
+            "items": {
+              "$ref": "#/components/schemas/Excluded"
+            },
+            "type": "array",
+            "title": "Excluded"
+          },
+          "truncated": {
+            "type": "integer",
+            "title": "Truncated",
+            "default": 0
+          },
+          "pairs": {
+            "items": {
+              "$ref": "#/components/schemas/Pair"
+            },
+            "type": "array",
+            "title": "Pairs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method",
+          "columns",
+          "values",
+          "metrics",
+          "n",
+          "clustered",
+          "rows",
+          "total",
+          "sampled"
+        ],
+        "title": "Matrix"
+      },
+      "MatrixMember": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "num",
+              "cat"
+            ],
+            "title": "Role"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "type",
+          "role"
+        ],
+        "title": "MatrixMember"
       },
       "Normality": {
         "properties": {
@@ -4464,6 +4832,57 @@
           "column_stats"
         ],
         "title": "Overview"
+      },
+      "Pair": {
+        "properties": {
+          "a": {
+            "type": "string",
+            "title": "A"
+          },
+          "b": {
+            "type": "string",
+            "title": "B"
+          },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "pearson",
+              "spearman",
+              "cramers_v",
+              "eta"
+            ],
+            "title": "Metric"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "p_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Value"
+          },
+          "n": {
+            "type": "integer",
+            "title": "N"
+          }
+        },
+        "type": "object",
+        "required": [
+          "a",
+          "b",
+          "metric",
+          "value",
+          "p_value",
+          "n"
+        ],
+        "title": "Pair"
       },
       "Parser": {
         "properties": {

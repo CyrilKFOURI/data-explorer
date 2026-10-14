@@ -10,6 +10,7 @@ Trouver **automatiquement** les liens entre variables, quels que soient leurs ty
    - num × num : Pearson ou Spearman (au choix)
    - cat × cat : V de Cramér (corrigé du biais)
    - num × cat : rapport de corrélation η
+   - Dates exclues (leurs liens se voient dans Comparer)
    - Option : réordonner par **clustering** pour regrouper les variables liées
    - Survol : valeur, métrique, n ; clic → Comparer prérempli
    - Plafond : 60 colonnes (sélection libre) pour rester lisible et rapide
@@ -28,4 +29,5 @@ Trouver **automatiquement** les liens entre variables, quels que soient leurs ty
 
 - Signal de **redondance** au-delà de |r| > 0,95.
 - Les identifiants, le texte libre et les colonnes ignorées sont exclus par défaut.
-- Calcul en tâche de fond avec progression si plus de 30 colonnes, résultat mis en cache.
+- Au-delà de 200 000 lignes, calcul sur un échantillon reproductible de 200 000 lignes (signalé) ; résultat mis en cache. Les filtres globaux s'appliquent.
+- Seuils des insights : asymétrie |skewness| > 2, modalité dominante > 70 %, manquants ≥ 20 %, corrélation forte ≥ 0,7, différence entre groupes η ≥ 0,4, association V ≥ 0,3.

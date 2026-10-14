@@ -5,6 +5,7 @@ import {
   api,
   type ChartParams,
   type CompareParams,
+  type CorrelationMethod,
   type ColumnChange,
   type Dataset,
   type ImportOptions,
@@ -35,6 +36,8 @@ export const queryKeys = {
   outliers: (id: string, column: string, method: OutlierMethod, filters: Condition[] = []) =>
     ["datasets", id, "variable", column, "outliers", method, filters] as const,
   savedFilters: (id: string) => ["datasets", id, "saved-filters"] as const,
+  correlations: (id: string, method: CorrelationMethod, columns: string[] | null, filters: Condition[]) =>
+    ["datasets", id, "correlations", method, columns, filters] as const,
   compare: (id: string, params: CompareParams, filters: Condition[]) =>
     ["datasets", id, "compare", params, filters] as const,
 };
@@ -308,5 +311,17 @@ export function useCompare(id: string, params: CompareParams | null) {
     staleTime: 60_000,
     placeholderData: (previous) => previous,
     retry: false,
+  });
+}
+
+/** Association matrix and insights over the filtered rows. */
+export function useCorrelations(id: string, method: CorrelationMethod, columns: string[] | null, enabled: boolean) {
+  const filters = useActiveFilters(id);
+  return useQuery({
+    queryKey: queryKeys.correlations(id, method, columns, filters),
+    queryFn: () => api.correlations(id, method, columns, filters),
+    enabled,
+    staleTime: 60_000,
+    placeholderData: (previous) => previous,
   });
 }

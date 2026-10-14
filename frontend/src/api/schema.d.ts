@@ -457,6 +457,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/datasets/{dataset_id}/correlations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Correlations */
+        get: operations["correlations_api_v1_datasets__dataset_id__correlations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/modules/hello": {
         parameters: {
             query?: never;
@@ -811,6 +828,12 @@ export interface components {
             parser: components["schemas"]["Parser"];
             summary: components["schemas"]["ColumnSummary"];
         };
+        /** Correlations */
+        Correlations: {
+            matrix: components["schemas"]["Matrix"];
+            /** Insights */
+            insights?: components["schemas"]["Insight"][];
+        };
         /** CsvOptions */
         CsvOptions: {
             /**
@@ -981,6 +1004,13 @@ export interface components {
             /** Size */
             size?: number | null;
         };
+        /** Excluded */
+        Excluded: {
+            /** Name */
+            name: string;
+            /** Reason */
+            reason: string;
+        };
         /** FileInfo */
         FileInfo: {
             /** Name */
@@ -1131,6 +1161,40 @@ export interface components {
             /** Reused */
             reused: boolean;
         };
+        /** Insight */
+        Insight: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "skewed" | "imbalanced" | "missing" | "correlated" | "redundant" | "group_difference" | "associated";
+            /**
+             * Severity
+             * @enum {string}
+             */
+            severity: "warning" | "info";
+            /** Text */
+            text: string;
+            /** Columns */
+            columns: string[];
+            link: components["schemas"]["InsightLink"];
+            /** Score */
+            score: number;
+        };
+        /** InsightLink */
+        InsightLink: {
+            /**
+             * Page
+             * @enum {string}
+             */
+            page: "variable" | "compare";
+            /** X */
+            x: string;
+            /** Y */
+            y?: string | null;
+        };
         /** JobOut */
         JobOut: {
             /** Id */
@@ -1188,6 +1252,51 @@ export interface components {
             roots: string[];
             /** Entries */
             entries: components["schemas"]["Entry"][];
+        };
+        /** Matrix */
+        Matrix: {
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "pearson" | "spearman";
+            /** Columns */
+            columns: components["schemas"]["MatrixMember"][];
+            /** Values */
+            values: (number | null)[][];
+            /** Metrics */
+            metrics: (("pearson" | "spearman" | "cramers_v" | "eta") | null)[][];
+            /** N */
+            n: number[][];
+            /** Clustered */
+            clustered: number[];
+            /** Rows */
+            rows: number;
+            /** Total */
+            total: number;
+            /** Sampled */
+            sampled: boolean;
+            /** Excluded */
+            excluded?: components["schemas"]["Excluded"][];
+            /**
+             * Truncated
+             * @default 0
+             */
+            truncated: number;
+            /** Pairs */
+            pairs?: components["schemas"]["Pair"][];
+        };
+        /** MatrixMember */
+        MatrixMember: {
+            /** Name */
+            name: string;
+            /** Type */
+            type: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "num" | "cat";
         };
         /** Normality */
         Normality: {
@@ -1282,6 +1391,24 @@ export interface components {
             column_stats: {
                 [key: string]: components["schemas"]["ColumnStats"];
             };
+        };
+        /** Pair */
+        Pair: {
+            /** A */
+            a: string;
+            /** B */
+            b: string;
+            /**
+             * Metric
+             * @enum {string}
+             */
+            metric: "pearson" | "spearman" | "cramers_v" | "eta";
+            /** Value */
+            value: number;
+            /** P Value */
+            p_value: number | null;
+            /** N */
+            n: number;
         };
         /**
          * Parser
@@ -2551,6 +2678,43 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Comparison"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    correlations_api_v1_datasets__dataset_id__correlations_get: {
+        parameters: {
+            query?: {
+                method?: "pearson" | "spearman";
+                /** @description Comma-separated column names (default: every column). */
+                columns?: string | null;
+                /** @description JSON list of conditions, combined with AND. */
+                filters?: string | null;
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Correlations"];
                 };
             };
             /** @description Validation Error */

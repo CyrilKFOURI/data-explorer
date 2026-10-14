@@ -16,6 +16,7 @@ import { NotFoundPage } from "../pages/not-found/NotFoundPage";
 import { OverviewPage } from "../pages/overview/OverviewPage";
 import { SettingsPage } from "../pages/settings/SettingsPage";
 import { ComparePage, validateCompareSearch } from "../pages/compare/ComparePage";
+import { CorrelationsPage } from "../pages/correlations/CorrelationsPage";
 import { VariablePage } from "../pages/variable/VariablePage";
 import { Shell } from "./layout/Shell";
 
@@ -63,6 +64,11 @@ export function createAppRouter({
     validateSearch: validateCompareSearch,
     component: ComparePage,
   });
+  const correlationsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/d/$datasetId/correlations",
+    component: CorrelationsPage,
+  });
   const moduleRoutes = modules.map((module) =>
     createRoute({ getParentRoute: () => rootRoute, path: module.path, component: module.component }),
   );
@@ -75,6 +81,7 @@ export function createAppRouter({
       columnsRoute,
       variableRoute,
       compareRoute,
+      correlationsRoute,
       ...moduleRoutes,
     ]),
     history,

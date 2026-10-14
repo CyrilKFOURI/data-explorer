@@ -57,6 +57,10 @@ export type SavedFilter = Schemas["SavedFilter"];
 export type Comparison = Complete<Schemas["Comparison"]>;
 export type BivariateTest = Comparison["tests"][number];
 export type CompareGroup = Comparison["groups"][number];
+export type Correlations = Complete<Schemas["Correlations"]>;
+export type AssociationMatrix = Correlations["matrix"];
+export type Insight = Correlations["insights"][number];
+export type CorrelationMethod = AssociationMatrix["method"];
 export type CompareParams = { x: string; y: string; z?: string | null; color?: string | null };
 export type OutlierMethod = Outliers["method"];
 
@@ -155,6 +159,11 @@ export const api = {
     if (params.z) query.set("z", params.z);
     if (params.color) query.set("color", params.color);
     return request<Comparison>("GET", `/datasets/${id}/compare?${query}`);
+  },
+  correlations: (id: string, method: CorrelationMethod, columns: string[] | null, filters?: Condition[]) => {
+    const query = new URLSearchParams({ method, ...filtersParam(filters) });
+    if (columns) query.set("columns", columns.join(","));
+    return request<Correlations>("GET", `/datasets/${id}/correlations?${query}`);
   },
   savedFilters: (id: string) => request<SavedFilter[]>("GET", `/datasets/${id}/saved-filters`),
   saveFilter: (id: string, name: string, conditions: Condition[]) =>

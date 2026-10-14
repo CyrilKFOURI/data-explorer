@@ -1,0 +1,83 @@
+import type { Data, Layout } from "plotly.js-dist-min";
+
+import type { AssociationMatrix } from "../../api/client";
+import type { ChartTokens } from "../../charts/theme";
+
+type Built = { data: Data[]; layout?: Partial<Layout> };
+
+export const METRIC_LABELS: Record<string, string> = {
+  pearson: "Pearson r",
+  spearman: "Spearman ρ",
+  cramers_v: "Cramér's V",
+  eta: "η (correlation ratio)",
+};
+
+/** Diverging scale: red for negative, neutral grey at 0, blue for positive (validated pair). */
+function divergingScale(tokens: ChartTokens): [number, string][] {
+  return [
+    [0, tokens.palette[7] ?? tokens.ink3],
+    [0.5, tokens.line],
+    [1, tokens.palette[0] ?? tokens.ink1],
+  ];
+}
+
+/** Heatmap of the matrix in the given column order; text values when it stays readable. */
+export function matrixFigure(matrix: AssociationMatrix, order: number[]): (tokens: ChartTokens) => Built {
+  return (tokens) => {
+    const names = order.map((i) => matrix.columns[i]?.name ?? "");
+    const z = order.map((i) => order.map((j) => matrix.values[i]?.[j] ?? null));
+    const custom = order.map((i) =>
+      order.map((j) => [METRIC_LABELS[matrix.metrics[i]?.[j] ?? ""] ?? "", (matrix.n[i]?.[j] ?? 0).toLocaleString("en-US")]),
+    );
+    const showText = names.length <= 16;
+    return {
+      data: [
+        {
+          type: "heatmap",
+          x: names,
+          y: names,
+          z,
+          zmin: -1,
+          zmax: 1,
+          colorscale: divergingScale(tokens),
+          customdata: custom,
+          text: z.map((row) => row.map((v) => (v === null ? "" : v.toFixed(2)))),
+          texttemplate: showText ? "%{text}" : "",
+          textfont: { size: 10, color: tokens.ink1 },
+          xgap: 1,
+          ygap: 1,
+          colorbar: { thickness: 10, outlinewidth: 0, tickfont: { size: 10, color: tokens.ink3 }, len: 0.8 },
+          hovertemplate: "%{y} × %{x}<br>%{customdata[0]} = %{z:.3f}<br>n = %{customdata[1]}<extra></extra>",
+          hoverongaps: false,
+        } as unknown as Data,
+      ],
+      layout: {
+        margin: { l: 8, r: 8, t: 8, b: 8 },
+        xaxis: { type: "category", showgrid: false, tickangle: -45, side: "bottom" },
+        yaxis: { type: "category", showgrid: false, autorange: "reversed" },
+      },
+    };
+  };
+}
+
+/** Variables most linked to a target, strongest first; colour carries the sign. */
+export function targetFigure(items: { name: string; value: number; metric: string }[]): (tokens: ChartTokens) => Built {
+  return (tokens) => ({
+    data: [
+      {
+        type: "bar",
+        orientation: "h",
+        x: items.map((item) => Math.abs(item.value)),
+        y: items.map((item) => item.name),
+        customdata: items.map((item) => [item.value.toFixed(3), METRIC_LABELS[item.metric] ?? item.metric]),
+        marker: { color: items.map((item) => (item.value < 0 ? tokens.palette[7] : tokens.palette[0])) },
+        hovertemplate: "%{y}<br>%{customdata[1]} = %{customdata[0]}<extra></extra>",
+      } as Data,
+    ],
+    layout: {
+      xaxis: { range: [0, 1], showgrid: true, title: { text: "strength (|value|)", font: { size: 11 } } },
+      yaxis: { type: "category", autorange: "reversed", showgrid: false },
+      barcornerradius: 3,
+    },
+  });
+}

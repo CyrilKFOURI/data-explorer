@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api import (
     columns,
     compare,
+    correlations,
     datasets,
     filters,
     health,
@@ -27,6 +28,7 @@ from app.core.jobs import JobRunner, ThreadJobRunner
 from app.core.storage import Workspace
 from app.domain.columns.service import ColumnService
 from app.domain.compare.service import CompareService
+from app.domain.correlations.service import CorrelationService
 from app.domain.datasets.service import DatasetService
 from app.domain.filters.saved import SavedFilterService
 from app.domain.profiling.service import ProfilingService
@@ -64,11 +66,13 @@ def create_app(settings: Settings | None = None, job_runner: JobRunner | None = 
     app.state.variable = VariableService(column_service)
     app.state.saved_filters = SavedFilterService(workspace, column_service)
     app.state.compare = CompareService(column_service)
+    app.state.correlations = CorrelationService(column_service)
     register_error_handlers(app)
     protect(app, tuple(settings.allowed_hosts))
 
     api = APIRouter(prefix=API_PREFIX)
-    for module in (health, datasets, sources, jobs, columns, profiling, variable, filters, compare):
+    routers = (health, datasets, sources, jobs, columns, profiling, variable, filters, compare)
+    for module in (*routers, correlations):
         api.include_router(module.router)
     app.include_router(api)
     mount_modules(app, API_PREFIX)

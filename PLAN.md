@@ -18,7 +18,7 @@ Roadmap en **sprints**, chacun composé de **tranches verticales** : chaque case
 
 ### Sprint 3 — Relations et sortie
 - [x] 006-comparer — visuel et tests choisis selon les types (nuage + régression, densité, boîtes/violons/moyennes ± IC, heatmap, séries, 3D), tailles d'effet, couleur ; facettes et intention reportées
-- [ ] 007-correlations-insights — matrice d'association mixte, clustering, paires classées, insights générés par règles
+- [x] 007-correlations-insights — matrice d'association mixte (r/ρ, V corrigé, η), clustering, variable cible, paires classées, insights par règles masquables
 - [ ] 008-donnees-export — table virtualisée, modes d'affichage, exports CSV / Parquet / Excel / PNG
 - [ ] 009-parametres-finitions — page Paramètres, palette de commandes, raccourcis, revue design et accessibilité
 - [ ] 010-portfolio — README anglais avec captures, `docker compose up` testé sur une machine propre, image < 600 Mo, CI (tests + build Docker)
