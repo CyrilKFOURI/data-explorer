@@ -641,13 +641,18 @@
   "data.noDuplicates": "No duplicate rows: every row is unique.",
   "data.noMissing": "No row has a missing value.",
   "data.noRows": "No rows to show.",
-  "filters.uniqueHint": "One row per value. Add columns to make the value a combination (e.g. id + month).",
-  "filters.duplicatesHint": "Compares the value of these columns together.",
-  "filters.addColumn": "+ column",
-  "filters.removeColumn": "Remove {name}",
+  "filters.uniqueHint": "One row per value of {column}.",
+  "filters.duplicatesHint": "Rows whose value of {column} appears more than once.",
   "filters.keep": "Keep",
   "filters.keepFirst": "First row",
   "filters.keepLast": "Last row",
   "filters.orderedBy": "Ordered by",
-  "filters.fileOrder": "File order"
+  "filters.fileOrder": "File order",
+  "filters.basedOn": "Based on",
+  "filters.basedOnColumn": "This column",
+  "filters.basedOnKey": "Several columns (key)",
+  "filters.keyColumns": "Columns of the key",
+  "filters.keyUniqueHint": "One row per combination of {key} (like a primary key).",
+  "filters.keyDuplicatesHint": "Rows whose combination of {key} appears more than once.",
+  "filters.needKeyColumns": "Tick at least one more column for the key."
 }

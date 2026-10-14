@@ -29,6 +29,7 @@ type Draft = {
   values: string[];
   part: string;
   extra: string[];
+  multi: boolean; // the value is a combination of columns (a composite key)
   keep: "first" | "last";
   orderBy: string;
 };
@@ -45,6 +46,7 @@ function draftOf(condition: Condition | undefined, columns: Column[]): Draft {
     values: condition?.values ?? [],
     part: condition?.part ?? "day_of_week",
     extra: condition?.columns ?? [],
+    multi: Boolean(condition?.columns?.length),
     keep: condition?.keep ?? "first",
     orderBy: condition?.order_by ?? "",
   };
@@ -58,7 +60,8 @@ function build(draft: Draft, column: Column, choice: Choice): Condition | string
   const filled = (raw: string) => raw.trim() !== "" && (!numeric || Number.isFinite(Number(raw)));
   if (choice.input === "none") return base;
   if (choice.input === "rows") {
-    const columns = draft.extra.filter((name) => name !== column.name);
+    const columns = draft.multi ? draft.extra.filter((name) => name !== column.name) : [];
+    if (draft.multi && !columns.length) return t("filters.needKeyColumns");
     return choice.op === "unique"
       ? { ...base, columns, keep: draft.keep, order_by: draft.orderBy || null }
       : { ...base, columns };
@@ -117,6 +120,7 @@ export function ConditionEditor({ datasetId, columns, others = columns, initial,
               values: [],
               value: "",
               extra: [],
+              multi: false,
             });
           }}
         >
@@ -238,6 +242,7 @@ function ValuesPicker({
 }
 
 /** Unique values / Duplicates: more columns making up the value; which row to keep. */
+/** Unique values / Duplicates: on this column, or on a combination of columns (a key). */
 function RowsOptions({
   column,
   unique,
@@ -251,43 +256,51 @@ function RowsOptions({
   draft: Draft;
   onChange: (patch: Partial<Draft>) => void;
 }) {
-  const addable = columns.filter((c) => c.name !== column && !draft.extra.includes(c.name));
+  const candidates = columns.filter((c) => c.name !== column);
+  const toggle = (name: string) =>
+    onChange({ extra: draft.extra.includes(name) ? draft.extra.filter((item) => item !== name) : [...draft.extra, name] });
   return (
     <div className="space-y-2.5 rounded-md border border-line p-2.5">
-      <div className="space-y-1.5">
-        <p className="text-xs text-ink-3">{t(unique ? "filters.uniqueHint" : "filters.duplicatesHint")}</p>
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-xs text-ink-1">{column}</span>
-          {draft.extra.map((name) => (
-            <span key={name} className="inline-flex items-center gap-1 rounded bg-surface-2 py-0.5 pr-0.5 pl-1.5 font-mono text-xs text-ink-1">
-              + {name}
-              <button
-                type="button"
-                aria-label={t("filters.removeColumn", { name })}
-                onClick={() => onChange({ extra: draft.extra.filter((item) => item !== name) })}
-                className="rounded px-1 text-ink-3 hover:bg-surface-1 hover:text-ink-1"
-              >
-                ×
-              </button>
-            </span>
-          ))}
-          {addable.length > 0 && (
-            <Select
-              aria-label={t("filters.addColumn")}
-              value=""
-              onChange={(event) => event.target.value && onChange({ extra: [...draft.extra, event.target.value] })}
-              className="h-7 w-auto text-xs"
-            >
-              <option value="">{t("filters.addColumn")}</option>
-              {addable.map((c) => (
-                <option key={c.name} value={c.name}>
-                  {c.name}
-                </option>
-              ))}
-            </Select>
-          )}
-        </div>
+      <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2">
+        <span className="text-xs text-ink-3">{t("filters.basedOn")}</span>
+        <SegmentedControl
+          label={t("filters.basedOn")}
+          value={draft.multi ? "key" : "single"}
+          options={[
+            { value: "single", label: t("filters.basedOnColumn") },
+            { value: "key", label: t("filters.basedOnKey") },
+          ]}
+          onChange={(mode) => onChange({ multi: mode === "key" })}
+        />
       </div>
+      <p className="text-xs text-ink-3">
+        {draft.multi
+          ? t(unique ? "filters.keyUniqueHint" : "filters.keyDuplicatesHint", { key: [column, ...draft.extra].join(" + ") })
+          : t(unique ? "filters.uniqueHint" : "filters.duplicatesHint", { column })}
+      </p>
+      {draft.multi && (
+        <div className="rounded-md border border-line">
+          <label className="flex items-center gap-2 border-b border-line px-2.5 py-1 text-[13px] text-ink-3">
+            <input type="checkbox" className="size-3.5" checked disabled />
+            <span className="truncate font-mono text-xs">{column}</span>
+          </label>
+          <ul className="max-h-40 overflow-y-auto py-1" aria-label={t("filters.keyColumns")}>
+            {candidates.map((c) => (
+              <li key={c.name}>
+                <label className="flex cursor-pointer items-center gap-2 px-2.5 py-1 text-[13px] hover:bg-surface-2">
+                  <input
+                    type="checkbox"
+                    className="size-3.5 accent-(--accent)"
+                    checked={draft.extra.includes(c.name)}
+                    onChange={() => toggle(c.name)}
+                  />
+                  <span className="truncate font-mono text-xs">{c.name}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {unique && (
         <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2">
           <span className="text-xs text-ink-3">{t("filters.keep")}</span>

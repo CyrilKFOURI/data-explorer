@@ -93,6 +93,24 @@ describe("Global filters", () => {
     expect(screen.getByRole("button", { name: /^Filter/ })).toHaveTextContent("1");
   });
 
+  it("keeps one row per value of one column", async () => {
+    const calls = setup();
+    renderAt("/d/d1");
+    fireEvent.click(await screen.findByRole("button", { name: /^Filter/ }));
+
+    const panel = await screen.findByRole("dialog", { name: "Filters" });
+    fireEvent.change(within(panel).getByLabelText("Column"), { target: { value: "country" } });
+    fireEvent.change(within(panel).getByLabelText("Condition"), { target: { value: "unique" } });
+    expect(within(panel).getByRole("radio", { name: "This column" })).toHaveAttribute("aria-checked", "true");
+    fireEvent.click(within(panel).getByRole("button", { name: "Apply" }));
+
+    expect(await within(panel).findByText("country · unique (first)")).toBeInTheDocument();
+    await waitFor(() => {
+      const sent = calls.find((c) => c.key === "GET /datasets/d1/overview" && c.params.get("filters"));
+      expect(JSON.parse(sent?.params.get("filters") ?? "[]")[0]).toMatchObject({ op: "unique", columns: [] });
+    });
+  });
+
   it("keeps one row per value of a combination of columns", async () => {
     const calls = setup();
     renderAt("/d/d1");
@@ -101,7 +119,10 @@ describe("Global filters", () => {
     const panel = await screen.findByRole("dialog", { name: "Filters" });
     fireEvent.change(within(panel).getByLabelText("Column"), { target: { value: "country" } });
     fireEvent.change(within(panel).getByLabelText("Condition"), { target: { value: "unique" } });
-    fireEvent.change(within(panel).getByLabelText("+ column"), { target: { value: "price" } });
+    fireEvent.click(within(panel).getByRole("radio", { name: "Several columns (key)" }));
+    fireEvent.click(within(panel).getByRole("button", { name: "Apply" }));
+    expect(await within(panel).findByText("Tick at least one more column for the key.")).toBeInTheDocument();
+    fireEvent.click(within(within(panel).getByRole("list", { name: "Columns of the key" })).getByRole("checkbox", { name: "price" }));
     fireEvent.click(within(panel).getByRole("radio", { name: "Last row" }));
     fireEvent.change(within(panel).getByLabelText("Ordered by"), { target: { value: "price" } });
     fireEvent.click(within(panel).getByRole("button", { name: "Apply" }));

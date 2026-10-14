@@ -38,7 +38,7 @@ Discrets par défaut : un **bouton `Filter`** dans la barre du haut (raccourci `
   - texte / identifiant : contient, commence par, égal, est vide
   - date : avant, après, entre, ou partie de date (année, mois, jour de semaine, heure)
   - chaque filtre a une option « n'est pas »
-  - toute colonne (hors ignorée) propose aussi **Unique values** (une ligne par valeur : garder la première ou la dernière, selon l'ordre du fichier ou « ordered by » une colonne, ex. la date la plus récente) et **Duplicates only** (les lignes dont la valeur apparaît au moins deux fois ; « n'est pas » = valeurs présentes une seule fois). « + column » ajoute des colonnes : l'unicité porte alors sur la combinaison (ex. `vehicle_id` + `month`)
+  - toute colonne (hors ignorée) propose aussi **Unique values** (une ligne par valeur : garder la première ou la dernière, selon l'ordre du fichier ou « ordered by » une colonne, ex. la date la plus récente) et **Duplicates only** (les lignes dont la valeur apparaît au moins deux fois ; « n'est pas » = valeurs présentes une seule fois). un choix **Based on : This column / Several columns (key)** : en mode clé, on coche les autres colonnes et l'unicité porte sur la combinaison, comme une clé primaire (ex. `vehicle_id` + `month`)
 - Logique : **ET entre les filtres**, **OU entre les valeurs cochées** d'un même filtre. Le OU entre colonnes différentes est hors V1. Les filtres de valeurs s'appliquent d'abord, puis Unique / Duplicates, dans l'ordre où ils ont été ajoutés.
 - **Puces** sous la barre du haut (`pays ∈ {FR, BE}` ✕) : optionnelles, masquées par défaut, activables dans le panneau.
 - Filtres **enregistrables** sous un nom et réutilisables.
