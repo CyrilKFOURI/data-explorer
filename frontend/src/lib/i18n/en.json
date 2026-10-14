@@ -654,5 +654,7 @@
   "filters.keyColumns": "Columns of the key",
   "filters.keyUniqueHint": "One row per combination of {key} (like a primary key).",
   "filters.keyDuplicatesHint": "Rows whose combination of {key} appears more than once.",
-  "filters.needKeyColumns": "Tick at least one more column for the key."
+  "filters.needKeyColumns": "Tick at least one more column for the key.",
+  "nav.help": "Guide",
+  "help.contents": "Contents"
 }

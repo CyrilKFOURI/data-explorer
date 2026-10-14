@@ -4,6 +4,8 @@ WORKDIR /web
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
+# The Guide page reads the user guide from docs/ (imported at build time).
+COPY docs/USER_GUIDE.md /docs/USER_GUIDE.md
 RUN npm run build
 
 # --- Runtime: Python backend serving the API and the built frontend ------------------------

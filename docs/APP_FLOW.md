@@ -14,6 +14,7 @@
 | Corrélations | `/d/:id/correlations` | Liens entre toutes les variables + insights | [pages/06-correlations.md](pages/06-correlations.md) |
 | Données | `/d/:id/data` | Table filtrée, exports | [pages/07-donnees.md](pages/07-donnees.md) |
 | Paramètres | `/settings` | Seuils de détection, affichage, cache, thème | [pages/08-parametres.md](pages/08-parametres.md) |
+| Guide | `/help` | Mode d'emploi, fonctionnalités, explication des métriques | [pages/09-aide.md](pages/09-aide.md) |
 
 Éléments présents sur tous les écrans d'un dataset (barre latérale, bandeau de résumé, barre de filtres, palette de commandes) : [pages/00-transverse.md](pages/00-transverse.md).
 

@@ -11,6 +11,7 @@ import { validateFilterSearch, type FilterSearch } from "../api/filters";
 import { modules as registeredModules } from "../modules/registry";
 import type { ModuleManifest } from "../modules/types";
 import { ColumnsPage } from "../pages/columns/ColumnsPage";
+import { HelpPage } from "../pages/help/HelpPage";
 import { HomePage } from "../pages/home/HomePage";
 import { NotFoundPage } from "../pages/not-found/NotFoundPage";
 import { OverviewPage } from "../pages/overview/OverviewPage";
@@ -44,6 +45,7 @@ export function createAppRouter({
     path: "/settings",
     component: SettingsPage,
   });
+  const helpRoute = createRoute({ getParentRoute: () => rootRoute, path: "/help", component: HelpPage });
   const datasetRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: "/d/$datasetId",
@@ -84,6 +86,7 @@ export function createAppRouter({
     routeTree: rootRoute.addChildren([
       homeRoute,
       settingsRoute,
+      helpRoute,
       datasetRoute,
       columnsRoute,
       variableRoute,

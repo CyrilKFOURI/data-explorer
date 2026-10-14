@@ -1,5 +1,6 @@
 import { Link, useParams } from "@tanstack/react-router";
 import {
+  BookOpen,
   Columns3,
   Grid3x3,
   House,
@@ -116,6 +117,7 @@ export function Sidebar({ collapsed, onToggle, modules }: SidebarProps) {
       </div>
 
       <div className="space-y-2 border-t border-line px-2 py-2">
+        <NavLink to="/help" icon={BookOpen} label={t("nav.help")} collapsed={collapsed} />
         <NavLink to="/settings" icon={Settings} label={t("nav.settings")} collapsed={collapsed} />
         <div className={`flex items-center gap-1 ${collapsed ? "flex-col" : "justify-between"}`}>
           {!collapsed && <ThemeSwitcher iconOnly />}
