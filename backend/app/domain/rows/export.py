@@ -6,6 +6,7 @@ from typing import Any, Literal
 
 import duckdb
 from openpyxl import Workbook
+from openpyxl.cell import WriteOnlyCell
 
 from app.core.errors import AppError
 from app.domain.ingestion.sql import ident, lit
@@ -62,13 +63,18 @@ def write_view(
     result = connection.execute(query)
     while chunk := result.fetchmany(CHUNK):
         for record in chunk:
-            sheet.append([_cell(value) for value in record])
+            sheet.append([_cell(sheet, value) for value in record])
     workbook.save(target)
 
 
-def _cell(value: Any) -> Any:
-    if hasattr(value, "tzinfo") and getattr(value, "tzinfo", None) is not None:
+def _cell(sheet: Any, value: Any) -> Any:
+    if getattr(value, "tzinfo", None) is not None:
         return value.replace(tzinfo=None)  # Excel has no time zones
+    if isinstance(value, str) and value.startswith("="):
+        # openpyxl writes "=..." as a formula, which Excel would run on opening: keep it text.
+        cell = WriteOnlyCell(sheet, value)
+        cell.data_type = "s"
+        return cell
     return value
 
 

@@ -1,7 +1,7 @@
 """Rows and exports of a dataset, read through each column's effective type and the filters."""
 
-import os
 import re
+import shutil
 import tempfile
 from collections import OrderedDict
 from dataclasses import dataclass
@@ -34,8 +34,11 @@ EXTENSIONS: dict[str, str] = {"csv": "csv", "parquet": "parquet", "xlsx": "xlsx"
 
 @dataclass
 class ExportFile:
-    path: Path
+    path: Path  # alone in its own temporary directory
     filename: str
+
+    def remove(self) -> None:
+        shutil.rmtree(self.path.parent, ignore_errors=True)
 
 
 class RowService:
@@ -112,7 +115,7 @@ class RowService:
             rows = count(connection, relation) if file_format == "xlsx" else 0
             write_view(connection, relation, order, columns, file_format, target.path, rows)
         except BaseException:
-            target.path.unlink(missing_ok=True)
+            target.remove()
             raise
         finally:
             connection.close()
@@ -125,7 +128,7 @@ class RowService:
         try:
             write_summary(connection, source, columns, target.path)
         except BaseException:
-            target.path.unlink(missing_ok=True)
+            target.remove()
             raise
         finally:
             connection.close()
@@ -133,9 +136,9 @@ class RowService:
 
     @staticmethod
     def _target(name: str, kind: str) -> ExportFile:
+        """A path in a new private directory (mode 0700): nothing else can create or swap it."""
         extension = EXTENSIONS[kind]
         stem = re.sub(r"[^\w.-]+", "_", Path(name).stem).strip("_") or "dataset"
-        handle, path = tempfile.mkstemp(suffix=f".{extension}", prefix="de-export-")
-        os.close(handle)
-        Path(path).unlink()  # DuckDB and openpyxl create the file themselves
-        return ExportFile(Path(path), f"{stem}-{date.today().isoformat()}.{extension}")
+        folder = Path(tempfile.mkdtemp(prefix="de-export-"))
+        filename = f"{stem}-{date.today().isoformat()}.{extension}"
+        return ExportFile(folder / f"export.{extension}", filename)

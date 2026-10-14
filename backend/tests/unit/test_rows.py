@@ -151,3 +151,19 @@ def test_column_summary(connection) -> None:
     assert price["min"] == 3 and price["max"] == 10.5 and price["median"] == pytest.approx(8.75)
     assert city["top_value"] == "Paris" and city["top_share_pct"] == 50
     assert city["distinct"] == 3 and price["distinct"] == 3
+
+
+def test_excel_keeps_formula_like_text_as_text(tmp_path: Path) -> None:
+    con = duckdb.connect()
+    con.execute(
+        "CREATE TABLE f AS SELECT 0::BIGINT AS file_row_number, '=HYPERLINK(\"x\")' AS note"
+    )
+    columns = [RowColumn("note", "text", Parser(kind="text"))]
+    relation, order = view_relation("f", columns, View())
+
+    write_view(con, relation, order, columns, "xlsx", tmp_path / "f.xlsx", 1)
+
+    sheet = load_workbook(tmp_path / "f.xlsx").active
+    assert sheet is not None
+    cell = sheet["A2"]
+    assert cell.data_type == "s" and cell.value == '=HYPERLINK("x")'

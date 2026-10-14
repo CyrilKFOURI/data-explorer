@@ -40,7 +40,7 @@ def _download(file: ExportFile, media_type: str) -> FileResponse:
         file.path,
         media_type=media_type,
         filename=file.filename,
-        background=BackgroundTask(file.path.unlink, missing_ok=True),
+        background=BackgroundTask(file.remove),
     )
 
 
