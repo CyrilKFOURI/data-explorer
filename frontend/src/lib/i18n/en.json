@@ -719,5 +719,6 @@
   "shortcuts.palette": "Command palette",
   "shortcuts.list": "This list",
   "shortcuts.undo": "Undo the last change (Columns page)",
-  "shortcuts.close": "Close a panel, menu or dialog"
+  "shortcuts.close": "Close a panel, menu or dialog",
+  "nav.skip": "Skip to content"
 }

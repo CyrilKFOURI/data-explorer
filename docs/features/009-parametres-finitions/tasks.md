@@ -13,5 +13,5 @@
 - [x] Fenêtre des raccourcis `?` ; tests
 
 ## Revue
-- [ ] Audit design et accessibilité, corrections
-- [ ] PLAN.md, docs ; vérification navigateur
+- [x] Audit (Web Interface Guidelines) : contraste AA corrigé (`ink-3` 3,2→4,5:1 en clair et 3,75→4,9:1 en sombre, accent 4,1→4,7:1, warn), `color-scheme` suivant le thème forcé (listes natives, barres de défilement), lien « Skip to content », focus visible du champ de la palette ; aucun bouton-icône sans nom, pas de `transition-all`, pas de div cliquable hors combobox
+- [x] PLAN.md, docs ; vérification navigateur (Guide, Settings avec vraies tailles, palette Ctrl+K → variable, couleurs calculées)

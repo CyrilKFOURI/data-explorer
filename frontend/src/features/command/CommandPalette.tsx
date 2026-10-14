@@ -136,7 +136,7 @@ export function CommandPalette({ open, onOpenChange, onShortcuts }: CommandPalet
           className="fixed top-[14vh] left-1/2 z-50 flex max-h-[min(70dvh,560px)] w-[calc(100vw-32px)] max-w-xl -translate-x-1/2 flex-col overflow-hidden rounded-lg border border-line bg-surface-1 shadow-[0_12px_40px_-12px_rgb(0_0_0/0.35)]"
         >
           <RadixDialog.Title className="sr-only">{t("palette.title")}</RadixDialog.Title>
-          <div className="flex items-center gap-2 border-b border-line px-3">
+          <div className="flex items-center gap-2 border-b border-line px-3 focus-within:shadow-[inset_0_-2px_0_var(--accent)]">
             <Search size={15} strokeWidth={1.5} className="text-ink-3" aria-hidden />
             <input
               autoFocus

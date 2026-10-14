@@ -5,6 +5,7 @@
  */
 
 :root {
+  color-scheme: light;
   --font-ui: "IBM Plex Sans", system-ui, sans-serif;
   --font-code: "IBM Plex Mono", ui-monospace, monospace;
 
@@ -13,14 +14,14 @@
   --surface-2: #efebe5;
   --ink-1: #24201b;
   --ink-2: #5c544a;
-  --ink-3: #8a8176;
+  --ink-3: #71695f; /* 4.5:1 on every surface (WCAG AA) */
   --line: #e2dcd3;
-  --accent: #c2562f;
+  --accent: #ad4a27; /* 4.6:1 as text on surfaces, 5.5:1 under white text */
   --accent-ink: #ffffff;
   --accent-soft: #f6e3da;
 
   --ok: #2f7d4f;
-  --warn: #9a6200;
+  --warn: #8f5b00;
   --bad: #b3261e;
 
   --type-numeric: #3b6ea8;
@@ -55,12 +56,13 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
+    color-scheme: dark;
     --surface-0: #14120f;
     --surface-1: #1d1a16;
     --surface-2: #27231e;
     --ink-1: #ede8e1;
     --ink-2: #b5aca0;
-    --ink-3: #847b70;
+    --ink-3: #988f83;
     --line: #332e28;
     --accent: #e07a50;
     --accent-ink: #14120f;
@@ -86,12 +88,13 @@
 }
 
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --surface-0: #14120f;
   --surface-1: #1d1a16;
   --surface-2: #27231e;
   --ink-1: #ede8e1;
   --ink-2: #b5aca0;
-  --ink-3: #847b70;
+  --ink-3: #988f83;
   --line: #332e28;
   --accent: #e07a50;
   --accent-ink: #14120f;
