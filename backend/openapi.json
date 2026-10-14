@@ -3098,7 +3098,9 @@
               "contains",
               "starts_with",
               "is_null",
-              "part_in"
+              "part_in",
+              "unique",
+              "duplicated"
             ],
             "title": "Op"
           },
@@ -3177,6 +3179,34 @@
             "type": "boolean",
             "title": "Negate",
             "default": false
+          },
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "title": "Columns"
+          },
+          "keep": {
+            "type": "string",
+            "enum": [
+              "first",
+              "last"
+            ],
+            "title": "Keep",
+            "default": "first"
+          },
+          "order_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By"
           }
         },
         "type": "object",

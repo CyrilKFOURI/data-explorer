@@ -3,8 +3,9 @@ import { useCallback } from "react";
 
 import type { components } from "./schema";
 
-/** One filter condition, as the API takes it (see backend app/domain/filters). */
-export type Condition = components["schemas"]["Condition"];
+type ConditionSchema = components["schemas"]["Condition"];
+/** One filter condition, as the API takes it (see backend app/domain/filters); `keep` has a server default. */
+export type Condition = Omit<ConditionSchema, "keep"> & { keep?: ConditionSchema["keep"] };
 
 /** Filters live in the URL (`?filters=`), tagged with their dataset: another dataset ignores them. */
 export type FilterSearch = { filters?: { dataset: string; conditions: Condition[] } };
@@ -21,6 +22,8 @@ const OPERATORS = new Set<Condition["op"]>([
   "starts_with",
   "is_null",
   "part_in",
+  "unique",
+  "duplicated",
 ]);
 
 function isCondition(value: unknown): value is Condition {

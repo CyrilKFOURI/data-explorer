@@ -640,5 +640,14 @@
   "data.noMatch": "No row contains \"{term}\".",
   "data.noDuplicates": "No duplicate rows: every row is unique.",
   "data.noMissing": "No row has a missing value.",
-  "data.noRows": "No rows to show."
+  "data.noRows": "No rows to show.",
+  "filters.uniqueHint": "One row per value. Add columns to make the value a combination (e.g. id + month).",
+  "filters.duplicatesHint": "Compares the value of these columns together.",
+  "filters.addColumn": "+ column",
+  "filters.removeColumn": "Remove {name}",
+  "filters.keep": "Keep",
+  "filters.keepFirst": "First row",
+  "filters.keepLast": "Last row",
+  "filters.orderedBy": "Ordered by",
+  "filters.fileOrder": "File order"
 }

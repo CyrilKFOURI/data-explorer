@@ -104,3 +104,30 @@ group("filtering from a chart", () => {
     });
   });
 });
+
+group("unique values and duplicates", () => {
+  it("are offered for every column type but ignored", () => {
+    expect(choicesFor("identifier").map((c) => c.id)).toEqual(expect.arrayContaining(["unique", "duplicated", "not_duplicated"]));
+    expect(choicesFor("numeric_continuous").some((c) => c.op === "unique")).toBe(true);
+    expect(choicesFor("ignored")).toEqual([]);
+  });
+
+  it("read as short chips", () => {
+    expect(describe({ column: "vehicle_id", op: "unique", negate: false, keep: "last", order_by: "date" })).toBe(
+      "vehicle_id · unique (last by date)",
+    );
+    expect(describe({ column: "vehicle_id", op: "unique", negate: false, columns: ["month"] })).toBe(
+      "vehicle_id + month · unique (first)",
+    );
+    expect(describe({ column: "email", op: "duplicated", negate: false })).toBe("email · duplicates only");
+    expect(describe({ column: "email", op: "duplicated", negate: true })).toBe("email · appearing once");
+  });
+
+  it("survive the URL", () => {
+    const conditions = [{ column: "vehicle_id", op: "unique", keep: "last" }];
+    expect(validateFilterSearch({ filters: { dataset: "d1", conditions } }).filters?.conditions[0]).toMatchObject({
+      op: "unique",
+      keep: "last",
+    });
+  });
+});

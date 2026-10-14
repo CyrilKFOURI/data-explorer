@@ -162,6 +162,7 @@ export function DataPage() {
           <ConditionEditor
             datasetId={datasetId}
             columns={[filtering]}
+            others={columns.data ?? []}
             onSave={(condition) => {
               add(condition);
               setFiltering(null);

@@ -119,3 +119,81 @@ def test_filters_parameter() -> None:
         parse_filters("not json")
     with pytest.raises(InvalidFilterError):
         parse_filters('[{"column": "a", "op": "drop"}]')
+
+
+FLEET = {
+    "vehicle": FilterColumn("vehicle", "identifier", RAW),
+    "month": FilterColumn("month", "categorical_ordinal", RAW),
+    "country": FilterColumn("country", "categorical_nominal", RAW),
+    "seen": FilterColumn("seen", "datetime", Parser(kind="date", format="%d/%m/%Y")),
+    "junk": FilterColumn("junk", "ignored", RAW),
+}
+
+
+@pytest.fixture
+def fleet() -> duckdb.DuckDBPyConnection:
+    con = duckdb.connect()
+    con.execute(
+        """
+        CREATE TABLE f AS SELECT * FROM (VALUES
+            (0, 'V1', 'jan', 'FR', '03/01/2024', 'x'),
+            (1, 'V2', 'jan', 'BE', '01/01/2024', 'x'),
+            (2, 'V1', 'feb', 'BE', '20/02/2024', 'x'),
+            (3, 'V1', 'feb', 'FR', '10/02/2024', 'x'),
+            (4, 'V3', 'jan', 'FR', NULL, 'x'),
+            (5, 'V2', 'jan', 'BE', '05/01/2024', 'x')
+        ) AS v(file_row_number, vehicle, month, country, seen, junk)
+        """
+    )
+    return con
+
+
+def rows_of(con: duckdb.DuckDBPyConnection, *conditions: Condition) -> list[int]:
+    from app.domain.filters.sql import filtered_source, row_steps
+
+    relation = filtered_source("f", where_sql(list(conditions), FLEET))
+    for step in row_steps(list(conditions), FLEET):
+        relation = step.apply(relation)
+    rows = con.execute(f"SELECT file_row_number FROM {relation} ORDER BY 1").fetchall()
+    return [row[0] for row in rows]
+
+
+def test_unique_keeps_first_or_last_row_per_value(fleet: duckdb.DuckDBPyConnection) -> None:
+    assert rows_of(fleet, c("vehicle", "unique")) == [0, 1, 4]
+    assert rows_of(fleet, c("vehicle", "unique", keep="last")) == [3, 4, 5]
+
+
+def test_unique_ordered_by_a_column(fleet: duckdb.DuckDBPyConnection) -> None:
+    latest = rows_of(fleet, c("vehicle", "unique", keep="last", order_by="seen"))
+    earliest = rows_of(fleet, c("vehicle", "unique", keep="first", order_by="seen"))
+
+    assert latest == [2, 4, 5]  # V1 on 20/02 (typed dates, not text), V2 on 05/01
+    assert earliest == [0, 1, 4]
+
+
+def test_unique_on_a_combination_of_columns(fleet: duckdb.DuckDBPyConnection) -> None:
+    assert rows_of(fleet, c("vehicle", "unique", columns=["month"])) == [0, 1, 2, 4]
+
+
+def test_duplicates_and_their_negation(fleet: duckdb.DuckDBPyConnection) -> None:
+    assert rows_of(fleet, c("vehicle", "duplicated")) == [0, 1, 2, 3, 5]
+    assert rows_of(fleet, c("vehicle", "duplicated", negate=True)) == [4]
+    assert rows_of(fleet, c("vehicle", "duplicated", columns=["month"])) == [1, 2, 3, 5]
+
+
+def test_value_filters_apply_first(fleet: duckdb.DuckDBPyConnection) -> None:
+    # The last FR row of each vehicle, not the vehicles whose last row is FR.
+    found = rows_of(fleet, c("vehicle", "unique", keep="last"), c("country", "in", values=["FR"]))
+
+    assert found == [3, 4]
+
+
+def test_row_conditions_are_validated() -> None:
+    from app.domain.filters.sql import row_steps
+
+    with pytest.raises(InvalidFilterError, match="Unknown column"):
+        row_steps([c("vehicle", "unique", columns=["nope"])], FLEET)
+    with pytest.raises(InvalidFilterError, match="ignored"):
+        row_steps([c("vehicle", "unique", order_by="junk")], FLEET)
+    with pytest.raises(InvalidFilterError, match="negated"):
+        row_steps([c("vehicle", "unique", negate=True)], FLEET)

@@ -8,7 +8,7 @@ export type Choice = {
   op: Condition["op"];
   negate: boolean;
   /** Which inputs the choice needs. */
-  input: "none" | "value" | "range" | "values" | "part";
+  input: "none" | "value" | "range" | "values" | "part" | "rows";
 };
 
 const NUMBER: Choice[] = [
@@ -44,13 +44,20 @@ const EMPTY: Choice[] = [
   { id: "not_null", label: "is not empty", op: "is_null", negate: true, input: "none" },
 ];
 
+/** Act on rows as a whole: one row per value, or the repeated values only (any column type). */
+const ROWS: Choice[] = [
+  { id: "unique", label: "unique values (one row each)", op: "unique", negate: false, input: "rows" },
+  { id: "duplicated", label: "duplicates only", op: "duplicated", negate: false, input: "rows" },
+  { id: "not_duplicated", label: "values appearing once", op: "duplicated", negate: true, input: "rows" },
+];
+
 export function choicesFor(type: AnalysisType): Choice[] {
-  if (type === "numeric_continuous") return [...NUMBER, ...EMPTY];
-  if (type === "numeric_discrete") return [...VALUES, ...NUMBER, ...EMPTY];
-  if (type === "categorical_nominal" || type === "categorical_ordinal") return [...VALUES, ...TEXT, ...EMPTY];
-  if (type === "boolean") return [...VALUES, ...EMPTY];
-  if (type === "datetime") return [...DATE, ...EMPTY];
-  if (type === "text" || type === "identifier") return [...TEXT, ...VALUES, ...EMPTY];
+  if (type === "numeric_continuous") return [...NUMBER, ...EMPTY, ...ROWS];
+  if (type === "numeric_discrete") return [...VALUES, ...NUMBER, ...EMPTY, ...ROWS];
+  if (type === "categorical_nominal" || type === "categorical_ordinal") return [...VALUES, ...TEXT, ...EMPTY, ...ROWS];
+  if (type === "boolean") return [...VALUES, ...EMPTY, ...ROWS];
+  if (type === "datetime") return [...DATE, ...EMPTY, ...ROWS];
+  if (type === "text" || type === "identifier") return [...TEXT, ...VALUES, ...EMPTY, ...ROWS];
   return [];
 }
 
@@ -92,9 +99,15 @@ function short(value: Condition["value"]): string {
   return typeof value === "string" && /^\d{4}-\d{2}-\d{2}T00:00/.test(value) ? value.slice(0, 10) : String(value ?? "");
 }
 
-/** "country ∈ FR, BE", "age ≥ 30", "signup_date on Mon"... */
+/** "country ∈ FR, BE", "age ≥ 30", "signup_date on Mon", "vehicle_id · unique (last by date)"... */
 export function describe(condition: Condition): string {
   const { column, op, negate } = condition;
+  if (op === "unique" || op === "duplicated") {
+    const key = [column, ...(condition.columns ?? [])].join(" + ");
+    if (op === "duplicated") return `${key} · ${negate ? "appearing once" : "duplicates only"}`;
+    const order = condition.order_by ? ` by ${condition.order_by}` : "";
+    return `${key} · unique (${condition.keep ?? "first"}${order})`;
+  }
   const symbols = SYMBOLS[op];
   if (symbols) return `${column} ${symbols[negate ? 1 : 0]} ${short(condition.value)}`;
   if (op === "between") {

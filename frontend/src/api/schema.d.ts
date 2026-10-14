@@ -843,7 +843,7 @@ export interface components {
              * Op
              * @enum {string}
              */
-            op: "eq" | "gt" | "gte" | "lt" | "lte" | "between" | "in" | "contains" | "starts_with" | "is_null" | "part_in";
+            op: "eq" | "gt" | "gte" | "lt" | "lte" | "between" | "in" | "contains" | "starts_with" | "is_null" | "part_in" | "unique" | "duplicated";
             /** Value */
             value?: string | number | null;
             /** Low */
@@ -859,6 +859,16 @@ export interface components {
              * @default false
              */
             negate: boolean;
+            /** Columns */
+            columns?: string[];
+            /**
+             * Keep
+             * @default first
+             * @enum {string}
+             */
+            keep: "first" | "last";
+            /** Order By */
+            order_by?: string | null;
         };
         /** Contingency */
         Contingency: {

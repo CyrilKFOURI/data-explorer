@@ -7,11 +7,14 @@ import { formatCount } from "../../lib/format";
 import { t } from "../../lib/i18n";
 import { Button } from "../../ui/Button";
 import { Select, TextInput } from "../../ui/fields";
+import { SegmentedControl } from "../../ui/SegmentedControl";
 import { choiceOf, choicesFor, PARTS, type Choice } from "./conditions";
 
 type ConditionEditorProps = {
   datasetId: string;
   columns: Column[];
+  /** Columns offered for "+ column" and "ordered by" (default: `columns`). */
+  others?: Column[];
   initial?: Condition;
   onSave: (condition: Condition) => void;
   onCancel: () => void;
@@ -25,6 +28,9 @@ type Draft = {
   high: string;
   values: string[];
   part: string;
+  extra: string[];
+  keep: "first" | "last";
+  orderBy: string;
 };
 
 function draftOf(condition: Condition | undefined, columns: Column[]): Draft {
@@ -38,6 +44,9 @@ function draftOf(condition: Condition | undefined, columns: Column[]): Draft {
     high: condition?.high !== undefined && condition.high !== null ? String(condition.high) : "",
     values: condition?.values ?? [],
     part: condition?.part ?? "day_of_week",
+    extra: condition?.columns ?? [],
+    keep: condition?.keep ?? "first",
+    orderBy: condition?.order_by ?? "",
   };
 }
 
@@ -48,6 +57,12 @@ function build(draft: Draft, column: Column, choice: Choice): Condition | string
   const read = (raw: string) => (numeric ? Number(raw) : raw);
   const filled = (raw: string) => raw.trim() !== "" && (!numeric || Number.isFinite(Number(raw)));
   if (choice.input === "none") return base;
+  if (choice.input === "rows") {
+    const columns = draft.extra.filter((name) => name !== column.name);
+    return choice.op === "unique"
+      ? { ...base, columns, keep: draft.keep, order_by: draft.orderBy || null }
+      : { ...base, columns };
+  }
   if (choice.input === "value") {
     return filled(draft.value) ? { ...base, value: read(draft.value) } : t("filters.needValue");
   }
@@ -61,7 +76,7 @@ function build(draft: Draft, column: Column, choice: Choice): Condition | string
     : { ...base, values: draft.values };
 }
 
-export function ConditionEditor({ datasetId, columns, initial, onSave, onCancel }: ConditionEditorProps) {
+export function ConditionEditor({ datasetId, columns, others = columns, initial, onSave, onCancel }: ConditionEditorProps) {
   const [draft, setDraft] = useState<Draft>(() => draftOf(initial, columns));
   const [error, setError] = useState<string | null>(null);
   const column = columns.find((c) => c.name === draft.column);
@@ -96,7 +111,13 @@ export function ConditionEditor({ datasetId, columns, initial, onSave, onCancel 
           value={draft.column}
           onChange={(event) => {
             const next = columns.find((c) => c.name === event.target.value);
-            update({ column: event.target.value, choice: next ? (choicesFor(next.type)[0]?.id ?? "") : "", values: [], value: "" });
+            update({
+              column: event.target.value,
+              choice: next ? (choicesFor(next.type)[0]?.id ?? "") : "",
+              values: [],
+              value: "",
+              extra: [],
+            });
           }}
         >
           {columns.map((c) => (
@@ -135,6 +156,15 @@ export function ConditionEditor({ datasetId, columns, initial, onSave, onCancel 
       )}
       {choice?.input === "part" && (
         <PartPicker part={draft.part} selected={draft.values} onChange={(part, values) => update({ part, values })} />
+      )}
+      {choice?.input === "rows" && column && (
+        <RowsOptions
+          column={column.name}
+          unique={choice.op === "unique"}
+          columns={others.filter((c) => c.type !== "ignored" && !c.excluded)}
+          draft={draft}
+          onChange={update}
+        />
       )}
 
       {error && <p className="text-xs text-bad">{error}</p>}
@@ -203,6 +233,84 @@ function ValuesPicker({
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+/** Unique values / Duplicates: more columns making up the value; which row to keep. */
+function RowsOptions({
+  column,
+  unique,
+  columns,
+  draft,
+  onChange,
+}: {
+  column: string;
+  unique: boolean;
+  columns: Column[];
+  draft: Draft;
+  onChange: (patch: Partial<Draft>) => void;
+}) {
+  const addable = columns.filter((c) => c.name !== column && !draft.extra.includes(c.name));
+  return (
+    <div className="space-y-2.5 rounded-md border border-line p-2.5">
+      <div className="space-y-1.5">
+        <p className="text-xs text-ink-3">{t(unique ? "filters.uniqueHint" : "filters.duplicatesHint")}</p>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-xs text-ink-1">{column}</span>
+          {draft.extra.map((name) => (
+            <span key={name} className="inline-flex items-center gap-1 rounded bg-surface-2 py-0.5 pr-0.5 pl-1.5 font-mono text-xs text-ink-1">
+              + {name}
+              <button
+                type="button"
+                aria-label={t("filters.removeColumn", { name })}
+                onClick={() => onChange({ extra: draft.extra.filter((item) => item !== name) })}
+                className="rounded px-1 text-ink-3 hover:bg-surface-1 hover:text-ink-1"
+              >
+                ×
+              </button>
+            </span>
+          ))}
+          {addable.length > 0 && (
+            <Select
+              aria-label={t("filters.addColumn")}
+              value=""
+              onChange={(event) => event.target.value && onChange({ extra: [...draft.extra, event.target.value] })}
+              className="h-7 w-auto text-xs"
+            >
+              <option value="">{t("filters.addColumn")}</option>
+              {addable.map((c) => (
+                <option key={c.name} value={c.name}>
+                  {c.name}
+                </option>
+              ))}
+            </Select>
+          )}
+        </div>
+      </div>
+      {unique && (
+        <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2">
+          <span className="text-xs text-ink-3">{t("filters.keep")}</span>
+          <SegmentedControl
+            label={t("filters.keep")}
+            value={draft.keep}
+            options={[
+              { value: "first", label: t("filters.keepFirst") },
+              { value: "last", label: t("filters.keepLast") },
+            ]}
+            onChange={(keep) => onChange({ keep })}
+          />
+          <span className="text-xs text-ink-3">{t("filters.orderedBy")}</span>
+          <Select aria-label={t("filters.orderedBy")} value={draft.orderBy} onChange={(event) => onChange({ orderBy: event.target.value })}>
+            <option value="">{t("filters.fileOrder")}</option>
+            {columns.map((c) => (
+              <option key={c.name} value={c.name}>
+                {c.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+      )}
     </div>
   );
 }

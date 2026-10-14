@@ -7,7 +7,7 @@ Comparisons follow SQL: a negated condition never keeps empty values, except `is
 import math
 from datetime import datetime
 
-from app.domain.filters.model import Condition, InvalidFilterError
+from app.domain.filters.model import ROW_OPERATORS, Condition, InvalidFilterError
 from app.domain.ingestion.sql import lit
 from app.domain.typing.dates import part_sql
 from app.domain.typing.parsers import typed_sql
@@ -137,14 +137,65 @@ def condition_sql(condition: Condition, column: FilterColumn) -> str:
 
 
 def where_sql(conditions: list[Condition], columns: dict[str, FilterColumn]) -> str:
-    """AND of every condition; "" when there is none."""
+    """AND of every value condition; "" when there is none (row conditions: see RowStep)."""
     parts = []
     for condition in conditions:
-        column = columns.get(condition.column)
-        if column is None:
-            raise InvalidFilterError(f"Unknown column {condition.column!r}.")
-        parts.append(condition_sql(condition, column))
+        if condition.op in ROW_OPERATORS:
+            continue
+        parts.append(condition_sql(condition, _known(condition.column, columns)))
     return " AND ".join(parts)
+
+
+def _known(name: str, columns: dict[str, FilterColumn]) -> FilterColumn:
+    column = columns.get(name)
+    if column is None:
+        raise InvalidFilterError(f"Unknown column {name!r}.")
+    if column.type == "ignored":
+        raise InvalidFilterError(f"{name!r} is ignored: it can't be filtered.")
+    return column
+
+
+ROW = "file_row_number"
+
+
+class RowStep:
+    """Unique values or Duplicates only: a window over the rows already filtered by value.
+
+    Values compare in their analysis type (parser applied); empty values form one group.
+    """
+
+    def __init__(self, condition: Condition, columns: dict[str, FilterColumn]) -> None:
+        names = list(dict.fromkeys([condition.column, *condition.columns]))
+        keys = [_known(name, columns) for name in names]
+        self.partition = ", ".join(typed_sql(k.name, k.parser) for k in keys)
+        self.op = condition.op
+        self.negate = condition.negate
+        if condition.op == "unique" and condition.negate:
+            raise InvalidFilterError("Unique values can't be negated: use Duplicates only.")
+        direction = "DESC" if condition.keep == "last" else "ASC"
+        self.order = f"{ROW} {direction}"
+        if condition.order_by:
+            by = _known(condition.order_by, columns)
+            self.order = f"{typed_sql(by.name, by.parser)} {direction} NULLS LAST, {self.order}"
+
+    def apply(self, relation: str) -> str:
+        """`relation` must carry `file_row_number`."""
+        if self.op == "unique":
+            return (
+                f"(SELECT * EXCLUDE (__de_rank) FROM (SELECT *, row_number() OVER "
+                f"(PARTITION BY {self.partition} ORDER BY {self.order}) AS __de_rank "
+                f"FROM {relation}) WHERE __de_rank = 1)"
+            )
+        test = "= 1" if self.negate else "> 1"
+        return (
+            f"(SELECT * EXCLUDE (__de_copies) FROM (SELECT *, count(*) OVER "
+            f"(PARTITION BY {self.partition}) AS __de_copies FROM {relation}) "
+            f"WHERE __de_copies {test})"
+        )
+
+
+def row_steps(conditions: list[Condition], columns: dict[str, FilterColumn]) -> list[RowStep]:
+    return [RowStep(c, columns) for c in conditions if c.op in ROW_OPERATORS]
 
 
 def filtered_source(base: str, where: str) -> str:

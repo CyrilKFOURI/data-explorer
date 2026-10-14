@@ -20,6 +20,13 @@
 - [x] État vide « 0 ligne » avec « Clear filters » ; Columns sur lignes filtrées
 - [x] Tests : conditions, URL, clic graphique, parcours (ajout, navigation, autre dataset, retrait), outliers (55 tests frontend)
 
+## Unique values / Duplicates only (ajout)
+- [x] Modèle : opérateurs `unique` / `duplicated`, `columns`, `keep`, `order_by` ; validation (colonnes connues et non ignorées)
+- [x] SQL : filtres de valeurs puis fenêtres (`row_number` / `count`) dans l'ordre d'ajout ; partout via `scoped_source`
+- [x] Tests backend : first / last / ordered by, combinaison de colonnes, duplicates et sa négation, après un filtre de valeurs, API (vue d'ensemble, lignes)
+- [x] Front : choix dans l'éditeur, « + column », keep, ordered by ; puce ; tests
+- [x] Vérification navigateur : `sales_timeseries`, store · unique (last by date) → 3 / 3 285 lignes, une par magasin au 2024-12-30
+
 ## Vérification
 - [x] Navigateur : `typing_traps`, FR (175/600) + âge ≥ 60 (67) + lundi (5), navigation Overview → Columns → fiche, enregistrement, rechargement, puces, Clear all
 - [ ] Clic sur un graphique vérifié à l'œil (panneau navigateur masqué : couvert par les tests)

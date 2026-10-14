@@ -10,6 +10,7 @@ Regarder le dataset **sur un sous-ensemble de lignes**, partout dans l'app, sans
 - **Dans un filtre catégoriel : OU** entre les valeurs cochées (`country ∈ {FR, BE}`).
 - **« N'est pas »** sur chaque filtre (`∉`, `≠`, hors de l'intervalle, non vide…).
 - Le OU entre colonnes différentes est hors V1 (mode avancé éventuel).
+- **Unique values / Duplicates only** (ajout après la 008, à la demande de l'utilisateur) : sur une ou plusieurs colonnes. Ils s'appliquent **après** les filtres de valeurs, dans leur ordre d'ajout.
 
 ## User stories
 
@@ -30,6 +31,10 @@ Regarder le dataset **sur un sous-ensemble de lignes**, partout dans l'app, sans
 - GIVEN « n'est pas » sur un intervalle numérique, THEN seules les lignes hors de l'intervalle restent (les vides sont exclus, comme en SQL).
 - Le filtre porte sur la valeur **typée** de la colonne (son parser) : `price_eur > 100` compare des nombres, même si le fichier contient « 79,50 ».
 - Filtre de date sur partie : `day_of_week ∈ {Mon}` ne garde que les lundis.
+- Unique values : condition `{op: "unique", column, columns: [autres colonnes], keep: "first"|"last", order_by: colonne|null}`. GIVEN 3 lignes du véhicule V1 THEN une seule reste : la première du fichier (`keep=first`), la dernière (`keep=last`), ou celle de la date la plus récente (`keep=last, order_by=date`, vides en dernier, ex æquo départagés par l'ordre du fichier). Comparaison sur les valeurs **typées** ; les vides forment un groupe comme une valeur.
+- Duplicates only : condition `{op: "duplicated", column, columns}` → les lignes dont la valeur (ou la combinaison) apparaît au moins deux fois, toutes les copies ; « n'est pas » → celles qui n'apparaissent qu'une fois.
+- GIVEN `country ∈ {FR}` + unique sur `vehicle_id` (last) THEN la dernière ligne **FR** de chaque véhicule (filtres de valeurs d'abord).
+- Le bandeau, les compteurs, toutes les pages et les exports en tiennent compte ; puce lisible (« vehicle_id · unique (last by date) »).
 - Valeurs injectées échappées ; colonne inconnue, opérateur incompatible avec le type ou valeur illisible → erreur 422 claire.
 - Columns : types et détection inchangés par les filtres ; les résumés (vides, distinctes, exemples, mini-histogramme) sont recalculés sur les lignes filtrées.
 - Filtres enregistrés persistés en SQLite par dataset ; supprimés avec le dataset.

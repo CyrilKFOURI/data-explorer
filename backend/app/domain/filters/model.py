@@ -20,10 +20,14 @@ Operator = Literal[
     "starts_with",
     "is_null",
     "part_in",  # a date part (`part`) is one of `values`, e.g. day_of_week in [1]
+    "unique",  # one row per value of `column` (+ `columns`): the first or last (`keep`)
+    "duplicated",  # rows whose value (+ `columns`) appears at least twice; negated: once
 ]
+ROW_OPERATORS = ("unique", "duplicated")  # act on rows as a whole, after the value conditions
 
 MAX_CONDITIONS = 50
 MAX_VALUES = 1_000
+MAX_KEY_COLUMNS = 10
 
 
 class Condition(BaseModel):
@@ -35,6 +39,10 @@ class Condition(BaseModel):
     values: list[str] = Field(default_factory=list, max_length=MAX_VALUES)
     part: DatePart | None = None
     negate: bool = False
+    # Unique values / Duplicates only: more columns making up the value, which row to keep.
+    columns: list[str] = Field(default_factory=list, max_length=MAX_KEY_COLUMNS)
+    keep: Literal["first", "last"] = "first"
+    order_by: str | None = None  # None: the file order
 
 
 Conditions = TypeAdapter(list[Condition])

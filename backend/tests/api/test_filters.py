@@ -112,3 +112,34 @@ def test_filter_cost_on_five_million_rows(client: TestClient, tmp_path) -> None:
 
     assert filtered.json()["rows"] == 1666667
     assert narrowed - plain < 1, (plain, narrowed)
+
+
+def test_unique_values_and_duplicates_everywhere(client: TestClient, traps: str) -> None:
+    one_per_city = [{"column": "city", "op": "unique", "keep": "last", "order_by": "signup_date"}]
+    repeated = [{"column": "city", "op": "duplicated", "negate": True}]
+
+    overview = get(client, f"/datasets/{traps}/overview", one_per_city).json()
+    chart = get(client, f"/datasets/{traps}/columns/chart", one_per_city, column="city").json()
+    rows = get(client, f"/datasets/{traps}/rows", one_per_city, limit=500).json()
+    lonely = get(client, f"/datasets/{traps}/overview", repeated).json()
+    cities = overview["column_stats"]["city"]["distinct"]
+
+    assert overview["rows"] == cities == rows["total"] < 600
+    assert all(bar["count"] == 1 for bar in chart["bars"])
+    assert lonely["rows"] < 600
+    # Combined with a value filter: one row per French city.
+    french = get(client, f"/datasets/{traps}/overview", [*FR, *one_per_city]).json()
+    assert french["rows"] == french["column_stats"]["city"]["distinct"] < cities
+
+
+def test_unique_values_can_be_saved_and_are_validated(client: TestClient, traps: str) -> None:
+    bad = [{"column": "city", "op": "unique", "columns": ["nope"]}]
+
+    response = get(client, f"/datasets/{traps}/overview", bad)
+    saved = client.post(
+        f"/api/v1/datasets/{traps}/saved-filters",
+        json={"name": "one per city", "conditions": [{"column": "city", "op": "unique"}]},
+    )
+
+    assert response.status_code == 422 and response.json()["error"]["code"] == "invalid_filter"
+    assert saved.status_code in (200, 201), saved.text

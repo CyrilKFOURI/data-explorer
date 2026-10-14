@@ -93,6 +93,28 @@ describe("Global filters", () => {
     expect(screen.getByRole("button", { name: /^Filter/ })).toHaveTextContent("1");
   });
 
+  it("keeps one row per value of a combination of columns", async () => {
+    const calls = setup();
+    renderAt("/d/d1");
+    fireEvent.click(await screen.findByRole("button", { name: /^Filter/ }));
+
+    const panel = await screen.findByRole("dialog", { name: "Filters" });
+    fireEvent.change(within(panel).getByLabelText("Column"), { target: { value: "country" } });
+    fireEvent.change(within(panel).getByLabelText("Condition"), { target: { value: "unique" } });
+    fireEvent.change(within(panel).getByLabelText("+ column"), { target: { value: "price" } });
+    fireEvent.click(within(panel).getByRole("radio", { name: "Last row" }));
+    fireEvent.change(within(panel).getByLabelText("Ordered by"), { target: { value: "price" } });
+    fireEvent.click(within(panel).getByRole("button", { name: "Apply" }));
+
+    expect(await within(panel).findByText("country + price · unique (last by price)")).toBeInTheDocument();
+    await waitFor(() => {
+      const sent = calls.find((c) => c.key === "GET /datasets/d1/overview" && c.params.get("filters"));
+      expect(JSON.parse(sent?.params.get("filters") ?? "[]")).toEqual([
+        { column: "country", op: "unique", negate: false, columns: ["price"], keep: "last", order_by: "price" },
+      ]);
+    });
+  });
+
   it("keeps the filters when moving to another page", async () => {
     const calls = setup();
     const filters = encodeURIComponent(JSON.stringify({ dataset: "d1", conditions: JSON.parse(FR) }));
