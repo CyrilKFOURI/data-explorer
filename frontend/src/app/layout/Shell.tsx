@@ -1,6 +1,7 @@
 import { Outlet } from "@tanstack/react-router";
 import { useState } from "react";
 
+import { KeyboardLayer } from "../../features/command/Shortcuts";
 import type { ModuleManifest } from "../../modules/types";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
@@ -37,6 +38,7 @@ export function Shell({ modules }: { modules: ModuleManifest[] }) {
           <Outlet />
         </main>
       </div>
+      <KeyboardLayer />
     </div>
   );
 }

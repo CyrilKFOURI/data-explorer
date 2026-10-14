@@ -12,6 +12,8 @@
         if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
         var density = localStorage.getItem("de.density");
         if (density === "comfortable") document.documentElement.dataset.density = density;
+        var motion = localStorage.getItem("de.motion");
+        if (motion === "reduce" || motion === "full") document.documentElement.dataset.motion = motion;
       } catch (e) {}
     </script>
   </head>

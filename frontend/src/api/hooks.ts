@@ -10,6 +10,7 @@ import {
   type Dataset,
   type ImportOptions,
   type OutlierMethod,
+  type DetectionSettings,
   type RowsView,
   type SourceOptions,
 } from "./client";
@@ -41,6 +42,8 @@ export const queryKeys = {
     ["datasets", id, "correlations", method, columns, filters] as const,
   compare: (id: string, params: CompareParams, filters: Condition[]) =>
     ["datasets", id, "compare", params, filters] as const,
+  settings: ["settings"] as const,
+  storage: ["storage"] as const,
   rows: (id: string, view: RowsView, filters: Condition[], block: number) =>
     ["datasets", id, "rows", view, filters, block] as const,
 };
@@ -342,5 +345,30 @@ export function useRowBlocks(id: string, view: RowsView, blocks: number[], enabl
       staleTime: 60_000,
       placeholderData: block === 0 ? keepPreviousData : undefined,
     })),
+  });
+}
+
+export function useSettings() {
+  return useQuery({ queryKey: queryKeys.settings, queryFn: api.settings });
+}
+
+export function useUpdateSettings() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (detection: DetectionSettings) => api.updateSettings(detection),
+    onSuccess: (saved) => client.setQueryData(queryKeys.settings, saved),
+  });
+}
+
+export function useStorage() {
+  return useQuery({ queryKey: queryKeys.storage, queryFn: api.storage });
+}
+
+/** Empties the server's in-memory caches and this page's cached results. */
+export function useClearCaches() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: api.clearCaches,
+    onSuccess: () => client.invalidateQueries({ queryKey: ["datasets"] }),
   });
 }

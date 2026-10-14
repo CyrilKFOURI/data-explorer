@@ -525,6 +525,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Settings */
+        get: operations["read_settings_api_v1_settings_get"];
+        /**
+         * Write Settings
+         * @description Detection thresholds apply to the next detections (imports, "Re-run detection").
+         */
+        put: operations["write_settings_api_v1_settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/storage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Storage */
+        get: operations["storage_api_v1_storage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/storage/clear-caches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Clear Caches */
+        post: operations["clear_caches_api_v1_storage_clear_caches_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/modules/hello": {
         parameters: {
             query?: never;
@@ -559,6 +614,10 @@ export interface components {
             message: string;
             /** Columns */
             columns?: string[];
+        };
+        /** AppSettings */
+        AppSettings: {
+            detection?: components["schemas"]["DetectionSettings"];
         };
         /** Bar */
         Bar: {
@@ -974,6 +1033,15 @@ export interface components {
             source_state: "ok" | "changed" | "missing";
             job?: components["schemas"]["JobOut"] | null;
         };
+        /** DatasetUsage */
+        DatasetUsage: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Bytes */
+            bytes: number;
+        };
         /** Density */
         Density: {
             /** X Edges */
@@ -1039,6 +1107,32 @@ export interface components {
             kurtosis: number | null;
             /** Sum */
             sum: number | null;
+        };
+        /**
+         * DetectionSettings
+         * @description Bounds keep detection sensible: below half, "mostly numbers" would mean nothing.
+         */
+        DetectionSettings: {
+            /**
+             * Parse Rate
+             * @default 0.95
+             */
+            parse_rate: number;
+            /**
+             * Empty Rate
+             * @default 0.95
+             */
+            empty_rate: number;
+            /**
+             * Discrete Max
+             * @default 20
+             */
+            discrete_max: number;
+            /**
+             * Identifier Unique
+             * @default 0.95
+             */
+            identifier_unique: number;
         };
         /** Effect */
         Effect: {
@@ -1684,6 +1778,15 @@ export interface components {
              * @enum {string}
              */
             folder_mode: "union" | "intersection";
+        };
+        /** StorageInfo */
+        StorageInfo: {
+            /** Workspace */
+            workspace: string;
+            /** Total Bytes */
+            total_bytes: number;
+            /** Datasets */
+            datasets: components["schemas"]["DatasetUsage"][];
         };
         /** TestResult */
         TestResult: {
@@ -2930,6 +3033,97 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    read_settings_api_v1_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppSettings"];
+                };
+            };
+        };
+    };
+    write_settings_api_v1_settings_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppSettings"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppSettings"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    storage_api_v1_storage_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageInfo"];
+                };
+            };
+        };
+    };
+    clear_caches_api_v1_storage_clear_caches_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

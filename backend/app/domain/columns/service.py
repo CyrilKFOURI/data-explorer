@@ -2,7 +2,7 @@
 
 import json
 import sqlite3
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Any, cast
@@ -20,7 +20,7 @@ from app.domain.datasets.repository import DatasetRecord, now
 from app.domain.datasets.service import DatasetService, NotFoundError
 from app.domain.ingestion.sql import lit
 from app.domain.typing.conversion import parser_for
-from app.domain.typing.engine import detect_columns
+from app.domain.typing.engine import DEFAULT_THRESHOLDS, Thresholds, detect_columns
 from app.domain.typing.knowledge_base import load
 from app.domain.typing.summary import summarize
 from app.domain.typing.types import AnalysisType, ColumnDetection, Confidence, Parser
@@ -115,6 +115,8 @@ class ColumnService:
     def __init__(self, workspace: Workspace, datasets: DatasetService) -> None:
         self.workspace = workspace
         self.datasets = datasets
+        # Replaced by the settings service at start-up (see app.main).
+        self.thresholds: Callable[[], Thresholds] = lambda: DEFAULT_THRESHOLDS
 
     @contextmanager
     def _db(self) -> Iterator[sqlite3.Connection]:
@@ -151,7 +153,9 @@ class ColumnService:
         """Detect all columns of a stored dataset, keeping the user's corrections."""
         duck = duckdb.connect()
         try:
-            detections = detect_columns(duck, f"read_parquet({lit(storage_path)})")
+            detections = detect_columns(
+                duck, f"read_parquet({lit(storage_path)})", self.thresholds()
+            )
             with self._db() as sqlite_connection:
                 previous = {r.name: r for r in repo.list_columns(sqlite_connection, dataset_id)}
                 records = []

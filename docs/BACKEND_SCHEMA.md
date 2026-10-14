@@ -13,7 +13,7 @@
 | `columns` | Une colonne : détection, corrections, résumé | `dataset_id`, `name`, `position`, `storage_dtype`, `detected_type`, `detected_role`, `detected_parser` (JSON), `detected_order` (JSON), `candidates` (meilleur parseur par famille, JSON), `confidence`, `reasons` (JSON), `user_type`, `user_role` (`''` = aucun rôle), `user_parser`, `user_order`, `excluded`, `summary` (JSON : lignes, vides, invalides, distinctes, exemples, histogramme). `datasets` gagne `types_reviewed_at` |
 | `saved_filters` | Filtres enregistrés (migration 0004) | `id`, `dataset_id`, `name` (unique par dataset : réenregistrer remplace), `conditions` (JSON : liste de conditions combinées en ET), `created_at`. Les filtres **actifs** ne sont pas stockés : ils vivent dans l'URL (`?filters=`) |
 | `ui_state` | Où l'utilisateur en était, par dataset | `dataset_id`, `key` (ex. `overview.page`, `overview.topN`), `value` (JSON) |
-| `settings` | Préférences globales (seuils de détection, Top N par défaut, thème…) | `key`, `value` (JSON) |
+| `settings` | Préférences globales du serveur : clé `detection` = seuils de détection (`parse_rate`, `empty_rate`, `discrete_max`, `identifier_unique`). Apparence et valeurs par défaut de l'analyse restent dans le navigateur | `key`, `value` (JSON) |
 | `analysis_cache` | Index du cache des analyses | `key` (hash), `dataset_id`, `analysis`, `params_hash`, `result` (JSON ou chemin de fichier), `size_bytes`, `created_at`, `last_used_at` |
 | `jobs` | Tâches longues | `id`, `kind`, `dataset_id`, `status` (pending / running / done / failed), `progress` (0–1), `message`, `created_at`, `finished_at`. Au démarrage, les jobs restés en cours sont marqués en échec |
 

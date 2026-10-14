@@ -21,6 +21,7 @@ from app.api import (
     sources,
     variable,
 )
+from app.api import settings as settings_api
 from app.api.errors import register_error_handlers
 from app.api.security import protect
 from app.config import Settings
@@ -34,6 +35,7 @@ from app.domain.datasets.service import DatasetService
 from app.domain.filters.saved import SavedFilterService
 from app.domain.profiling.service import ProfilingService
 from app.domain.rows.service import RowService
+from app.domain.settings.service import SettingsService
 from app.domain.variable.service import VariableService
 from app.modules.registry import mount_modules
 
@@ -70,12 +72,22 @@ def create_app(settings: Settings | None = None, job_runner: JobRunner | None = 
     app.state.compare = CompareService(column_service)
     app.state.correlations = CorrelationService(column_service)
     app.state.rows = RowService(column_service)
+    settings_service = SettingsService(workspace, dataset_service)
+    column_service.thresholds = settings_service.thresholds
+    settings_service.cache_clearers += [
+        app.state.profiling._overviews.clear,
+        app.state.variable._cache.clear,
+        app.state.compare._cache.clear,
+        app.state.correlations._cache.clear,
+        app.state.rows._counts.clear,
+    ]
+    app.state.settings = settings_service
     register_error_handlers(app)
     protect(app, tuple(settings.allowed_hosts))
 
     api = APIRouter(prefix=API_PREFIX)
     routers = (health, datasets, sources, jobs, columns, profiling, variable, filters, compare)
-    for module in (*routers, correlations, rows):
+    for module in (*routers, correlations, rows, settings_api):
         api.include_router(module.router)
     app.include_router(api)
     mount_modules(app, API_PREFIX)

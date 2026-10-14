@@ -1,6 +1,7 @@
 import { Link, useParams } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, Columns3, Info, Search, TriangleAlert } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { PAGE_SIZES, readDefaults, TOP_NS } from "../../lib/defaults";
 
 import type { Alert, AnalysisType, Column, Overview } from "../../api/client";
 import { useColumns, useDataset, useOpenDataset, useOverview, useUpdateColumns } from "../../api/hooks";
@@ -15,8 +16,6 @@ import { ErrorNote, Select, TextInput } from "../../ui/fields";
 
 type Sort = "file" | "name" | "missing" | "distinct" | "skewness";
 
-const PAGE_SIZES = [6, 12, 24, 48];
-const TOP_NS = [5, 10, 15, 20, 30, 50];
 
 function sortColumns(columns: Column[], sort: Sort, overview: Overview | undefined): Column[] {
   const stats = overview?.column_stats ?? {};
@@ -47,8 +46,8 @@ export function OverviewPage() {
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useStoredState<AnalysisType | null>(key("type"), null);
   const [sort, setSort] = useStoredState<Sort>(key("sort"), "file");
-  const [pageSize, setPageSize] = useStoredState(key("pageSize"), 12);
-  const [topN, setTopN] = useStoredState(key("topN"), 10);
+  const [pageSize, setPageSize] = useStoredState(key("pageSize"), readDefaults().pageSize);
+  const [topN, setTopN] = useStoredState(key("topN"), readDefaults().topN);
   const [page, setPage] = useStoredState(key("page"), 0);
 
   useEffect(() => {

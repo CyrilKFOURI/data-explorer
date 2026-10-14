@@ -1,6 +1,7 @@
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { ArrowLeft, ChevronLeft, ChevronRight, ScatterChart } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { readDefaults } from "../../lib/defaults";
 
 import type { AnalysisType, Column, VariableProfile } from "../../api/client";
 import { useActiveFilters } from "../../api/filters";
@@ -207,7 +208,7 @@ function VariableSections({ datasetId, column, profile }: { datasetId: string; c
 function NumericBody({ datasetId, column, profile }: { datasetId: string; column: Column; profile: VariableProfile }) {
   const numeric = profile.numeric;
   const [tab, setTab] = useState<NumericTab>("summary");
-  const [alpha, setAlpha] = useStoredState<Alpha>("de.variable.alpha", "0.05");
+  const [alpha, setAlpha] = useStoredState<Alpha>("de.variable.alpha", readDefaults().alpha);
   if (!numeric) return null;
   const summary = numeric.describe;
   const normal = isNormal(numeric.normality, Number(alpha));

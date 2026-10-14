@@ -2065,6 +2065,102 @@
         }
       }
     },
+    "/api/v1/settings": {
+      "get": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Read Settings",
+        "operationId": "read_settings_api_v1_settings_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppSettings"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Write Settings",
+        "description": "Detection thresholds apply to the next detections (imports, \"Re-run detection\").",
+        "operationId": "write_settings_api_v1_settings_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppSettings"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppSettings"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/storage": {
+      "get": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Storage",
+        "operationId": "storage_api_v1_storage_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/storage/clear-caches": {
+      "post": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Clear Caches",
+        "operationId": "clear_caches_api_v1_storage_clear_caches_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        }
+      }
+    },
     "/api/v1/modules/hello": {
       "get": {
         "tags": [
@@ -2122,6 +2218,15 @@
           "message"
         ],
         "title": "Alert"
+      },
+      "AppSettings": {
+        "properties": {
+          "detection": {
+            "$ref": "#/components/schemas/DetectionSettings"
+          }
+        },
+        "type": "object",
+        "title": "AppSettings"
       },
       "Bar": {
         "properties": {
@@ -3529,6 +3634,29 @@
         ],
         "title": "DatasetOut"
       },
+      "DatasetUsage": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "bytes": {
+            "type": "integer",
+            "title": "Bytes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "bytes"
+        ],
+        "title": "DatasetUsage"
+      },
       "Density": {
         "properties": {
           "x_edges": {
@@ -3839,6 +3967,41 @@
           "sum"
         ],
         "title": "Describe"
+      },
+      "DetectionSettings": {
+        "properties": {
+          "parse_rate": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.5,
+            "title": "Parse Rate",
+            "default": 0.95
+          },
+          "empty_rate": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.5,
+            "title": "Empty Rate",
+            "default": 0.95
+          },
+          "discrete_max": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 2.0,
+            "title": "Discrete Max",
+            "default": 20
+          },
+          "identifier_unique": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.5,
+            "title": "Identifier Unique",
+            "default": 0.95
+          }
+        },
+        "type": "object",
+        "title": "DetectionSettings",
+        "description": "Bounds keep detection sensible: below half, \"mostly numbers\" would mean nothing."
       },
       "Effect": {
         "properties": {
@@ -5906,6 +6069,32 @@
         "type": "object",
         "title": "SourceOptions",
         "description": "How to read a source. `None` fields mean \"detect\" or \"everything\"."
+      },
+      "StorageInfo": {
+        "properties": {
+          "workspace": {
+            "type": "string",
+            "title": "Workspace"
+          },
+          "total_bytes": {
+            "type": "integer",
+            "title": "Total Bytes"
+          },
+          "datasets": {
+            "items": {
+              "$ref": "#/components/schemas/DatasetUsage"
+            },
+            "type": "array",
+            "title": "Datasets"
+          }
+        },
+        "type": "object",
+        "required": [
+          "workspace",
+          "total_bytes",
+          "datasets"
+        ],
+        "title": "StorageInfo"
       },
       "TestResult": {
         "properties": {

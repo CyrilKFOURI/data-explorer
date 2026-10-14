@@ -28,10 +28,19 @@ from app.domain.typing.types import (
 
 SAMPLE_ROWS = 10_000
 SAMPLE_TABLE = "detection_sample"
-PARSE_RATE = 0.95
-EMPTY_RATE = 0.95
-DISCRETE_MAX = 20
-IDENTIFIER_UNIQUE = 0.95
+
+
+@dataclass(frozen=True)
+class Thresholds:
+    """Detection thresholds, adjustable in Settings (defaults below)."""
+
+    parse_rate: float = 0.95  # share of values read as numbers / dates to convert the column
+    empty_rate: float = 0.95  # share of empty values to ignore the column
+    discrete_max: int = 20  # at most this many distinct whole numbers: discrete
+    identifier_unique: float = 0.95  # share of distinct values to call text an identifier
+
+
+DEFAULT_THRESHOLDS = Thresholds()
 TOP_VALUES = 30
 
 TEXT_PARSER = Parser(kind="text")
@@ -87,10 +96,17 @@ def examples(profile: Profile, count: int = 3) -> str:
 
 
 class ColumnDetector:
-    def __init__(self, connection: duckdb.DuckDBPyConnection, kb: KnowledgeBase, rows: int) -> None:
+    def __init__(
+        self,
+        connection: duckdb.DuckDBPyConnection,
+        kb: KnowledgeBase,
+        rows: int,
+        thresholds: Thresholds = DEFAULT_THRESHOLDS,
+    ) -> None:
         self.connection = connection
         self.kb = kb
         self.rows = rows
+        self.thresholds = thresholds
 
     def one(self, sql: str) -> tuple:
         return self.connection.execute(sql).fetchone() or ()
@@ -180,7 +196,7 @@ class ColumnDetector:
     # --- Shared rules --------------------------------------------------------------------------
 
     def empty_or_constant(self, profile: Profile) -> tuple[str, str] | None:
-        if profile.rows == 0 or profile.present / profile.rows < 1 - EMPTY_RATE:
+        if profile.rows == 0 or profile.present / profile.rows < 1 - self.thresholds.empty_rate:
             return (
                 "ignored",
                 f"{percent(1 - profile.present / max(profile.rows, 1))} of values are empty",
@@ -194,7 +210,7 @@ class ColumnDetector:
     ) -> tuple[AnalysisType, Confidence, list[str]]:
         if role and role.type in NUMERIC_TYPES:
             return role.type, "high", [f"name suggests {role.label.lower()}"]
-        if integer and distinct <= DISCRETE_MAX:
+        if integer and distinct <= self.thresholds.discrete_max:
             confidence: Confidence = "high" if distinct <= 12 else "medium"
             return (
                 "numeric_discrete",
@@ -322,13 +338,13 @@ class ColumnDetector:
                         candidates=candidates)  # fmt: skip
 
         number_rate = profile.rate(profile.number_matches[best_decimal])
-        if number_rate >= PARSE_RATE:
+        if number_rate >= self.thresholds.parse_rate:
             return self.text_number(
                 name, role, profile, best_decimal, number_rate, make, candidates
             )
 
         date_rate = profile.rate(profile.date_matches[best_format])
-        if date_rate >= PARSE_RATE:
+        if date_rate >= self.thresholds.parse_rate:
             reasons = [f"{percent(date_rate)} of values read as dates ({best_format})"]
             confidence = "high" if date_rate >= 0.99 else "medium"
             swapped = swap_day_month(best_format)
@@ -346,7 +362,7 @@ class ColumnDetector:
                         role.id if role else None, ordered, candidates)  # fmt: skip
 
         for pattern in ("email", "url", "uuid"):
-            if profile.rate(profile.pattern_matches[pattern]) >= PARSE_RATE:
+            if profile.rate(profile.pattern_matches[pattern]) >= self.thresholds.parse_rate:
                 pattern_role = "identifier" if pattern == "uuid" else pattern
                 analysis_type: AnalysisType = (
                     "identifier" if profile.unique_ratio >= 0.9 else "categorical_nominal"
@@ -368,7 +384,7 @@ class ColumnDetector:
             return make("text", "medium", reasons, TEXT_PARSER, candidates=candidates)
 
         if (
-            profile.unique_ratio >= IDENTIFIER_UNIQUE
+            profile.unique_ratio >= self.thresholds.identifier_unique
             and profile.present >= 20
             and spaced_rate < 0.1
         ):
@@ -423,7 +439,11 @@ def swap_day_month(date_format: str) -> str | None:
     return None
 
 
-def detect_columns(connection: duckdb.DuckDBPyConnection, source_sql: str) -> list[ColumnDetection]:
+def detect_columns(
+    connection: duckdb.DuckDBPyConnection,
+    source_sql: str,
+    thresholds: Thresholds = DEFAULT_THRESHOLDS,
+) -> list[ColumnDetection]:
     """Detect every column of a query (typically `read_parquet(...)`)."""
     connection.execute("SET threads = 1")  # seeded sampling is only reproducible on one thread
     connection.execute(
@@ -433,7 +453,7 @@ def detect_columns(connection: duckdb.DuckDBPyConnection, source_sql: str) -> li
     connection.execute("RESET threads")
     rows = int((connection.execute(f"SELECT count(*) FROM {SAMPLE_TABLE}").fetchone() or (0,))[0])
     columns = connection.execute(f"DESCRIBE {SAMPLE_TABLE}").fetchall()
-    detector = ColumnDetector(connection, load(), rows)
+    detector = ColumnDetector(connection, load(), rows, thresholds)
     return [
         detector.detect(name, dtype, position)
         for position, (name, dtype, *_rest) in enumerate(columns)

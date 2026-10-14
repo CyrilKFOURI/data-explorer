@@ -9,6 +9,9 @@ import { describe } from "./conditions";
 import { FilterPanel } from "./FilterPanel";
 import { useFilters } from "./useFilters";
 
+/** Dispatched on window (by the command palette) to open the filter panel. */
+export const OPEN_FILTERS_EVENT = "de:open-filters";
+
 type FilterButtonProps = {
   datasetId: string;
   showChips: boolean;
@@ -25,7 +28,7 @@ export function FilterButton({ datasetId, showChips, onShowChips }: FilterButton
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
+      const target = event.target instanceof Element ? event.target : null;
       const typing = target?.closest("input, select, textarea, [contenteditable=true]");
       if (typing || event.ctrlKey || event.metaKey || event.altKey) return;
       if (event.key === "f" || event.key === "F") {
@@ -33,8 +36,13 @@ export function FilterButton({ datasetId, showChips, onShowChips }: FilterButton
         setOpen(true);
       }
     };
+    const onOpen = () => setOpen(true);
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener(OPEN_FILTERS_EVENT, onOpen);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener(OPEN_FILTERS_EVENT, onOpen);
+    };
   }, []);
 
   return (

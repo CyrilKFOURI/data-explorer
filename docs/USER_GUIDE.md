@@ -93,7 +93,17 @@ The rows behind every chart, after your filters.
 
 ### Settings
 
-Theme (system, light, dark), density, analysis defaults and detection thresholds, storage used by each dataset, version. See the Settings page for what each option does.
+- **Appearance**: theme (system, light, dark), density (compact, comfortable), animations (system, reduce, full).
+- **Analysis defaults**: starting values of *Top categories per chart*, *Cards per page* and the normality tests' *α*, for datasets you haven't customised yet (each page can still change them). Remembered in this browser.
+- **Type detection**: the thresholds used by the next detections (imports and *Re-run detection*): how many distinct whole numbers still count as *discrete* (20), the share of values that must read as numbers or dates to convert a text column (95 %), the share of distinct values that makes an *identifier* (95 %), the share of empty values that makes a column *ignored* (95 %). Validated types and manual corrections are kept. *Back to defaults* restores them.
+- **Storage**: where the app keeps its copies (the workspace), the disk used in total and per dataset, and *Clear caches* to drop computed results kept in memory (rebuilt on demand).
+- **About**: version and licence.
+- The ↺ button next to a setting resets it to its default.
+
+### Anywhere
+
+- **Ctrl+K** (or the *Search or jump to…* button at the top) opens the command palette: type a few letters to go to a page, a variable of the open dataset or another dataset, or to run an action (open or clear the filters, change the theme, show the shortcuts). Arrows to move, Enter to run, Esc to close.
+- **?** lists the keyboard shortcuts. **Guide** (bottom of the sidebar) opens this guide.
 
 ## Filters
 

@@ -63,6 +63,9 @@ export type Insight = Correlations["insights"][number];
 export type CorrelationMethod = AssociationMatrix["method"];
 export type CompareParams = { x: string; y: string; z?: string | null; color?: string | null };
 export type OutlierMethod = Outliers["method"];
+export type AppSettings = Schemas["AppSettings"];
+export type DetectionSettings = Required<Schemas["DetectionSettings"]>;
+export type StorageInfo = Schemas["StorageInfo"];
 export type RowsColumn = Schemas["RowsColumn"];
 /** A cell: the typed value, or the stored text when the column's type cannot read it. */
 export type Cell = string | number | boolean | null | { invalid: string };
@@ -203,6 +206,12 @@ export const api = {
     request<SavedFilter>("POST", `/datasets/${id}/saved-filters`, { name, conditions }),
   deleteSavedFilter: (id: string, filterId: string) =>
     request<void>("DELETE", `/datasets/${id}/saved-filters/${filterId}`),
+
+  settings: () => request<{ detection: DetectionSettings }>("GET", "/settings"),
+  updateSettings: (detection: DetectionSettings) =>
+    request<{ detection: DetectionSettings }>("PUT", "/settings", { detection }),
+  storage: () => request<StorageInfo>("GET", "/storage"),
+  clearCaches: () => request<void>("POST", "/storage/clear-caches"),
 
   job: (id: string) => request<Job>("GET", `/jobs/${id}`),
 

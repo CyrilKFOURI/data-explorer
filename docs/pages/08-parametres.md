@@ -1,12 +1,13 @@
 # Paramètres — `/settings`
 
-| Section | Réglages |
-|---|---|
-| Détection des types | Seuil « numérique discret » (20 valeurs distinctes / 5 %), seuil identifiant (95 %), seuil de conversion date / nombre (95 %), seuil « ignorée » (95 % de nuls), langue des noms (FR + EN) |
-| Affichage | Top N par défaut (10), variables par page (12), seuil d'échantillonnage des nuages (50 000), seuil α des tests (0,05), format des nombres |
-| Apparence | Clair / sombre / système, densité (compacte / confortable), réduction des animations |
-| Stockage | Emplacement du workspace, taille du cache (+ « Vider le cache »), espace utilisé par dataset |
-| Modules | Activer / désactiver les modules installés (vide en V1) |
-| À propos | Version, emplacement des journaux |
+| Section | Réglages | Où c'est gardé |
+|---|---|---|
+| Apparence | Thème clair / sombre / système, densité (compacte / confortable), animations (système / réduites / complètes) | Navigateur |
+| Valeurs par défaut de l'analyse | Top N par chart (10), cartes par page (12), α des tests de normalité (0,05) : valeurs de départ des datasets pas encore personnalisés | Navigateur |
+| Détection des types | Nombre discret maximal (20), taux de conversion nombre / date (95 %), taux d'unicité d'un identifiant (95 %), taux de vides pour ignorer (95 %) ; « Save thresholds », « Back to defaults » | SQLite (`settings.detection`) |
+| Stockage | Emplacement du workspace, espace total et par dataset, « Clear caches » (résultats calculés en mémoire) | — |
+| À propos | Version, licence MIT | — |
 
-Chaque réglage modifié propose « Rétablir la valeur par défaut ». Les seuils de détection s'appliquent aux nouveaux imports, avec un bouton « Relancer la détection » pour les datasets existants (les corrections manuelles sont conservées).
+- Chaque réglage du navigateur modifié affiche un bouton ↺ « Reset to default ».
+- Les seuils de détection s'appliquent aux nouvelles détections (import, « Re-run detection » sur la page Columns) ; les types validés et les corrections manuelles sont conservés.
+- Hors V1 : seuil d'échantillonnage des nuages, format des nombres, emplacement du workspace modifiable (variable `DATA_EXPLORER_HOME`), activation des modules.
