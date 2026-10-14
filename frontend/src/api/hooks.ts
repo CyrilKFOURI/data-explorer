@@ -4,6 +4,7 @@ import { useActiveFilters, type Condition } from "./filters";
 import {
   api,
   type ChartParams,
+  type CompareParams,
   type ColumnChange,
   type Dataset,
   type ImportOptions,
@@ -34,6 +35,8 @@ export const queryKeys = {
   outliers: (id: string, column: string, method: OutlierMethod, filters: Condition[] = []) =>
     ["datasets", id, "variable", column, "outliers", method, filters] as const,
   savedFilters: (id: string) => ["datasets", id, "saved-filters"] as const,
+  compare: (id: string, params: CompareParams, filters: Condition[]) =>
+    ["datasets", id, "compare", params, filters] as const,
 };
 
 const isImporting = (datasets: Dataset[] | undefined) =>
@@ -292,5 +295,18 @@ export function useDeleteSavedFilter(id: string) {
   return useMutation({
     mutationFn: (filterId: string) => api.deleteSavedFilter(id, filterId),
     onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.savedFilters(id) }),
+  });
+}
+
+/** Two or three columns compared over the filtered rows. */
+export function useCompare(id: string, params: CompareParams | null) {
+  const filters = useActiveFilters(id);
+  return useQuery({
+    queryKey: queryKeys.compare(id, params ?? { x: "", y: "" }, filters),
+    queryFn: () => api.compare(id, params as CompareParams, filters),
+    enabled: Boolean(params),
+    staleTime: 60_000,
+    placeholderData: (previous) => previous,
+    retry: false,
   });
 }

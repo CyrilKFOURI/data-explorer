@@ -1,0 +1,74 @@
+import json
+import time
+from pathlib import Path
+
+import pytest
+from fastapi.testclient import TestClient
+
+from app.config import default_samples_dir
+from tests.api.test_profiling import import_path
+
+
+@pytest.fixture
+def traps(client: TestClient) -> str:
+    return import_path(client, default_samples_dir() / "typing_traps.csv")
+
+
+def get(client: TestClient, dataset_id: str, **params):
+    return client.get(f"/api/v1/datasets/{dataset_id}/compare", params=params)
+
+
+def test_each_combination_through_the_api(client: TestClient, traps: str) -> None:
+    kinds = {
+        ("age", "income"): "scatter",
+        ("segment", "price_eur"): "groups",
+        ("country", "segment"): "contingency",
+        ("signup_date", "price_eur"): "timeline",
+        ("signup_date", "country"): "date_counts",
+    }
+    for (x, y), kind in kinds.items():
+        response = get(client, traps, x=x, y=y)
+        assert response.status_code == 200, (x, y, response.text)
+        assert response.json()["kind"] == kind
+
+
+def test_filters_narrow_the_comparison(client: TestClient, traps: str) -> None:
+    full = get(client, traps, x="age", y="income").json()
+    france = get(
+        client,
+        traps,
+        x="age",
+        y="income",
+        filters=json.dumps([{"column": "country", "op": "in", "values": ["FR"]}]),
+    ).json()
+
+    assert france["total"] < full["total"] == 600
+    assert france["rows"] <= france["total"]
+
+
+def test_not_comparable_is_a_422(client: TestClient, traps: str) -> None:
+    response = get(client, traps, x="age", y="comment")
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "not_comparable"
+    assert get(client, traps, x="age", y="nope").status_code == 422
+
+
+@pytest.mark.slow
+def test_five_million_rows(client: TestClient, tmp_path: Path) -> None:
+    import duckdb
+
+    path = tmp_path / "big.parquet"
+    duckdb.execute(
+        "COPY (SELECT range AS id, random() * 100 AS a, random() * 50 AS b, "
+        "['north', 'south', 'east', 'west'][1 + range % 4] AS zone FROM range(5000000)) "
+        f"TO '{path.as_posix()}' (FORMAT parquet)"
+    )
+    dataset_id = import_path(client, path)
+
+    for x, y in (("a", "b"), ("zone", "a")):
+        start = time.perf_counter()
+        response = get(client, dataset_id, x=x, y=y)
+        seconds = time.perf_counter() - start
+        assert response.status_code == 200, response.text
+        assert seconds < 3, (x, y, seconds)

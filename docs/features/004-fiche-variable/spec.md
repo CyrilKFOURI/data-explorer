@@ -57,4 +57,4 @@ L'analyse **approfondie** d'une variable : statistiques complètes, tests de nor
 
 ## Hors scope
 
-Filtre local et « filtrer ces lignes » depuis les outliers (005), « Comparer avec… » (006, bouton visible mais inactif), hétéroscédasticité / stationnarité (module séries temporelles), réglage global des niveaux d'explication (009 ; ici : verdict court + détail dépliable).
+Filtre local (les filtres globaux de 005 s'appliquent), hétéroscédasticité / stationnarité (module séries temporelles), réglage global des niveaux d'explication (009 ; ici : verdict court + détail dépliable).

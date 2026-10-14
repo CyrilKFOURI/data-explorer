@@ -17,7 +17,7 @@ Roadmap en **sprints**, chacun composé de **tranches verticales** : chaque case
 - [x] 005-filtres — filtres globaux (bouton + panneau, ET entre filtres, OU entre valeurs), puces optionnelles, filtres enregistrés, filtrer depuis un graphique ou les outliers, sur toutes les pages
 
 ### Sprint 3 — Relations et sortie
-- [ ] 006-comparer — visuels selon les types et l'intention, tests bivariés avec taille d'effet, 3D
+- [x] 006-comparer — visuel et tests choisis selon les types (nuage + régression, densité, boîtes/violons/moyennes ± IC, heatmap, séries, 3D), tailles d'effet, couleur ; facettes et intention reportées
 - [ ] 007-correlations-insights — matrice d'association mixte, clustering, paires classées, insights générés par règles
 - [ ] 008-donnees-export — table virtualisée, modes d'affichage, exports CSV / Parquet / Excel / PNG
 - [ ] 009-parametres-finitions — page Paramètres, palette de commandes, raccourcis, revue design et accessibilité

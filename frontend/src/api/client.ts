@@ -54,6 +54,10 @@ export type Transform = Fit["transforms"][number];
 export type Outliers = Complete<Schemas["Outliers"]>;
 export type ColumnSummary = Schemas["ColumnSummary"];
 export type SavedFilter = Schemas["SavedFilter"];
+export type Comparison = Complete<Schemas["Comparison"]>;
+export type BivariateTest = Comparison["tests"][number];
+export type CompareGroup = Comparison["groups"][number];
+export type CompareParams = { x: string; y: string; z?: string | null; color?: string | null };
 export type OutlierMethod = Outliers["method"];
 
 function chartQuery(column: string, params: ChartParams, filters?: Condition[]): string {
@@ -146,6 +150,12 @@ export const api = {
       "GET",
       `/datasets/${id}/variable/outliers?${new URLSearchParams({ column, method, ...filtersParam(filters) })}`,
     ),
+  compare: (id: string, params: CompareParams, filters?: Condition[]) => {
+    const query = new URLSearchParams({ x: params.x, y: params.y, ...filtersParam(filters) });
+    if (params.z) query.set("z", params.z);
+    if (params.color) query.set("color", params.color);
+    return request<Comparison>("GET", `/datasets/${id}/compare?${query}`);
+  },
   savedFilters: (id: string) => request<SavedFilter[]>("GET", `/datasets/${id}/saved-filters`),
   saveFilter: (id: string, name: string, conditions: Condition[]) =>
     request<SavedFilter>("POST", `/datasets/${id}/saved-filters`, { name, conditions }),

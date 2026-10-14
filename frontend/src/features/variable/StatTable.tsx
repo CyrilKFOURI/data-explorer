@@ -4,7 +4,7 @@ import { formatCount } from "../../lib/format";
 import { t, type MessageKey } from "../../lib/i18n";
 import { InfoTip } from "../../ui/InfoTip";
 
-export type StatKey = keyof Describe;
+export type StatKey = Exclude<keyof Describe, "distinct_approx">;
 export type StatRow = { key: string; label: string; value: string; note?: string; explain?: string };
 
 const COUNTS: StatKey[] = ["rows", "count", "missing", "infinite", "zeros", "negatives", "distinct"];
@@ -28,7 +28,7 @@ export function statRow(summary: Describe, key: StatKey): StatRow {
   return {
     key,
     label: t(`vstat.${key}` as MessageKey),
-    value: isCount ? formatCount(value) : formatNumber(value),
+    value: (key === "distinct" && summary.distinct_approx ? "≈ " : "") + (isCount ? formatCount(value) : formatNumber(value)),
     note: isCount && key !== "rows" && key !== "distinct" ? share(value ?? 0, summary.rows) : undefined,
     explain: t(`explain.${key}` as MessageKey),
   };

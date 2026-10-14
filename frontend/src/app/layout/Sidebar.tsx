@@ -20,11 +20,11 @@ import type { ModuleManifest } from "../../modules/types";
 const DATASET_PAGES: {
   labelKey: MessageKey;
   icon: LucideIcon;
-  to?: "/d/$datasetId" | "/d/$datasetId/columns";
+  to?: "/d/$datasetId" | "/d/$datasetId/columns" | "/d/$datasetId/compare";
 }[] = [
   { labelKey: "nav.overview", icon: LayoutGrid, to: "/d/$datasetId" },
   { labelKey: "nav.columns", icon: Columns3, to: "/d/$datasetId/columns" },
-  { labelKey: "nav.compare", icon: ScatterChart },
+  { labelKey: "nav.compare", icon: ScatterChart, to: "/d/$datasetId/compare" },
   { labelKey: "nav.correlations", icon: Grid3x3 },
   { labelKey: "nav.data", icon: Rows3 },
 ];

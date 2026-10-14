@@ -6,9 +6,9 @@ Croiser **2 ou 3 variables** (+ une couleur), voir le bon graphique et le bon te
 
 ## Contenu
 
-- **Sélecteurs** : X, Y, Z (optionnel, pour la 3D), Couleur (optionnel), Facette (optionnel : petits multiples par modalité)
-- **Intention** (optionnel) : Distribution · Comparer des groupes · Relation · Composition · Profils. Elle réduit la liste des visuels proposés. Voir [VISUALS.md](../VISUALS.md).
-- **Visuel** : liste des visuels compatibles avec les types choisis, le plus adapté présélectionné
+- **Sélecteurs** : X, Y, Z (optionnel, pour la 3D), Couleur (optionnel), bouton « Inverser X/Y »
+- **Visuel** : le plus adapté aux types est présélectionné ; bascule entre les vues compatibles (voir [006 spec](../features/006-comparer/spec.md))
+- Ligne « n lignes utilisées » (lignes où toutes les variables choisies sont renseignées) et mention d'échantillon le cas échéant
 - **Graphique** (grand), avec les options propres au visuel : droite de régression / LOWESS, échelle log, normalisation %, Top N
 - **Panneau « Test statistique »** à droite, choisi automatiquement selon les types :
 
@@ -35,5 +35,8 @@ Disponible dès que 3 numériques sont choisies (ou 2 numériques + Z) : **nuage
 - Combinaisons récentes mémorisées.
 
 ## Hors V1
+
+Facettes (petits multiples), sélecteur d'intention, surface de densité 3D, clic sur un point pour filtrer.
+
 
 Modèles de régression complets (diagnostics, résidus, hétéroscédasticité) : module ML.

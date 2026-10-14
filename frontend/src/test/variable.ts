@@ -8,6 +8,7 @@ const describe = {
   zeros: 3,
   negatives: 0,
   distinct: 900,
+  distinct_approx: false,
   mean: 136.2,
   std: 208.4,
   cv: 1.53,

@@ -440,6 +440,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/datasets/{dataset_id}/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Compare */
+        get: operations["compare_api_v1_datasets__dataset_id__compare_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/modules/hello": {
         parameters: {
             query?: never;
@@ -490,6 +507,25 @@ export interface components {
             end: number;
             /** Count */
             count: number;
+        };
+        /** BivariateTest */
+        BivariateTest: {
+            /** Key */
+            key: string;
+            /** Statistic */
+            statistic: number | null;
+            /** P Value */
+            p_value: number | null;
+            /** N */
+            n: number;
+            effect?: components["schemas"]["Effect"] | null;
+            /**
+             * Recommended
+             * @default false
+             */
+            recommended: boolean;
+            /** Note */
+            note?: string | null;
         };
         /** Box */
         Box: {
@@ -689,6 +725,48 @@ export interface components {
             histogram: components["schemas"]["HistogramBar"][];
             date?: components["schemas"]["app__schemas__columns__DateProfile"] | null;
         };
+        /** Comparison */
+        Comparison: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "scatter" | "groups" | "contingency" | "timeline" | "date_counts";
+            /** X */
+            x: string;
+            /** Y */
+            y: string;
+            /** Z */
+            z: string | null;
+            /** Color */
+            color: string | null;
+            /** Roles */
+            roles: {
+                [key: string]: "num" | "cat" | "date";
+            };
+            /** Rows */
+            rows: number;
+            /** Total */
+            total: number;
+            /** Sample */
+            sample?: number | null;
+            /** Group Axis */
+            group_axis?: ("x" | "y") | null;
+            points?: components["schemas"]["Points"] | null;
+            regression?: components["schemas"]["Regression"] | null;
+            density?: components["schemas"]["Density"] | null;
+            /** Groups */
+            groups?: components["schemas"]["Group"][];
+            contingency?: components["schemas"]["Contingency"] | null;
+            /** Series */
+            series?: components["schemas"]["Series"][];
+            /** Step */
+            step?: string | null;
+            /** Tests */
+            tests?: components["schemas"]["BivariateTest"][];
+            /** Message */
+            message?: string | null;
+        };
         /** Condition */
         Condition: {
             /** Column */
@@ -713,6 +791,15 @@ export interface components {
              * @default false
              */
             negate: boolean;
+        };
+        /** Contingency */
+        Contingency: {
+            /** Rows */
+            rows: string[];
+            /** Columns */
+            columns: string[];
+            /** Counts */
+            counts: number[][];
         };
         /** ConversionOut */
         ConversionOut: {
@@ -803,6 +890,15 @@ export interface components {
             source_state: "ok" | "changed" | "missing";
             job?: components["schemas"]["JobOut"] | null;
         };
+        /** Density */
+        Density: {
+            /** X Edges */
+            x_edges: number[];
+            /** Y Edges */
+            y_edges: number[];
+            /** Counts */
+            counts: number[][];
+        };
         /** Describe */
         Describe: {
             /** Rows */
@@ -819,6 +915,8 @@ export interface components {
             negatives: number;
             /** Distinct */
             distinct: number;
+            /** Distinct Approx */
+            distinct_approx: boolean;
             /** Mean */
             mean: number | null;
             /** Std */
@@ -857,6 +955,15 @@ export interface components {
             kurtosis: number | null;
             /** Sum */
             sum: number | null;
+        };
+        /** Effect */
+        Effect: {
+            /** Name */
+            name: string;
+            /** Value */
+            value: number | null;
+            /** Magnitude */
+            magnitude: ("negligible" | "small" | "medium" | "large") | null;
         };
         /** Entry */
         Entry: {
@@ -900,6 +1007,33 @@ export interface components {
             transforms?: components["schemas"]["Transform"][];
             /** Reason */
             reason?: string | null;
+        };
+        /** Group */
+        Group: {
+            /** Label */
+            label: string;
+            /** N */
+            n: number;
+            /** Mean */
+            mean: number | null;
+            /** Std */
+            std: number | null;
+            /** Q1 */
+            q1: number | null;
+            /** Median */
+            median: number | null;
+            /** Q3 */
+            q3: number | null;
+            /** Low */
+            low: number | null;
+            /** High */
+            high: number | null;
+            /** Ci Low */
+            ci_low: number | null;
+            /** Ci High */
+            ci_high: number | null;
+            /** Sample */
+            sample?: number[];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1186,6 +1320,17 @@ export interface components {
              */
             false_values: string[];
         };
+        /** Points */
+        Points: {
+            /** X */
+            x: number[];
+            /** Y */
+            y: number[];
+            /** Z */
+            z?: number[] | null;
+            /** Color */
+            color?: string[] | null;
+        };
         /** Preview */
         Preview: {
             /**
@@ -1239,6 +1384,15 @@ export interface components {
             /** Intercept */
             intercept: number;
         };
+        /** Regression */
+        Regression: {
+            /** Slope */
+            slope: number;
+            /** Intercept */
+            intercept: number;
+            /** R2 */
+            r2: number | null;
+        };
         /** RenameRequest */
         RenameRequest: {
             /** Name */
@@ -1279,6 +1433,19 @@ export interface components {
             conditions: components["schemas"]["Condition"][];
             /** Created At */
             created_at: string;
+        };
+        /** Series */
+        Series: {
+            /** Label */
+            label: string | null;
+            /** Periods */
+            periods: string[];
+            /** Values */
+            values: (number | null)[];
+            /** Low */
+            low?: (number | null)[];
+            /** High */
+            high?: (number | null)[];
         };
         /**
          * SourceOptions
@@ -2347,6 +2514,44 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    compare_api_v1_datasets__dataset_id__compare_get: {
+        parameters: {
+            query: {
+                x: string;
+                y: string;
+                z?: string | null;
+                color?: string | null;
+                /** @description JSON list of conditions, combined with AND. */
+                filters?: string | null;
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comparison"];
+                };
             };
             /** @description Validation Error */
             422: {

@@ -14,6 +14,7 @@ CURVE_SAMPLE = 20_000
 POINTS = 200
 EXACT_QUANTILES = 200_000  # beyond, curve quantiles come from a t-digest (error well under 1%)
 MIN_TEST_VALUES = 8
+EXACT_DISTINCT = 200_000
 PERCENTILES = (0.01, 0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95, 0.99)
 
 
@@ -26,6 +27,7 @@ class Describe:
     zeros: int
     negatives: int
     distinct: int
+    distinct_approx: bool  # HyperLogLog estimate (about ±2%) beyond EXACT_DISTINCT values
     mean: float | None
     std: float | None
     cv: float | None
@@ -82,11 +84,16 @@ class QQ:
 
 def describe(source: VariableSource) -> Describe:
     values, numbers = source.values, source.numbers
-    rows, valid, distinct, infinite = source.one(
-        f"SELECT count(*), count(t), count(DISTINCT t), "
-        f"count(*) FILTER (WHERE t IS NOT NULL AND NOT isfinite(CAST(t AS DOUBLE))) "
-        f"FROM {values}"
+    rows, valid, infinite, estimate = source.one(
+        f"SELECT count(*), count(t), "
+        f"count(*) FILTER (WHERE t IS NOT NULL AND NOT isfinite(CAST(t AS DOUBLE))), "
+        f"approx_count_distinct(t) FROM {values}"
     )
+    approximate = valid > EXACT_DISTINCT
+    if approximate:
+        distinct = estimate
+    else:
+        (distinct,) = source.one(f"SELECT count(DISTINCT t) FROM {values}")
     probabilities = ", ".join(str(p) for p in PERCENTILES)
     row = source.one(
         f"SELECT count(x), count(*) FILTER (WHERE x = 0), count(*) FILTER (WHERE x < 0), "
@@ -105,6 +112,7 @@ def describe(source: VariableSource) -> Describe:
         zeros=int(zeros),
         negatives=int(negatives),
         distinct=int(distinct),
+        distinct_approx=approximate,
         mean=mean,
         std=std,
         cv=std / abs(mean) if std is not None and mean else None,

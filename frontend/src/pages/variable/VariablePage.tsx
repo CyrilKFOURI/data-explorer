@@ -104,9 +104,15 @@ export function VariablePage() {
             )}
           </div>
           <div className="flex items-center gap-1.5">
-            <Button variant="secondary" icon={ScatterChart} disabled title={t("variable.compareSoon")}>
+            <Link
+              to="/d/$datasetId/compare"
+              params={{ datasetId }}
+              search={(previous) => ({ ...previous, x: name, y: undefined, z: undefined, color: undefined })}
+              className="inline-flex h-(--control-h) items-center gap-1.5 rounded-md border border-line bg-surface-1 px-3 text-[13px] text-ink-1 hover:bg-surface-2"
+            >
+              <ScatterChart size={15} strokeWidth={1.5} aria-hidden />
               {t("variable.compare")}
-            </Button>
+            </Link>
             <NavButton datasetId={datasetId} target={previous} label={t("variable.previous")} direction="previous" />
             {index >= 0 && (
               <span className="px-1 text-xs text-ink-3 tabular-nums">

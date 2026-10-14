@@ -1524,6 +1524,121 @@
         }
       }
     },
+    "/api/v1/datasets/{dataset_id}/compare": {
+      "get": {
+        "tags": [
+          "compare"
+        ],
+        "summary": "Compare",
+        "operationId": "compare_api_v1_datasets__dataset_id__compare_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "x",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "X"
+            }
+          },
+          {
+            "name": "y",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Y"
+            }
+          },
+          {
+            "name": "z",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Z"
+            }
+          },
+          {
+            "name": "color",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Color"
+            }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON list of conditions, combined with AND.",
+              "title": "Filters"
+            },
+            "description": "JSON list of conditions, combined with AND."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Comparison"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/modules/hello": {
       "get": {
         "tags": [
@@ -1622,6 +1737,74 @@
           "count"
         ],
         "title": "Bin"
+      },
+      "BivariateTest": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "statistic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statistic"
+          },
+          "p_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Value"
+          },
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "effect": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Effect"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recommended": {
+            "type": "boolean",
+            "title": "Recommended",
+            "default": false
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "statistic",
+          "p_value",
+          "n"
+        ],
+        "title": "BivariateTest"
       },
       "Box": {
         "properties": {
@@ -2283,6 +2466,192 @@
         ],
         "title": "ColumnSummary"
       },
+      "Comparison": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "scatter",
+              "groups",
+              "contingency",
+              "timeline",
+              "date_counts"
+            ],
+            "title": "Kind"
+          },
+          "x": {
+            "type": "string",
+            "title": "X"
+          },
+          "y": {
+            "type": "string",
+            "title": "Y"
+          },
+          "z": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Z"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "roles": {
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "num",
+                "cat",
+                "date"
+              ]
+            },
+            "type": "object",
+            "title": "Roles"
+          },
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "sample": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sample"
+          },
+          "group_axis": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "x",
+                  "y"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Axis"
+          },
+          "points": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Points"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "regression": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Regression"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "density": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Density"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/Group"
+            },
+            "type": "array",
+            "title": "Groups"
+          },
+          "contingency": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Contingency"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/Series"
+            },
+            "type": "array",
+            "title": "Series"
+          },
+          "step": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step"
+          },
+          "tests": {
+            "items": {
+              "$ref": "#/components/schemas/BivariateTest"
+            },
+            "type": "array",
+            "title": "Tests"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "x",
+          "y",
+          "z",
+          "color",
+          "roles",
+          "rows",
+          "total"
+        ],
+        "title": "Comparison"
+      },
       "Condition": {
         "properties": {
           "column": {
@@ -2390,6 +2759,41 @@
           "op"
         ],
         "title": "Condition"
+      },
+      "Contingency": {
+        "properties": {
+          "rows": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "counts": {
+            "items": {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Counts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rows",
+          "columns",
+          "counts"
+        ],
+        "title": "Contingency"
       },
       "ConversionOut": {
         "properties": {
@@ -2650,6 +3054,41 @@
         ],
         "title": "DatasetOut"
       },
+      "Density": {
+        "properties": {
+          "x_edges": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "X Edges"
+          },
+          "y_edges": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Y Edges"
+          },
+          "counts": {
+            "items": {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Counts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "x_edges",
+          "y_edges",
+          "counts"
+        ],
+        "title": "Density"
+      },
       "Describe": {
         "properties": {
           "rows": {
@@ -2679,6 +3118,10 @@
           "distinct": {
             "type": "integer",
             "title": "Distinct"
+          },
+          "distinct_approx": {
+            "type": "boolean",
+            "title": "Distinct Approx"
           },
           "mean": {
             "anyOf": [
@@ -2899,6 +3342,7 @@
           "zeros",
           "negatives",
           "distinct",
+          "distinct_approx",
           "mean",
           "std",
           "cv",
@@ -2920,6 +3364,49 @@
           "sum"
         ],
         "title": "Describe"
+      },
+      "Effect": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "magnitude": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "negligible",
+                  "small",
+                  "medium",
+                  "large"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Magnitude"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "value",
+          "magnitude"
+        ],
+        "title": "Effect"
       },
       "Entry": {
         "properties": {
@@ -3056,6 +3543,139 @@
           "sample_quantiles"
         ],
         "title": "Fit"
+      },
+      "Group": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean"
+          },
+          "std": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Std"
+          },
+          "q1": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q1"
+          },
+          "median": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median"
+          },
+          "q3": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q3"
+          },
+          "low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Low"
+          },
+          "high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High"
+          },
+          "ci_low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ci Low"
+          },
+          "ci_high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ci High"
+          },
+          "sample": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Sample"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "n",
+          "mean",
+          "std",
+          "q1",
+          "median",
+          "q3",
+          "low",
+          "high",
+          "ci_low",
+          "ci_high"
+        ],
+        "title": "Group"
       },
       "HTTPValidationError": {
         "properties": {
@@ -3901,6 +4521,58 @@
         "title": "Parser",
         "description": "How to read a stored value in its analysis type, applied at query time.\n\n- raw: the stored value as is\n- number: text with a given decimal separator (thousands separators, %, currency stripped)\n- date: text with a strptime format\n- boolean: text mapped with true/false vocabularies (empty lists: cast the value)\n- year: integer year \u2192 date (January 1st)\n- text: the value as text, null tokens removed"
       },
+      "Points": {
+        "properties": {
+          "x": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "X"
+          },
+          "y": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Y"
+          },
+          "z": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Z"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          }
+        },
+        "type": "object",
+        "required": [
+          "x",
+          "y"
+        ],
+        "title": "Points"
+      },
       "Preview": {
         "properties": {
           "kind": {
@@ -4074,6 +4746,36 @@
         "title": "QQ",
         "description": "Sample quantiles against the standard normal's, with the line through Q1 and Q3."
       },
+      "Regression": {
+        "properties": {
+          "slope": {
+            "type": "number",
+            "title": "Slope"
+          },
+          "intercept": {
+            "type": "number",
+            "title": "Intercept"
+          },
+          "r2": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "R2"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slope",
+          "intercept",
+          "r2"
+        ],
+        "title": "Regression"
+      },
       "RenameRequest": {
         "properties": {
           "name": {
@@ -4190,6 +4892,77 @@
           "created_at"
         ],
         "title": "SavedFilter"
+      },
+      "Series": {
+        "properties": {
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "periods": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Periods"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values"
+          },
+          "low": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Low"
+          },
+          "high": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "High"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "periods",
+          "values"
+        ],
+        "title": "Series"
       },
       "SourceOptions": {
         "properties": {

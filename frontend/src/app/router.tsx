@@ -15,6 +15,7 @@ import { HomePage } from "../pages/home/HomePage";
 import { NotFoundPage } from "../pages/not-found/NotFoundPage";
 import { OverviewPage } from "../pages/overview/OverviewPage";
 import { SettingsPage } from "../pages/settings/SettingsPage";
+import { ComparePage, validateCompareSearch } from "../pages/compare/ComparePage";
 import { VariablePage } from "../pages/variable/VariablePage";
 import { Shell } from "./layout/Shell";
 
@@ -56,6 +57,12 @@ export function createAppRouter({
     path: "/d/$datasetId/variable/$column",
     component: VariablePage,
   });
+  const compareRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/d/$datasetId/compare",
+    validateSearch: validateCompareSearch,
+    component: ComparePage,
+  });
   const moduleRoutes = modules.map((module) =>
     createRoute({ getParentRoute: () => rootRoute, path: module.path, component: module.component }),
   );
@@ -67,6 +74,7 @@ export function createAppRouter({
       datasetRoute,
       columnsRoute,
       variableRoute,
+      compareRoute,
       ...moduleRoutes,
     ]),
     history,
