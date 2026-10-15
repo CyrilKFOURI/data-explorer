@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.15"
+      - run: uv python install 3.12
+      - run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Typecheck
+        run: uv run pyright
+      - name: Tests (performance checks on millions of rows excluded)
+        run: uv run pytest
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the image
+        run: docker build -t data-explorer:ci .
+      - name: Image size under 600 MB
+        run: |
+          size=$(docker image inspect data-explorer:ci --format '{{.Size}}')
+          echo "Image size: $((size / 1024 / 1024)) MB"
+          test "$size" -lt $((600 * 1024 * 1024))
+      - name: Smoke test
+        run: |
+          docker run -d --name app -p 8000:8000 data-explorer:ci
+          for i in $(seq 1 30); do
+            if curl -fs http://localhost:8000/api/v1/health | grep -q '"status":"ok"'; then break; fi
+            sleep 1
+          done
+          curl -fs http://localhost:8000/api/v1/health | grep -q '"status":"ok"'
+          curl -fs http://localhost:8000/ | grep -q '<div id="root">'
+          curl -fs http://localhost:8000/api/v1/samples | grep -q typing_traps
+      - name: Logs on failure
+        if: failure()
+        run: docker logs app || true
