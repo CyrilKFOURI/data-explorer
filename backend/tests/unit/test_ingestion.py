@@ -177,3 +177,30 @@ class TestFingerprint:
         assert fingerprint(list_source_files(path), {"sample_pct": 50}) != before
         write_csv(path, "x\n1\n2\n")
         assert fingerprint(list_source_files(path), {"sample_pct": 100}) != before
+
+
+def test_excel_columns_keep_types_and_names(tmp_path: Path) -> None:
+    from datetime import datetime
+
+    from app.domain.ingestion.reader import read_sheet
+
+    path = write_excel(
+        tmp_path / "mixed.xlsx",
+        {
+            "S": [
+                ["amount", None, "amount", "when"],
+                [1.5, "x", 2, datetime(2024, 1, 2)],
+                [None, None, None, None],
+                [3, 4, "n/a", datetime(2024, 1, 3)],
+            ]
+        },
+    )
+
+    table = read_sheet(path, "S")
+
+    assert table.column_names == ["amount", "column_2", "amount_3", "when"]
+    assert table.num_rows == 2  # the empty row is skipped
+    assert table.column("amount").to_pylist() == [1.5, 3.0]
+    assert table.column("column_2").to_pylist() == ["x", "4"]  # mixed: text
+    assert table.column("amount_3").to_pylist() == ["2", "n/a"]
+    assert str(table.schema.field("when").type).startswith("timestamp")

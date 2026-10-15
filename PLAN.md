@@ -5,7 +5,7 @@ Roadmap en **sprints**, chacun composé de **tranches verticales** : chaque case
 ## V1 — Explorateur
 
 ### Sprint 0 — Socle
-- [ ] 000-socle (code fait ; reste : vérif Docker + revue design) — backend FastAPI + frontend React/Vite, une seule commande `dev`, healthcheck, SQLite + migrations, Shell (barre latérale, barre du haut, thème clair/sombre, tokens), routage, registres de modules vides, tests / lint / typecheck branchés, Dockerfile + docker-compose qui démarrent l'app, LICENSE MIT
+- [x] 000-socle (Docker vérifié en 010, revue design et accessibilité en 009) — backend FastAPI + frontend React/Vite, une seule commande `dev`, healthcheck, SQLite + migrations, Shell (barre latérale, barre du haut, thème clair/sombre, tokens), routage, registres de modules vides, tests / lint / typecheck branchés, Dockerfile + docker-compose qui démarrent l'app, LICENSE MIT
 
 ### Sprint 1 — Données et types
 - [x] 001-import — fichier ou dossier (CSV, Parquet, Excel) → aperçu → options → copie Parquet ; datasets récents ; réimport instantané si la source n'a pas changé ; upload + dossier monté `/data` ; jeux de démo dans `samples/`
@@ -21,9 +21,9 @@ Roadmap en **sprints**, chacun composé de **tranches verticales** : chaque case
 - [x] 007-correlations-insights — matrice d'association mixte (r/ρ, V corrigé, η), clustering, variable cible, paires classées, insights par règles masquables
 - [x] 008-donnees-export — table virtualisée par blocs, modes (échantillon, doublons, manquants), recherche, tri, colonnes figées / masquées, exports CSV / Parquet / Excel + résumé (PNG déjà sur les cartes)
 - [x] 009-parametres-finitions — guide utilisateur (docs/USER_GUIDE.md + page Guide), Paramètres (apparence, valeurs par défaut, seuils de détection, stockage, à propos), palette Ctrl+K, raccourcis `?`, revue accessibilité (contraste AA, skip link, color-scheme)
-- [ ] 010-portfolio — README anglais avec captures, `docker compose up` testé sur une machine propre, image < 600 Mo, CI (tests + build Docker)
+- [x] 010-portfolio — README anglais court avec captures, `docker compose up` testé, image 557 Mo, CI (tests, lint, typecheck, build Docker, test de fumée)
 
-**→ Release V1.0**
+**→ Release V1.0** ✓
 
 ## Modules (après la V1) — voir `docs/modules-futurs/`
 

@@ -3,7 +3,6 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 
 import duckdb
-import polars as pl
 from openpyxl.utils.exceptions import InvalidFileException
 
 from app.core.errors import AppError
@@ -38,7 +37,5 @@ def readable_errors() -> Iterator[None]:
         raise IngestionError(
             "This Excel file can't be read: it may be password-protected or corrupted."
         ) from error
-    except pl.exceptions.PolarsError as error:
-        raise IngestionError(f"Could not read this file: {error}") from error
     except UnicodeDecodeError as error:
         raise IngestionError("This file is not UTF-8 encoded: try another encoding.") from error

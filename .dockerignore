@@ -9,3 +9,5 @@ frontend/dist
 data
 docs
 !docs/USER_GUIDE.md
+backend/tests
+backend/openapi.json

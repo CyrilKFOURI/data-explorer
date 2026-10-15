@@ -4,7 +4,7 @@ from pathlib import Path
 
 import duckdb
 import openpyxl
-import polars as pl
+import pyarrow as pa
 
 from app.domain.ingestion.csv_sniff import sniff_csv
 from app.domain.ingestion.options import CsvOptions, SourceOptions
@@ -12,6 +12,43 @@ from app.domain.ingestion.sources import SourceFile
 from app.domain.ingestion.sql import ident, lit
 
 FULL_SNIFF_MAX_BYTES = 100 * 1024 * 1024
+
+
+def _column(values: list[object]) -> pa.Array:
+    """Typed when the cells agree (numbers, dates, booleans), text when they are mixed."""
+    try:
+        return pa.array(values)
+    except (pa.ArrowInvalid, pa.ArrowTypeError):
+        return pa.array([None if value is None else str(value) for value in values], pa.string())
+
+
+def read_sheet(path: Path, sheet: str) -> pa.Table:
+    """A sheet as a table: the first row names the columns; fully empty rows are skipped."""
+    workbook = openpyxl.load_workbook(path, read_only=True, data_only=True)
+    try:
+        rows = [
+            row
+            for row in workbook[sheet].iter_rows(values_only=True)
+            if any(c is not None for c in row)
+        ]
+    finally:
+        workbook.close()
+    if not rows:
+        return pa.table({})
+    width = max(len(row) for row in rows)
+    names: list[str] = []
+    for index in range(width):
+        header = rows[0][index] if index < len(rows[0]) else None
+        name = (
+            str(header).strip()
+            if header is not None and str(header).strip()
+            else f"column_{index + 1}"
+        )
+        while name in names:  # duplicated header: keep both columns
+            name = f"{name}_{index + 1}"
+        names.append(name)
+    body = [list(row) + [None] * (width - len(row)) for row in rows[1:]]
+    return pa.table({name: _column([row[i] for row in body]) for i, name in enumerate(names)})
 
 
 def excel_sheets(path: Path) -> list[str]:
@@ -51,11 +88,11 @@ class SourceReader:
         parts = []
         self.excel_rows[file.path] = 0
         for sheet in names:
-            frame = pl.read_excel(file.path, sheet_name=sheet, engine="openpyxl")
+            table = read_sheet(file.path, sheet)
             self._views += 1
             view = f"excel_sheet_{self._views}"
-            self.connection.register(view, frame.to_arrow())
-            self.excel_rows[file.path] += frame.height
+            self.connection.register(view, table)
+            self.excel_rows[file.path] += table.num_rows
             sheet_column = f", {lit(sheet)} AS source_sheet" if len(names) > 1 else ""
             parts.append(f"SELECT *{sheet_column} FROM {view}")
         return " UNION ALL BY NAME ".join(parts)
