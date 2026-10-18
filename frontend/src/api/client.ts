@@ -82,6 +82,14 @@ export type MlJob = Complete<Schemas["TrainingJob"]>;
 export type MlRun = Complete<Schemas["Run"]>;
 export type MlRunSummary = Complete<Schemas["RunSummary"]>;
 export type MlTask = MlRun["task"];
+export type MlPreparation = MlRun["preparation"];
+export type MlDecision = MlPreparation["decisions"][number];
+export type MlChoices = Complete<Schemas["Choices"]>;
+export type MlColumnChoice = MlChoices["columns"][string];
+export type MlSelectionChoice = MlChoices["selection"][number];
+/** What the preparation editor sends: anything left out is automatic. */
+export type MlChoicesInput = Partial<Omit<MlChoices, "columns">> & { columns?: Record<string, Partial<MlColumnChoice>> };
+export type MlPreparationPreview = Complete<Schemas["PreparationPreview"]>;
 export type SeriesSetup = SeriesOverview["setup"];
 export type SeriesLine = SeriesOverview["analyzed"];
 export type MethodResult = SeriesOverview["methods"][number];
@@ -200,6 +208,13 @@ async function errorMessage(response: Response): Promise<string> {
     // Not JSON: fall back to the status text.
   }
   return `Request failed (${response.status})`;
+}
+
+function mlQuery(target: string, model: string | null, settings: Record<string, unknown> | null, filters?: Condition[]) {
+  const query = new URLSearchParams({ target, ...filtersParam(filters) });
+  if (model) query.set("model", model);
+  if (settings) query.set("settings", JSON.stringify(settings));
+  return query;
 }
 
 async function request<T>(
@@ -351,12 +366,27 @@ export const api = {
     if (minority !== null) query.set("minority", String(minority));
     return request<MlModel[]>("GET", `/modules/ml/catalog?${query}`);
   },
-  mlTrain: (id: string, target: string, model: string | null, settings: Record<string, unknown> | null, filters?: Condition[]) => {
-    const query = new URLSearchParams({ target, ...filtersParam(filters) });
-    if (model) query.set("model", model);
-    if (settings) query.set("settings", JSON.stringify(settings));
-    return request<MlJob>("POST", `/modules/ml/datasets/${id}/runs?${query}`);
-  },
+  mlTrain: (
+    id: string,
+    target: string,
+    model: string | null,
+    settings: Record<string, unknown> | null,
+    filters?: Condition[],
+    choices?: MlChoicesInput | null,
+  ) => request<MlJob>("POST", `/modules/ml/datasets/${id}/runs?${mlQuery(target, model, settings, filters)}`, choices ?? undefined),
+  mlPreparation: (
+    id: string,
+    target: string,
+    model: string | null,
+    settings: Record<string, unknown> | null,
+    choices: MlChoicesInput,
+    filters?: Condition[],
+  ) =>
+    request<MlPreparationPreview>(
+      "POST",
+      `/modules/ml/datasets/${id}/preparation?${mlQuery(target, model, settings, filters)}`,
+      choices,
+    ),
   mlJob: (jobId: string) => request<MlJob>("GET", `/modules/ml/jobs/${jobId}`),
   mlRuns: (id: string, target: string) =>
     request<MlRunSummary[]>("GET", `/modules/ml/datasets/${id}/runs?${new URLSearchParams({ target })}`),

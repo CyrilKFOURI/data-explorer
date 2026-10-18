@@ -851,6 +851,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/modules/ml/datasets/{dataset_id}/preparation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preparation
+         * @description The decisions the next training would take, and its first 20 training rows prepared.
+         */
+        post: operations["preparation_api_v1_modules_ml_datasets__dataset_id__preparation_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/modules/ml/jobs/{job_id}": {
         parameters: {
             query?: never;
@@ -981,6 +1001,23 @@ export interface components {
             aic: number | null;
             /** Bic */
             bic: number | null;
+        };
+        /** Balance */
+        Balance: {
+            /** Strategy */
+            strategy: string;
+            /** Rule */
+            rule: string;
+            /** Why */
+            why: string;
+            /** Before */
+            before: {
+                [key: string]: number;
+            };
+            /** After */
+            after: {
+                [key: string]: number;
+            };
         };
         /** Bar */
         Bar: {
@@ -1179,6 +1216,61 @@ export interface components {
             /** Message */
             message?: string | null;
         };
+        /**
+         * Choices
+         * @description Everything the preparation editor can change. The defaults are the automatic rules.
+         */
+        Choices: {
+            /** Columns */
+            columns?: {
+                [key: string]: components["schemas"]["ColumnChoice"];
+            };
+            /**
+             * Numeric Impute
+             * @default auto
+             * @enum {string}
+             */
+            numeric_impute: "auto" | "mean" | "median" | "constant" | "knn" | "iterative";
+            /**
+             * Indicator Share
+             * @default 0.05
+             */
+            indicator_share: number;
+            /**
+             * Rare Share
+             * @default 0.01
+             */
+            rare_share: number;
+            /**
+             * Rare Rows
+             * @default 10
+             */
+            rare_rows: number;
+            /**
+             * One Hot Limit
+             * @default 15
+             */
+            one_hot_limit: number;
+            /**
+             * Target Smoothing
+             * @default 10
+             */
+            target_smoothing: number;
+            /**
+             * Outliers
+             * @default none
+             * @enum {string}
+             */
+            outliers: "none" | "clip_percentiles" | "clip_iqr" | "drop_rows";
+            /**
+             * Imbalance
+             * @default auto
+             * @enum {string}
+             */
+            imbalance: "auto" | "none" | "weights" | "oversample" | "undersample";
+            /** Selection */
+            selection?: components["schemas"]["SelectionChoice"][];
+        };
         /** ClassReport */
         ClassReport: {
             /** Label */
@@ -1270,6 +1362,24 @@ export interface components {
         ColumnChangesRequest: {
             /** Changes */
             changes: components["schemas"]["ColumnChange"][];
+        };
+        /**
+         * ColumnChoice
+         * @description What the user set for one column; None = automatic.
+         */
+        ColumnChoice: {
+            /** Use */
+            use?: boolean | null;
+            /** Impute */
+            impute?: string | null;
+            /** Indicator */
+            indicator?: boolean | null;
+            /** Transform */
+            transform?: string | null;
+            /** Encoding */
+            encoding?: string | null;
+            /** Scaling */
+            scaling?: string | null;
         };
         /** ColumnInfo */
         ColumnInfo: {
@@ -1570,6 +1680,31 @@ export interface components {
             scaling?: string | null;
             /** Order */
             order?: string[] | null;
+            /** Auto */
+            auto?: {
+                [key: string]: string;
+            };
+            /** Manual */
+            manual?: string[];
+            /** Options */
+            options?: {
+                [key: string]: components["schemas"]["Option"][];
+            };
+            /**
+             * Reactivable
+             * @default true
+             */
+            reactivable: boolean;
+            /**
+             * Leak
+             * @default false
+             */
+            leak: boolean;
+            /**
+             * Missing
+             * @default 0
+             */
+            missing: number;
         };
         /** Decomposition */
         Decomposition: {
@@ -2122,6 +2257,13 @@ export interface components {
             /** Sample */
             sample: number[];
         };
+        /** Option */
+        Option: {
+            /** Value */
+            value: string;
+            /** Reason */
+            reason?: string | null;
+        };
         /** Others */
         Others: {
             /** Count */
@@ -2298,6 +2440,37 @@ export interface components {
              * @default 0
              */
             excluded: number;
+            choices?: components["schemas"]["Choices"];
+            /**
+             * Custom
+             * @default false
+             */
+            custom: boolean;
+            /** Warnings */
+            warnings?: string[];
+            /** Selection */
+            selection?: components["schemas"]["SelectionReport"][];
+            balance?: components["schemas"]["Balance"] | null;
+            /**
+             * Dropped Rows
+             * @default 0
+             */
+            dropped_rows: number;
+        };
+        /**
+         * PreparationPreview
+         * @description The matrix the model really receives: the first training rows once prepared.
+         */
+        PreparationPreview: {
+            preparation: components["schemas"]["Preparation"];
+            /** Columns */
+            columns: string[];
+            /** Rows */
+            rows: (number | null)[][];
+            /** Row Numbers */
+            row_numbers: number[];
+            /** Train Rows */
+            train_rows: number;
         };
         /** Preview */
         Preview: {
@@ -2581,6 +2754,27 @@ export interface components {
              * @default 0
              */
             last: number;
+        };
+        /** SelectionChoice */
+        SelectionChoice: {
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "variance" | "correlation" | "vif" | "mutual_info" | "univariate" | "l1" | "rfe" | "permutation";
+            /** Value */
+            value?: number | null;
+        };
+        /** SelectionReport */
+        SelectionReport: {
+            /** Method */
+            method: string;
+            /** Value */
+            value: number | null;
+            /** Kept */
+            kept: number;
+            /** Of */
+            of: number;
         };
         /** Series */
         Series: {
@@ -4979,7 +5173,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["Choices"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             202: {
@@ -4988,6 +5186,47 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TrainingJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preparation_api_v1_modules_ml_datasets__dataset_id__preparation_post: {
+        parameters: {
+            query: {
+                target: string;
+                model?: string | null;
+                /** @description JSON object of settings. */
+                settings?: string | null;
+                filters?: string | null;
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["Choices"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreparationPreview"];
                 };
             };
             /** @description Validation Error */

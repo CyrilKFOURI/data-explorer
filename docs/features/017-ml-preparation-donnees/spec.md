@@ -79,6 +79,7 @@ Calculé une fois (réutilise les résumés de la page Colonnes et de la fiche v
 | R-NUM-10 | modèle `tree_based` | aucune transformation ni échelle |
 | R-NUM-11 | rôle `percentage` en 0–100 | divisé par 100 avant échelle (lisibilité des coefficients) |
 | R-NUM-12 | rôle `latitude` / `longitude` | gardées brutes pour les arbres ; standardisées sinon ; option « distance to centre » |
+| R-NUM-13 | réglage global « imputation numérique » ≠ auto | cette stratégie (mean · median · 0 · KNN · iterative) ; pas d'indicateur avec KNN / iterative |
 
 Valeurs aberrantes : **aucune action par défaut** (les supprimer biaise souvent le modèle) ; options : écrêtage aux percentiles (1–99 par défaut), écrêtage IQR, suppression des lignes (apprentissage seulement, jamais le test).
 

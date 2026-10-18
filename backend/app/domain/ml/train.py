@@ -18,6 +18,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 from app.domain.ml import models as catalogue
 from app.domain.ml import preparation as prep
+from app.domain.ml import steps
 from app.domain.ml.data import NUMERIC, Field
 from app.domain.ml.target import MAX_CLASSES, Task
 from app.domain.variable.source import clean
@@ -164,18 +165,80 @@ def _thin(
     )
 
 
-def train(
+@dataclass
+class _Setup:
+    """Everything shared by training and the preparation preview."""
+
+    spec: catalogue.ModelSpec
+    context: catalogue.Context
+    values: dict[str, Any]
+    preparation: prep.Preparation
+    x_train: pd.DataFrame
+    x_test: pd.DataFrame
+    y_train: pd.Series
+    y_test: pd.Series
+    row_test: pd.Series
+    minority: float | None
+    unregularized: bool
+
+
+def _counts(y: pd.Series) -> dict[str, int]:
+    return {str(k): int(v) for k, v in y.value_counts().items()}
+
+
+def _imbalance(
+    choices: prep.Choices, minority: float | None, values: dict[str, Any], warnings: list[str]
+) -> tuple[str, str, str]:
+    """R-IMB-01/02/03 or the user's strategy → (strategy, rule, why). Weights go through the
+    model's own class_weight setting, so the run's settings show what was used."""
+    weights = "class_weight" in values
+    share = f"{minority:.0%}" if minority is not None else "?"
+    if choices.imbalance == "auto":
+        if weights and values["class_weight"] == "balanced":
+            rule = "R-IMB-02" if minority is not None and minority < 0.2 else "USER"
+            return (
+                "weights",
+                rule,
+                f"The rarest class is {share} of rows: class weights balance it.",
+            )
+        if minority is None or minority >= 0.2:
+            return "none", "R-IMB-01", f"The rarest class is {share} of rows: nothing to rebalance."
+        if weights:
+            return "none", "USER", "Class weights are turned off in the model settings."
+        return (
+            "none",
+            "R-IMB-03",
+            f"The rarest class is {share} of rows and this model takes no weights: "
+            "judge it on balanced accuracy.",
+        )
+    strategy = choices.imbalance
+    if strategy == "weights" and not weights:
+        warnings.append("This model takes no class weights: classes left as they are.")
+        return "none", "R-IMB-03", "This model takes no class weights."
+    if weights:
+        values["class_weight"] = "balanced" if strategy == "weights" else "none"
+    why = {
+        "none": "Classes left as they are: your choice.",
+        "weights": "Class weights balance the classes: your choice.",
+        "oversample": "Training rows of the smaller classes repeated at random up to the largest "
+        "class: your choice (the test rows are untouched).",
+        "undersample": "Training rows of the larger classes drawn at random down to the smallest "
+        "class: your choice (the test rows are untouched).",
+    }[strategy]
+    return strategy, "USER", why
+
+
+def _setup(
     frame: pd.DataFrame,
     fields: list[Field],
     target: Field,
     task: Task,
     model_key: str,
     given: dict[str, Any] | None,
-    rows: int,
-    sampled: bool,
-    excluded_columns: set[str] | None = None,
-) -> Trained:
-    started = time.monotonic()
+    excluded_columns: set[str] | None,
+    choices: prep.Choices | None,
+) -> _Setup:
+    choices = choices or prep.Choices()
     spec = catalogue.CATALOGUE[model_key]
     if task not in spec.tasks:
         raise TrainingError(f"{spec.label} does not handle {task} problems.")
@@ -186,7 +249,7 @@ def train(
     context = catalogue.Context(len(frame), task, minority)
     values = catalogue.resolve(spec, context, given)
     model_profile = catalogue.profile_for(spec, values)
-    preparation = prep.decide(frame, fields, target, task, model_profile, excluded_columns)
+    preparation = prep.decide(frame, fields, target, task, model_profile, excluded_columns, choices)
     if not preparation.used:
         raise TrainingError("No usable feature: every column was left out (see Preparation).")
     features = [d.column for d in preparation.used]
@@ -201,15 +264,78 @@ def train(
     )
     x_train, x_test = cast(pd.DataFrame, x_train), cast(pd.DataFrame, x_test)
     y_train, y_test = cast(pd.Series, y_train), cast(pd.Series, y_test)
-    row_test = cast(pd.Series, row_test)
     if len(x_train) < 10 or len(x_test) < 3:
         raise TrainingError("Too few rows to train and test (at least 15 needed).")
-    unregularized = model_key == "linear_regression" and values["regularization"] == "none"
-    transformer = prep.build(preparation, len(x_train), task, drop_first=unregularized)
-    pipeline = Pipeline([("prepare", transformer), ("model", spec.build(values, context))])
+    if choices.outliers == "drop_rows":
+        numbers = [d.column for d in preparation.used if d.type in NUMERIC]
+        extreme = steps.extreme_rows(x_train, numbers)
+        if (~extreme).sum() < 10:
+            preparation.warnings.append("Dropping extreme rows would leave too few: none dropped.")
+        elif extreme.any():
+            x_train = cast(pd.DataFrame, x_train[~extreme])
+            y_train = cast(pd.Series, y_train[~extreme])
+            preparation.dropped_rows = int(extreme.sum())
+    if task != "regression":
+        before = _counts(y_train)
+        strategy, rule, why = _imbalance(choices, minority, values, preparation.warnings)
+        if strategy in ("oversample", "undersample"):
+            x_train, y_train = steps.rebalance(x_train, y_train, strategy)
+        preparation.balance = prep.Balance(strategy, rule, why, before, _counts(y_train))
+    return _Setup(
+        spec,
+        context,
+        values,
+        preparation,
+        x_train,
+        x_test,
+        y_train,
+        y_test,
+        cast(pd.Series, row_test),
+        minority,
+        model_key == "linear_regression" and values.get("regularization") == "none",
+    )
+
+
+def _selection(pipeline: Pipeline) -> list[prep.SelectionReport]:
+    return [
+        prep.SelectionReport(
+            step.method,
+            step.value if step.value is not None else steps.SELECTION_DEFAULTS[step.method],
+            int(step.support_.sum()),
+            int(step.n_features_in_),
+        )
+        for _, step in pipeline.steps
+        if isinstance(step, steps.Selector)
+    ]
+
+
+def train(
+    frame: pd.DataFrame,
+    fields: list[Field],
+    target: Field,
+    task: Task,
+    model_key: str,
+    given: dict[str, Any] | None,
+    rows: int,
+    sampled: bool,
+    excluded_columns: set[str] | None = None,
+    choices: prep.Choices | None = None,
+) -> Trained:
+    started = time.monotonic()
+    setup = _setup(frame, fields, target, task, model_key, given, excluded_columns, choices)
+    spec, context, values, preparation = setup.spec, setup.context, setup.values, setup.preparation
+    x_train, x_test, y_train, y_test = setup.x_train, setup.x_test, setup.y_train, setup.y_test
+    row_test, minority, unregularized = setup.row_test, setup.minority, setup.unregularized
+    pipeline = Pipeline(
+        [
+            *prep.steps(preparation, len(x_train), task, drop_first=unregularized),
+            ("model", spec.build(values, context)),
+        ]
+    )
     _quiet(lambda: pipeline.fit(x_train, y_train))
-    names = [str(n) for n in pipeline.named_steps["prepare"].get_feature_names_out()]
+    names = [str(n) for n in pipeline[:-1].get_feature_names_out()]  # type: ignore[union-attr]
     preparation.inputs = len(names)
+    preparation.selection = _selection(pipeline)
 
     regression = classification = None
     coefficients: list[Coefficient] = []
@@ -318,7 +444,7 @@ def _linear_coefficients(
     preparation: prep.Preparation,
     unregularized: bool,
 ) -> tuple[list[Coefficient], float | None]:
-    design = np.asarray(pipeline.named_steps["prepare"].transform(x_train), dtype=float)
+    design = np.asarray(pipeline[:-1].transform(x_train), dtype=float)
     model = pipeline.named_steps["model"]
     coefficients = [
         Coefficient(name, float(value))
@@ -442,3 +568,46 @@ def _logistic_coefficients(pipeline: Pipeline, names: list[str]) -> list[Coeffic
         found = [Coefficient(n, float(v)) for n, v in zip(names, strongest, strict=True)]
     found.sort(key=lambda c: -abs(c.estimate))
     return found
+
+
+PREVIEW_ROWS = 20
+
+
+@dataclass
+class PreparationPreview:
+    """The matrix the model really receives: the first training rows once prepared."""
+
+    preparation: prep.Preparation
+    columns: list[str]
+    rows: list[list[float | None]]
+    row_numbers: list[int]  # row numbers in the file
+    train_rows: int
+
+
+def preview(
+    frame: pd.DataFrame,
+    fields: list[Field],
+    target: Field,
+    task: Task,
+    model_key: str,
+    given: dict[str, Any] | None,
+    choices: prep.Choices | None = None,
+    excluded_columns: set[str] | None = None,
+) -> PreparationPreview:
+    """`prepare.fit(train).transform(train)[:20]`, with the decisions behind it."""
+    setup = _setup(frame, fields, target, task, model_key, given, excluded_columns, choices)
+    preparation, x_train = setup.preparation, setup.x_train
+    prepare = Pipeline(prep.steps(preparation, len(x_train), task, drop_first=setup.unregularized))
+    _quiet(lambda: prepare.fit(x_train, setup.y_train))
+    names = [str(n) for n in prepare.get_feature_names_out()]  # type: ignore[union-attr]
+    preparation.inputs = len(names)
+    preparation.selection = _selection(prepare)
+    first = x_train.iloc[:PREVIEW_ROWS]
+    matrix = np.asarray(_quiet(lambda: prepare.transform(first)), dtype=float)
+    return PreparationPreview(
+        preparation,
+        names,
+        [[clean(v) for v in row] for row in matrix],
+        [int(v) for v in frame.loc[first.index, "__row"]],
+        len(x_train),
+    )

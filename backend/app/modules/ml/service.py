@@ -213,7 +213,31 @@ class MlService:
         model: str | None,
         settings: dict[str, Any] | None,
         conditions: list[Condition],
+        choices: prep.Choices | None = None,
     ) -> TrainingJob:
+        fields, field_, source = self._request(dataset_id, target, model, conditions)
+        job = TrainingJob(uuid.uuid4().hex[:12], "running", "loading")
+        with self._lock:
+            self._jobs[job.id] = job
+            while len(self._jobs) > KEPT_JOBS:
+                self._jobs.popitem(last=False)
+        self._executor.submit(
+            self._train,
+            job,
+            dataset_id,
+            fields,
+            field_,
+            model,
+            settings,
+            source,
+            conditions,
+            choices,
+        )
+        return job
+
+    def _request(
+        self, dataset_id: str, target: str, model: str | None, conditions: list[Condition]
+    ) -> tuple[list[Field], Field, str]:
         fields, (dataset, views) = self._fields(dataset_id)
         by_name = {f.name: f for f in fields}
         if target not in by_name:
@@ -223,17 +247,47 @@ class MlService:
             raise MlError(f"{target!r} cannot be predicted: it is {field_.type}.", "bad_target")
         if model is not None and model not in catalogue.CATALOGUE:
             raise MlError(f"Unknown model {model!r}.", "unknown_model")
-        job = TrainingJob(uuid.uuid4().hex[:12], "running", "loading")
-        with self._lock:
-            self._jobs[job.id] = job
-            while len(self._jobs) > KEPT_JOBS:
-                self._jobs.popitem(last=False)
-        where = where_for(views, conditions)
-        source = scoped_source(dataset.storage_path, where, numbered=True)
-        self._executor.submit(
-            self._train, job, dataset_id, fields, field_, model, settings, source, conditions
-        )
-        return job
+        source = scoped_source(dataset.storage_path, where_for(views, conditions), numbered=True)
+        return fields, field_, source
+
+    def _load(self, fields: list[Field], target: Field, source: str) -> tuple[ml_data.Frame, Task]:
+        connection = duckdb.connect()
+        try:
+            frame = ml_data.load(connection, source, fields, target.name)
+        finally:
+            connection.close()
+        if frame.rows < 15:
+            raise MlError("Fewer than 15 rows have a target value.")
+        distinct = len(set(frame.data[target.name].dropna().astype(str)))
+        task = candidate(target.name, target.type, target.role, distinct, 0).task
+        if task is None:
+            raise MlError(f"{target.name!r} cannot be predicted.")
+        return frame, task
+
+    def preview(
+        self,
+        dataset_id: str,
+        target: str,
+        model: str | None,
+        settings: dict[str, Any] | None,
+        conditions: list[Condition],
+        choices: prep.Choices | None,
+    ) -> trainer.PreparationPreview:
+        """The preparation the next training would use, and its first prepared rows."""
+        fields, field_, source = self._request(dataset_id, target, model, conditions)
+        frame, task = self._load(fields, field_, source)
+        try:
+            return trainer.preview(
+                frame.data,
+                fields,
+                field_,
+                task,
+                model or catalogue.default_model(task),
+                settings,
+                choices,
+            )
+        except (trainer.TrainingError, catalogue.SettingsError) as error:
+            raise MlError(str(error)) from None
 
     def job(self, job_id: str) -> TrainingJob:
         job = self._jobs.get(job_id)
@@ -251,25 +305,23 @@ class MlService:
         settings: dict[str, Any] | None,
         source: str,
         conditions: list[Condition],
+        choices: prep.Choices | None = None,
     ) -> None:
         try:
-            connection = duckdb.connect()
-            try:
-                frame = ml_data.load(connection, source, fields, target.name)
-            finally:
-                connection.close()
-            if frame.rows < 15:
-                raise MlError("Fewer than 15 rows have a target value.")
+            frame, task = self._load(fields, target, source)
             job.stage = "preparing"
-            series = frame.data[target.name]
-            distinct = len(set(series.dropna().astype(str)))
-            task = candidate(target.name, target.type, target.role, distinct, 0).task
-            if task is None:
-                raise MlError(f"{target.name!r} cannot be predicted.")
             key = model or catalogue.default_model(task)
             job.stage = "training"
             trained = trainer.train(
-                frame.data, fields, target, task, key, settings, frame.rows, frame.sampled
+                frame.data,
+                fields,
+                target,
+                task,
+                key,
+                settings,
+                frame.rows,
+                frame.sampled,
+                choices=choices,
             )
             job.stage = "saving"
             job.run_id = self._save(dataset_id, target.name, trained, conditions)

@@ -17,6 +17,7 @@ import {
   type ColumnChange,
   type Dataset,
   type ImportOptions,
+  type MlChoicesInput,
   type OutlierMethod,
   type DetectionSettings,
   type RowsView,
@@ -472,8 +473,37 @@ export function useMlCatalog(task: string | null, rows: number, minority: number
 export function useMlTrain(id: string) {
   const filters = useActiveFilters(id);
   return useMutation({
-    mutationFn: ({ target, model, settings }: { target: string; model: string | null; settings: Record<string, unknown> | null }) =>
-      api.mlTrain(id, target, model, settings, filters),
+    mutationFn: ({
+      target,
+      model,
+      settings,
+      choices,
+    }: {
+      target: string;
+      model: string | null;
+      settings: Record<string, unknown> | null;
+      choices?: MlChoicesInput | null;
+    }) => api.mlTrain(id, target, model, settings, filters, choices),
+  });
+}
+
+/** The preparation the next training would use, with its first prepared rows. */
+export function useMlPreparation(
+  id: string,
+  target: string,
+  model: string | null,
+  settings: Record<string, unknown> | null,
+  choices: MlChoicesInput,
+  enabled: boolean,
+) {
+  const filters = useActiveFilters(id);
+  return useQuery({
+    queryKey: ["datasets", id, "ml", "preparation", target, model, settings, choices, filters],
+    queryFn: () => api.mlPreparation(id, target, model, settings, choices, filters),
+    enabled,
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
+    retry: false,
   });
 }
 

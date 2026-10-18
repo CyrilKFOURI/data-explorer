@@ -1,11 +1,13 @@
 import json
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Body, Depends, Query, Request
 from fastapi.responses import Response
 
 from app.domain.filters.model import Condition, parse_filters
+from app.domain.ml.preparation import Choices
 from app.domain.ml.target import Task
+from app.domain.ml.train import PreparationPreview
 from app.modules.ml.service import (
     MlError,
     MlService,
@@ -58,15 +60,34 @@ def train(
     target: Annotated[str, Query(min_length=1)],
     model: str | None = None,
     settings: Annotated[str | None, Query(description="JSON object of settings.")] = None,
+    choices: Annotated[Choices | None, Body(description="Preparation choices.")] = None,
 ) -> TrainingJob:
     """Train a model in the background (defaults for everything not given)."""
+    return service.start(dataset_id, target, model, _settings(settings), filters, choices)
+
+
+@router.post("/datasets/{dataset_id}/preparation")
+def preparation(
+    dataset_id: str,
+    service: Service,
+    filters: Filters,
+    target: Annotated[str, Query(min_length=1)],
+    model: str | None = None,
+    settings: Annotated[str | None, Query(description="JSON object of settings.")] = None,
+    choices: Annotated[Choices | None, Body(description="Preparation choices.")] = None,
+) -> PreparationPreview:
+    """The decisions the next training would take, and its first 20 training rows prepared."""
+    return service.preview(dataset_id, target, model, _settings(settings), filters, choices)
+
+
+def _settings(settings: str | None) -> dict[str, Any] | None:
     try:
         values: dict[str, Any] | None = json.loads(settings) if settings else None
     except json.JSONDecodeError:
         raise MlError("Settings must be a JSON object.", "bad_settings") from None
     if values is not None and not isinstance(values, dict):
         raise MlError("Settings must be a JSON object.", "bad_settings")
-    return service.start(dataset_id, target, model, values, filters)
+    return values
 
 
 @router.get("/jobs/{job_id}")

@@ -2,17 +2,20 @@
 
 Each decision comes from the column's profile (validated type, role, statistics) and the model's
 profile (does it need scaling? handle missing values?). Every decision carries the id of the rule
-that made it and a sentence with the numbers behind it. The scikit-learn pipeline is built from the
-decisions, so everything that learns from data (medians, scales, encodings) is fitted on the
-training rows only.
+that made it and a sentence with the numbers behind it. The user's choices (`Choices`) are applied
+on top of the rules: per column, or globally; a choice the column or the model cannot take is
+refused with its reason and the automatic one is kept. The scikit-learn pipeline is built from the
+decisions, so everything that learns from data (medians, scales, encodings, selection) is fitted on
+the training rows only.
 """
 
 import math
 from dataclasses import dataclass, field
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 import numpy as np
 import pandas as pd
+from pydantic import BaseModel, Field
 from scipy import stats
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.compose import ColumnTransformer
@@ -20,6 +23,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import (
     FunctionTransformer,
+    MinMaxScaler,
     OneHotEncoder,
     OrdinalEncoder,
     PowerTransformer,
@@ -28,14 +32,57 @@ from sklearn.preprocessing import (
     TargetEncoder,
 )
 
-from app.domain.ml.data import CATEGORICAL, NUMERIC, Field
+from app.domain.ml.data import CATEGORICAL, NUMERIC
+from app.domain.ml.data import Field as DataField
+from app.domain.ml.steps import Clipper, JointImputer, Selector
 from app.domain.ml.target import Task
 
-ONE_HOT_LIMIT = 15
 TARGET_ENCODING_LIMIT = 100
-INDICATOR_SHARE = 0.05
-RARE_SHARE, RARE_ROWS = 0.01, 10
 MISSING = "Missing"
+
+# --- The user's choices --------------------------------------------------------------------------
+
+NumericImpute = Literal["auto", "mean", "median", "constant", "knn", "iterative"]
+Outliers = Literal["none", "clip_percentiles", "clip_iqr", "drop_rows"]
+Imbalance = Literal["auto", "none", "weights", "oversample", "undersample"]
+SelectionMethod = Literal[
+    "variance", "correlation", "vif", "mutual_info", "univariate", "l1", "rfe", "permutation"
+]
+CHOICE_KEYS = ("impute", "indicator", "transform", "encoding", "scaling")
+
+
+class ColumnChoice(BaseModel):
+    """What the user set for one column; None = automatic."""
+
+    use: bool | None = None
+    impute: str | None = Field(default=None, max_length=32)
+    indicator: bool | None = None
+    transform: str | None = Field(default=None, max_length=32)
+    encoding: str | None = Field(default=None, max_length=32)
+    scaling: str | None = Field(default=None, max_length=32)
+
+
+class SelectionChoice(BaseModel):
+    method: SelectionMethod
+    value: float | None = Field(default=None, ge=0, le=1_000)  # threshold or k; None = default
+
+
+class Choices(BaseModel):
+    """Everything the preparation editor can change. The defaults are the automatic rules."""
+
+    columns: dict[str, ColumnChoice] = Field(default_factory=dict, max_length=5_000)
+    numeric_impute: NumericImpute = "auto"
+    indicator_share: float = Field(default=0.05, ge=0, le=1)
+    rare_share: float = Field(default=0.01, ge=0, le=0.5)
+    rare_rows: int = Field(default=10, ge=1, le=100_000)
+    one_hot_limit: int = Field(default=15, ge=2, le=200)
+    target_smoothing: float = Field(default=10.0, ge=0, le=10_000)
+    outliers: Outliers = "none"
+    imbalance: Imbalance = "auto"
+    selection: list[SelectionChoice] = Field(default_factory=list, max_length=8)
+
+
+GLOBAL_DEFAULTS = Choices().model_dump(exclude={"columns"})
 
 
 @dataclass(frozen=True)
@@ -66,18 +113,30 @@ class ColumnProfile:
 
 
 @dataclass
+class Option:
+    value: str
+    reason: str | None = None  # why it cannot be chosen here; None = available
+
+
+@dataclass
 class Decision:
     column: str
     type: str
     use: bool
     rules: list[str] = field(default_factory=list)  # rule ids, in the order they applied
     why: list[str] = field(default_factory=list)  # one sentence per rule
-    impute: str | None = None  # median, mean, most_frequent, missing_category, none
+    impute: str | None = None  # median, mean, constant, knn, iterative, most_frequent, …
     indicator: bool = False
     transform: str | None = None  # log1p, yeojohnson, date_parts
-    encoding: str | None = None  # binary, onehot, target, ordinal
-    scaling: str | None = None  # standard, robust
+    encoding: str | None = None  # binary, onehot, target, ordinal, native
+    scaling: str | None = None  # standard, robust, minmax
     order: list[str] | None = None  # categories of an ordinal column
+    auto: dict[str, str] = field(default_factory=dict)  # what the rules chose ("none" = nothing)
+    manual: list[str] = field(default_factory=list)  # what the user changed
+    options: dict[str, list[Option]] = field(default_factory=dict)
+    reactivable: bool = True  # an excluded column the user may use anyway
+    leak: bool = False  # excluded because it seems to contain the answer
+    missing: float = 0.0  # share of empty values
 
     def apply(self, rule: str, sentence: str) -> None:
         self.rules.append(rule)
@@ -85,10 +144,33 @@ class Decision:
 
 
 @dataclass
+class SelectionReport:
+    method: str
+    value: float | None
+    kept: int
+    of: int
+
+
+@dataclass
+class Balance:
+    strategy: str  # none, weights, oversample, undersample
+    rule: str  # R-IMB-01/02/03, or USER
+    why: str
+    before: dict[str, int]
+    after: dict[str, int]
+
+
+@dataclass
 class Preparation:
     decisions: list[Decision]
     inputs: int = 0  # model inputs once prepared (filled after fitting)
     excluded: int = 0
+    choices: Choices = field(default_factory=Choices)
+    custom: bool = False  # the user changed something
+    warnings: list[str] = field(default_factory=list)
+    selection: list[SelectionReport] = field(default_factory=list)
+    balance: Balance | None = None
+    dropped_rows: int = 0  # training rows removed as extreme outliers
 
     @property
     def used(self) -> list[Decision]:
@@ -103,7 +185,7 @@ def _col(frame: pd.DataFrame, name: str) -> pd.Series:
 # --- Profiles ------------------------------------------------------------------------------------
 
 
-def profile(series: pd.Series, fld: Field) -> ColumnProfile:
+def profile(series: pd.Series, fld: DataField) -> ColumnProfile:
     n = len(series)
     present = series.dropna()
     missing = 1 - len(present) / n if n else 0.0
@@ -177,104 +259,168 @@ def _separation(feature: pd.Series, target: pd.Series) -> float:
 
 # --- Rules ---------------------------------------------------------------------------------------
 
+USABLE = NUMERIC | CATEGORICAL | {"datetime"}
+NAMES = {
+    "mean": "mean",
+    "median": "median",
+    "constant": "0",
+    "knn": "KNN imputer (5 nearest rows)",
+    "iterative": "iterative imputer (each column predicted from the others)",
+}
+
 
 def decide(
     frame: pd.DataFrame,
-    fields: list[Field],
-    target: Field,
+    fields: list[DataField],
+    target: DataField,
     task: Task,
     model: ModelProfile,
     excluded_columns: set[str] | None = None,
+    choices: Choices | None = None,
 ) -> Preparation:
-    """One decision per column, from the rules of the 017 spec."""
-    decisions = []
+    """One decision per column: the rules of the 017 spec, then the user's choices."""
+    choices = choices or Choices()
+    decisions: list[Decision] = []
+    warnings: list[str] = []
+    forced: set[str] = set()
     excluded_columns = excluded_columns or set()
-    target_numeric = task == "regression"
     for fld in fields:
         decision = Decision(fld.name, fld.type, True)
         decisions.append(decision)
-        if fld.name == target.name:
-            decision.use = False
-            decision.apply("R-SEL-01", "This is the target.")
-            continue
-        if fld.name in excluded_columns:
-            decision.use = False
-            decision.apply("R-SEL-08", "Ignored in the Columns page.")
-            continue
+        choice = choices.columns.get(fld.name)
         prof = profile(_col(frame, fld.name), fld)
-        if fld.type == "identifier" or (
-            fld.type in CATEGORICAL
-            and (
-                (prof.distinct_share > 0.5 and prof.distinct > 20)
-                or prof.distinct > TARGET_ENCODING_LIMIT
-            )
-        ):
-            decision.use = False
-            decision.apply(
-                "R-SEL-02", f"Behaves like an identifier ({prof.distinct:,} distinct values)."
-            )
-            continue
-        if fld.type == "text":
-            decision.use = False
-            decision.apply("R-SEL-03", "Free text is left out (text features come later).")
-            continue
-        if prof.distinct <= 1 or prof.dominant_share > 0.99:
-            decision.use = False
-            decision.apply("R-SEL-04", f"Almost always the same value ({prof.dominant_share:.1%}).")
-            continue
-        if prof.missing_share > 0.8:
-            decision.use = False
-            decision.apply("R-SEL-05", f"{prof.missing_share:.0%} empty.")
-            continue
-        if fld.type in NUMERIC | CATEGORICAL:
-            strength = _association(
-                _col(frame, fld.name), _col(frame, target.name), fld.type in NUMERIC, target_numeric
-            )
-            if strength >= 0.98:
+        decision.missing = prof.missing_share
+        _exclusion(decision, fld, prof, frame, target, task, model, excluded_columns)
+        decision.auto["use"] = "yes" if decision.use else "no"
+        wants = choice.use if choice else None
+        if not decision.use and wants is True:
+            if decision.reactivable:
+                decision.use = True
+                decision.manual.append("use")
+                decision.apply("USER", "Used anyway: your choice.")
+            else:
+                warnings.append(f"{fld.name} cannot be used: {decision.why[0]}")
+        if decision.use:
+            _type_rules(decision, fld, prof, model, choices)
+            _snapshot(decision)
+            if wants is True:
+                forced.add(fld.name)
+            if wants is False:
                 decision.use = False
-                decision.apply(
-                    "R-SEL-06",
-                    "Looks like it contains the answer "
-                    f"(association {strength:.3f} with the target).",
-                )
-                continue
-            separation = (
-                _separation(_col(frame, fld.name), _col(frame, target.name))
-                if task == "binary" and fld.type in NUMERIC
-                else 0.0
-            )
-            if separation >= 0.995:
-                decision.use = False
-                decision.apply(
-                    "R-SEL-06",
-                    "Looks like it contains the answer: one threshold separates the classes "
-                    f"(AUC {separation:.3f}).",
-                )
-                continue
-        if fld.type in NUMERIC:
-            _numeric(decision, prof, model)
-        elif fld.type == "boolean":
-            _boolean(decision, prof, model)
-        elif fld.type == "categorical_ordinal":
-            _ordinal(decision, fld, prof, model)
-        elif fld.type == "categorical_nominal":
-            _nominal(decision, prof, model)
-        elif fld.type == "datetime":
-            _date(decision, model)
-        else:
-            decision.use = False
-            decision.apply("R-SEL-03", "This type is not used by models yet.")
+                decision.manual.append("use")
+                decision.apply("USER", "Left out: your choice.")
+            elif choice:
+                _apply(decision, choice, prof, model, warnings)
+        decision.options = _options(decision, prof, model)
     if model.sensitive_to_collinearity:
-        _collinearity(frame, decisions, target, target_numeric)
+        _collinearity(frame, decisions, target, task == "regression", forced)
+    custom = choices.model_dump(exclude={"columns"}) != GLOBAL_DEFAULTS or any(
+        d.manual for d in decisions
+    )
     return Preparation(
-        decisions, excluded=sum(not d.use for d in decisions if d.column != target.name)
+        decisions,
+        excluded=sum(not d.use for d in decisions if d.column != target.name),
+        choices=choices,
+        custom=custom,
+        warnings=warnings,
     )
 
 
-def _numeric(decision: Decision, prof: ColumnProfile, model: ModelProfile) -> None:
+def _exclusion(
+    decision: Decision,
+    fld: DataField,
+    prof: ColumnProfile,
+    frame: pd.DataFrame,
+    target: DataField,
+    task: Task,
+    model: ModelProfile,
+    excluded_columns: set[str],
+) -> None:
+    """R-SEL-01 to R-SEL-06 and R-SEL-08: is the column left out, and may it come back?"""
+
+    def out(rule: str, sentence: str, reactivable: bool = True, leak: bool = False) -> None:
+        decision.use, decision.reactivable, decision.leak = False, reactivable, leak
+        decision.apply(rule, sentence)
+
+    if fld.name == target.name:
+        return out("R-SEL-01", "This is the target.", reactivable=False)
+    if fld.name in excluded_columns:
+        return out("R-SEL-08", "Ignored in the Columns page.", reactivable=False)
+    if fld.type == "identifier":
+        return out(
+            "R-SEL-02",
+            f"Behaves like an identifier ({prof.distinct:,} distinct values).",
+            reactivable=False,
+        )
+    if fld.type in CATEGORICAL and (
+        (prof.distinct_share > 0.5 and prof.distinct > 20) or prof.distinct > TARGET_ENCODING_LIMIT
+    ):
+        return out("R-SEL-02", f"Behaves like an identifier ({prof.distinct:,} distinct values).")
+    if fld.type == "text":
+        return out(
+            "R-SEL-03", "Free text is left out (text features come later).", reactivable=False
+        )
+    if fld.type not in USABLE:
+        return out("R-SEL-03", "This type is not used by models yet.", reactivable=False)
+    if prof.distinct <= 1 or prof.dominant_share > 0.99:
+        return out("R-SEL-04", f"Almost always the same value ({prof.dominant_share:.1%}).")
+    if prof.missing_share > 0.8:
+        return out("R-SEL-05", f"{prof.missing_share:.0%} empty.")
+    if fld.type in NUMERIC | CATEGORICAL:
+        strength = _association(
+            _col(frame, fld.name),
+            _col(frame, target.name),
+            fld.type in NUMERIC,
+            task == "regression",
+        )
+        if strength >= 0.98:
+            return out(
+                "R-SEL-06",
+                f"Looks like it contains the answer (association {strength:.3f} with the target).",
+                leak=True,
+            )
+        separation = (
+            _separation(_col(frame, fld.name), _col(frame, target.name))
+            if task == "binary" and fld.type in NUMERIC
+            else 0.0
+        )
+        if separation >= 0.995:
+            return out(
+                "R-SEL-06",
+                "Looks like it contains the answer: one threshold separates the classes "
+                f"(AUC {separation:.3f}).",
+                leak=True,
+            )
+    return None
+
+
+def _type_rules(
+    decision: Decision, fld: DataField, prof: ColumnProfile, model: ModelProfile, choices: Choices
+) -> None:
+    if fld.type in NUMERIC:
+        _numeric(decision, prof, model, choices)
+    elif fld.type == "boolean":
+        _boolean(decision, prof, model, choices)
+    elif fld.type == "categorical_ordinal":
+        _ordinal(decision, fld, prof, model, choices)
+    elif fld.type == "categorical_nominal":
+        _nominal(decision, prof, model, choices)
+    elif fld.type == "datetime":
+        _date(decision, model)
+
+
+def _numeric(
+    decision: Decision, prof: ColumnProfile, model: ModelProfile, choices: Choices
+) -> None:
     if model.handles_missing:
         decision.impute = "none"
         decision.apply("R-NUM-01", "Missing values are handled natively by the model.")
+    elif choices.numeric_impute != "auto":
+        decision.impute = choices.numeric_impute
+        decision.apply(
+            "R-NUM-13",
+            f"Missing values → {NAMES[choices.numeric_impute]} (set in Missing & outliers).",
+        )
     elif prof.skewness is not None and abs(prof.skewness) <= 0.5:
         decision.impute = "mean"
         decision.apply(
@@ -284,12 +430,20 @@ def _numeric(decision: Decision, prof: ColumnProfile, model: ModelProfile) -> No
         decision.impute = "median"
         skew = "unknown" if prof.skewness is None else f"{prof.skewness:.2f}"
         decision.apply("R-NUM-03", f"Missing values → median (skewness {skew}).")
-    if prof.missing_share > INDICATOR_SHARE and not model.handles_missing:
-        decision.indicator = True
-        decision.apply(
-            "R-NUM-04",
-            f"Adds a “was missing” indicator ({prof.missing_share:.0%} empty: often informative).",
-        )
+    if prof.missing_share > choices.indicator_share and not model.handles_missing:
+        if decision.impute in ("knn", "iterative"):
+            decision.apply(
+                "R-NUM-04",
+                f"No “was missing” indicator with the {NAMES[decision.impute]} "
+                f"({prof.missing_share:.0%} empty).",
+            )
+        else:
+            decision.indicator = True
+            decision.apply(
+                "R-NUM-04",
+                f"Adds a “was missing” indicator ({prof.missing_share:.0%} empty, above "
+                f"{choices.indicator_share:.0%}: often informative).",
+            )
     if model.tree_based:
         decision.apply(
             "R-NUM-10", "Trees are unaffected by monotonic transformations and scales: kept as is."
@@ -307,7 +461,10 @@ def _numeric(decision: Decision, prof: ColumnProfile, model: ModelProfile) -> No
                 "R-NUM-06",
                 f"Yeo-Johnson: |skewness| {abs(prof.skewness):.2f} > 1 with negative values.",
             )
-    if model.needs_scaling:
+    if model.nonnegative_inputs:
+        decision.scaling = "minmax"
+        decision.apply("R-NUM-09", "Scaled to [0, 1]: this model needs inputs ≥ 0.")
+    elif model.needs_scaling:
         if prof.outlier_share is not None and prof.outlier_share > 0.05:
             decision.scaling = "robust"
             decision.apply(
@@ -319,10 +476,12 @@ def _numeric(decision: Decision, prof: ColumnProfile, model: ModelProfile) -> No
             decision.apply("R-NUM-08", "Standardised (mean 0, standard deviation 1).")
 
 
-def _boolean(decision: Decision, prof: ColumnProfile, model: ModelProfile) -> None:
+def _boolean(
+    decision: Decision, prof: ColumnProfile, model: ModelProfile, choices: Choices
+) -> None:
     decision.encoding = "binary"
     decision.apply("R-BOOL-01", "Encoded 0 / 1.")
-    if prof.missing_share > INDICATOR_SHARE and not model.handles_missing:
+    if prof.missing_share > choices.indicator_share and not model.handles_missing:
         decision.impute = "missing_category"
         decision.apply(
             "R-BOOL-02", f"Missing values are their own category ({prof.missing_share:.0%} empty)."
@@ -332,10 +491,16 @@ def _boolean(decision: Decision, prof: ColumnProfile, model: ModelProfile) -> No
         decision.apply("R-BOOL-02", "The few missing values take the most frequent value.")
 
 
-def _ordinal(decision: Decision, fld: Field, prof: ColumnProfile, model: ModelProfile) -> None:
+def _ordinal(
+    decision: Decision,
+    fld: DataField,
+    prof: ColumnProfile,
+    model: ModelProfile,
+    choices: Choices,
+) -> None:
     if not fld.order:
         decision.apply("R-ORD-02", "No order set in Columns: treated as unordered categories.")
-        _nominal(decision, prof, model)
+        _nominal(decision, prof, model, choices)
         return
     decision.impute = "most_frequent"
     decision.encoding = "ordinal"
@@ -351,12 +516,14 @@ def _ordinal(decision: Decision, fld: Field, prof: ColumnProfile, model: ModelPr
         decision.apply("R-NUM-08", "Standardised like a number.")
 
 
-def _nominal(decision: Decision, prof: ColumnProfile, model: ModelProfile) -> None:
+def _nominal(
+    decision: Decision, prof: ColumnProfile, model: ModelProfile, choices: Choices
+) -> None:
     decision.impute = "missing_category"
     decision.apply(
         "R-CAT-01",
-        f"Missing values become “{MISSING}”; "
-        "categories under 1 % (and 10 rows) are grouped as Other.",
+        f"Missing values become “{MISSING}”; categories under {choices.rare_share:.0%} "
+        f"(and {choices.rare_rows} rows) are grouped as Other.",
     )
     if prof.distinct == 2:
         decision.encoding = "binary"
@@ -372,18 +539,20 @@ def _nominal(decision: Decision, prof: ColumnProfile, model: ModelProfile) -> No
             if prof.distinct <= 50
             else "Target encoding (more than 50 categories).",
         )
-    elif prof.distinct <= ONE_HOT_LIMIT or model.nonnegative_inputs:
+    elif prof.distinct <= choices.one_hot_limit or model.nonnegative_inputs:
         decision.encoding = "onehot"
         rule = (
-            "R-CAT-07" if model.nonnegative_inputs and prof.distinct > ONE_HOT_LIMIT else "R-CAT-05"
+            "R-CAT-07"
+            if model.nonnegative_inputs and prof.distinct > choices.one_hot_limit
+            else "R-CAT-05"
         )
         decision.apply(rule, f"One-hot: {prof.distinct} categories.")
     else:
         decision.encoding = "target"
         decision.apply(
             "R-CAT-06",
-            f"Target encoding, cross-fitted on 5 folds ({prof.distinct} categories: "
-            "one-hot would add too many columns).",
+            f"Target encoding, cross-fitted on 5 folds, smoothing {choices.target_smoothing:g} "
+            f"({prof.distinct} categories, above the one-hot limit of {choices.one_hot_limit}).",
         )
 
 
@@ -405,10 +574,143 @@ def _date(decision: Decision, model: ModelProfile) -> None:
         decision.apply("R-DATE-02", "Parts as integers for trees.")
 
 
-def _collinearity(
-    frame: pd.DataFrame, decisions: list[Decision], target: Field, target_numeric: bool
+# --- Choices on top of the rules -----------------------------------------------------------------
+
+NO_MISSING = "This model cannot handle missing values: they must be filled."
+ONLY_ORDINAL = "Only for ordinal codes."
+
+
+def _value(decision: Decision, key: str) -> str:
+    if key == "indicator":
+        return "yes" if decision.indicator else "no"
+    return getattr(decision, key) or "none"
+
+
+def _snapshot(decision: Decision) -> None:
+    for key in CHOICE_KEYS:
+        decision.auto[key] = _value(decision, key)
+
+
+def _options(
+    decision: Decision, prof: ColumnProfile, model: ModelProfile
+) -> dict[str, list[Option]]:
+    """The choices each setting offers for this column, with the reason when one is impossible."""
+    options = {
+        "use": [
+            Option("yes", None if decision.reactivable else (decision.why or [""])[0]),
+            Option(
+                "no",
+                "The target is never an input." if decision.rules[:1] == ["R-SEL-01"] else None,
+            ),
+        ]
+    }
+    no_fill = None if model.handles_missing else NO_MISSING
+    if decision.type in NUMERIC:
+        fills = ("mean", "median", "constant")
+        options |= {
+            "impute": [*(Option(v) for v in (*fills, "knn", "iterative")), Option("none", no_fill)],
+            "indicator": [
+                Option(
+                    "yes",
+                    None if decision.impute in fills else "Only with mean, median or 0 imputation.",
+                ),
+                Option("no"),
+            ],
+            "transform": [
+                Option("none"),
+                Option("log1p", None if prof.all_nonnegative else "Needs every value ≥ 0."),
+                Option("yeojohnson"),
+            ],
+            "scaling": [Option(v) for v in ("none", "standard", "robust", "minmax")],
+        }
+    elif decision.type == "datetime":
+        options["scaling"] = [Option(v) for v in ("none", "standard", "minmax")]
+    elif decision.type in CATEGORICAL:
+        options["impute"] = [
+            Option("missing_category"),
+            Option("most_frequent"),
+            Option("none", no_fill),
+        ]
+        if decision.type != "boolean":
+            options["encoding"] = [
+                Option("onehot"),
+                Option("binary", None if prof.distinct == 2 else "Only for two categories."),
+                Option("ordinal"),
+                Option(
+                    "target",
+                    "Can be negative: this model needs inputs ≥ 0."
+                    if model.nonnegative_inputs
+                    else None,
+                ),
+                Option(
+                    "native",
+                    None
+                    if model.native_categorical
+                    else "This model does not take categories as they are.",
+                ),
+            ]
+            ordinal = None if decision.encoding == "ordinal" else ONLY_ORDINAL
+            options["scaling"] = [
+                Option("none"),
+                Option("standard", ordinal),
+                Option("minmax", ordinal),
+            ]
+    return options
+
+
+def _set(decision: Decision, key: str, value: str) -> None:
+    if key == "indicator":
+        decision.indicator = value == "yes"
+    elif key in ("transform", "scaling"):
+        setattr(decision, key, None if value == "none" else value)
+    elif key == "impute":
+        decision.impute = value
+        if value not in ("mean", "median", "constant"):
+            decision.indicator = False
+    elif key == "encoding":
+        decision.encoding = value
+        if value != "ordinal":
+            decision.scaling = None
+
+
+def _apply(
+    decision: Decision,
+    choice: ColumnChoice,
+    prof: ColumnProfile,
+    model: ModelProfile,
+    warnings: list[str],
 ) -> None:
-    """R-SEL-07: of two numbers with |r| > 0.95, drop the one less linked to the target."""
+    """The user's per-column choices, in an order where each one sees the previous ones."""
+    for key in CHOICE_KEYS:
+        wanted = getattr(choice, key)
+        if wanted is None:
+            continue
+        text = ("yes" if wanted else "no") if key == "indicator" else str(wanted)
+        available = {o.value: o.reason for o in _options(decision, prof, model).get(key, [])}
+        if text not in available:
+            warnings.append(
+                f"{decision.column}: “{text}” is not a possible {key} here; automatic choice kept."
+            )
+            continue
+        if available[text]:
+            warnings.append(f"{decision.column}: {text} — {available[text]} Automatic choice kept.")
+            continue
+        if _value(decision, key) == text:
+            continue
+        _set(decision, key, text)
+        decision.manual.append(key)
+        decision.apply("USER", f"{key.capitalize()} set to {text}: your choice.")
+
+
+def _collinearity(
+    frame: pd.DataFrame,
+    decisions: list[Decision],
+    target: DataField,
+    target_numeric: bool,
+    forced: set[str],
+) -> None:
+    """R-SEL-07: of two numbers with |r| > 0.95, drop the one less linked to the target
+    (never one the user asked to keep)."""
     numeric = [d for d in decisions if d.use and d.type in NUMERIC]
     for i, first in enumerate(numeric):
         for second in numeric[i + 1 :]:
@@ -429,7 +731,12 @@ def _collinearity(
             drop, keep = (
                 (first, second) if link[first.column] < link[second.column] else (second, first)
             )
+            if drop.column in forced:
+                drop, keep = keep, drop
+            if drop.column in forced:
+                continue
             drop.use = False
+            drop.auto["use"] = "no"
             drop.apply(
                 "R-SEL-07",
                 f"Nearly duplicates {keep.column} (r = {r:.3f}); unstable coefficients otherwise.",
@@ -486,17 +793,21 @@ class DateParts(BaseEstimator, TransformerMixin):
 
 
 def _scaler(kind: str | None):
-    return {"standard": StandardScaler(), "robust": RobustScaler()}.get(kind or "", "passthrough")
+    return {"standard": StandardScaler(), "robust": RobustScaler(), "minmax": MinMaxScaler()}.get(
+        kind or "", "passthrough"
+    )
 
 
-def _rare(n: int) -> int:
-    return max(RARE_ROWS, math.ceil(RARE_SHARE * n))
+def _rare(n: int, choices: Choices) -> int:
+    return max(choices.rare_rows, math.ceil(choices.rare_share * n))
 
 
 def build(
     preparation: Preparation, rows: int, task: Task, drop_first: bool = False
 ) -> ColumnTransformer:
-    """The scikit-learn ColumnTransformer that applies the decisions."""
+    """The scikit-learn ColumnTransformer that applies the per-column decisions."""
+    choices = preparation.choices
+    clip = choices.outliers if choices.outliers in ("clip_percentiles", "clip_iqr") else None
     transformers = []
     for d in preparation.used:
         steps: list[tuple[str, object]] = []
@@ -505,6 +816,15 @@ def build(
                 steps.append(
                     ("impute", SimpleImputer(strategy=d.impute, add_indicator=d.indicator))
                 )
+            elif d.impute == "constant":
+                steps.append(
+                    (
+                        "impute",
+                        SimpleImputer(strategy="constant", fill_value=0, add_indicator=d.indicator),
+                    )
+                )
+            if clip:
+                steps.append(("clip", Clipper(clip)))
             if d.transform == "log1p":
                 steps.append(
                     ("log1p", FunctionTransformer(np.log1p, feature_names_out="one-to-one"))
@@ -521,34 +841,22 @@ def build(
                 ("scale", _scaler(d.scaling)),
             ]
         else:
-            fill = MISSING if d.impute == "missing_category" else None
-            steps.append(
-                (
-                    "impute",
-                    SimpleImputer(strategy="constant", fill_value=fill)
-                    if fill
-                    else SimpleImputer(strategy="most_frequent"),
-                )
-            )
-            if d.encoding == "ordinal" and d.order:
+            if d.impute == "missing_category":
+                steps.append(("impute", SimpleImputer(strategy="constant", fill_value=MISSING)))
+            elif d.impute == "most_frequent":
+                steps.append(("impute", SimpleImputer(strategy="most_frequent")))
+            if d.encoding == "ordinal":
                 steps.append(
                     (
                         "ordinal",
                         OrdinalEncoder(
-                            categories=[d.order],  # type: ignore[arg-type]
+                            categories=[d.order] if d.order else "auto",  # type: ignore[arg-type]
                             handle_unknown="use_encoded_value",
                             unknown_value=-1,
                         ),
                     )
                 )
                 steps.append(("scale", _scaler(d.scaling)))
-            elif d.encoding == "ordinal":
-                steps.append(
-                    (
-                        "ordinal",
-                        OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1),
-                    )
-                )
             elif d.encoding == "target":
                 target_type = (
                     "continuous"
@@ -558,7 +866,12 @@ def build(
                 steps.append(
                     (
                         "target",
-                        TargetEncoder(target_type=target_type, smooth=10.0, cv=5, random_state=42),  # type: ignore[arg-type]
+                        TargetEncoder(
+                            target_type=target_type,  # type: ignore[arg-type]
+                            smooth=choices.target_smoothing,  # type: ignore[arg-type]
+                            cv=5,
+                            random_state=42,  # type: ignore[arg-type]
+                        ),
                     )
                 )
                 steps.append(("scale", StandardScaler()))
@@ -573,7 +886,7 @@ def build(
                             handle_unknown="infrequent_if_exist"
                             if d.encoding == "onehot"
                             else "ignore",
-                            min_frequency=_rare(rows) if d.encoding == "onehot" else None,
+                            min_frequency=_rare(rows, choices) if d.encoding == "onehot" else None,
                             sparse_output=False,
                         ),
                     )
@@ -582,4 +895,20 @@ def build(
     return ColumnTransformer(transformers, remainder="drop", verbose_feature_names_out=False)
 
 
-Kind = Literal["number", "category", "date"]
+def steps(
+    preparation: Preparation, rows: int, task: Task, drop_first: bool = False
+) -> list[tuple[str, Any]]:
+    """Every preparation step, in order: joint imputation, per-column preparation, selection."""
+    found: list[tuple[str, Any]] = []
+    for kind in ("knn", "iterative"):
+        columns = tuple(
+            d.column for d in preparation.used if d.type in NUMERIC and d.impute == kind
+        )
+        if columns:
+            found.append((f"impute_{kind}", JointImputer(columns, kind)))
+    found.append(("prepare", build(preparation, rows, task, drop_first)))
+    for i, selection in enumerate(preparation.choices.selection):
+        found.append(
+            (f"select_{i}_{selection.method}", Selector(selection.method, selection.value, task))
+        )
+    return found

@@ -103,3 +103,40 @@ def test_predictions_csv_neutralises_formulas() -> None:
     assert _cell("@cmd") == "'@cmd" and _cell("+1+1") == "'+1+1"
     assert _cell("\tx") == "'\tx"
     assert _cell("-12.5") == "-12.5" and _cell("yes") == "yes"
+
+
+def test_preparation_preview_and_training_with_choices(client: TestClient, traps: str) -> None:
+    choices = {
+        "columns": {"age": {"scaling": "minmax"}},
+        "outliers": "clip_iqr",
+        "selection": [{"method": "variance", "value": 0.0}],
+    }
+    shown = client.post(
+        f"{BASE}/datasets/{traps}/preparation", params={"target": "income"}, json=choices
+    )
+    assert shown.status_code == 200, shown.text
+    body = shown.json()
+    assert len(body["rows"]) == 20 and body["columns"]
+    assert (
+        body["preparation"]["custom"]
+        and body["preparation"]["selection"][0]["method"] == "variance"
+    )
+    age = next(d for d in body["preparation"]["decisions"] if d["column"] == "age")
+    assert age["scaling"] == "minmax" and age["manual"] == ["scaling"] and age["options"]["scaling"]
+
+    job = wait(
+        client,
+        client.post(
+            f"{BASE}/datasets/{traps}/runs", params={"target": "income"}, json=choices
+        ).json(),
+    )
+    assert job["status"] == "done", job
+    run = client.get(f"{BASE}/datasets/{traps}/runs/{job['run_id']}").json()
+    assert run["preparation"]["choices"]["outliers"] == "clip_iqr"
+
+    bad = client.post(
+        f"{BASE}/datasets/{traps}/preparation",
+        params={"target": "income"},
+        json={"outliers": "explode"},
+    )
+    assert bad.status_code == 422

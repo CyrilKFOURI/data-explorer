@@ -3,13 +3,14 @@ import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import type { MlCandidate, MlRun, MlSetting } from "../../api/client";
+import type { MlCandidate, MlChoicesInput, MlRun, MlSetting } from "../../api/client";
 import { useDataset, useMlCatalog, useMlJob, useMlRun, useMlRuns, useMlTargets, useMlTrain } from "../../api/hooks";
 import { formatNumber } from "../../charts/figures";
 import { t, type MessageKey } from "../../lib/i18n";
 import { Button } from "../../ui/Button";
 import { ErrorNote, Select, TextInput } from "../../ui/fields";
 import { InfoTip } from "../../ui/InfoTip";
+import { PreparationEditor, preparationSummary } from "./PreparationEditor";
 import { Results } from "./Results";
 
 export type MlSearch = { target?: string; run?: string };
@@ -166,6 +167,10 @@ function Workbench({
   const train = useMlTrain(datasetId);
   const job = useMlJob(jobId);
   const started = useRef(false);
+  const [editing, setEditing] = useState(false);
+  // Preparation choices: what the user changed, else what the shown run used.
+  const [edited, setEdited] = useState<MlChoicesInput | null>(null);
+  const choices: MlChoicesInput = edited ?? run.data?.preparation.choices ?? {};
 
   const settings = useMemo(() => {
     const merged: Record<string, unknown> = {};
@@ -176,11 +181,21 @@ function Workbench({
   }, [model, values, run.data]);
 
   // Only the settings the user changed: the server resolves every other default on the data.
+  const changedSettings = Object.keys(values).length ? values : null;
   const launch = () =>
     train.mutate(
-      { target: candidate.name, model: model?.key ?? null, settings: Object.keys(values).length ? values : null },
-      { onSuccess: (created) => setJobId(created.id) },
+      { target: candidate.name, model: model?.key ?? null, settings: changedSettings, choices },
+      {
+        onSuccess: (created) => {
+          setJobId(created.id);
+          setEdited(null);
+        },
+      },
     );
+  const pickRun = (id: string) => {
+    setEdited(null);
+    onRun(id);
+  };
 
   // The reference model trains on its own the first time a target is chosen.
   useEffect(() => {
@@ -236,31 +251,29 @@ function Workbench({
           </section>
         )}
         <section className="space-y-1 text-xs">
-          <p className="text-ink-3">{t("ml.preparation")}</p>
-          {preparation ? (
-            <details>
-              <summary className="cursor-pointer text-ink-1">
-                {t("ml.preparationSummary", {
-                  used: String(preparation.decisions.filter((d) => d.use).length),
-                  inputs: String(preparation.inputs),
-                  excluded: String(preparation.excluded),
-                })}
-              </summary>
-              <ul className="mt-2 space-y-1.5">
-                {preparation.decisions.map((d) => (
-                  <li key={d.column} className={d.use ? "text-ink-1" : "text-ink-3"}>
-                    <span className="font-mono">{d.column}</span>
-                    {!d.use && <span> — {t("ml.excluded")}</span>}
-                    <span className="block text-ink-3">{d.why.join(" ")}</span>
-                  </li>
-                ))}
-              </ul>
-            </details>
-          ) : (
-            <p className="text-ink-2">{t("ml.preparationAuto")}</p>
-          )}
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-ink-3">
+              {t("ml.preparation")} · {(edited ? Object.keys(edited).length > 0 : preparation?.custom) ? t("ml.prep.custom") : t("ml.prep.automatic")}
+            </p>
+            <Button variant="ghost" onClick={() => setEditing(true)} disabled={!model}>
+              {t("ml.prep.edit")}
+            </Button>
+          </div>
+          <p className="text-ink-1">{preparation ? preparationSummary(preparation) : t("ml.preparationAuto")}</p>
+          {edited && <p className="text-warn">{t("ml.prep.pending")}</p>}
           <p className="pt-1 text-ink-3">{t("ml.validation")}</p>
         </section>
+        <PreparationEditor
+          open={editing}
+          onOpenChange={setEditing}
+          datasetId={datasetId}
+          target={candidate.name}
+          task={task}
+          model={model?.key ?? null}
+          settings={changedSettings}
+          choices={choices}
+          onChoices={setEdited}
+        />
         <Button variant="primary" onClick={launch} disabled={training || !model}>
           {training ? t(`ml.stage.${job.data?.stage ?? "loading"}` as MessageKey) : t("ml.train")}
         </Button>
@@ -276,7 +289,7 @@ function Workbench({
             {training ? t("ml.trainingFirst") : t("ml.noRunYet")}
           </div>
         )}
-        {runs.data && runs.data.length > 0 && <RunStrip runs={runs.data} shown={run.data} onPick={onRun} />}
+        {runs.data && runs.data.length > 0 && <RunStrip runs={runs.data} shown={run.data} onPick={pickRun} />}
       </div>
     </div>
   );

@@ -5128,6 +5128,24 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Choices"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Preparation choices.",
+                "title": "Choices"
+              }
+            }
+          }
+        },
         "responses": {
           "202": {
             "description": "Successful Response",
@@ -5196,6 +5214,128 @@
                     "$ref": "#/components/schemas/RunSummary"
                   },
                   "title": "Response Runs Api V1 Modules Ml Datasets  Dataset Id  Runs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/ml/datasets/{dataset_id}/preparation": {
+      "post": {
+        "tags": [
+          "module:ml"
+        ],
+        "summary": "Preparation",
+        "description": "The decisions the next training would take, and its first 20 training rows prepared.",
+        "operationId": "preparation_api_v1_modules_ml_datasets__dataset_id__preparation_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "target",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Target"
+            }
+          },
+          {
+            "name": "model",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Model"
+            }
+          },
+          {
+            "name": "settings",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON object of settings.",
+              "title": "Settings"
+            },
+            "description": "JSON object of settings."
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filters"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Choices"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Preparation choices.",
+                "title": "Choices"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreparationPreview"
                 }
               }
             }
@@ -5597,6 +5737,45 @@
           "bic"
         ],
         "title": "ArOrder"
+      },
+      "Balance": {
+        "properties": {
+          "strategy": {
+            "type": "string",
+            "title": "Strategy"
+          },
+          "rule": {
+            "type": "string",
+            "title": "Rule"
+          },
+          "why": {
+            "type": "string",
+            "title": "Why"
+          },
+          "before": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Before"
+          },
+          "after": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "After"
+          }
+        },
+        "type": "object",
+        "required": [
+          "strategy",
+          "rule",
+          "why",
+          "before",
+          "after"
+        ],
+        "title": "Balance"
       },
       "Bar": {
         "properties": {
@@ -6190,6 +6369,100 @@
         ],
         "title": "Chart"
       },
+      "Choices": {
+        "properties": {
+          "columns": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ColumnChoice"
+            },
+            "type": "object",
+            "maxProperties": 5000,
+            "title": "Columns"
+          },
+          "numeric_impute": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "mean",
+              "median",
+              "constant",
+              "knn",
+              "iterative"
+            ],
+            "title": "Numeric Impute",
+            "default": "auto"
+          },
+          "indicator_share": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Indicator Share",
+            "default": 0.05
+          },
+          "rare_share": {
+            "type": "number",
+            "maximum": 0.5,
+            "minimum": 0.0,
+            "title": "Rare Share",
+            "default": 0.01
+          },
+          "rare_rows": {
+            "type": "integer",
+            "maximum": 100000.0,
+            "minimum": 1.0,
+            "title": "Rare Rows",
+            "default": 10
+          },
+          "one_hot_limit": {
+            "type": "integer",
+            "maximum": 200.0,
+            "minimum": 2.0,
+            "title": "One Hot Limit",
+            "default": 15
+          },
+          "target_smoothing": {
+            "type": "number",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Target Smoothing",
+            "default": 10.0
+          },
+          "outliers": {
+            "type": "string",
+            "enum": [
+              "none",
+              "clip_percentiles",
+              "clip_iqr",
+              "drop_rows"
+            ],
+            "title": "Outliers",
+            "default": "none"
+          },
+          "imbalance": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "none",
+              "weights",
+              "oversample",
+              "undersample"
+            ],
+            "title": "Imbalance",
+            "default": "auto"
+          },
+          "selection": {
+            "items": {
+              "$ref": "#/components/schemas/SelectionChoice"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "title": "Selection"
+          }
+        },
+        "type": "object",
+        "title": "Choices",
+        "description": "Everything the preparation editor can change. The defaults are the automatic rules."
+      },
       "ClassReport": {
         "properties": {
           "label": {
@@ -6578,6 +6851,83 @@
           "changes"
         ],
         "title": "ColumnChangesRequest"
+      },
+      "ColumnChoice": {
+        "properties": {
+          "use": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Use"
+          },
+          "impute": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Impute"
+          },
+          "indicator": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Indicator"
+          },
+          "transform": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transform"
+          },
+          "encoding": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Encoding"
+          },
+          "scaling": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scaling"
+          }
+        },
+        "type": "object",
+        "title": "ColumnChoice",
+        "description": "What the user set for one column; None = automatic."
       },
       "ColumnInfo": {
         "properties": {
@@ -7630,6 +7980,45 @@
               }
             ],
             "title": "Order"
+          },
+          "auto": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Auto"
+          },
+          "manual": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Manual"
+          },
+          "options": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/Option"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Options"
+          },
+          "reactivable": {
+            "type": "boolean",
+            "title": "Reactivable",
+            "default": true
+          },
+          "leak": {
+            "type": "boolean",
+            "title": "Leak",
+            "default": false
+          },
+          "missing": {
+            "type": "number",
+            "title": "Missing",
+            "default": 0.0
           }
         },
         "type": "object",
@@ -9635,6 +10024,30 @@
         ],
         "title": "NumericProfile"
       },
+      "Option": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "title": "Option"
+      },
       "Others": {
         "properties": {
           "count": {
@@ -10095,6 +10508,43 @@
             "type": "integer",
             "title": "Excluded",
             "default": 0
+          },
+          "choices": {
+            "$ref": "#/components/schemas/Choices"
+          },
+          "custom": {
+            "type": "boolean",
+            "title": "Custom",
+            "default": false
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "selection": {
+            "items": {
+              "$ref": "#/components/schemas/SelectionReport"
+            },
+            "type": "array",
+            "title": "Selection"
+          },
+          "balance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Balance"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dropped_rows": {
+            "type": "integer",
+            "title": "Dropped Rows",
+            "default": 0
           }
         },
         "type": "object",
@@ -10102,6 +10552,58 @@
           "decisions"
         ],
         "title": "Preparation"
+      },
+      "PreparationPreview": {
+        "properties": {
+          "preparation": {
+            "$ref": "#/components/schemas/Preparation"
+          },
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "rows": {
+            "items": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "row_numbers": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Row Numbers"
+          },
+          "train_rows": {
+            "type": "integer",
+            "title": "Train Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "preparation",
+          "columns",
+          "rows",
+          "row_numbers",
+          "train_rows"
+        ],
+        "title": "PreparationPreview",
+        "description": "The matrix the model really receives: the first training rows once prepared."
       },
       "Preview": {
         "properties": {
@@ -11044,6 +11546,77 @@
           "mean"
         ],
         "title": "Segment"
+      },
+      "SelectionChoice": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "variance",
+              "correlation",
+              "vif",
+              "mutual_info",
+              "univariate",
+              "l1",
+              "rfe",
+              "permutation"
+            ],
+            "title": "Method"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method"
+        ],
+        "title": "SelectionChoice"
+      },
+      "SelectionReport": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "kept": {
+            "type": "integer",
+            "title": "Kept"
+          },
+          "of": {
+            "type": "integer",
+            "title": "Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method",
+          "value",
+          "kept",
+          "of"
+        ],
+        "title": "SelectionReport"
       },
       "Series": {
         "properties": {
