@@ -16,7 +16,10 @@ import { HomePage } from "../pages/home/HomePage";
 import { NotFoundPage } from "../pages/not-found/NotFoundPage";
 import { OverviewPage } from "../pages/overview/OverviewPage";
 import { SettingsPage } from "../pages/settings/SettingsPage";
-import { ComparePage, validateCompareSearch } from "../pages/compare/ComparePage";
+import {
+  ComparePage,
+  validateCompareSearch,
+} from "../pages/compare/ComparePage";
 import { CorrelationsPage } from "../pages/correlations/CorrelationsPage";
 import { DataPage, validateDataSearch } from "../pages/data/DataPage";
 import { VariablePage } from "../pages/variable/VariablePage";
@@ -39,13 +42,21 @@ export function createAppRouter({
     notFoundComponent: NotFoundPage,
   });
 
-  const homeRoute = createRoute({ getParentRoute: () => rootRoute, path: "/", component: HomePage });
+  const homeRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/",
+    component: HomePage,
+  });
   const settingsRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: "/settings",
     component: SettingsPage,
   });
-  const helpRoute = createRoute({ getParentRoute: () => rootRoute, path: "/help", component: HelpPage });
+  const helpRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/help",
+    component: HelpPage,
+  });
   const datasetRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: "/d/$datasetId",
@@ -79,7 +90,14 @@ export function createAppRouter({
     component: DataPage,
   });
   const moduleRoutes = modules.map((module) =>
-    createRoute({ getParentRoute: () => rootRoute, path: module.path, component: module.component }),
+    createRoute({
+      getParentRoute: () => rootRoute,
+      path: module.path,
+      component: module.component,
+      ...(module.validateSearch
+        ? { validateSearch: module.validateSearch }
+        : {}),
+    }),
   );
 
   return createRouter({

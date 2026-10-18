@@ -77,7 +77,8 @@ describe("Columns page", () => {
     const calls = setup();
     await screen.findByRole("heading", { name: "Columns" });
 
-    fireEvent.change(screen.getByLabelText("Role of store"), { target: { value: "city" } });
+    fireEvent.pointerDown(screen.getByRole("button", { name: "Role of store" }), { button: 0, pointerType: "mouse" });
+    fireEvent.click(await screen.findByRole("menuitemradio", { name: "City" }));
     await waitFor(() => expect(patches(calls)).toHaveLength(1));
     expect(patches(calls)[0]).toEqual({ changes: [{ name: "store", role: "city" }] });
 

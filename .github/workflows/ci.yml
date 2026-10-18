@@ -52,11 +52,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build the image
         run: docker build -t data-explorer:ci .
-      - name: Image size under 600 MB
+      - name: Image size under 900 MB
         run: |
           size=$(docker image inspect data-explorer:ci --format '{{.Size}}')
           echo "Image size: $((size / 1024 / 1024)) MB"
-          test "$size" -lt $((600 * 1024 * 1024))
+          test "$size" -lt $((900 * 1024 * 1024))
       - name: Smoke test
         run: |
           docker run -d --name app -p 8000:8000 data-explorer:ci

@@ -54,6 +54,18 @@ def test_not_comparable_is_a_422(client: TestClient, traps: str) -> None:
     assert get(client, traps, x="age", y="nope").status_code == 422
 
 
+def test_time_series_options(client: TestClient, traps: str) -> None:
+    result = get(
+        client, traps, x="signup_date", y="price_eur", period="month", agg="median", window=4
+    ).json()
+
+    assert result["time"]["period"] == "month" and result["time"]["aggregate"] == "median"
+    assert result["time"]["window"] == 4 and not result["time"]["period_auto"]
+    assert result["tests"][0]["key"] == "mann_kendall"
+    assert get(client, traps, x="signup_date", y="price_eur", agg="mode").status_code == 422
+    assert get(client, traps, x="signup_date", y="price_eur", window=1).status_code == 422
+
+
 @pytest.mark.slow
 def test_five_million_rows(client: TestClient, tmp_path: Path) -> None:
     import duckdb
@@ -61,7 +73,8 @@ def test_five_million_rows(client: TestClient, tmp_path: Path) -> None:
     path = tmp_path / "big.parquet"
     duckdb.execute(
         "COPY (SELECT range AS id, random() * 100 AS a, random() * 50 AS b, "
-        "['north', 'south', 'east', 'west'][1 + range % 4] AS zone FROM range(5000000)) "
+        "['north', 'south', 'east', 'west'][1 + range % 4] AS zone, "
+        "DATE '2015-01-01' + CAST(range % 3650 AS INTEGER) AS day FROM range(5000000)) "
         f"TO '{path.as_posix()}' (FORMAT parquet)"
     )
     dataset_id = import_path(client, path)
@@ -72,3 +85,10 @@ def test_five_million_rows(client: TestClient, tmp_path: Path) -> None:
         seconds = time.perf_counter() - start
         assert response.status_code == 200, response.text
         assert seconds < 3, (x, y, seconds)
+
+    start = time.perf_counter()
+    response = get(client, dataset_id, x="day", y="a", color="zone")
+    seconds = time.perf_counter() - start
+    assert response.status_code == 200, response.text
+    assert response.json()["kind"] == "timeline"
+    assert seconds < 2, ("day", "a", seconds)

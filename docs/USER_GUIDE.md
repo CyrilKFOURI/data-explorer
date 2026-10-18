@@ -64,11 +64,47 @@ Pick an **X** and a **Y**: the chart and the statistical tests follow their type
 | Number × number | Scatter with linear fit (or density for many rows), 3D with a third number | Pearson r, Spearman ρ, Kendall τ |
 | Number × category | Box, violin, or means ± 95 % CI per group | Welch t-test / Mann-Whitney (2 groups); ANOVA, Welch ANOVA, Kruskal-Wallis (3+ groups); Levene for equal spreads. The *Recommended* test is chosen from normality and spreads |
 | Category × category | Heatmap of counts, or stacked 100 % bars | χ² test of independence, Fisher's exact test (2×2), Cramér's V |
-| Date × number | Series (one point per day, week, month… ) | — |
+| Date × number | Time series: one aggregated value per period, rolling mean and ± 1σ band | Mann-Kendall trend test, Sen's slope |
 | Date × category | Counts per period and category | — |
 
 - **Color** splits a numeric pair or a series by a category. **Swap** exchanges X and Y.
+- **Time series** (date × number): rows are always **aggregated per period first** — a rolling mean over raw rows would mean nothing when a date has several rows. Above the chart, change:
+  - **Period** — *Auto* uses the usual gap between dates, coarsened beyond 400 periods (3 years of daily data → weeks);
+  - **Aggregate** — *Auto* sums amounts and quantities (by their column role) and averages everything else; also median, min, max, count;
+  - **Window** of the rolling mean and standard deviation, in periods (*Auto*: 7 days, 4 weeks, 3 months…), **Trailing** (only looks back) or **Centered**;
+  - which layers to draw: values, rolling mean, ± 1σ band (single series only).
+  An empty period is a gap — except for sums and counts, where it is 0. A first or last period only partly covered by the data (a week starting mid-week) is drawn but left out of the trend test. *Data used* lists every period with its value, rolling mean, rolling σ and number of rows.
 - Each test shows its statistic, p-value, **effect size** with its magnitude (negligible, small, medium, large) and a sentence to read it. Statistics use every row; only the points drawn may be sampled (it is said under the chart).
+
+### Time series
+
+*Modules › Time series* (needs a date column) analyses **one series** in depth. It opens already set up: the first date, the first amount or quantity column (otherwise the first number), and the automatic period and aggregate of *Compare*. *Analyze as time series →* in *Compare* opens it on the same choices.
+
+- **Settings bar** (stays at the top): Time, Value, Period, Aggregate, **Group** (one series per category, up to 8; *Series* picks the one analysed), **Gaps** — leave empty periods empty, interpolate them, fill them with 0 or carry the last value forward. Methods that need a complete series interpolate on their own and say so.
+- **Sections**, each opening on its conclusion (also shown in the side contents):
+  - **Overview** — span, number of periods, empty periods, change between the first and last quarter; the curve with its rolling mean and ± 1σ band (window, trailing or centered), a range slider to zoom, and *Show all series* to overlay the groups.
+  - **Seasonality** — boxes by weekday, month, quarter or hour (whichever the period allows), with the label furthest from the average once the trend is removed; one line per year to compare the latest year with the previous ones.
+  - **Decomposition** — trend, seasonal and remainder, stacked on one time axis, with **STL** (robust, default), **MSTL** (several cycles, e.g. weekly and yearly), or **classical** additive / multiplicative moving averages. *Season length* overrides the cycle (7 days, 52 weeks, 12 months…). The **strengths** of trend and seasonality run from 0 (none) to 1 (dominant): above 0.64 is strong.
+- **Methods**: every section lists the methods it ran; **+ Add method** offers every method that answers the same question, and your choice is remembered. Each method shows its conclusion, p-value, statistic, what it estimates, and *What it does* with its null hypothesis.
+
+| Section | Methods (★ = shown by default) |
+|---|---|
+| Trend | ★ Mann-Kendall · ★ Sen's slope · Mann-Kendall corrected for autocorrelation (Hamed–Rao) · Seasonal Mann-Kendall · Cox–Stuart · Spearman ρ with time · Linear regression on time |
+| Seasonality | ★ Kruskal–Wallis between seasons (ε²) · ★ Periodogram (dominant cycle length) · Friedman · QS test · Fisher's g · Autocorrelation at the seasonal lag |
+| Stationarity | ★ ADF · ★ KPSS · ★ Phillips–Perron · DF-GLS · Zivot–Andrews (one break) · Variance ratio · Range unit-root |
+| Autocorrelation | ★ Ljung–Box · ★ Durbin–Watson · Box–Pierce · Breusch–Godfrey · Runs test · Turning points · Bartels rank test |
+| Volatility | ★ Breusch–Pagan · ★ ARCH-LM · White · Goldfeld–Quandt · McLeod–Li · Levene · Brown–Forsythe · Bartlett · Fligner–Killeen |
+| Breaks | ★ Pettitt · CUSUM · Chow · Buishand range · SNHT |
+
+- **Residuals** are what is left once trend and seasonality are removed (the STL remainder; a straight line's residuals when the series is too short for two cycles). With fewer than 7 cycles, the seasonal part is estimated as a plain average per position of the cycle, so it does not swallow the noise.
+- **Volatility** — the residuals and their rolling standard deviation, and tests of whether the variance changes over time or comes in clusters (ARCH). When the spread grows with the level, a log transformation is suggested.
+- **Residuals** section — the full distribution, exactly as on a variable page: shape statistics (skewness, excess kurtosis), QQ-plot against a normal law, the normality tests, and the fitted laws ranked by AIC with transformations. Choose what to analyse: **Residuals**, the **Series** itself, or its **Returns** (relative change from one period to the next).
+- **Breaks & anomalies** — change points found by **PELT** (exact) or **binary segmentation**, on the series without its seasonality. *Change in*: the **mean**, the **mean and variance**, or the **trend** (a straight line per segment: a change of slope). *Auto* uses the trend when the series has one, because cutting a steady trend into mean levels gives a staircase of false breaks. *Sensitivity* sets how strong a change must be. **Anomalies** are periods whose residual is unusual (robust z-score, IQR rule, rolling z-score or Hampel filter; threshold 3, 3.5 or 4); *Show rows* opens the Data page filtered on that period.
+- An incomplete first or last period (a week that starts mid-week) is left out of every analysis when values are summed or counted: its total is too low.
+- **Forecast** — runs when you click **Run forecast** (it fits each model several times). Choose the **horizon** (default: 30 days, 12 weeks, 12 months, 8 quarters… at most a quarter of the series) and the models: ★ **Naive**, ★ **Seasonal naive**, ★ **ETS (automatic)** (every exponential-smoothing form, lowest AICc), ★ **ARIMA (automatic)** (differences from the stationarity tests, then a stepwise search of the orders), plus Drift, Mean, Simple exponential smoothing, Holt, Holt-Winters, Theta and **SARIMA** with your own orders. Each model is scored on several **rolling origins**: it forecasts periods it has not seen, from several starting points. The table ranks the models by **MASE** (error relative to the naive reference: below 1 beats it) with MAE, RMSE, the gain over the reference, and the **coverage** of the 95 % interval (*All metrics* adds MAPE, sMAPE, RMSSE, bias, 80 % coverage and the Winkler interval score). The chart shows the history, the chosen model's forecast and its 80 % and 95 % intervals; click a model to draw it, *Show the other models* to overlay them, *Export CSV* to download the forecast. A Ljung–Box check says whether the model's residuals are white noise (the model captured the structure). You can cancel a running forecast.
+
+- **Stationarity** — does the series keep a stable level and spread? ADF (H0: unit root) and KPSS (H0: stationary) ask opposite questions, so together they conclude: *stationary*, *not stationary*, *trend- or difference-stationary*, or *inconclusive*. Pick a **transformation** — log, difference, seasonal difference, log + difference, difference ×2, seasonal + difference — and the tests run on it; the simplest one that makes the series stationary is marked **Suggested**. With a strong trend, the tests are run around the trend.
+- **Autocorrelation** — on the series as transformed above: the **ACF** (correlation with the value k periods earlier) and **PACF** (the same once shorter lags are accounted for; Yule-Walker, OLS or Burg), with the significance band ± 1.96/√n, and a reading of their shapes: slow decay → trend or unit root; spikes every cycle → seasonality; PACF stopping after lag p → an AR(p) model is a good start; nothing beyond chance → white noise.
 
 ### Correlations
 
@@ -184,6 +220,8 @@ With thousands of rows, tests detect even tiny departures from normality: the **
 | η² | Number × 3+ groups (ANOVA) | 0 … 1 | Share of the variance explained by the groups |
 | ε² | Number × 3+ groups (Kruskal-Wallis) | 0 … 1 | Same idea, on ranks |
 | Rank-biserial r | Mann-Whitney | −1 … 1 | How often one group's values exceed the other's |
+| Mann-Kendall τ | Date × number | −1 … 1 | Over every pair of periods, how often the later value is higher; −1 = always falls, 1 = always rises |
+| Sen's slope | Date × number | any | Median of the slopes between every pair of periods: the typical change per period, robust to outliers; with its 95 % interval and the change per year relative to the average level |
 
 **Effect sizes** (Cohen's conventions) say whether a link matters in practice:
 
@@ -192,6 +230,8 @@ With thousands of rows, tests detect even tiny departures from normality: the **
 | Small | ≥ 0.1 | ≥ 0.10 | ≥ 0.01 | ≥ 0.2 |
 | Medium | ≥ 0.3 | ≥ 0.24 | ≥ 0.06 | ≥ 0.5 |
 | Large | ≥ 0.5 | ≥ 0.37 | ≥ 0.14 | ≥ 0.8 |
+
+The **Mann-Kendall test** runs on one value per period. When successive values are strongly linked (lag-1 autocorrelation above 0.5: a cycle or a slow drift), its p-value is optimistic, and the panel says so.
 
 Cramér's V thresholds are lowered for tables with more than two rows and columns (Cohen's correction for the degrees of freedom).
 

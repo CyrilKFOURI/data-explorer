@@ -150,7 +150,7 @@ export function violinFigure(profile: NumericProfile): (tokens: ChartTokens) => 
 }
 
 /** Histogram with the best laws' densities, scaled to counts per bin. */
-export function lawsFigure(chart: Chart, grid: number[], laws: Law[], valueCount: number): (tokens: ChartTokens) => Built {
+export function lawsFigure(chart: Pick<Chart, "bins">, grid: number[], laws: Law[], valueCount: number): (tokens: ChartTokens) => Built {
   return (tokens) => {
     const width = chart.bins[0] ? chart.bins[0].end - chart.bins[0].start : 1;
     const bars: Data = {

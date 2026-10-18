@@ -17,7 +17,12 @@ export function TopBar() {
     <>
       <header className="flex h-(--topbar-h) shrink-0 items-center justify-between gap-4 border-b border-line bg-surface-0 px-6">
         {datasetId && dataset.data ? (
-          <span className="truncate font-medium text-ink-1">{dataset.data.name}</span>
+          <span className="flex min-w-0 items-baseline gap-1.5">
+            <span className="shrink-0 text-ink-3">{t("topbar.dataset")}</span>
+            <span className="truncate font-medium text-ink-1">
+              {dataset.data.name}
+            </span>
+          </span>
         ) : (
           <span className="text-ink-3">{t("topbar.noDataset")}</span>
         )}
@@ -29,9 +34,17 @@ export function TopBar() {
           >
             <Search size={14} strokeWidth={1.5} aria-hidden />
             <span className="hidden md:inline">{t("palette.open")}</span>
-            <kbd className="hidden rounded border border-line px-1 text-[11px] md:inline">Ctrl K</kbd>
+            <kbd className="hidden rounded border border-line px-1 text-[11px] md:inline">
+              Ctrl K
+            </kbd>
           </button>
-          {ready && datasetId && <FilterButton datasetId={datasetId} showChips={showChips} onShowChips={setShowChips} />}
+          {ready && datasetId && (
+            <FilterButton
+              datasetId={datasetId}
+              showChips={showChips}
+              onShowChips={setShowChips}
+            />
+          )}
         </div>
       </header>
       {ready && datasetId && showChips && <FilterChips datasetId={datasetId} />}

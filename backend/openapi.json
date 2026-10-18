@@ -1530,6 +1530,7 @@
           "compare"
         ],
         "summary": "Compare",
+        "description": "Chart data and tests; period, agg, window and align shape a date-and-number series.",
         "operationId": "compare_api_v1_datasets__dataset_id__compare_get",
         "parameters": [
           {
@@ -1593,6 +1594,90 @@
                 }
               ],
               "title": "Color"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "hour",
+                    "day",
+                    "week",
+                    "month",
+                    "quarter",
+                    "year"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "const": "auto",
+                  "type": "string"
+                }
+              ],
+              "default": "auto",
+              "title": "Period"
+            }
+          },
+          {
+            "name": "agg",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "sum",
+                    "mean",
+                    "median",
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "const": "auto",
+                  "type": "string"
+                }
+              ],
+              "default": "auto",
+              "title": "Agg"
+            }
+          },
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 365,
+                  "minimum": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Window"
+            }
+          },
+          {
+            "name": "align",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "trailing",
+                "centered"
+              ],
+              "type": "string",
+              "default": "trailing",
+              "title": "Align"
             }
           },
           {
@@ -2161,20 +2246,2616 @@
         }
       }
     },
-    "/api/v1/modules/hello": {
+    "/api/v1/modules/timeseries/datasets/{dataset_id}/overview": {
       "get": {
         "tags": [
-          "module:hello"
+          "module:timeseries"
         ],
-        "summary": "Hello",
-        "operationId": "hello_api_v1_modules_hello_get",
+        "summary": "Overview",
+        "description": "The series, its rolling statistics, key figures and trend methods.",
+        "operationId": "overview_api_v1_modules_timeseries_datasets__dataset_id__overview_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "methods",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated method keys.",
+              "title": "Methods"
+            },
+            "description": "Comma-separated method keys."
+          },
+          {
+            "name": "time",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Time"
+            }
+          },
+          {
+            "name": "value",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Value"
+            }
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group"
+            }
+          },
+          {
+            "name": "series",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Series"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "hour",
+                    "day",
+                    "week",
+                    "month",
+                    "quarter",
+                    "year"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "const": "auto",
+                  "type": "string"
+                }
+              ],
+              "default": "auto",
+              "title": "Period"
+            }
+          },
+          {
+            "name": "agg",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "sum",
+                    "mean",
+                    "median",
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "const": "auto",
+                  "type": "string"
+                }
+              ],
+              "default": "auto",
+              "title": "Agg"
+            }
+          },
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 365,
+                  "minimum": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Window"
+            }
+          },
+          {
+            "name": "align",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "trailing",
+                "centered"
+              ],
+              "type": "string",
+              "default": "trailing",
+              "title": "Align"
+            }
+          },
+          {
+            "name": "gaps",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "leave",
+                "interpolate",
+                "zero",
+                "carry"
+              ],
+              "type": "string",
+              "default": "leave",
+              "title": "Gaps"
+            }
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 400,
+                  "minimum": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Season"
+            }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filters"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HelloOut"
+                  "$ref": "#/components/schemas/SeriesOverview"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/timeseries/datasets/{dataset_id}/seasonality": {
+      "get": {
+        "tags": [
+          "module:timeseries"
+        ],
+        "summary": "Seasonality",
+        "description": "Calendar profiles, one line per year, and seasonality methods.",
+        "operationId": "seasonality_api_v1_modules_timeseries_datasets__dataset_id__seasonality_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "methods",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated method keys.",
+              "title": "Methods"
+            },
+            "description": "Comma-separated method keys."
+          },
+          {
+            "name": "time",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Time"
+            }
+          },
+          {
+            "name": "value",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Value"
+            }
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group"
+            }
+          },
+          {
+            "name": "series",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Series"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "hour",
+                    "day",
+                    "week",
+                    "month",
+                    "quarter",
+                    "year"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "const": "auto",
+                  "type": "string"
+                }
+              ],
+              "default": "auto",
+              "title": "Period"
+            }
+          },
+          {
+            "name": "agg",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "sum",
+                    "mean",
+                    "median",
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "const": "auto",
+                  "type": "string"
+                }
+              ],
+              "default": "auto",
+              "title": "Agg"
+            }
+          },
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 365,
+                  "minimum": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Window"
+            }
+          },
+          {
+            "name": "align",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "trailing",
+                "centered"
+              ],
+              "type": "string",
+              "default": "trailing",
+              "title": "Align"
+            }
+          },
+          {
+            "name": "gaps",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "leave",
+                "interpolate",
+                "zero",
+                "carry"
+              ],
+              "type": "string",
+              "default": "leave",
+              "title": "Gaps"
+            }
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 400,
+                  "minimum": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Season"
+            }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filters"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeriesSeasonality"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/timeseries/datasets/{dataset_id}/stationarity": {
+      "get": {
+        "tags": [
+          "module:timeseries"
+        ],
+        "summary": "Stationarity",
+        "description": "Unit-root and stationarity tests on the series or a transformation of it.",
+        "operationId": "stationarity_api_v1_modules_timeseries_datasets__dataset_id__stationarity_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "transform",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "none",
+                "log",
+                "diff",
+                "seasonal_diff",
+                "log_diff",
+                "diff2",
+                "seasonal_diff_diff"
+              ],
+              "type": "string",
+              "default": "none",
+              "title": "Transform"
+            }
+          },
+          {
+            "name": "methods",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated method keys.",
+              "title": "Methods"
+            },
+            "description": "Comma-separated method keys."
+          },
+          {
+            "name": "time",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Time"
+            }
+          },
+          {
+            "name": "value",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Value"
+            }
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group"
+            }
+          },
+          {
+            "name": "series",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Series"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "hour",
+                    "day",
+                    "week",
+                    "month",
+                    "quarter",
+                    "year"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "const": "auto",
+                  "type": "string"
+                }
+              ],
+              "default": "auto",
+              "title": "Period"
+            }
+          },
+          {
+            "name": "agg",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "sum",
+                    "mean",
+                    "median",
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "const": "auto",
+                  "type": "string"
+                }
+              ],
+              "default": "auto",
+              "title": "Agg"
+            }
+          },
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 365,
+                  "minimum": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Window"
+            }
+          },
+          {
+            "name": "align",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "trailing",
+                "centered"
+              ],
+              "type": "string",
+              "default": "trailing",
+              "title": "Align"
+            }
+          },
+          {
+            "name": "gaps",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "leave",
+                "interpolate",
+                "zero",
+                "carry"
+              ],
+              "type": "string",
+              "default": "leave",
+              "title": "Gaps"
+            }
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 400,
+                  "minimum": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Season"
+            }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filters"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeriesStationarity"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/timeseries/datasets/{dataset_id}/autocorrelation": {
+      "get": {
+        "tags": [
+          "module:timeseries"
+        ],
+        "summary": "Autocorrelation",
+        "description": "ACF, PACF, a reading of their shapes, and autocorrelation / randomness tests.",
+        "operationId": "autocorrelation_api_v1_modules_timeseries_datasets__dataset_id__autocorrelation_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "transform",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "none",
+                "log",
+                "diff",
+                "seasonal_diff",
+                "log_diff",
+                "diff2",
+                "seasonal_diff_diff"
+              ],
+              "type": "string",
+              "default": "none",
+              "title": "Transform"
+            }
+          },
+          {
+            "name": "methods",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated method keys.",
+              "title": "Methods"
+            },
+            "description": "Comma-separated method keys."
+          },
+          {
+            "name": "pacf",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "ywm",
+                "ols",
+                "burg"
+              ],
+              "type": "string",
+              "default": "ywm",
+              "title": "Pacf"
+            }
+          },
+          {
+            "name": "time",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Time"
+            }
+          },
+          {
+            "name": "value",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Value"
+            }
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group"
+            }
+          },
+          {
+            "name": "series",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Series"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "hour",
+                    "day",
+                    "week",
+                    "month",
+                    "quarter",
+                    "year"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "const": "auto",
+                  "type": "string"
+                }
+              ],
+              "default": "auto",
+              "title": "Period"
+            }
+          },
+          {
+            "name": "agg",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "sum",
+                    "mean",
+                    "median",
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "const": "auto",
+                  "type": "string"
+                }
+              ],
+              "default": "auto",
+              "title": "Agg"
+            }
+          },
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 365,
+                  "minimum": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Window"
+            }
+          },
+          {
+            "name": "align",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "trailing",
+                "centered"
+              ],
+              "type": "string",
+              "default": "trailing",
+              "title": "Align"
+            }
+          },
+          {
+            "name": "gaps",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "leave",
+                "interpolate",
+                "zero",
+                "carry"
+              ],
+              "type": "string",
+              "default": "leave",
+              "title": "Gaps"
+            }
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 400,
+                  "minimum": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Season"
+            }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filters"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeriesAutocorrelation"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/timeseries/datasets/{dataset_id}/volatility": {
+      "get": {
+        "tags": [
+          "module:timeseries"
+        ],
+        "summary": "Volatility",
+        "description": "Rolling spread of the residuals and heteroscedasticity / ARCH tests.",
+        "operationId": "volatility_api_v1_modules_timeseries_datasets__dataset_id__volatility_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "methods",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated method keys.",
+              "title": "Methods"
+            },
+            "description": "Comma-separated method keys."
+          },
+          {
+            "name": "time",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Time"
+            }
+          },
+          {
+            "name": "value",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Value"
+            }
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group"
+            }
+          },
+          {
+            "name": "series",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Series"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "hour",
+                    "day",
+                    "week",
+                    "month",
+                    "quarter",
+                    "year"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "const": "auto",
+                  "type": "string"
+                }
+              ],
+              "default": "auto",
+              "title": "Period"
+            }
+          },
+          {
+            "name": "agg",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "sum",
+                    "mean",
+                    "median",
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "const": "auto",
+                  "type": "string"
+                }
+              ],
+              "default": "auto",
+              "title": "Agg"
+            }
+          },
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 365,
+                  "minimum": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Window"
+            }
+          },
+          {
+            "name": "align",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "trailing",
+                "centered"
+              ],
+              "type": "string",
+              "default": "trailing",
+              "title": "Align"
+            }
+          },
+          {
+            "name": "gaps",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "leave",
+                "interpolate",
+                "zero",
+                "carry"
+              ],
+              "type": "string",
+              "default": "leave",
+              "title": "Gaps"
+            }
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 400,
+                  "minimum": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Season"
+            }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filters"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeriesVolatility"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/timeseries/datasets/{dataset_id}/residuals": {
+      "get": {
+        "tags": [
+          "module:timeseries"
+        ],
+        "summary": "Residuals",
+        "description": "Distribution of the residuals, the series or its returns: statistics, normality, laws.",
+        "operationId": "residuals_api_v1_modules_timeseries_datasets__dataset_id__residuals_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "residuals",
+                "series",
+                "returns"
+              ],
+              "type": "string",
+              "default": "residuals",
+              "title": "Source"
+            }
+          },
+          {
+            "name": "time",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Time"
+            }
+          },
+          {
+            "name": "value",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Value"
+            }
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group"
+            }
+          },
+          {
+            "name": "series",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Series"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "hour",
+                    "day",
+                    "week",
+                    "month",
+                    "quarter",
+                    "year"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "const": "auto",
+                  "type": "string"
+                }
+              ],
+              "default": "auto",
+              "title": "Period"
+            }
+          },
+          {
+            "name": "agg",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "sum",
+                    "mean",
+                    "median",
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "const": "auto",
+                  "type": "string"
+                }
+              ],
+              "default": "auto",
+              "title": "Agg"
+            }
+          },
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 365,
+                  "minimum": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Window"
+            }
+          },
+          {
+            "name": "align",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "trailing",
+                "centered"
+              ],
+              "type": "string",
+              "default": "trailing",
+              "title": "Align"
+            }
+          },
+          {
+            "name": "gaps",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "leave",
+                "interpolate",
+                "zero",
+                "carry"
+              ],
+              "type": "string",
+              "default": "leave",
+              "title": "Gaps"
+            }
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 400,
+                  "minimum": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Season"
+            }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filters"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeriesResiduals"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/timeseries/datasets/{dataset_id}/breaks": {
+      "get": {
+        "tags": [
+          "module:timeseries"
+        ],
+        "summary": "Breaks",
+        "description": "Change points, single-break tests and anomalies.",
+        "operationId": "breaks_api_v1_modules_timeseries_datasets__dataset_id__breaks_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "pelt",
+                "binseg"
+              ],
+              "type": "string",
+              "default": "pelt",
+              "title": "Search"
+            }
+          },
+          {
+            "name": "cost",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "mean",
+                    "mean_var",
+                    "trend"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "const": "auto",
+                  "type": "string"
+                }
+              ],
+              "default": "auto",
+              "title": "Cost"
+            }
+          },
+          {
+            "name": "sensitivity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ],
+              "type": "string",
+              "default": "medium",
+              "title": "Sensitivity"
+            }
+          },
+          {
+            "name": "methods",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated method keys.",
+              "title": "Methods"
+            },
+            "description": "Comma-separated method keys."
+          },
+          {
+            "name": "anomaly",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "robust_z",
+                "iqr",
+                "rolling_z",
+                "hampel"
+              ],
+              "type": "string",
+              "default": "robust_z",
+              "title": "Anomaly"
+            }
+          },
+          {
+            "name": "threshold",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 6,
+              "minimum": 2,
+              "default": 3.5,
+              "title": "Threshold"
+            }
+          },
+          {
+            "name": "time",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Time"
+            }
+          },
+          {
+            "name": "value",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Value"
+            }
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group"
+            }
+          },
+          {
+            "name": "series",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Series"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "hour",
+                    "day",
+                    "week",
+                    "month",
+                    "quarter",
+                    "year"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "const": "auto",
+                  "type": "string"
+                }
+              ],
+              "default": "auto",
+              "title": "Period"
+            }
+          },
+          {
+            "name": "agg",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "sum",
+                    "mean",
+                    "median",
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "const": "auto",
+                  "type": "string"
+                }
+              ],
+              "default": "auto",
+              "title": "Agg"
+            }
+          },
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 365,
+                  "minimum": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Window"
+            }
+          },
+          {
+            "name": "align",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "trailing",
+                "centered"
+              ],
+              "type": "string",
+              "default": "trailing",
+              "title": "Align"
+            }
+          },
+          {
+            "name": "gaps",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "leave",
+                "interpolate",
+                "zero",
+                "carry"
+              ],
+              "type": "string",
+              "default": "leave",
+              "title": "Gaps"
+            }
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 400,
+                  "minimum": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Season"
+            }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filters"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeriesBreaks"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/timeseries/datasets/{dataset_id}/forecast": {
+      "post": {
+        "tags": [
+          "module:timeseries"
+        ],
+        "summary": "Start Forecast",
+        "description": "Start (or reuse) a forecast job: models scored by rolling origin, then refitted.",
+        "operationId": "start_forecast_api_v1_modules_timeseries_datasets__dataset_id__forecast_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "horizon",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 500,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Horizon"
+            }
+          },
+          {
+            "name": "methods",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated method keys.",
+              "title": "Methods"
+            },
+            "description": "Comma-separated method keys."
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "1,1,1",
+              "title": "Order"
+            }
+          },
+          {
+            "name": "sorder",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "0,0,0",
+              "title": "Sorder"
+            }
+          },
+          {
+            "name": "time",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Time"
+            }
+          },
+          {
+            "name": "value",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Value"
+            }
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group"
+            }
+          },
+          {
+            "name": "series",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Series"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "hour",
+                    "day",
+                    "week",
+                    "month",
+                    "quarter",
+                    "year"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "const": "auto",
+                  "type": "string"
+                }
+              ],
+              "default": "auto",
+              "title": "Period"
+            }
+          },
+          {
+            "name": "agg",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "sum",
+                    "mean",
+                    "median",
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "const": "auto",
+                  "type": "string"
+                }
+              ],
+              "default": "auto",
+              "title": "Agg"
+            }
+          },
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 365,
+                  "minimum": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Window"
+            }
+          },
+          {
+            "name": "align",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "trailing",
+                "centered"
+              ],
+              "type": "string",
+              "default": "trailing",
+              "title": "Align"
+            }
+          },
+          {
+            "name": "gaps",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "leave",
+                "interpolate",
+                "zero",
+                "carry"
+              ],
+              "type": "string",
+              "default": "leave",
+              "title": "Gaps"
+            }
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 400,
+                  "minimum": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Season"
+            }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filters"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForecastJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/timeseries/forecast-jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "module:timeseries"
+        ],
+        "summary": "Forecast Job",
+        "description": "Progress, then the result, of a forecast job.",
+        "operationId": "forecast_job_api_v1_modules_timeseries_forecast_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForecastJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "module:timeseries"
+        ],
+        "summary": "Cancel Forecast",
+        "description": "Stop a forecast after the model being fitted.",
+        "operationId": "cancel_forecast_api_v1_modules_timeseries_forecast_jobs__job_id__delete",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForecastJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/timeseries/datasets/{dataset_id}/decomposition": {
+      "get": {
+        "tags": [
+          "module:timeseries"
+        ],
+        "summary": "Decomposition",
+        "description": "Trend, seasonal and remainder components.",
+        "operationId": "decomposition_api_v1_modules_timeseries_datasets__dataset_id__decomposition_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "method",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "stl",
+                "mstl",
+                "classical_additive",
+                "classical_multiplicative"
+              ],
+              "type": "string",
+              "default": "stl",
+              "title": "Method"
+            }
+          },
+          {
+            "name": "time",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Time"
+            }
+          },
+          {
+            "name": "value",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Value"
+            }
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group"
+            }
+          },
+          {
+            "name": "series",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Series"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "hour",
+                    "day",
+                    "week",
+                    "month",
+                    "quarter",
+                    "year"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "const": "auto",
+                  "type": "string"
+                }
+              ],
+              "default": "auto",
+              "title": "Period"
+            }
+          },
+          {
+            "name": "agg",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "sum",
+                    "mean",
+                    "median",
+                    "min",
+                    "max",
+                    "count"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "const": "auto",
+                  "type": "string"
+                }
+              ],
+              "default": "auto",
+              "title": "Agg"
+            }
+          },
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 365,
+                  "minimum": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Window"
+            }
+          },
+          {
+            "name": "align",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "trailing",
+                "centered"
+              ],
+              "type": "string",
+              "default": "trailing",
+              "title": "Align"
+            }
+          },
+          {
+            "name": "gaps",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "leave",
+                "interpolate",
+                "zero",
+                "carry"
+              ],
+              "type": "string",
+              "default": "leave",
+              "title": "Gaps"
+            }
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 400,
+                  "minimum": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Season"
+            }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filters"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeriesDecomposition"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -2218,6 +4899,49 @@
           "message"
         ],
         "title": "Alert"
+      },
+      "AnomalyRow": {
+        "properties": {
+          "index": {
+            "type": "integer",
+            "title": "Index"
+          },
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "start": {
+            "type": "string",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "title": "End"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "expected": {
+            "type": "number",
+            "title": "Expected"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "index",
+          "period",
+          "start",
+          "end",
+          "value",
+          "expected",
+          "score"
+        ],
+        "title": "AnomalyRow"
       },
       "AppSettings": {
         "properties": {
@@ -2382,6 +5106,91 @@
           "outlier_values"
         ],
         "title": "Box"
+      },
+      "BreakPoint": {
+        "properties": {
+          "index": {
+            "type": "integer",
+            "title": "Index"
+          },
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "before": {
+            "type": "number",
+            "title": "Before"
+          },
+          "after": {
+            "type": "number",
+            "title": "After"
+          },
+          "slope_before": {
+            "type": "number",
+            "title": "Slope Before",
+            "default": 0.0
+          },
+          "slope_after": {
+            "type": "number",
+            "title": "Slope After",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "index",
+          "period",
+          "before",
+          "after"
+        ],
+        "title": "BreakPoint"
+      },
+      "Breaks": {
+        "properties": {
+          "search": {
+            "type": "string",
+            "enum": [
+              "pelt",
+              "binseg"
+            ],
+            "title": "Search"
+          },
+          "cost": {
+            "type": "string",
+            "enum": [
+              "mean",
+              "mean_var",
+              "trend"
+            ],
+            "title": "Cost"
+          },
+          "points": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Points"
+          },
+          "segments": {
+            "items": {
+              "$ref": "#/components/schemas/Segment"
+            },
+            "type": "array",
+            "title": "Segments"
+          },
+          "cost_auto": {
+            "type": "boolean",
+            "title": "Cost Auto",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "search",
+          "cost",
+          "points"
+        ],
+        "title": "Breaks"
       },
       "CategoricalProfile": {
         "properties": {
@@ -3151,6 +5960,26 @@
             ],
             "title": "Step"
           },
+          "time": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimeView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "trend": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrendSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "tests": {
             "items": {
               "$ref": "#/components/schemas/BivariateTest"
@@ -3407,6 +6236,61 @@
         ],
         "title": "Correlations"
       },
+      "Correlogram": {
+        "properties": {
+          "lags": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Lags"
+          },
+          "acf": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Acf"
+          },
+          "pacf": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Pacf"
+          },
+          "band": {
+            "type": "number",
+            "title": "Band"
+          },
+          "readings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Readings"
+          },
+          "ar_order": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ar Order"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lags",
+          "acf",
+          "pacf",
+          "band"
+        ],
+        "title": "Correlogram"
+      },
       "CsvOptions": {
         "properties": {
           "delimiter": {
@@ -3656,6 +6540,112 @@
           "bytes"
         ],
         "title": "DatasetUsage"
+      },
+      "Decomposition": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "stl",
+              "mstl",
+              "classical_additive",
+              "classical_multiplicative"
+            ],
+            "title": "Method"
+          },
+          "seasons": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Seasons"
+          },
+          "trend": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Trend"
+          },
+          "seasonal": {
+            "items": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Seasonal"
+          },
+          "resid": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Resid"
+          },
+          "strength_trend": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strength Trend"
+          },
+          "strength_seasonal": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strength Seasonal"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method",
+          "seasons",
+          "trend",
+          "seasonal",
+          "resid",
+          "strength_trend",
+          "strength_seasonal"
+        ],
+        "title": "Decomposition"
       },
       "Density": {
         "properties": {
@@ -4003,6 +6993,78 @@
         "title": "DetectionSettings",
         "description": "Bounds keep detection sensible: below half, \"mostly numbers\" would mean nothing."
       },
+      "Distribution": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "residuals",
+              "series",
+              "returns"
+            ],
+            "title": "Source"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method"
+          },
+          "describe": {
+            "$ref": "#/components/schemas/Describe"
+          },
+          "normality": {
+            "$ref": "#/components/schemas/Normality"
+          },
+          "density": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Curve"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "qq": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QQ"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "bins": {
+            "items": {
+              "$ref": "#/components/schemas/Bin"
+            },
+            "type": "array",
+            "title": "Bins"
+          },
+          "fit": {
+            "$ref": "#/components/schemas/Fit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "method",
+          "describe",
+          "normality",
+          "density",
+          "qq",
+          "bins",
+          "fit"
+        ],
+        "title": "Distribution"
+      },
       "Effect": {
         "properties": {
           "name": {
@@ -4199,6 +7261,72 @@
           "sample_quantiles"
         ],
         "title": "Fit"
+      },
+      "ForecastJob": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "done",
+              "cancelled",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "done": {
+            "type": "integer",
+            "title": "Done"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "current": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeriesForecast"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "done",
+          "total"
+        ],
+        "title": "ForecastJob"
       },
       "Group": {
         "properties": {
@@ -4410,19 +7538,6 @@
           "db"
         ],
         "title": "HealthOut"
-      },
-      "HelloOut": {
-        "properties": {
-          "message": {
-            "type": "string",
-            "title": "Message"
-          }
-        },
-        "type": "object",
-        "required": [
-          "message"
-        ],
-        "title": "HelloOut"
       },
       "HistogramBar": {
         "properties": {
@@ -5076,6 +8191,213 @@
           "role"
         ],
         "title": "MatrixMember"
+      },
+      "MethodResult": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "statistic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statistic"
+          },
+          "p_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Value"
+          },
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "significant": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Significant"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Low"
+          },
+          "high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "statistic",
+          "p_value",
+          "n",
+          "significant"
+        ],
+        "title": "MethodResult"
+      },
+      "ModelResult": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "info": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Info"
+          },
+          "scores": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Scores"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "vs_reference": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vs Reference"
+          },
+          "forecast": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Forecast"
+          },
+          "low80": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Low80"
+          },
+          "high80": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "High80"
+          },
+          "low95": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Low95"
+          },
+          "high95": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "High95"
+          },
+          "residual_check": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MethodResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "seconds": {
+            "type": "number",
+            "title": "Seconds",
+            "default": 0.0
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "info",
+          "scores",
+          "vs_reference"
+        ],
+        "title": "ModelResult"
       },
       "Normality": {
         "properties": {
@@ -5945,6 +9267,234 @@
         ],
         "title": "SavedFilter"
       },
+      "Scores": {
+        "properties": {
+          "mae": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mae"
+          },
+          "rmse": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rmse"
+          },
+          "mape": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mape"
+          },
+          "smape": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Smape"
+          },
+          "mase": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mase"
+          },
+          "rmsse": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rmsse"
+          },
+          "bias": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bias"
+          },
+          "coverage80": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage80"
+          },
+          "coverage95": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage95"
+          },
+          "winkler95": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Winkler95"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mae",
+          "rmse",
+          "mape",
+          "smape",
+          "mase",
+          "rmsse",
+          "bias",
+          "coverage80",
+          "coverage95",
+          "winkler95"
+        ],
+        "title": "Scores"
+      },
+      "SeasonalProfile": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "labels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Labels"
+          },
+          "values": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Values"
+          },
+          "deviation": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Deviation"
+          },
+          "test": {
+            "$ref": "#/components/schemas/MethodResult"
+          },
+          "strongest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strongest"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "labels",
+          "values",
+          "deviation",
+          "test"
+        ],
+        "title": "SeasonalProfile"
+      },
+      "Segment": {
+        "properties": {
+          "start": {
+            "type": "integer",
+            "title": "Start"
+          },
+          "end": {
+            "type": "integer",
+            "title": "End"
+          },
+          "mean": {
+            "type": "number",
+            "title": "Mean"
+          },
+          "slope": {
+            "type": "number",
+            "title": "Slope",
+            "default": 0.0
+          },
+          "first": {
+            "type": "number",
+            "title": "First",
+            "default": 0.0
+          },
+          "last": {
+            "type": "number",
+            "title": "Last",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "mean"
+        ],
+        "title": "Segment"
+      },
       "Series": {
         "properties": {
           "label": {
@@ -5979,7 +9529,7 @@
             "type": "array",
             "title": "Values"
           },
-          "low": {
+          "rolling_mean": {
             "items": {
               "anyOf": [
                 {
@@ -5991,9 +9541,9 @@
               ]
             },
             "type": "array",
-            "title": "Low"
+            "title": "Rolling Mean"
           },
-          "high": {
+          "rolling_std": {
             "items": {
               "anyOf": [
                 {
@@ -6005,7 +9555,14 @@
               ]
             },
             "type": "array",
-            "title": "High"
+            "title": "Rolling Std"
+          },
+          "counts": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Counts"
           }
         },
         "type": "object",
@@ -6015,6 +9572,949 @@
           "values"
         ],
         "title": "Series"
+      },
+      "SeriesAutocorrelation": {
+        "properties": {
+          "setup": {
+            "$ref": "#/components/schemas/SeriesSetup"
+          },
+          "transform": {
+            "type": "string",
+            "enum": [
+              "none",
+              "log",
+              "diff",
+              "seasonal_diff",
+              "log_diff",
+              "diff2",
+              "seasonal_diff_diff"
+            ],
+            "title": "Transform"
+          },
+          "correlogram": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Correlogram"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "methods": {
+            "items": {
+              "$ref": "#/components/schemas/MethodResult"
+            },
+            "type": "array",
+            "title": "Methods"
+          },
+          "filled": {
+            "type": "integer",
+            "title": "Filled"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "setup",
+          "transform",
+          "correlogram",
+          "methods",
+          "filled"
+        ],
+        "title": "SeriesAutocorrelation"
+      },
+      "SeriesBreaks": {
+        "properties": {
+          "setup": {
+            "$ref": "#/components/schemas/SeriesSetup"
+          },
+          "periods": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Periods"
+          },
+          "values": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Values"
+          },
+          "deseasonalized": {
+            "type": "boolean",
+            "title": "Deseasonalized"
+          },
+          "breaks": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Breaks"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/BreakPoint"
+            },
+            "type": "array",
+            "title": "Points"
+          },
+          "methods": {
+            "items": {
+              "$ref": "#/components/schemas/MethodResult"
+            },
+            "type": "array",
+            "title": "Methods"
+          },
+          "anomalies": {
+            "items": {
+              "$ref": "#/components/schemas/AnomalyRow"
+            },
+            "type": "array",
+            "title": "Anomalies"
+          },
+          "anomaly_method": {
+            "type": "string",
+            "enum": [
+              "robust_z",
+              "iqr",
+              "rolling_z",
+              "hampel"
+            ],
+            "title": "Anomaly Method"
+          },
+          "threshold": {
+            "type": "number",
+            "title": "Threshold"
+          },
+          "residuals_from": {
+            "type": "string",
+            "title": "Residuals From"
+          },
+          "filled": {
+            "type": "integer",
+            "title": "Filled"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "setup",
+          "periods",
+          "values",
+          "deseasonalized",
+          "breaks",
+          "points",
+          "methods",
+          "anomalies",
+          "anomaly_method",
+          "threshold",
+          "residuals_from",
+          "filled"
+        ],
+        "title": "SeriesBreaks"
+      },
+      "SeriesDecomposition": {
+        "properties": {
+          "setup": {
+            "$ref": "#/components/schemas/SeriesSetup"
+          },
+          "periods": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Periods"
+          },
+          "observed": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Observed"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Decomposition"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "filled": {
+            "type": "integer",
+            "title": "Filled"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "setup",
+          "periods",
+          "observed",
+          "result",
+          "filled"
+        ],
+        "title": "SeriesDecomposition"
+      },
+      "SeriesFigures": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "title": "End"
+          },
+          "periods": {
+            "type": "integer",
+            "title": "Periods"
+          },
+          "missing": {
+            "type": "integer",
+            "title": "Missing"
+          },
+          "change": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "periods",
+          "missing",
+          "change"
+        ],
+        "title": "SeriesFigures"
+      },
+      "SeriesForecast": {
+        "properties": {
+          "horizon": {
+            "type": "integer",
+            "title": "Horizon"
+          },
+          "periods": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Periods"
+          },
+          "history": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "History"
+          },
+          "future": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Future"
+          },
+          "reference": {
+            "type": "string",
+            "title": "Reference"
+          },
+          "origins": {
+            "type": "integer",
+            "title": "Origins"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/ModelResult"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "best": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best"
+          }
+        },
+        "type": "object",
+        "required": [
+          "horizon",
+          "periods",
+          "history",
+          "future",
+          "reference",
+          "origins",
+          "results",
+          "best"
+        ],
+        "title": "SeriesForecast"
+      },
+      "SeriesLine": {
+        "properties": {
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values"
+          },
+          "counts": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Counts"
+          },
+          "rolling_mean": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Rolling Mean"
+          },
+          "rolling_std": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Rolling Std"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "values",
+          "counts"
+        ],
+        "title": "SeriesLine"
+      },
+      "SeriesOverview": {
+        "properties": {
+          "setup": {
+            "$ref": "#/components/schemas/SeriesSetup"
+          },
+          "periods": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Periods"
+          },
+          "analyzed": {
+            "$ref": "#/components/schemas/SeriesLine"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/SeriesLine"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "figures": {
+            "$ref": "#/components/schemas/SeriesFigures"
+          },
+          "window": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Window"
+          },
+          "align": {
+            "type": "string",
+            "enum": [
+              "trailing",
+              "centered"
+            ],
+            "title": "Align"
+          },
+          "methods": {
+            "items": {
+              "$ref": "#/components/schemas/MethodResult"
+            },
+            "type": "array",
+            "title": "Methods"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "setup",
+          "periods",
+          "analyzed",
+          "lines",
+          "figures",
+          "window",
+          "align",
+          "methods"
+        ],
+        "title": "SeriesOverview"
+      },
+      "SeriesResiduals": {
+        "properties": {
+          "setup": {
+            "$ref": "#/components/schemas/SeriesSetup"
+          },
+          "distribution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Distribution"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "filled": {
+            "type": "integer",
+            "title": "Filled"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "setup",
+          "distribution",
+          "filled"
+        ],
+        "title": "SeriesResiduals"
+      },
+      "SeriesSeasonality": {
+        "properties": {
+          "setup": {
+            "$ref": "#/components/schemas/SeriesSetup"
+          },
+          "detrend": {
+            "type": "string",
+            "title": "Detrend"
+          },
+          "profiles": {
+            "items": {
+              "$ref": "#/components/schemas/SeasonalProfile"
+            },
+            "type": "array",
+            "title": "Profiles"
+          },
+          "overlay": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/YearOverlay"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "methods": {
+            "items": {
+              "$ref": "#/components/schemas/MethodResult"
+            },
+            "type": "array",
+            "title": "Methods"
+          },
+          "filled": {
+            "type": "integer",
+            "title": "Filled"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "setup",
+          "detrend",
+          "profiles",
+          "overlay",
+          "methods",
+          "filled"
+        ],
+        "title": "SeriesSeasonality"
+      },
+      "SeriesSetup": {
+        "properties": {
+          "time": {
+            "type": "string",
+            "title": "Time"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group"
+          },
+          "series": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Series"
+          },
+          "dates": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Dates"
+          },
+          "numbers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Numbers"
+          },
+          "categories": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Categories"
+          },
+          "groups": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Groups"
+          },
+          "period": {
+            "type": "string",
+            "enum": [
+              "hour",
+              "day",
+              "week",
+              "month",
+              "quarter",
+              "year"
+            ],
+            "title": "Period"
+          },
+          "aggregate": {
+            "type": "string",
+            "enum": [
+              "sum",
+              "mean",
+              "median",
+              "min",
+              "max",
+              "count"
+            ],
+            "title": "Aggregate"
+          },
+          "period_auto": {
+            "type": "boolean",
+            "title": "Period Auto"
+          },
+          "aggregate_auto": {
+            "type": "boolean",
+            "title": "Aggregate Auto"
+          },
+          "coarsened": {
+            "type": "boolean",
+            "title": "Coarsened"
+          },
+          "first_partial": {
+            "type": "boolean",
+            "title": "First Partial"
+          },
+          "last_partial": {
+            "type": "boolean",
+            "title": "Last Partial"
+          },
+          "gaps": {
+            "type": "string",
+            "enum": [
+              "leave",
+              "interpolate",
+              "zero",
+              "carry"
+            ],
+            "title": "Gaps"
+          },
+          "season": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Season"
+          },
+          "periods": {
+            "type": "integer",
+            "title": "Periods"
+          },
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "time",
+          "value",
+          "group",
+          "series",
+          "dates",
+          "numbers",
+          "categories",
+          "groups",
+          "period",
+          "aggregate",
+          "period_auto",
+          "aggregate_auto",
+          "coarsened",
+          "first_partial",
+          "last_partial",
+          "gaps",
+          "season",
+          "periods",
+          "rows",
+          "total"
+        ],
+        "title": "SeriesSetup",
+        "description": "The configuration actually used: every field chosen or defaulted."
+      },
+      "SeriesStationarity": {
+        "properties": {
+          "setup": {
+            "$ref": "#/components/schemas/SeriesSetup"
+          },
+          "transform": {
+            "type": "string",
+            "enum": [
+              "none",
+              "log",
+              "diff",
+              "seasonal_diff",
+              "log_diff",
+              "diff2",
+              "seasonal_diff_diff"
+            ],
+            "title": "Transform"
+          },
+          "regression": {
+            "type": "string",
+            "enum": [
+              "c",
+              "ct"
+            ],
+            "title": "Regression"
+          },
+          "periods": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Periods"
+          },
+          "transformed": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Transformed"
+          },
+          "synthesis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Synthesis"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "suggestion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Suggestion"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "methods": {
+            "items": {
+              "$ref": "#/components/schemas/MethodResult"
+            },
+            "type": "array",
+            "title": "Methods"
+          },
+          "filled": {
+            "type": "integer",
+            "title": "Filled"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "setup",
+          "transform",
+          "regression",
+          "periods",
+          "transformed",
+          "synthesis",
+          "suggestion",
+          "methods",
+          "filled"
+        ],
+        "title": "SeriesStationarity"
+      },
+      "SeriesVolatility": {
+        "properties": {
+          "setup": {
+            "$ref": "#/components/schemas/SeriesSetup"
+          },
+          "residuals_from": {
+            "type": "string",
+            "title": "Residuals From"
+          },
+          "periods": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Periods"
+          },
+          "residuals": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Residuals"
+          },
+          "rolling_std": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Rolling Std"
+          },
+          "window": {
+            "type": "integer",
+            "title": "Window"
+          },
+          "rising": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rising"
+          },
+          "log_helps": {
+            "type": "boolean",
+            "title": "Log Helps"
+          },
+          "methods": {
+            "items": {
+              "$ref": "#/components/schemas/MethodResult"
+            },
+            "type": "array",
+            "title": "Methods"
+          },
+          "filled": {
+            "type": "integer",
+            "title": "Filled"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "setup",
+          "residuals_from",
+          "periods",
+          "residuals",
+          "rolling_std",
+          "window",
+          "rising",
+          "log_helps",
+          "methods",
+          "filled"
+        ],
+        "title": "SeriesVolatility"
       },
       "SourceOptions": {
         "properties": {
@@ -6095,6 +10595,68 @@
           "datasets"
         ],
         "title": "StorageInfo"
+      },
+      "Suggestion": {
+        "properties": {
+          "transform": {
+            "type": "string",
+            "enum": [
+              "none",
+              "log",
+              "diff",
+              "seasonal_diff",
+              "log_diff",
+              "diff2",
+              "seasonal_diff_diff"
+            ],
+            "title": "Transform"
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "stationary",
+              "unit_root",
+              "trend_or_difference",
+              "inconclusive"
+            ],
+            "title": "Verdict"
+          }
+        },
+        "type": "object",
+        "required": [
+          "transform",
+          "verdict"
+        ],
+        "title": "Suggestion"
+      },
+      "Synthesis": {
+        "properties": {
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "stationary",
+              "unit_root",
+              "trend_or_difference",
+              "inconclusive"
+            ],
+            "title": "Verdict"
+          },
+          "adf_rejects": {
+            "type": "boolean",
+            "title": "Adf Rejects"
+          },
+          "kpss_rejects": {
+            "type": "boolean",
+            "title": "Kpss Rejects"
+          }
+        },
+        "type": "object",
+        "required": [
+          "verdict",
+          "adf_rejects",
+          "kpss_rejects"
+        ],
+        "title": "Synthesis"
       },
       "TestResult": {
         "properties": {
@@ -6215,6 +10777,92 @@
         ],
         "title": "TextProfile"
       },
+      "TimeView": {
+        "properties": {
+          "period": {
+            "type": "string",
+            "enum": [
+              "hour",
+              "day",
+              "week",
+              "month",
+              "quarter",
+              "year"
+            ],
+            "title": "Period"
+          },
+          "aggregate": {
+            "type": "string",
+            "enum": [
+              "sum",
+              "mean",
+              "median",
+              "min",
+              "max",
+              "count"
+            ],
+            "title": "Aggregate"
+          },
+          "window": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Window"
+          },
+          "align": {
+            "type": "string",
+            "enum": [
+              "trailing",
+              "centered"
+            ],
+            "title": "Align"
+          },
+          "periods": {
+            "type": "integer",
+            "title": "Periods"
+          },
+          "period_auto": {
+            "type": "boolean",
+            "title": "Period Auto"
+          },
+          "aggregate_auto": {
+            "type": "boolean",
+            "title": "Aggregate Auto"
+          },
+          "coarsened": {
+            "type": "boolean",
+            "title": "Coarsened"
+          },
+          "first_partial": {
+            "type": "boolean",
+            "title": "First Partial",
+            "default": false
+          },
+          "last_partial": {
+            "type": "boolean",
+            "title": "Last Partial",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "period",
+          "aggregate",
+          "window",
+          "align",
+          "periods",
+          "period_auto",
+          "aggregate_auto",
+          "coarsened"
+        ],
+        "title": "TimeView",
+        "description": "How a date and a number was turned into a series (each setting chosen or defaulted)."
+      },
       "Transform": {
         "properties": {
           "key": {
@@ -6295,6 +10943,53 @@
           "bins"
         ],
         "title": "Transform"
+      },
+      "TrendSummary": {
+        "properties": {
+          "slope": {
+            "type": "number",
+            "title": "Slope"
+          },
+          "slope_low": {
+            "type": "number",
+            "title": "Slope Low"
+          },
+          "slope_high": {
+            "type": "number",
+            "title": "Slope High"
+          },
+          "per_year": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Per Year"
+          },
+          "lag1": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lag1"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slope",
+          "slope_low",
+          "slope_high",
+          "per_year",
+          "lag1"
+        ],
+        "title": "TrendSummary"
       },
       "UploadOut": {
         "properties": {
@@ -6421,6 +11116,62 @@
           "type"
         ],
         "title": "VariableProfile"
+      },
+      "YearLine": {
+        "properties": {
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "x": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "X"
+          },
+          "y": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Y"
+          }
+        },
+        "type": "object",
+        "required": [
+          "year",
+          "x",
+          "y"
+        ],
+        "title": "YearLine"
+      },
+      "YearOverlay": {
+        "properties": {
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "years": {
+            "items": {
+              "$ref": "#/components/schemas/YearLine"
+            },
+            "type": "array",
+            "title": "Years"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit"
+        ],
+        "title": "YearOverlay"
       },
       "app__domain__variable__profiles__DateProfile": {
         "properties": {

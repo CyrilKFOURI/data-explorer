@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 
-import type { Fit, Law, NumericProfile, Transform } from "../../api/client";
+import type { Chart, Fit, Law, NumericProfile, Transform } from "../../api/client";
 import { useChart, useFit } from "../../api/hooks";
 import { formatNumber } from "../../charts/figures";
 import { Plot } from "../../charts/Plot";
@@ -31,26 +31,28 @@ export function FitPanel({ datasetId, column, profile }: FitPanelProps) {
   if (fit.data.reason || !fit.data.laws.length) {
     return <p className="text-ink-2">{t("fit.none", { reason: fit.data.reason ?? "" })}</p>;
   }
-  return <FitResults fit={fit.data} profile={profile} column={column} chart={chart.data} />;
+  return <FitResults fit={fit.data} count={profile.describe.count} column={column} chart={chart.data} />;
 }
 
-function FitResults({
+/** Laws ranked by AIC, overlaid on the histogram, a QQ-plot against any of them, and
+ *  transformations. Also used for time series residuals. */
+export function FitResults({
   fit,
-  profile,
+  count,
   column,
   chart,
 }: {
   fit: Fit;
-  profile: NumericProfile;
+  count: number;
   column: string;
-  chart: NonNullable<ReturnType<typeof useChart>["data"]>;
+  chart: Pick<Chart, "bins">;
 }) {
   const [qqLaw, setQqLaw] = useState(fit.laws[0]?.key ?? "");
   const best = fit.laws[0] as Law;
   const top = useMemo(() => fit.laws.slice(0, OVERLAID), [fit.laws]);
   const overlay = useMemo(
-    () => lawsFigure(chart, fit.grid, top, profile.describe.count),
-    [chart, fit.grid, top, profile.describe.count],
+    () => lawsFigure(chart, fit.grid, top, count),
+    [chart, fit.grid, top, count],
   );
   const selected = fit.laws.find((law) => law.key === qqLaw) ?? best;
   const qq = useMemo(

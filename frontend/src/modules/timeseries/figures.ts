@@ -1,0 +1,242 @@
+import type { Data, Layout } from "plotly.js-dist-min";
+
+import type {
+  SeasonalProfile,
+  SeriesDecomposition,
+  SeriesLine,
+  SeriesSeasonality,
+} from "../../api/client";
+import type { Figure } from "../../charts/Plot";
+import { withAlpha } from "../../charts/figures";
+
+const legend: Partial<Layout> = {
+  showlegend: true,
+  legend: { orientation: "h", x: 0, y: 1.12, font: { size: 11 } },
+};
+const title = (text: string) => ({ title: { text, font: { size: 11 } } });
+
+export type Layers = { values: boolean; mean: boolean; band: boolean };
+
+/** The analysed series with its rolling mean and ± 1σ band; other groups faintly behind. */
+export function overviewFigure(
+  periods: string[],
+  analyzed: SeriesLine,
+  others: SeriesLine[],
+  layers: Layers,
+  what: string,
+  rolled: string,
+): Figure {
+  return (tokens) => {
+    const color = tokens.palette[0] ?? tokens.date;
+    const data: Data[] = others.map(
+      (line, i) =>
+        ({
+          type: "scatter",
+          mode: "lines",
+          name: line.label ?? "",
+          x: periods,
+          y: line.values,
+          line: {
+            color: withAlpha(tokens.palette[(i + 1) % 8] ?? tokens.ink3, 0.6),
+            width: 1,
+          },
+          hovertemplate: `${line.label}<br>%{x}: %{y:,.4g}<extra></extra>`,
+        }) as Data,
+    );
+    const rolling = analyzed.rolling_mean.length > 0;
+    if (rolling && layers.band) {
+      const edge = (sign: number) =>
+        analyzed.rolling_mean.map((m, i) => {
+          const s = analyzed.rolling_std[i];
+          return m === null || s === null || s === undefined
+            ? null
+            : m + sign * s;
+        });
+      data.push(
+        {
+          type: "scatter",
+          mode: "lines",
+          x: periods,
+          y: edge(-1),
+          line: { width: 0 },
+          hoverinfo: "skip",
+          showlegend: false,
+        } as Data,
+        {
+          type: "scatter",
+          mode: "lines",
+          name: "± 1σ band",
+          x: periods,
+          y: edge(1),
+          fill: "tonexty",
+          fillcolor: withAlpha(color, 0.15),
+          line: { width: 0 },
+          hoverinfo: "skip",
+        } as Data,
+      );
+    }
+    if (layers.values || !rolling) {
+      data.push({
+        type: "scatter",
+        mode: periods.length > 60 ? "lines" : "lines+markers",
+        name: analyzed.label ? `${analyzed.label} · ${what}` : what,
+        x: periods,
+        y: analyzed.values,
+        customdata: analyzed.counts,
+        line: {
+          color: rolling && layers.mean ? withAlpha(color, 0.55) : color,
+          width: 1.25,
+        },
+        marker: { size: 4 },
+        hovertemplate: `%{x}<br>${what}: %{y:,.4g}<br>%{customdata:,} rows<extra></extra>`,
+      } as Data);
+    }
+    if (rolling && layers.mean) {
+      data.push({
+        type: "scatter",
+        mode: "lines",
+        name: rolled,
+        x: periods,
+        y: analyzed.rolling_mean,
+        line: { color, width: 2.5 },
+        hovertemplate: `%{x}<br>${rolled}: %{y:,.4g}<extra></extra>`,
+      } as Data);
+    }
+    return {
+      data,
+      layout: {
+        ...legend,
+        hovermode: "x unified",
+        xaxis: {
+          type: "date",
+          rangeslider: { visible: periods.length > 30, thickness: 0.08 },
+        },
+        yaxis: title(what),
+      },
+    };
+  };
+}
+
+/** Box per calendar label (Mon…Sun, Jan…Dec), the strongest label highlighted. */
+export function profileFigure(profile: SeasonalProfile, what: string): Figure {
+  return (tokens) => ({
+    data: profile.labels.map(
+      (label, i) =>
+        ({
+          type: "box",
+          name: label,
+          y: profile.values[i],
+          boxpoints: false,
+          marker: {
+            color:
+              label === profile.strongest
+                ? (tokens.palette[0] ?? tokens.numeric)
+                : tokens.ink3,
+          },
+          line: { width: 1.25 },
+          hovertemplate: `${label}<br>%{y:,.4g}<br>${
+            profile.deviation[i] === null
+              ? ""
+              : `${(profile.deviation[i] ?? 0) >= 0 ? "+" : ""}${(profile.deviation[i] ?? 0).toFixed(1)} % vs average`
+          }<extra></extra>`,
+        }) as Data,
+    ),
+    layout: {
+      showlegend: false,
+      xaxis: { type: "category" },
+      yaxis: title(what),
+    },
+  });
+}
+
+/** One line per year, the latest in the accent color. */
+export function overlayFigure(
+  overlay: NonNullable<SeriesSeasonality["overlay"]>,
+  what: string,
+): Figure {
+  return (tokens) => {
+    const latest = overlay.years.at(-1)?.year;
+    return {
+      data: overlay.years.map(
+        (line) =>
+          ({
+            type: "scatter",
+            mode: "lines",
+            name: String(line.year),
+            x: line.x,
+            y: line.y,
+            line: {
+              color:
+                line.year === latest
+                  ? (tokens.palette[0] ?? tokens.date)
+                  : withAlpha(tokens.ink3, 0.55),
+              width: line.year === latest ? 2.5 : 1.25,
+            },
+            hovertemplate: `${line.year}<br>${overlay.unit} %{x}: %{y:,.4g}<extra></extra>`,
+          }) as Data,
+      ),
+      layout: { ...legend, xaxis: title(overlay.unit), yaxis: title(what) },
+    };
+  };
+}
+
+/** Observed, trend, seasonal component(s) and remainder, stacked on one time axis. */
+export function decompositionFigure(
+  periods: string[],
+  observed: (number | null)[],
+  parts: NonNullable<SeriesDecomposition["result"]>,
+): Figure {
+  return (tokens) => {
+    const rows: {
+      name: string;
+      y: (number | null)[];
+      color: string;
+      bars?: boolean;
+    }[] = [
+      { name: "Observed", y: observed, color: tokens.ink2 },
+      {
+        name: "Trend",
+        y: parts.trend,
+        color: tokens.palette[0] ?? tokens.date,
+      },
+      ...parts.seasonal.map((y, i) => ({
+        name:
+          parts.seasonal.length > 1
+            ? `Seasonal (${parts.seasons[i]})`
+            : "Seasonal",
+        y,
+        color: tokens.palette[1 + i] ?? tokens.numeric,
+      })),
+      { name: "Remainder", y: parts.resid, color: tokens.ink3, bars: true },
+    ];
+    const gap = 0.04;
+    const size = (1 - gap * (rows.length - 1)) / rows.length;
+    const layout: Partial<Layout> & Record<string, unknown> = {
+      showlegend: false,
+      hovermode: "x unified",
+    };
+    const data: Data[] = rows.map((row, i) => {
+      const axis = i === 0 ? "" : String(i + 1);
+      const top = 1 - i * (size + gap);
+      layout[`yaxis${axis}`] = {
+        domain: [top - size, top],
+        ...title(row.name),
+        zeroline: row.bars ?? false,
+      };
+      return {
+        type: row.bars ? "bar" : "scatter",
+        mode: "lines",
+        name: row.name,
+        x: periods,
+        y: row.y,
+        xaxis: "x",
+        yaxis: `y${axis}` as "y",
+        line: { color: row.color, width: 1.5 },
+        marker: { color: row.color },
+        hovertemplate: `${row.name}: %{y:,.4g}<extra></extra>`,
+      } as Data;
+    });
+    layout.xaxis = { type: "date", anchor: `y${rows.length}` as "y" };
+    return { data, layout };
+  };
+}

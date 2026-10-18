@@ -1,6 +1,8 @@
 # Module Machine learning — `/d/:id/ml`
 
 > **Statut : futur (Sprint 5). Ne pas implémenter avant la V1.**
+>
+> **Précisé par** [11-machine-learning.md](../pages/11-machine-learning.md) et les specs 016 à 021 (font foi en cas d'écart).
 
 ## Parcours
 

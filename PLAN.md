@@ -27,8 +27,22 @@ Roadmap en **sprints**, chacun composé de **tranches verticales** : chaque case
 
 ## Modules (après la V1) — voir `docs/modules-futurs/`
 
-- [ ] Sprint 4 — Module séries temporelles (stationnarité, hétéroscédasticité, décomposition, autocorrélation, prévision)
-- [ ] Sprint 5 — Module machine learning (XGBoost par défaut, évaluation, SHAP, comparaison, Optuna)
+### Sprint 4 — Séries temporelles (page : `docs/pages/10-series-temporelles.md`, méthodes : `docs/TIMESERIES_METHODS.md`)
+- [x] 011-vue-temporelle — Comparer date × num : agrégation par période, moyenne et écart-type glissants, Mann-Kendall + pente de Sen
+- [x] 012-ts-page-visualisation — page `/timeseries` (module), configuration, vue d'ensemble, saisonnalité, décomposition STL
+- [x] 013-ts-stationnarite-autocorrelation — ADF, KPSS, Phillips–Perron, différenciation suggérée, ACF/PACF, Ljung–Box, Durbin–Watson
+- [x] 014-ts-volatilite-ruptures — hétéroscédasticité (BP, White, GQ, ARCH-LM, Levene), résidus, ruptures, anomalies
+- [x] 015-ts-prevision — naïves, ETS, ARIMA auto, validation glissante, intervalles
+
+### Sprint 5 — Machine learning (page : `docs/pages/11-machine-learning.md`)
+- [ ] 016-ml-premier-modele — page `/ml` (module), cible seule obligatoire, problème déduit, modèle linéaire / logistique entraîné aussitôt, résultats, runs
+- [ ] 017-ml-preparation-donnees — moteur de règles (type détecté × profil du modèle) : sélection, imputation, encodage, transformations, échelle, déséquilibre ; éditeur
+- [ ] 018-ml-cible-en-classes — cible numérique découpée en classes (nombre, méthode, aperçu en direct, noms)
+- [ ] 019-ml-catalogue-modeles — tous les modèles par familles, réglages à 3 niveaux (essentiels, avancés, expert / optimiseurs), validation
+- [ ] 020-ml-explicabilite — permutation importance, SHAP (natif boosting / forme close), dépendance partielle, explication par ligne
+- [ ] 021-ml-comparaison-optimisation — comparer les modèles et les runs, optimisation Optuna (TPE, CMA-ES…) avec budget
+
+### Après
 - [ ] Sprint 6 — Module Builder KPI
 - [ ] Sprint 7 — Module données synthétiques (CTGAN, TVAE/VAE, TimeGAN, évaluation de fidélité)
 - [ ] À planifier — Module Assistant IA (LLM local optionnel)

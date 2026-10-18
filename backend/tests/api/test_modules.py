@@ -1,14 +1,21 @@
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 from fastapi.testclient import TestClient
 
 from app.modules.registry import MODULES, Module, mount_modules
 
 
-def test_registered_module_route_responds(client: TestClient) -> None:
-    response = client.get("/api/v1/modules/hello")
+def demo_router() -> APIRouter:
+    router = APIRouter()
 
-    assert response.status_code == 200
-    assert response.json() == {"message": "Hello from the demo module"}
+    @router.get("")
+    def ping() -> dict[str, str]:
+        return {"message": "pong"}
+
+    return router
+
+
+def test_time_series_module_is_registered() -> None:
+    assert [module.id for module in MODULES] == ["timeseries"]
 
 
 def test_module_ids_are_unique() -> None:
@@ -20,12 +27,13 @@ def test_unregistered_module_is_not_mounted() -> None:
     app = FastAPI()
     mount_modules(app, "/api/v1", modules=[])
 
-    assert TestClient(app).get("/api/v1/modules/hello").status_code == 404
+    assert TestClient(app).get("/api/v1/modules/demo").status_code == 404
 
 
-def test_mount_uses_module_id_as_path() -> None:
-    hello = next(module for module in MODULES if module.id == "hello")
+def test_mount_uses_module_id_as_path_and_runs_setup() -> None:
     app = FastAPI()
-    mount_modules(app, "/api/v1", modules=[Module(id="other", router=hello.router)])
+    calls: list[FastAPI] = []
+    mount_modules(app, "/api/v1", modules=[Module("demo", demo_router(), calls.append)])
 
-    assert TestClient(app).get("/api/v1/modules/other").status_code == 200
+    assert TestClient(app).get("/api/v1/modules/demo").json() == {"message": "pong"}
+    assert calls == [app]

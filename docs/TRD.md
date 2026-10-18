@@ -54,7 +54,7 @@ Navigateur (React)  ──HTTP /api/v1──▶  FastAPI
 ## Distribution (validé : Docker)
 
 - **Une commande** pour le visiteur : `docker compose up`, puis ouvrir `http://localhost:8000`.
-- **Image multi-étapes** : une étape Node build l'interface, l'image finale (Python slim) ne contient que le backend et le front compilé. Objectif : < 600 Mo pour la V1.
+- **Image multi-étapes** : une étape Node build l'interface, l'image finale (Python slim) ne contient que le backend et le front compilé. Objectif : < 600 Mo pour la V1 ; < 900 Mo avec les modules séries temporelles et ML (statsmodels, scikit-learn, XGBoost), contrôlé par la CI.
 - **Accès aux fichiers** : un conteneur ne voit pas `C:\...`. Deux voies d'import :
   1. **Glisser-déposer / upload** depuis le navigateur : marche partout.
   2. **Dossier monté** : `docker-compose.yml` monte un dossier de l'hôte (`./data` par défaut, modifiable dans `.env`) en `/data` **en lecture seule**. Le bouton « Browse » de l'app parcourt `/data`. C'est la voie pour les gros fichiers et les dossiers.

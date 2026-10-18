@@ -6,6 +6,7 @@ import type { AnalysisType, Column, Role } from "../../api/client";
 import { useColumnSummaries, useColumns, useDataset, useDetectColumns, useReviewTypes, useRoles } from "../../api/hooks";
 import { ANALYSIS_TYPES, TYPE_META } from "../../features/columns/columnTypes";
 import { OrderDialog } from "../../features/columns/OrderDialog";
+import { RoleMenu } from "../../features/columns/RoleMenu";
 import { Sparkline } from "../../features/columns/Sparkline";
 import { TypeBadge } from "../../features/columns/TypeBadge";
 import { useColumnHistory } from "../../features/columns/useColumnHistory";
@@ -352,19 +353,12 @@ function ColumnRow({
         )}
       </td>
       <td className="px-3 py-2">
-        <Select
-          aria-label={t("columns.roleOf", { name: column.name })}
+        <RoleMenu
+          label={t("columns.roleOf", { name: column.name })}
           value={column.role ?? ""}
-          onChange={(event) => onChange({ role: event.target.value })}
-          className="max-w-36"
-        >
-          <option value="">{t("columns.noRole")}</option>
-          {roles.map((role) => (
-            <option key={role.id} value={role.id}>
-              {role.label}
-            </option>
-          ))}
-        </Select>
+          roles={roles}
+          onChange={(role) => onChange({ role })}
+        />
       </td>
       <td className="max-w-80 px-3 py-2.5">
         <ConfidenceTag confidence={column.confidence} />

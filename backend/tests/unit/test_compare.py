@@ -152,7 +152,8 @@ def test_date_and_number_timeline(connection: duckdb.DuckDBPyConnection) -> None
 
     assert result.kind == "timeline" and result.step == "day"
     assert {s.label for s in result.series} == {"a", "other"}
-    assert result.tests[0].key == "spearman"
+    assert result.tests[0].key == "mann_kendall"
+    assert all(s.rolling_mean for s in result.series)
 
 
 def test_date_and_category_counts(connection: duckdb.DuckDBPyConnection) -> None:

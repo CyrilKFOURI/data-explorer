@@ -41,7 +41,8 @@ export function TypeBadge({ type, onChange, onReset, detectedType, reasons }: Ty
         <Menu.Content
           align="start"
           sideOffset={4}
-          className="z-50 w-80 rounded-lg border border-line bg-surface-1 p-1 shadow-[0_12px_32px_-12px_rgb(0_0_0/0.35)]"
+          collisionPadding={12}
+          className="z-50 max-h-(--radix-dropdown-menu-content-available-height) w-72 overflow-y-auto overscroll-contain rounded-lg border border-line bg-surface-1 p-1 shadow-[0_12px_32px_-12px_rgb(0_0_0/0.35)]"
         >
           {reasons && reasons.length > 0 && (
             <div className="border-b border-line px-2.5 pt-1.5 pb-2 text-xs text-ink-2">
@@ -63,7 +64,7 @@ export function TypeBadge({ type, onChange, onReset, detectedType, reasons }: Ty
                 <Menu.RadioItem
                   key={option}
                   value={option}
-                  className="flex cursor-default items-start gap-2.5 rounded-md px-2.5 py-1.5 outline-none data-[highlighted]:bg-surface-2"
+                  className="flex cursor-default items-start gap-2 rounded-md px-2 py-1 outline-none data-[highlighted]:bg-surface-2"
                 >
                   <OptionIcon
                     size={15}
@@ -73,7 +74,9 @@ export function TypeBadge({ type, onChange, onReset, detectedType, reasons }: Ty
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block text-[13px] text-ink-1">{t(optionMeta.label)}</span>
-                    <span className="block text-xs text-ink-3">{t(optionMeta.description)}</span>
+                    <span className="block truncate text-xs text-ink-3" title={t(optionMeta.description)}>
+                      {t(optionMeta.description)}
+                    </span>
                   </span>
                   <Menu.ItemIndicator>
                     <Check size={14} strokeWidth={1.5} className="mt-0.5 text-accent" aria-hidden />

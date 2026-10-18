@@ -18,10 +18,15 @@ Croiser **2 ou 3 variables** (+ une couleur), voir le bon graphique et le bon te
 | num × cat (2 groupes) | t de Welch, Mann–Whitney | d de Cohen |
 | num × cat (≥ 3 groupes) | ANOVA, Welch-ANOVA, Kruskal–Wallis (+ test de Levene pour l'égalité des variances) | η², ε² |
 | cat × cat | χ² d'indépendance, test exact de Fisher (petits effectifs) | V de Cramér |
+| date × num | Mann-Kendall (une valeur par période) + pente de Sen et IC 95 % | τ de Kendall |
 
 Chaque test est présenté avec un `TestResult` et ses conditions d'application (« Les variances sont inégales (Levene p < 0,01) → Welch-ANOVA utilisée »).
 
 - **Table des données utilisées** sous le graphique (repliable), exportable.
+
+## Vue temporelle (date × num) — [011](../features/011-vue-temporelle/spec.md)
+
+Agrégation par période (Auto : pas typique des dates, relevé au-delà de 400 périodes ; Sum pour les rôles `amount`/`quantity`, Mean sinon), moyenne et écart-type glissants (fenêtre Auto selon la période, arrière ou centrée), bande ± 1σ (série unique), une courbe par groupe avec Couleur. Barre d'options (Period, Aggregate, Window, alignement, tracés) dans l'URL ; libellé résumé ; périodes incomplètes au début / à la fin signalées et exclues du test (Sum, Count) ; avertissement d'autocorrélation ; table « Data used » ; lien « Analyze as time series → » (actif avec 012).
 
 ## 3D
 

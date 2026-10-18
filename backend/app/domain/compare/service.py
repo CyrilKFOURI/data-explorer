@@ -9,6 +9,7 @@ from app.domain.columns.service import ColumnService
 from app.domain.compare.analyze import CompareColumn, Comparison, NotComparableError, compare
 from app.domain.filters.model import Condition, filters_key
 from app.domain.filters.scope import scoped_source, where_for
+from app.domain.timeseries.series import Options
 
 CACHE_SIZE = 32
 
@@ -26,8 +27,10 @@ class CompareService:
         z: str | None = None,
         color: str | None = None,
         conditions: list[Condition] | None = None,
+        options: Options | None = None,
     ) -> Comparison:
         conditions = conditions or []
+        options = options or Options()
         dataset = self.columns.ready(dataset_id)
         views = {view.name: view for view in self.columns.columns(dataset_id)}
 
@@ -37,7 +40,7 @@ class CompareService:
             view = views.get(name)
             if view is None or view.excluded:
                 raise NotComparableError(f"Unknown or excluded column {name!r}.")
-            return CompareColumn(view.name, view.type, view.parser, view.order)
+            return CompareColumn(view.name, view.type, view.parser, view.order, view.role)
 
         chosen = [pick(name) for name in (x, y, z, color)]
         key = (
@@ -45,6 +48,8 @@ class CompareService:
             dataset.imported_at,
             tuple((c.name, c.type, c.parser.model_dump_json()) if c else None for c in chosen),
             filters_key(conditions),
+            (options.period, options.aggregate, options.window, options.align),
+            tuple(c.semantic_role if c else None for c in chosen),
         )
         if key in self._cache:
             self._cache.move_to_end(key)
@@ -61,6 +66,7 @@ class CompareService:
                 second,
                 third,
                 fourth,
+                options,
             )
         finally:
             connection.close()

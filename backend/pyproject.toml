@@ -12,6 +12,7 @@ dependencies = [
     "pyarrow>=26.0.0",
     "pydantic-settings>=2.15.0",
     "scipy>=1.18.1",
+    "statsmodels>=0.15.0",
     "uvicorn[standard]>=0.54.0",
 ]
 

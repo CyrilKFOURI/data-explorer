@@ -31,7 +31,7 @@ export function Shell({ modules }: { modules: ModuleManifest[] }) {
   };
 
   return (
-    <div className="flex h-dvh bg-surface-0 text-ink-1">
+    <div className="flex h-dvh overflow-hidden bg-surface-0 text-ink-1">
       <a
         href="#main"
         className="sr-only z-50 rounded-md bg-accent px-3 py-2 text-accent-ink focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
@@ -41,7 +41,11 @@ export function Shell({ modules }: { modules: ModuleManifest[] }) {
       <Sidebar collapsed={collapsed} onToggle={toggle} modules={modules} />
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar />
-        <main id="main" tabIndex={-1} className="min-h-0 flex-1 overflow-y-auto outline-none">
+        <main
+          id="main"
+          tabIndex={-1}
+          className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain outline-none"
+        >
           <Outlet />
         </main>
       </div>

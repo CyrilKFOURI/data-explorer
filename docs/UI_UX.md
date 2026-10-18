@@ -51,7 +51,7 @@ Valeurs de départ, à affiner sur maquette. La terracotta est réservée aux **
 
 | Composant | Rôle |
 |---|---|
-| **Shell** | Barre latérale gauche repliable (pages du dataset, puis modules), barre du haut (nom du dataset, sélecteur de dataset, recherche ⌘K) |
+| **Shell** | Barre latérale gauche repliable (en tête : logo CK + « Data Explorer App », lien vers l'accueil ; pages du dataset, puis modules), barre du haut (« Dataset: nom », recherche ⌘K). Seul `<main>` défile : la page elle-même ne défile jamais |
 | **SummaryStrip** | Bandeau de résumé : lignes, colonnes, % de manquants, doublons, mémoire, répartition des types |
 | **FilterBar** | Filtres actifs sous forme de puces, « + Filtre », « Tout effacer », nombre de lignes restantes |
 | **TypeBadge** | Badge coloré du type + rôle ; clic → menu de correction avec la confiance et les raisons de la détection |

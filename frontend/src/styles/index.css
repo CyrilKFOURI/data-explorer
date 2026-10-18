@@ -40,6 +40,13 @@
     height: 100%;
   }
 
+  /* The shell scrolls inside <main>; the page itself never scrolls or bounces. */
+  html,
+  body {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
   body {
     background: var(--surface-0);
     color: var(--ink-1);

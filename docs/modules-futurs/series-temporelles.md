@@ -1,6 +1,8 @@
 # Module Séries temporelles — `/d/:id/timeseries`
 
 > **Statut : futur (Sprint 4). Ne pas implémenter avant la V1.**
+>
+> **Précisé par** [10-series-temporelles.md](../pages/10-series-temporelles.md) et les specs 011 à 015 (font foi en cas d'écart).
 
 ## Configuration
 

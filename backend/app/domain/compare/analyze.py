@@ -20,6 +20,9 @@ from app.domain.compare.stats import (
 )
 from app.domain.filters.scope import TypedColumn
 from app.domain.ingestion.sql import lit
+from app.domain.timeseries import builder
+from app.domain.timeseries import series as ts
+from app.domain.timeseries.trend import trend as trend_of
 from app.domain.typing.dates import STEP_FORMATS, auto_step
 from app.domain.typing.parsers import typed_sql
 from app.domain.typing.types import AnalysisType, Parser
@@ -57,6 +60,7 @@ class CompareColumn:
     type: AnalysisType
     parser: Parser
     order: list[str] | None = None
+    semantic_role: str | None = None  # amount, quantity, age… (column roles)
 
     @property
     def role(self) -> Role:
@@ -116,8 +120,36 @@ class Series:
     label: str | None
     periods: list[str]
     values: list[float | None]
-    low: list[float | None] = field(default_factory=list)
-    high: list[float | None] = field(default_factory=list)
+    rolling_mean: list[float | None] = field(default_factory=list)
+    rolling_std: list[float | None] = field(default_factory=list)
+    counts: list[int] = field(default_factory=list)  # rows aggregated in each period
+
+
+@dataclass
+class TimeView:
+    """How a date and a number was turned into a series (each setting chosen or defaulted)."""
+
+    period: ts.Period
+    aggregate: ts.Aggregate
+    window: int | None  # None: too few periods for rolling statistics
+    align: ts.Align
+    periods: int
+    period_auto: bool
+    aggregate_auto: bool
+    coarsened: bool  # the period was raised to keep the series readable
+    # The data starts after the first period begins (or ends before the last one ends): a sum or
+    # count there is too low, so that period is left out of the trend test.
+    first_partial: bool = False
+    last_partial: bool = False
+
+
+@dataclass
+class TrendSummary:
+    slope: float  # Sen's slope, in value units per period
+    slope_low: float
+    slope_high: float
+    per_year: float | None  # change over a year, relative to the mean level
+    lag1: float | None
 
 
 @dataclass
@@ -139,6 +171,8 @@ class Comparison:
     contingency: Contingency | None = None
     series: list[Series] = field(default_factory=list)
     step: str | None = None
+    time: TimeView | None = None
+    trend: TrendSummary | None = None
     tests: list[BivariateTest] = field(default_factory=list)
     message: str | None = None
 
@@ -164,8 +198,10 @@ class Comparer:
         y: CompareColumn,
         z: CompareColumn | None = None,
         color: CompareColumn | None = None,
+        options: ts.Options | None = None,
     ) -> None:
         self.connection = connection
+        self.options = options or ts.Options()
         self.source = source
         self.x, self.y, self.z, self.color = x, y, z, color
         if x.name == y.name:
@@ -453,6 +489,7 @@ class Comparer:
         return step, STEP_FORMATS[step]
 
     def timeline(self) -> Comparison:
+        """One aggregated value per period, rolling mean ± standard deviation, trend test."""
         date, numeric = self.date_and_other()
         columns = {"t": date, "v": numeric}
         if self.color:
@@ -463,39 +500,69 @@ class Comparer:
         if n < 3:
             result.message = "Fewer than 3 rows have both values."
             return result
-        step, fmt = self.step_for(relation)
-        result.step = step
-        group = "c" if self.color else "NULL"
-        labels = None
-        if self.color:
-            labels = [
-                str(v)
-                for (v,) in self.all(
-                    f"SELECT c FROM {relation} GROUP BY c "
-                    f"ORDER BY count(*) DESC, c LIMIT {MAX_SERIES}"
-                )
-            ]
-        rows = self.all(
-            f"SELECT {group} AS g, strftime(date_trunc('{step}', t), '{fmt}') AS p, "
-            f"avg(v), min(v), max(v) FROM {relation} "
-            + (f"WHERE c IN ({', '.join(lit(label) for label in labels)}) " if labels else "")
-            + f"GROUP BY g, date_trunc('{step}', t), p ORDER BY g, date_trunc('{step}', t)"
+
+        options = self.options
+        groups = self.kept_labels(relation, "c", self.color)[:MAX_SERIES] if self.color else None
+        built = builder.aggregate(self.connection, relation, numeric.semantic_role, options, groups)
+        chosen = built.groups if self.color else [built.overall]
+        series = [
+            Series(item.label, built.periods, item.values, counts=item.counts) for item in chosen
+        ]
+        periods = len(built.periods)
+        window = None
+        if periods >= ts.MIN_PERIODS:
+            window = max(
+                2, min(options.window or ts.default_window(built.period, periods), periods)
+            )
+            for item in series:
+                item.rolling_mean, item.rolling_std = ts.rolling(item.values, window, options.align)
+        result.step = built.period
+        result.series = series
+        result.time = TimeView(
+            built.period,
+            built.aggregate,
+            window,
+            options.align,
+            periods,
+            built.period_auto,
+            built.aggregate_auto,
+            built.coarsened,
+            built.first_partial,
+            built.last_partial,
         )
-        series: dict[str | None, Series] = {}
-        for g, period, mean, low, high in rows:
-            item = series.setdefault(g, Series(g, [], []))
-            item.periods.append(str(period))
-            item.values.append(clean(mean))
-            item.low.append(clean(low))
-            item.high.append(clean(high))
-        result.series = [series[label] for label in (labels or [None]) if label in series]
-        tested = self.sample(relation, "epoch(t), v", TEST_SAMPLE)
-        times = np.array([row[0] for row in tested], dtype=float)
-        values = np.array([row[1] for row in tested], dtype=float)
-        trend = rank_correlations(times, values)[0]
-        trend.note = "Monotonic trend over time (Spearman's ρ between date and value)."
-        trend.effect = correlation_effect("rho", trend.statistic)
-        result.tests = [trend]
+        if periods < ts.MIN_PERIODS:
+            result.message = f"Too few periods for a trend test ({ts.MIN_PERIODS} needed)."
+            return result
+
+        found = trend_of(builder.trend_input(built, built.overall.values))
+        if found is None:
+            result.message = "The series doesn't vary: no trend to test."
+            return result
+        level = float(np.mean([v for v in built.overall.values if v is not None]))
+        per_year = found.slope * ts.PER_YEAR[built.period] / abs(level) if level else None
+        result.trend = TrendSummary(
+            found.slope, found.slope_low, found.slope_high, clean(per_year), clean(found.lag1)
+        )
+        notes = ["Mann-Kendall test on one value per period"]
+        notes[0] += " (all groups combined)." if self.color else "."
+        if found.sampled:
+            notes.append(f"Tested on {found.n:,} evenly spaced periods.")
+        if found.lag1 is not None and found.lag1 > 0.5:
+            notes.append(
+                "Successive values are strongly linked; the p-value may be optimistic. "
+                "The time series page tests this properly."
+            )
+        result.tests = [
+            BivariateTest(
+                "mann_kendall",
+                clean(found.z),
+                clean(found.p_value),
+                found.n,
+                correlation_effect("tau", clean(found.tau)),
+                recommended=True,
+                note=" ".join(notes),
+            )
+        ]
         return result
 
     def date_counts(self) -> Comparison:
@@ -540,5 +607,6 @@ def compare(
     y: CompareColumn,
     z: CompareColumn | None = None,
     color: CompareColumn | None = None,
+    options: ts.Options | None = None,
 ) -> Comparison:
-    return Comparer(connection, source, x, y, z, color).compare()
+    return Comparer(connection, source, x, y, z, color, options).compare()

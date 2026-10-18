@@ -4,3147 +4,4533 @@
  */
 
 export interface paths {
-    "/api/v1/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Health */
-        get: operations["health_api_v1_health_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  "/api/v1/health": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Datasets */
-        get: operations["list_datasets_api_v1_datasets_get"];
-        put?: never;
-        /** Import Dataset */
-        post: operations["import_dataset_api_v1_datasets_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Health */
+    get: operations["health_api_v1_health_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/datasets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Dataset */
-        get: operations["get_dataset_api_v1_datasets__dataset_id__get"];
-        put?: never;
-        post?: never;
-        /** Delete Dataset */
-        delete: operations["delete_dataset_api_v1_datasets__dataset_id__delete"];
-        options?: never;
-        head?: never;
-        /** Rename Dataset */
-        patch: operations["rename_dataset_api_v1_datasets__dataset_id__patch"];
-        trace?: never;
+    /** List Datasets */
+    get: operations["list_datasets_api_v1_datasets_get"];
+    put?: never;
+    /** Import Dataset */
+    post: operations["import_dataset_api_v1_datasets_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}/reimport": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Reimport Dataset */
-        post: operations["reimport_dataset_api_v1_datasets__dataset_id__reimport_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Get Dataset */
+    get: operations["get_dataset_api_v1_datasets__dataset_id__get"];
+    put?: never;
+    post?: never;
+    /** Delete Dataset */
+    delete: operations["delete_dataset_api_v1_datasets__dataset_id__delete"];
+    options?: never;
+    head?: never;
+    /** Rename Dataset */
+    patch: operations["rename_dataset_api_v1_datasets__dataset_id__patch"];
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}/reimport": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}/open": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Open Dataset */
-        post: operations["open_dataset_api_v1_datasets__dataset_id__open_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Reimport Dataset */
+    post: operations["reimport_dataset_api_v1_datasets__dataset_id__reimport_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}/open": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}/schema": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Dataset Schema */
-        get: operations["dataset_schema_api_v1_datasets__dataset_id__schema_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Open Dataset */
+    post: operations["open_dataset_api_v1_datasets__dataset_id__open_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}/schema": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}/head": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Dataset Head */
-        get: operations["dataset_head_api_v1_datasets__dataset_id__head_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Dataset Schema */
+    get: operations["dataset_schema_api_v1_datasets__dataset_id__schema_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}/head": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/sources/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Preview Source */
-        post: operations["preview_source_api_v1_sources_preview_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Dataset Head */
+    get: operations["dataset_head_api_v1_datasets__dataset_id__head_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/sources/preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/browse": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Browse */
-        get: operations["browse_api_v1_browse_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Preview Source */
+    post: operations["preview_source_api_v1_sources_preview_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/browse": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/samples": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Samples */
-        get: operations["list_samples_api_v1_samples_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Browse */
+    get: operations["browse_api_v1_browse_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/samples": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/uploads": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Upload
-         * @description Receive a file as the raw request body (no multipart), stored in the workspace.
-         */
-        put: operations["upload_api_v1_uploads_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List Samples */
+    get: operations["list_samples_api_v1_samples_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/uploads": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/jobs/{job_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Job */
-        get: operations["get_job_api_v1_jobs__job_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    /**
+     * Upload
+     * @description Receive a file as the raw request body (no multipart), stored in the workspace.
+     */
+    put: operations["upload_api_v1_uploads_put"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/jobs/{job_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}/columns": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Columns */
-        get: operations["list_columns_api_v1_datasets__dataset_id__columns_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update Columns */
-        patch: operations["update_columns_api_v1_datasets__dataset_id__columns_patch"];
-        trace?: never;
+    /** Get Job */
+    get: operations["get_job_api_v1_jobs__job_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}/columns": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}/columns/detect": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Detect Columns */
-        post: operations["detect_columns_api_v1_datasets__dataset_id__columns_detect_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List Columns */
+    get: operations["list_columns_api_v1_datasets__dataset_id__columns_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Update Columns */
+    patch: operations["update_columns_api_v1_datasets__dataset_id__columns_patch"];
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}/columns/detect": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}/columns/conversion": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Conversion Preview */
-        get: operations["conversion_preview_api_v1_datasets__dataset_id__columns_conversion_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Detect Columns */
+    post: operations["detect_columns_api_v1_datasets__dataset_id__columns_detect_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}/columns/conversion": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}/columns/review": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Review Types */
-        post: operations["review_types_api_v1_datasets__dataset_id__columns_review_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Conversion Preview */
+    get: operations["conversion_preview_api_v1_datasets__dataset_id__columns_conversion_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}/columns/review": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/column-roles": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Roles */
-        get: operations["list_roles_api_v1_column_roles_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Review Types */
+    post: operations["review_types_api_v1_datasets__dataset_id__columns_review_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/column-roles": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}/overview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Overview */
-        get: operations["overview_api_v1_datasets__dataset_id__overview_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List Roles */
+    get: operations["list_roles_api_v1_column_roles_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}/overview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}/columns/chart": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Chart */
-        get: operations["chart_api_v1_datasets__dataset_id__columns_chart_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Overview */
+    get: operations["overview_api_v1_datasets__dataset_id__overview_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}/columns/chart": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}/columns/summaries": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Summaries
-         * @description Column summaries over the filtered rows (types and detection are not affected).
-         */
-        get: operations["summaries_api_v1_datasets__dataset_id__columns_summaries_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Chart */
+    get: operations["chart_api_v1_datasets__dataset_id__columns_chart_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}/columns/summaries": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}/variable": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Profile */
-        get: operations["profile_api_v1_datasets__dataset_id__variable_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Summaries
+     * @description Column summaries over the filtered rows (types and detection are not affected).
+     */
+    get: operations["summaries_api_v1_datasets__dataset_id__columns_summaries_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}/variable": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}/variable/fit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Fit */
-        get: operations["fit_api_v1_datasets__dataset_id__variable_fit_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Profile */
+    get: operations["profile_api_v1_datasets__dataset_id__variable_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}/variable/fit": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}/variable/outliers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Outliers */
-        get: operations["outliers_api_v1_datasets__dataset_id__variable_outliers_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Fit */
+    get: operations["fit_api_v1_datasets__dataset_id__variable_fit_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}/variable/outliers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}/saved-filters": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Saved */
-        get: operations["list_saved_api_v1_datasets__dataset_id__saved_filters_get"];
-        put?: never;
-        /** Save */
-        post: operations["save_api_v1_datasets__dataset_id__saved_filters_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Outliers */
+    get: operations["outliers_api_v1_datasets__dataset_id__variable_outliers_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}/saved-filters": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}/saved-filters/{filter_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Delete */
-        delete: operations["delete_api_v1_datasets__dataset_id__saved_filters__filter_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List Saved */
+    get: operations["list_saved_api_v1_datasets__dataset_id__saved_filters_get"];
+    put?: never;
+    /** Save */
+    post: operations["save_api_v1_datasets__dataset_id__saved_filters_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}/saved-filters/{filter_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}/compare": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Compare */
-        get: operations["compare_api_v1_datasets__dataset_id__compare_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete */
+    delete: operations["delete_api_v1_datasets__dataset_id__saved_filters__filter_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}/compare": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}/correlations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Correlations */
-        get: operations["correlations_api_v1_datasets__dataset_id__correlations_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Compare
+     * @description Chart data and tests; period, agg, window and align shape a date-and-number series.
+     */
+    get: operations["compare_api_v1_datasets__dataset_id__compare_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}/correlations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}/rows": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Rows */
-        get: operations["rows_api_v1_datasets__dataset_id__rows_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Correlations */
+    get: operations["correlations_api_v1_datasets__dataset_id__correlations_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}/rows": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}/export": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export */
-        get: operations["export_api_v1_datasets__dataset_id__export_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Rows */
+    get: operations["rows_api_v1_datasets__dataset_id__rows_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/datasets/{dataset_id}/export/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export Summary */
-        get: operations["export_summary_api_v1_datasets__dataset_id__export_summary_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Export */
+    get: operations["export_api_v1_datasets__dataset_id__export_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/datasets/{dataset_id}/export/summary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/settings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Read Settings */
-        get: operations["read_settings_api_v1_settings_get"];
-        /**
-         * Write Settings
-         * @description Detection thresholds apply to the next detections (imports, "Re-run detection").
-         */
-        put: operations["write_settings_api_v1_settings_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Export Summary */
+    get: operations["export_summary_api_v1_datasets__dataset_id__export_summary_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/settings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/storage": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Storage */
-        get: operations["storage_api_v1_storage_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Read Settings */
+    get: operations["read_settings_api_v1_settings_get"];
+    /**
+     * Write Settings
+     * @description Detection thresholds apply to the next detections (imports, "Re-run detection").
+     */
+    put: operations["write_settings_api_v1_settings_put"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/storage": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/storage/clear-caches": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Clear Caches */
-        post: operations["clear_caches_api_v1_storage_clear_caches_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Storage */
+    get: operations["storage_api_v1_storage_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/storage/clear-caches": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/modules/hello": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Hello */
-        get: operations["hello_api_v1_modules_hello_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Clear Caches */
+    post: operations["clear_caches_api_v1_storage_clear_caches_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/modules/timeseries/datasets/{dataset_id}/overview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    /**
+     * Overview
+     * @description The series, its rolling statistics, key figures and trend methods.
+     */
+    get: operations["overview_api_v1_modules_timeseries_datasets__dataset_id__overview_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/modules/timeseries/datasets/{dataset_id}/seasonality": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Seasonality
+     * @description Calendar profiles, one line per year, and seasonality methods.
+     */
+    get: operations["seasonality_api_v1_modules_timeseries_datasets__dataset_id__seasonality_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/modules/timeseries/datasets/{dataset_id}/stationarity": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Stationarity
+     * @description Unit-root and stationarity tests on the series or a transformation of it.
+     */
+    get: operations["stationarity_api_v1_modules_timeseries_datasets__dataset_id__stationarity_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/modules/timeseries/datasets/{dataset_id}/autocorrelation": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Autocorrelation
+     * @description ACF, PACF, a reading of their shapes, and autocorrelation / randomness tests.
+     */
+    get: operations["autocorrelation_api_v1_modules_timeseries_datasets__dataset_id__autocorrelation_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/modules/timeseries/datasets/{dataset_id}/volatility": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Volatility
+     * @description Rolling spread of the residuals and heteroscedasticity / ARCH tests.
+     */
+    get: operations["volatility_api_v1_modules_timeseries_datasets__dataset_id__volatility_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/modules/timeseries/datasets/{dataset_id}/residuals": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Residuals
+     * @description Distribution of the residuals, the series or its returns: statistics, normality, laws.
+     */
+    get: operations["residuals_api_v1_modules_timeseries_datasets__dataset_id__residuals_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/modules/timeseries/datasets/{dataset_id}/breaks": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Breaks
+     * @description Change points, single-break tests and anomalies.
+     */
+    get: operations["breaks_api_v1_modules_timeseries_datasets__dataset_id__breaks_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/modules/timeseries/datasets/{dataset_id}/forecast": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Start Forecast
+     * @description Start (or reuse) a forecast job: models scored by rolling origin, then refitted.
+     */
+    post: operations["start_forecast_api_v1_modules_timeseries_datasets__dataset_id__forecast_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/modules/timeseries/forecast-jobs/{job_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Forecast Job
+     * @description Progress, then the result, of a forecast job.
+     */
+    get: operations["forecast_job_api_v1_modules_timeseries_forecast_jobs__job_id__get"];
+    put?: never;
+    post?: never;
+    /**
+     * Cancel Forecast
+     * @description Stop a forecast after the model being fitted.
+     */
+    delete: operations["cancel_forecast_api_v1_modules_timeseries_forecast_jobs__job_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/modules/timeseries/datasets/{dataset_id}/decomposition": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Decomposition
+     * @description Trend, seasonal and remainder components.
+     */
+    get: operations["decomposition_api_v1_modules_timeseries_datasets__dataset_id__decomposition_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        /** Alert */
-        Alert: {
-            /** Kind */
-            kind: string;
-            /**
-             * Severity
-             * @enum {string}
-             */
-            severity: "warning" | "info";
-            /** Message */
-            message: string;
-            /** Columns */
-            columns?: string[];
-        };
-        /** AppSettings */
-        AppSettings: {
-            detection?: components["schemas"]["DetectionSettings"];
-        };
-        /** Bar */
-        Bar: {
-            /** Label */
-            label: string;
-            /** Count */
-            count: number;
-        };
-        /** Bin */
-        Bin: {
-            /** Start */
-            start: number;
-            /** End */
-            end: number;
-            /** Count */
-            count: number;
-        };
-        /** BivariateTest */
-        BivariateTest: {
-            /** Key */
-            key: string;
-            /** Statistic */
-            statistic: number | null;
-            /** P Value */
-            p_value: number | null;
-            /** N */
-            n: number;
-            effect?: components["schemas"]["Effect"] | null;
-            /**
-             * Recommended
-             * @default false
-             */
-            recommended: boolean;
-            /** Note */
-            note?: string | null;
-        };
-        /** Box */
-        Box: {
-            /** Q1 */
-            q1: number;
-            /** Median */
-            median: number;
-            /** Q3 */
-            q3: number;
-            /** Lowerfence */
-            lowerfence: number;
-            /** Upperfence */
-            upperfence: number;
-            /** Outliers */
-            outliers: number;
-            /** Outlier Values */
-            outlier_values: number[];
-        };
-        /** CategoricalProfile */
-        CategoricalProfile: {
-            /** Rows */
-            rows: number;
-            /** Missing */
-            missing: number;
-            /** Distinct */
-            distinct: number;
-            /** Entropy */
-            entropy: number | null;
-            /** Normalized Entropy */
-            normalized_entropy: number | null;
-            /** Herfindahl */
-            herfindahl: number | null;
-            top: components["schemas"]["Bar"] | null;
-            /** Top Share */
-            top_share: number | null;
-            /** Imbalanced */
-            imbalanced: boolean;
-            /** Rare Count */
-            rare_count: number;
-            /** Rare */
-            rare?: components["schemas"]["Bar"][];
-            /** Chi2 */
-            chi2?: number | null;
-            /** Chi2 P */
-            chi2_p?: number | null;
-        };
-        /** Chart */
-        Chart: {
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "histogram" | "bars" | "timeline" | "identifier" | "high_cardinality" | "empty";
-            /** View */
-            view: string;
-            /** Views */
-            views: string[];
-            /**
-             * Rows
-             * @default 0
-             */
-            rows: number;
-            /**
-             * Missing
-             * @default 0
-             */
-            missing: number;
-            /**
-             * Distinct
-             * @default 0
-             */
-            distinct: number;
-            /** Bars */
-            bars?: components["schemas"]["Bar"][];
-            others?: components["schemas"]["Others"] | null;
-            /**
-             * Ordered
-             * @default false
-             */
-            ordered: boolean;
-            /** Bins */
-            bins?: components["schemas"]["Bin"][];
-            /** Stats */
-            stats?: {
-                [key: string]: number | null;
-            } | null;
-            box?: components["schemas"]["Box"] | null;
-            /** Step */
-            step?: string | null;
-            /** Steps */
-            steps?: string[];
-            /** Examples */
-            examples?: string[];
-            /**
-             * Duplicates
-             * @default 0
-             */
-            duplicates: number;
-            /** Message */
-            message?: string | null;
-        };
-        /**
-         * ColumnChange
-         * @description A correction of one column. `None` fields are left unchanged.
-         */
-        ColumnChange: {
-            /** Name */
-            name: string;
-            /** Type */
-            type?: ("numeric_continuous" | "numeric_discrete" | "categorical_nominal" | "categorical_ordinal" | "boolean" | "datetime" | "text" | "identifier" | "ignored") | null;
-            /** Role */
-            role?: string | null;
-            /** Excluded */
-            excluded?: boolean | null;
-            /** Order */
-            order?: string[] | null;
-            /**
-             * Reset
-             * @default false
-             */
-            reset: boolean;
-        };
-        /** ColumnChangesRequest */
-        ColumnChangesRequest: {
-            /** Changes */
-            changes: components["schemas"]["ColumnChange"][];
-        };
-        /** ColumnInfo */
-        ColumnInfo: {
-            /** Name */
-            name: string;
-            /** Dtype */
-            dtype: string;
-        };
-        /** ColumnOut */
-        ColumnOut: {
-            /** Name */
-            name: string;
-            /** Position */
-            position: number;
-            /** Storage Dtype */
-            storage_dtype: string;
-            /**
-             * Type
-             * @enum {string}
-             */
-            type: "numeric_continuous" | "numeric_discrete" | "categorical_nominal" | "categorical_ordinal" | "boolean" | "datetime" | "text" | "identifier" | "ignored";
-            /** Role */
-            role: string | null;
-            /** Role Label */
-            role_label: string | null;
-            parser: components["schemas"]["Parser"];
-            /** Order */
-            order: string[] | null;
-            /**
-             * Detected Type
-             * @enum {string}
-             */
-            detected_type: "numeric_continuous" | "numeric_discrete" | "categorical_nominal" | "categorical_ordinal" | "boolean" | "datetime" | "text" | "identifier" | "ignored";
-            /** Detected Role */
-            detected_role: string | null;
-            /**
-             * Confidence
-             * @enum {string}
-             */
-            confidence: "high" | "medium" | "low";
-            /** Reasons */
-            reasons: string[];
-            /** Overridden */
-            overridden: boolean;
-            /** Excluded */
-            excluded: boolean;
-            summary: components["schemas"]["ColumnSummary"] | null;
-        };
-        /** ColumnStats */
-        ColumnStats: {
-            /** Missing Pct */
-            missing_pct: number;
-            /** Distinct */
-            distinct: number;
-            /** Skewness */
-            skewness?: number | null;
-        };
-        /** ColumnSummary */
-        ColumnSummary: {
-            /** Rows */
-            rows: number;
-            /** Null Count */
-            null_count: number;
-            /** Invalid Count */
-            invalid_count: number;
-            /** Distinct Count */
-            distinct_count: number;
-            /** Examples */
-            examples: string[];
-            /** Histogram */
-            histogram: components["schemas"]["HistogramBar"][];
-            date?: components["schemas"]["app__schemas__columns__DateProfile"] | null;
-        };
-        /** Comparison */
-        Comparison: {
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "scatter" | "groups" | "contingency" | "timeline" | "date_counts";
-            /** X */
-            x: string;
-            /** Y */
-            y: string;
-            /** Z */
-            z: string | null;
-            /** Color */
-            color: string | null;
-            /** Roles */
-            roles: {
-                [key: string]: "num" | "cat" | "date";
-            };
-            /** Rows */
-            rows: number;
-            /** Total */
-            total: number;
-            /** Sample */
-            sample?: number | null;
-            /** Group Axis */
-            group_axis?: ("x" | "y") | null;
-            points?: components["schemas"]["Points"] | null;
-            regression?: components["schemas"]["Regression"] | null;
-            density?: components["schemas"]["Density"] | null;
-            /** Groups */
-            groups?: components["schemas"]["Group"][];
-            contingency?: components["schemas"]["Contingency"] | null;
-            /** Series */
-            series?: components["schemas"]["Series"][];
-            /** Step */
-            step?: string | null;
-            /** Tests */
-            tests?: components["schemas"]["BivariateTest"][];
-            /** Message */
-            message?: string | null;
-        };
-        /** Condition */
-        Condition: {
-            /** Column */
-            column: string;
-            /**
-             * Op
-             * @enum {string}
-             */
-            op: "eq" | "gt" | "gte" | "lt" | "lte" | "between" | "in" | "contains" | "starts_with" | "is_null" | "part_in" | "unique" | "duplicated";
-            /** Value */
-            value?: string | number | null;
-            /** Low */
-            low?: string | number | null;
-            /** High */
-            high?: string | number | null;
-            /** Values */
-            values?: string[];
-            /** Part */
-            part?: ("year" | "quarter" | "month" | "year_month" | "week" | "day_of_week" | "day_of_month" | "hour") | null;
-            /**
-             * Negate
-             * @default false
-             */
-            negate: boolean;
-            /** Columns */
-            columns?: string[];
-            /**
-             * Keep
-             * @default first
-             * @enum {string}
-             */
-            keep: "first" | "last";
-            /** Order By */
-            order_by?: string | null;
-        };
-        /** Contingency */
-        Contingency: {
-            /** Rows */
-            rows: string[];
-            /** Columns */
-            columns: string[];
-            /** Counts */
-            counts: number[][];
-        };
-        /** ConversionOut */
-        ConversionOut: {
-            /**
-             * Type
-             * @enum {string}
-             */
-            type: "numeric_continuous" | "numeric_discrete" | "categorical_nominal" | "categorical_ordinal" | "boolean" | "datetime" | "text" | "identifier" | "ignored";
-            parser: components["schemas"]["Parser"];
-            summary: components["schemas"]["ColumnSummary"];
-        };
-        /** Correlations */
-        Correlations: {
-            matrix: components["schemas"]["Matrix"];
-            /** Insights */
-            insights?: components["schemas"]["Insight"][];
-        };
-        /** CsvOptions */
-        CsvOptions: {
-            /**
-             * Delimiter
-             * @default ,
-             */
-            delimiter: string;
-            /**
-             * Encoding
-             * @default utf-8
-             * @enum {string}
-             */
-            encoding: "utf-8" | "latin-1" | "utf-16";
-            /**
-             * Header
-             * @default true
-             */
-            header: boolean;
-            /**
-             * Decimal
-             * @default .
-             * @enum {string}
-             */
-            decimal: "." | ",";
-        };
-        /** Curve */
-        Curve: {
-            /** X */
-            x: number[];
-            /** Y */
-            y: number[];
-        };
-        /** DatasetOut */
-        DatasetOut: {
-            /** Id */
-            id: string;
-            /** Name */
-            name: string;
-            /** Source Path */
-            source_path: string;
-            /**
-             * Source Kind
-             * @enum {string}
-             */
-            source_kind: "file" | "folder";
-            /** Format */
-            format: string;
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "importing" | "ready" | "error";
-            /** Error */
-            error: string | null;
-            /** Row Count */
-            row_count: number | null;
-            /** Col Count */
-            col_count: number | null;
-            /** Size Bytes */
-            size_bytes: number | null;
-            /** Sample Pct */
-            sample_pct: number;
-            /** Created At */
-            created_at: string;
-            /** Imported At */
-            imported_at: string | null;
-            /** Last Opened At */
-            last_opened_at: string | null;
-            /** Types Version */
-            types_version: number;
-            /** Types Reviewed At */
-            types_reviewed_at: string | null;
-            /**
-             * Source State
-             * @enum {string}
-             */
-            source_state: "ok" | "changed" | "missing";
-            job?: components["schemas"]["JobOut"] | null;
-        };
-        /** DatasetUsage */
-        DatasetUsage: {
-            /** Id */
-            id: string;
-            /** Name */
-            name: string;
-            /** Bytes */
-            bytes: number;
-        };
-        /** Density */
-        Density: {
-            /** X Edges */
-            x_edges: number[];
-            /** Y Edges */
-            y_edges: number[];
-            /** Counts */
-            counts: number[][];
-        };
-        /** Describe */
-        Describe: {
-            /** Rows */
-            rows: number;
-            /** Count */
-            count: number;
-            /** Missing */
-            missing: number;
-            /** Infinite */
-            infinite: number;
-            /** Zeros */
-            zeros: number;
-            /** Negatives */
-            negatives: number;
-            /** Distinct */
-            distinct: number;
-            /** Distinct Approx */
-            distinct_approx: boolean;
-            /** Mean */
-            mean: number | null;
-            /** Std */
-            std: number | null;
-            /** Cv */
-            cv: number | null;
-            /** Min */
-            min: number | null;
-            /** P1 */
-            p1: number | null;
-            /** P5 */
-            p5: number | null;
-            /** P10 */
-            p10: number | null;
-            /** Q1 */
-            q1: number | null;
-            /** Median */
-            median: number | null;
-            /** Q3 */
-            q3: number | null;
-            /** P90 */
-            p90: number | null;
-            /** P95 */
-            p95: number | null;
-            /** P99 */
-            p99: number | null;
-            /** Max */
-            max: number | null;
-            /** Iqr */
-            iqr: number | null;
-            /** Mad */
-            mad: number | null;
-            /** Skewness */
-            skewness: number | null;
-            /** Kurtosis */
-            kurtosis: number | null;
-            /** Sum */
-            sum: number | null;
-        };
-        /**
-         * DetectionSettings
-         * @description Bounds keep detection sensible: below half, "mostly numbers" would mean nothing.
-         */
-        DetectionSettings: {
-            /**
-             * Parse Rate
-             * @default 0.95
-             */
-            parse_rate: number;
-            /**
-             * Empty Rate
-             * @default 0.95
-             */
-            empty_rate: number;
-            /**
-             * Discrete Max
-             * @default 20
-             */
-            discrete_max: number;
-            /**
-             * Identifier Unique
-             * @default 0.95
-             */
-            identifier_unique: number;
-        };
-        /** Effect */
-        Effect: {
-            /** Name */
-            name: string;
-            /** Value */
-            value: number | null;
-            /** Magnitude */
-            magnitude: ("negligible" | "small" | "medium" | "large") | null;
-        };
-        /** Entry */
-        Entry: {
-            /** Name */
-            name: string;
-            /** Path */
-            path: string;
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "dir" | "file";
-            /** Format */
-            format?: ("csv" | "parquet" | "excel") | null;
-            /** Size */
-            size?: number | null;
-        };
-        /** Excluded */
-        Excluded: {
-            /** Name */
-            name: string;
-            /** Reason */
-            reason: string;
-        };
-        /** FileInfo */
-        FileInfo: {
-            /** Name */
-            name: string;
-            /**
-             * Format
-             * @enum {string}
-             */
-            format: "csv" | "parquet" | "excel";
-            /** Size */
-            size: number;
-        };
-        /** Fit */
-        Fit: {
-            /** N */
-            n: number;
-            /** Grid */
-            grid: number[];
-            /** Sample Quantiles */
-            sample_quantiles: number[];
-            /** Laws */
-            laws?: components["schemas"]["Law"][];
-            /** Transforms */
-            transforms?: components["schemas"]["Transform"][];
-            /** Reason */
-            reason?: string | null;
-        };
-        /** Group */
-        Group: {
-            /** Label */
-            label: string;
-            /** N */
-            n: number;
-            /** Mean */
-            mean: number | null;
-            /** Std */
-            std: number | null;
-            /** Q1 */
-            q1: number | null;
-            /** Median */
-            median: number | null;
-            /** Q3 */
-            q3: number | null;
-            /** Low */
-            low: number | null;
-            /** High */
-            high: number | null;
-            /** Ci Low */
-            ci_low: number | null;
-            /** Ci High */
-            ci_high: number | null;
-            /** Sample */
-            sample?: number[];
-        };
-        /** HTTPValidationError */
-        HTTPValidationError: {
-            /** Detail */
-            detail?: components["schemas"]["ValidationError"][];
-        };
-        /** HeadOut */
-        HeadOut: {
-            /** Columns */
-            columns: string[];
-            /** Rows */
-            rows: (string | null)[][];
-        };
-        /** HealthOut */
-        HealthOut: {
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "ok" | "degraded";
-            /** Version */
-            version: string;
-            /**
-             * Db
-             * @enum {string}
-             */
-            db: "ok" | "error";
-        };
-        /** HelloOut */
-        HelloOut: {
-            /** Message */
-            message: string;
-        };
-        /** HistogramBar */
-        HistogramBar: {
-            /** Label */
-            label: string;
-            /** Count */
-            count: number;
-        };
-        /** IdentifierProfile */
-        IdentifierProfile: {
-            /** Rows */
-            rows: number;
-            /** Missing */
-            missing: number;
-            /** Distinct */
-            distinct: number;
-            /** Unique Pct */
-            unique_pct: number;
-            /** Duplicated Values */
-            duplicated_values: number;
-            /** Duplicates */
-            duplicates?: components["schemas"]["Bar"][];
-            /** Min Length */
-            min_length?: number | null;
-            /** Max Length */
-            max_length?: number | null;
-            /** Patterns */
-            patterns?: components["schemas"]["Bar"][];
-        };
-        /** ImportOptions */
-        ImportOptions: {
-            csv?: components["schemas"]["CsvOptions"] | null;
-            /** Sheets */
-            sheets?: string[] | null;
-            /** Files */
-            files?: string[] | null;
-            /**
-             * Folder Mode
-             * @default union
-             * @enum {string}
-             */
-            folder_mode: "union" | "intersection";
-            /** Columns */
-            columns?: string[] | null;
-            /**
-             * Sample Pct
-             * @default 100
-             */
-            sample_pct: number;
-        };
-        /** ImportRequest */
-        ImportRequest: {
-            /** Path */
-            path: string;
-            /** Name */
-            name?: string | null;
-            options?: components["schemas"]["ImportOptions"];
-        };
-        /** ImportResponse */
-        ImportResponse: {
-            dataset: components["schemas"]["DatasetOut"];
-            job: components["schemas"]["JobOut"] | null;
-            /** Reused */
-            reused: boolean;
-        };
-        /** Insight */
-        Insight: {
-            /** Id */
-            id: string;
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "skewed" | "imbalanced" | "missing" | "correlated" | "redundant" | "group_difference" | "associated";
-            /**
-             * Severity
-             * @enum {string}
-             */
-            severity: "warning" | "info";
-            /** Text */
-            text: string;
-            /** Columns */
-            columns: string[];
-            link: components["schemas"]["InsightLink"];
-            /** Score */
-            score: number;
-            /** Evidence */
-            evidence?: ("strong" | "moderate" | "weak") | null;
-        };
-        /** InsightLink */
-        InsightLink: {
-            /**
-             * Page
-             * @enum {string}
-             */
-            page: "variable" | "compare";
-            /** X */
-            x: string;
-            /** Y */
-            y?: string | null;
-        };
-        /** JobOut */
-        JobOut: {
-            /** Id */
-            id: string;
-            /** Kind */
-            kind: string;
-            /** Dataset Id */
-            dataset_id: string | null;
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "pending" | "running" | "done" | "failed";
-            /** Progress */
-            progress: number;
-            /** Message */
-            message: string | null;
-            /** Created At */
-            created_at: string;
-            /** Finished At */
-            finished_at: string | null;
-        };
-        /** Law */
-        Law: {
-            /** Key */
-            key: string;
-            /** Label */
-            label: string;
-            /** Discrete */
-            discrete: boolean;
-            /** Params */
-            params: {
-                [key: string]: number;
-            };
-            /** Log Likelihood */
-            log_likelihood: number;
-            /** Aic */
-            aic: number;
-            /** Bic */
-            bic: number;
-            /** Ks */
-            ks: number;
-            /** Density */
-            density: number[];
-            /** Quantiles */
-            quantiles: number[];
-        };
-        /** Listing */
-        Listing: {
-            /** Path */
-            path: string;
-            /** Parent */
-            parent: string | null;
-            /** Roots */
-            roots: string[];
-            /** Entries */
-            entries: components["schemas"]["Entry"][];
-        };
-        /** Matrix */
-        Matrix: {
-            /**
-             * Method
-             * @enum {string}
-             */
-            method: "pearson" | "spearman";
-            /** Columns */
-            columns: components["schemas"]["MatrixMember"][];
-            /** Values */
-            values: (number | null)[][];
-            /** Metrics */
-            metrics: (("pearson" | "spearman" | "cramers_v" | "eta") | null)[][];
-            /** N */
-            n: number[][];
-            /** Clustered */
-            clustered: number[];
-            /** Rows */
-            rows: number;
-            /** Total */
-            total: number;
-            /** Sampled */
-            sampled: boolean;
-            /** Excluded */
-            excluded?: components["schemas"]["Excluded"][];
-            /**
-             * Truncated
-             * @default 0
-             */
-            truncated: number;
-            /** Pairs */
-            pairs?: components["schemas"]["Pair"][];
-        };
-        /** MatrixMember */
-        MatrixMember: {
-            /** Name */
-            name: string;
-            /** Type */
-            type: string;
-            /**
-             * Role
-             * @enum {string}
-             */
-            role: "num" | "cat";
-        };
-        /** Normality */
-        Normality: {
-            /** N */
-            n: number;
-            /** Sample */
-            sample: number;
-            /** Tests */
-            tests?: components["schemas"]["TestResult"][];
-            /** Reason */
-            reason?: string | null;
-        };
-        /** NumericProfile */
-        NumericProfile: {
-            describe: components["schemas"]["Describe"];
-            normality: components["schemas"]["Normality"];
-            kde: components["schemas"]["Curve"] | null;
-            ecdf: components["schemas"]["Curve"] | null;
-            qq: components["schemas"]["QQ"] | null;
-            /** Sample */
-            sample: number[];
-        };
-        /** Others */
-        Others: {
-            /** Count */
-            count: number;
-            /** Categories */
-            categories: number;
-        };
-        /** OutlierRow */
-        OutlierRow: {
-            /** Row */
-            row: number;
-            /** Value */
-            value: number;
-        };
-        /** OutlierRule */
-        OutlierRule: {
-            /**
-             * Method
-             * @enum {string}
-             */
-            method: "iqr" | "iqr3" | "zscore" | "robust";
-            /** Low */
-            low: number | null;
-            /** High */
-            high: number | null;
-            /** Count */
-            count: number;
-            /** Pct */
-            pct: number;
-        };
-        /** Outliers */
-        Outliers: {
-            /**
-             * Method
-             * @enum {string}
-             */
-            method: "iqr" | "iqr3" | "zscore" | "robust";
-            /** Rules */
-            rules?: components["schemas"]["OutlierRule"][];
-            /** Rows */
-            rows?: components["schemas"]["OutlierRow"][];
-        };
-        /** Overview */
-        Overview: {
-            /** Rows */
-            rows: number;
-            /** Total Rows */
-            total_rows: number;
-            /** Columns */
-            columns: number;
-            /** Used Columns */
-            used_columns: number;
-            /** Missing Cells */
-            missing_cells: number;
-            /** Missing Pct */
-            missing_pct: number;
-            /** Duplicate Rows */
-            duplicate_rows: number;
-            /** Duplicate Columns */
-            duplicate_columns: string[][];
-            /** Size Bytes */
-            size_bytes: number;
-            /** Types */
-            types: {
-                [key: string]: number;
-            };
-            /** Alerts */
-            alerts: components["schemas"]["Alert"][];
-            /** Column Stats */
-            column_stats: {
-                [key: string]: components["schemas"]["ColumnStats"];
-            };
-        };
-        /** Pair */
-        Pair: {
-            /** A */
-            a: string;
-            /** B */
-            b: string;
-            /**
-             * Metric
-             * @enum {string}
-             */
-            metric: "pearson" | "spearman" | "cramers_v" | "eta";
-            /** Value */
-            value: number;
-            /** P Value */
-            p_value: number | null;
-            /** N */
-            n: number;
-            /** Q Value */
-            q_value?: number | null;
-            /**
-             * Evidence
-             * @default none
-             * @enum {string}
-             */
-            evidence: "strong" | "moderate" | "weak" | "none";
-        };
-        /**
-         * Parser
-         * @description How to read a stored value in its analysis type, applied at query time.
-         *
-         *     - raw: the stored value as is
-         *     - number: text with a given decimal separator (thousands separators, %, currency stripped)
-         *     - date: text with a strptime format
-         *     - boolean: text mapped with true/false vocabularies (empty lists: cast the value)
-         *     - year: integer year → date (January 1st)
-         *     - text: the value as text, null tokens removed
-         */
-        Parser: {
-            /**
-             * Kind
-             * @default raw
-             * @enum {string}
-             */
-            kind: "raw" | "number" | "date" | "boolean" | "year" | "text";
-            /**
-             * Decimal
-             * @default .
-             * @enum {string}
-             */
-            decimal: "." | ",";
-            /** Format */
-            format?: string | null;
-            /**
-             * True Values
-             * @default []
-             */
-            true_values: string[];
-            /**
-             * False Values
-             * @default []
-             */
-            false_values: string[];
-        };
-        /** Points */
-        Points: {
-            /** X */
-            x: number[];
-            /** Y */
-            y: number[];
-            /** Z */
-            z?: number[] | null;
-            /** Color */
-            color?: string[] | null;
-        };
-        /** Preview */
-        Preview: {
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "file" | "folder";
-            /** Format */
-            format: ("csv" | "parquet" | "excel") | "mixed";
-            /** Files */
-            files: components["schemas"]["FileInfo"][];
-            /** Columns */
-            columns: components["schemas"]["ColumnInfo"][];
-            /** Rows */
-            rows: (string | null)[][];
-            /** Row Estimate */
-            row_estimate: number | null;
-            csv?: components["schemas"]["CsvOptions"] | null;
-            /** Sheets */
-            sheets?: string[] | null;
-            /**
-             * Schema Mismatch
-             * @default false
-             */
-            schema_mismatch: boolean;
-            /**
-             * Suggested Name
-             * @default
-             */
-            suggested_name: string;
-            /** Warnings */
-            warnings?: string[];
-        };
-        /** PreviewRequest */
-        PreviewRequest: {
-            /** Path */
-            path: string;
-            options?: components["schemas"]["SourceOptions"];
-        };
-        /**
-         * QQ
-         * @description Sample quantiles against the standard normal's, with the line through Q1 and Q3.
-         */
-        QQ: {
-            /** Theoretical */
-            theoretical: number[];
-            /** Sample */
-            sample: number[];
-            /** Slope */
-            slope: number;
-            /** Intercept */
-            intercept: number;
-        };
-        /** Regression */
-        Regression: {
-            /** Slope */
-            slope: number;
-            /** Intercept */
-            intercept: number;
-            /** R2 */
-            r2: number | null;
-        };
-        /** RenameRequest */
-        RenameRequest: {
-            /** Name */
-            name: string;
-        };
-        /** RoleOut */
-        RoleOut: {
-            /** Id */
-            id: string;
-            /** Label */
-            label: string;
-        };
-        /** RowsColumn */
-        RowsColumn: {
-            /** Name */
-            name: string;
-            /**
-             * Type
-             * @enum {string}
-             */
-            type: "numeric_continuous" | "numeric_discrete" | "categorical_nominal" | "categorical_ordinal" | "boolean" | "datetime" | "text" | "identifier" | "ignored";
-            /** Excluded */
-            excluded: boolean;
-        };
-        /** RowsPage */
-        RowsPage: {
-            /** Columns */
-            columns: components["schemas"]["RowsColumn"][];
-            /** Rows */
-            rows: unknown[][];
-            /** Total */
-            total: number;
-            /** Offset */
-            offset: number;
-        };
-        /** SampleOut */
-        SampleOut: {
-            /** Name */
-            name: string;
-            /** Path */
-            path: string;
-            /** Format */
-            format: string;
-            /** Size */
-            size: number;
-        };
-        /** SaveFilterRequest */
-        SaveFilterRequest: {
-            /** Name */
-            name: string;
-            /** Conditions */
-            conditions: components["schemas"]["Condition"][];
-        };
-        /** SavedFilter */
-        SavedFilter: {
-            /** Id */
-            id: string;
-            /** Name */
-            name: string;
-            /** Conditions */
-            conditions: components["schemas"]["Condition"][];
-            /** Created At */
-            created_at: string;
-        };
-        /** Series */
-        Series: {
-            /** Label */
-            label: string | null;
-            /** Periods */
-            periods: string[];
-            /** Values */
-            values: (number | null)[];
-            /** Low */
-            low?: (number | null)[];
-            /** High */
-            high?: (number | null)[];
-        };
-        /**
-         * SourceOptions
-         * @description How to read a source. `None` fields mean "detect" or "everything".
-         */
-        SourceOptions: {
-            csv?: components["schemas"]["CsvOptions"] | null;
-            /** Sheets */
-            sheets?: string[] | null;
-            /** Files */
-            files?: string[] | null;
-            /**
-             * Folder Mode
-             * @default union
-             * @enum {string}
-             */
-            folder_mode: "union" | "intersection";
-        };
-        /** StorageInfo */
-        StorageInfo: {
-            /** Workspace */
-            workspace: string;
-            /** Total Bytes */
-            total_bytes: number;
-            /** Datasets */
-            datasets: components["schemas"]["DatasetUsage"][];
-        };
-        /** TestResult */
-        TestResult: {
-            /** Key */
-            key: string;
-            /** Statistic */
-            statistic: number | null;
-            /** P Value */
-            p_value: number | null;
-            /** N */
-            n: number;
-            /** Note */
-            note?: string | null;
-        };
-        /** TextProfile */
-        TextProfile: {
-            /** Rows */
-            rows: number;
-            /** Missing */
-            missing: number;
-            /** Distinct */
-            distinct: number;
-            /** Min Length */
-            min_length: number | null;
-            /** Max Length */
-            max_length: number | null;
-            /** Mean Length */
-            mean_length: number | null;
-            /** Words */
-            words?: components["schemas"]["Bar"][];
-        };
-        /** Transform */
-        Transform: {
-            /** Key */
-            key: string;
-            /** Lmbda */
-            lmbda: number | null;
-            /** Skewness Before */
-            skewness_before: number | null;
-            /** Skewness After */
-            skewness_after: number | null;
-            /** Shapiro Before */
-            shapiro_before: number | null;
-            /** Shapiro After */
-            shapiro_after: number | null;
-            /** Bins */
-            bins: components["schemas"]["Bin"][];
-        };
-        /** UploadOut */
-        UploadOut: {
-            /** Path */
-            path: string;
-            /** Size */
-            size: number;
-        };
-        /** ValidationError */
-        ValidationError: {
-            /** Location */
-            loc: (string | number)[];
-            /** Message */
-            msg: string;
-            /** Error Type */
-            type: string;
-            /** Input */
-            input?: unknown;
-            /** Context */
-            ctx?: Record<string, never>;
-        };
-        /** VariableProfile */
-        VariableProfile: {
-            /** Name */
-            name: string;
-            /** Type */
-            type: string;
-            numeric?: components["schemas"]["NumericProfile"] | null;
-            categorical?: components["schemas"]["CategoricalProfile"] | null;
-            date?: components["schemas"]["app__domain__variable__profiles__DateProfile"] | null;
-            text?: components["schemas"]["TextProfile"] | null;
-            identifier?: components["schemas"]["IdentifierProfile"] | null;
-        };
-        /** DateProfile */
-        app__domain__variable__profiles__DateProfile: {
-            /** Rows */
-            rows: number;
-            /** Missing */
-            missing: number;
-            /** Distinct */
-            distinct: number;
-            /** Min */
-            min: string | null;
-            /** Max */
-            max: string | null;
-            /** Has Time */
-            has_time: boolean;
-            /** Granularity */
-            granularity: string;
-            /** Step */
-            step: string | null;
-            /** Periods */
-            periods: number;
-            /** Gap Count */
-            gap_count: number;
-            /** Gaps */
-            gaps?: string[];
-            /** Calendar */
-            calendar?: components["schemas"]["Bar"][];
-        };
-        /** DateProfile */
-        app__schemas__columns__DateProfile: {
-            /** Has Time */
-            has_time: boolean;
-            /** Min */
-            min: string | null;
-            /** Max */
-            max: string | null;
-            /** Step */
-            step: string;
-            /** Parts */
-            parts: string[];
-        };
+  schemas: {
+    /** Alert */
+    Alert: {
+      /** Kind */
+      kind: string;
+      /**
+       * Severity
+       * @enum {string}
+       */
+      severity: "warning" | "info";
+      /** Message */
+      message: string;
+      /** Columns */
+      columns?: string[];
     };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    /** AnomalyRow */
+    AnomalyRow: {
+      /** Index */
+      index: number;
+      /** Period */
+      period: string;
+      /** Start */
+      start: string;
+      /** End */
+      end: string;
+      /** Value */
+      value: number;
+      /** Expected */
+      expected: number;
+      /** Score */
+      score: number;
+    };
+    /** AppSettings */
+    AppSettings: {
+      detection?: components["schemas"]["DetectionSettings"];
+    };
+    /** Bar */
+    Bar: {
+      /** Label */
+      label: string;
+      /** Count */
+      count: number;
+    };
+    /** Bin */
+    Bin: {
+      /** Start */
+      start: number;
+      /** End */
+      end: number;
+      /** Count */
+      count: number;
+    };
+    /** BivariateTest */
+    BivariateTest: {
+      /** Key */
+      key: string;
+      /** Statistic */
+      statistic: number | null;
+      /** P Value */
+      p_value: number | null;
+      /** N */
+      n: number;
+      effect?: components["schemas"]["Effect"] | null;
+      /**
+       * Recommended
+       * @default false
+       */
+      recommended: boolean;
+      /** Note */
+      note?: string | null;
+    };
+    /** Box */
+    Box: {
+      /** Q1 */
+      q1: number;
+      /** Median */
+      median: number;
+      /** Q3 */
+      q3: number;
+      /** Lowerfence */
+      lowerfence: number;
+      /** Upperfence */
+      upperfence: number;
+      /** Outliers */
+      outliers: number;
+      /** Outlier Values */
+      outlier_values: number[];
+    };
+    /** BreakPoint */
+    BreakPoint: {
+      /** Index */
+      index: number;
+      /** Period */
+      period: string;
+      /** Before */
+      before: number;
+      /** After */
+      after: number;
+      /**
+       * Slope Before
+       * @default 0
+       */
+      slope_before: number;
+      /**
+       * Slope After
+       * @default 0
+       */
+      slope_after: number;
+    };
+    /** Breaks */
+    Breaks: {
+      /**
+       * Search
+       * @enum {string}
+       */
+      search: "pelt" | "binseg";
+      /**
+       * Cost
+       * @enum {string}
+       */
+      cost: "mean" | "mean_var" | "trend";
+      /** Points */
+      points: number[];
+      /** Segments */
+      segments?: components["schemas"]["Segment"][];
+      /**
+       * Cost Auto
+       * @default false
+       */
+      cost_auto: boolean;
+    };
+    /** CategoricalProfile */
+    CategoricalProfile: {
+      /** Rows */
+      rows: number;
+      /** Missing */
+      missing: number;
+      /** Distinct */
+      distinct: number;
+      /** Entropy */
+      entropy: number | null;
+      /** Normalized Entropy */
+      normalized_entropy: number | null;
+      /** Herfindahl */
+      herfindahl: number | null;
+      top: components["schemas"]["Bar"] | null;
+      /** Top Share */
+      top_share: number | null;
+      /** Imbalanced */
+      imbalanced: boolean;
+      /** Rare Count */
+      rare_count: number;
+      /** Rare */
+      rare?: components["schemas"]["Bar"][];
+      /** Chi2 */
+      chi2?: number | null;
+      /** Chi2 P */
+      chi2_p?: number | null;
+    };
+    /** Chart */
+    Chart: {
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind:
+        | "histogram"
+        | "bars"
+        | "timeline"
+        | "identifier"
+        | "high_cardinality"
+        | "empty";
+      /** View */
+      view: string;
+      /** Views */
+      views: string[];
+      /**
+       * Rows
+       * @default 0
+       */
+      rows: number;
+      /**
+       * Missing
+       * @default 0
+       */
+      missing: number;
+      /**
+       * Distinct
+       * @default 0
+       */
+      distinct: number;
+      /** Bars */
+      bars?: components["schemas"]["Bar"][];
+      others?: components["schemas"]["Others"] | null;
+      /**
+       * Ordered
+       * @default false
+       */
+      ordered: boolean;
+      /** Bins */
+      bins?: components["schemas"]["Bin"][];
+      /** Stats */
+      stats?: {
+        [key: string]: number | null;
+      } | null;
+      box?: components["schemas"]["Box"] | null;
+      /** Step */
+      step?: string | null;
+      /** Steps */
+      steps?: string[];
+      /** Examples */
+      examples?: string[];
+      /**
+       * Duplicates
+       * @default 0
+       */
+      duplicates: number;
+      /** Message */
+      message?: string | null;
+    };
+    /**
+     * ColumnChange
+     * @description A correction of one column. `None` fields are left unchanged.
+     */
+    ColumnChange: {
+      /** Name */
+      name: string;
+      /** Type */
+      type?:
+        | (
+            | "numeric_continuous"
+            | "numeric_discrete"
+            | "categorical_nominal"
+            | "categorical_ordinal"
+            | "boolean"
+            | "datetime"
+            | "text"
+            | "identifier"
+            | "ignored"
+          )
+        | null;
+      /** Role */
+      role?: string | null;
+      /** Excluded */
+      excluded?: boolean | null;
+      /** Order */
+      order?: string[] | null;
+      /**
+       * Reset
+       * @default false
+       */
+      reset: boolean;
+    };
+    /** ColumnChangesRequest */
+    ColumnChangesRequest: {
+      /** Changes */
+      changes: components["schemas"]["ColumnChange"][];
+    };
+    /** ColumnInfo */
+    ColumnInfo: {
+      /** Name */
+      name: string;
+      /** Dtype */
+      dtype: string;
+    };
+    /** ColumnOut */
+    ColumnOut: {
+      /** Name */
+      name: string;
+      /** Position */
+      position: number;
+      /** Storage Dtype */
+      storage_dtype: string;
+      /**
+       * Type
+       * @enum {string}
+       */
+      type:
+        | "numeric_continuous"
+        | "numeric_discrete"
+        | "categorical_nominal"
+        | "categorical_ordinal"
+        | "boolean"
+        | "datetime"
+        | "text"
+        | "identifier"
+        | "ignored";
+      /** Role */
+      role: string | null;
+      /** Role Label */
+      role_label: string | null;
+      parser: components["schemas"]["Parser"];
+      /** Order */
+      order: string[] | null;
+      /**
+       * Detected Type
+       * @enum {string}
+       */
+      detected_type:
+        | "numeric_continuous"
+        | "numeric_discrete"
+        | "categorical_nominal"
+        | "categorical_ordinal"
+        | "boolean"
+        | "datetime"
+        | "text"
+        | "identifier"
+        | "ignored";
+      /** Detected Role */
+      detected_role: string | null;
+      /**
+       * Confidence
+       * @enum {string}
+       */
+      confidence: "high" | "medium" | "low";
+      /** Reasons */
+      reasons: string[];
+      /** Overridden */
+      overridden: boolean;
+      /** Excluded */
+      excluded: boolean;
+      summary: components["schemas"]["ColumnSummary"] | null;
+    };
+    /** ColumnStats */
+    ColumnStats: {
+      /** Missing Pct */
+      missing_pct: number;
+      /** Distinct */
+      distinct: number;
+      /** Skewness */
+      skewness?: number | null;
+    };
+    /** ColumnSummary */
+    ColumnSummary: {
+      /** Rows */
+      rows: number;
+      /** Null Count */
+      null_count: number;
+      /** Invalid Count */
+      invalid_count: number;
+      /** Distinct Count */
+      distinct_count: number;
+      /** Examples */
+      examples: string[];
+      /** Histogram */
+      histogram: components["schemas"]["HistogramBar"][];
+      date?: components["schemas"]["app__schemas__columns__DateProfile"] | null;
+    };
+    /** Comparison */
+    Comparison: {
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: "scatter" | "groups" | "contingency" | "timeline" | "date_counts";
+      /** X */
+      x: string;
+      /** Y */
+      y: string;
+      /** Z */
+      z: string | null;
+      /** Color */
+      color: string | null;
+      /** Roles */
+      roles: {
+        [key: string]: "num" | "cat" | "date";
+      };
+      /** Rows */
+      rows: number;
+      /** Total */
+      total: number;
+      /** Sample */
+      sample?: number | null;
+      /** Group Axis */
+      group_axis?: ("x" | "y") | null;
+      points?: components["schemas"]["Points"] | null;
+      regression?: components["schemas"]["Regression"] | null;
+      density?: components["schemas"]["Density"] | null;
+      /** Groups */
+      groups?: components["schemas"]["Group"][];
+      contingency?: components["schemas"]["Contingency"] | null;
+      /** Series */
+      series?: components["schemas"]["Series"][];
+      /** Step */
+      step?: string | null;
+      time?: components["schemas"]["TimeView"] | null;
+      trend?: components["schemas"]["TrendSummary"] | null;
+      /** Tests */
+      tests?: components["schemas"]["BivariateTest"][];
+      /** Message */
+      message?: string | null;
+    };
+    /** Condition */
+    Condition: {
+      /** Column */
+      column: string;
+      /**
+       * Op
+       * @enum {string}
+       */
+      op:
+        | "eq"
+        | "gt"
+        | "gte"
+        | "lt"
+        | "lte"
+        | "between"
+        | "in"
+        | "contains"
+        | "starts_with"
+        | "is_null"
+        | "part_in"
+        | "unique"
+        | "duplicated";
+      /** Value */
+      value?: string | number | null;
+      /** Low */
+      low?: string | number | null;
+      /** High */
+      high?: string | number | null;
+      /** Values */
+      values?: string[];
+      /** Part */
+      part?:
+        | (
+            | "year"
+            | "quarter"
+            | "month"
+            | "year_month"
+            | "week"
+            | "day_of_week"
+            | "day_of_month"
+            | "hour"
+          )
+        | null;
+      /**
+       * Negate
+       * @default false
+       */
+      negate: boolean;
+      /** Columns */
+      columns?: string[];
+      /**
+       * Keep
+       * @default first
+       * @enum {string}
+       */
+      keep: "first" | "last";
+      /** Order By */
+      order_by?: string | null;
+    };
+    /** Contingency */
+    Contingency: {
+      /** Rows */
+      rows: string[];
+      /** Columns */
+      columns: string[];
+      /** Counts */
+      counts: number[][];
+    };
+    /** ConversionOut */
+    ConversionOut: {
+      /**
+       * Type
+       * @enum {string}
+       */
+      type:
+        | "numeric_continuous"
+        | "numeric_discrete"
+        | "categorical_nominal"
+        | "categorical_ordinal"
+        | "boolean"
+        | "datetime"
+        | "text"
+        | "identifier"
+        | "ignored";
+      parser: components["schemas"]["Parser"];
+      summary: components["schemas"]["ColumnSummary"];
+    };
+    /** Correlations */
+    Correlations: {
+      matrix: components["schemas"]["Matrix"];
+      /** Insights */
+      insights?: components["schemas"]["Insight"][];
+    };
+    /** Correlogram */
+    Correlogram: {
+      /** Lags */
+      lags: number[];
+      /** Acf */
+      acf: number[];
+      /** Pacf */
+      pacf: number[];
+      /** Band */
+      band: number;
+      /** Readings */
+      readings?: string[];
+      /** Ar Order */
+      ar_order?: number | null;
+    };
+    /** CsvOptions */
+    CsvOptions: {
+      /**
+       * Delimiter
+       * @default ,
+       */
+      delimiter: string;
+      /**
+       * Encoding
+       * @default utf-8
+       * @enum {string}
+       */
+      encoding: "utf-8" | "latin-1" | "utf-16";
+      /**
+       * Header
+       * @default true
+       */
+      header: boolean;
+      /**
+       * Decimal
+       * @default .
+       * @enum {string}
+       */
+      decimal: "." | ",";
+    };
+    /** Curve */
+    Curve: {
+      /** X */
+      x: number[];
+      /** Y */
+      y: number[];
+    };
+    /** DatasetOut */
+    DatasetOut: {
+      /** Id */
+      id: string;
+      /** Name */
+      name: string;
+      /** Source Path */
+      source_path: string;
+      /**
+       * Source Kind
+       * @enum {string}
+       */
+      source_kind: "file" | "folder";
+      /** Format */
+      format: string;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "importing" | "ready" | "error";
+      /** Error */
+      error: string | null;
+      /** Row Count */
+      row_count: number | null;
+      /** Col Count */
+      col_count: number | null;
+      /** Size Bytes */
+      size_bytes: number | null;
+      /** Sample Pct */
+      sample_pct: number;
+      /** Created At */
+      created_at: string;
+      /** Imported At */
+      imported_at: string | null;
+      /** Last Opened At */
+      last_opened_at: string | null;
+      /** Types Version */
+      types_version: number;
+      /** Types Reviewed At */
+      types_reviewed_at: string | null;
+      /**
+       * Source State
+       * @enum {string}
+       */
+      source_state: "ok" | "changed" | "missing";
+      job?: components["schemas"]["JobOut"] | null;
+    };
+    /** DatasetUsage */
+    DatasetUsage: {
+      /** Id */
+      id: string;
+      /** Name */
+      name: string;
+      /** Bytes */
+      bytes: number;
+    };
+    /** Decomposition */
+    Decomposition: {
+      /**
+       * Method
+       * @enum {string}
+       */
+      method:
+        "stl" | "mstl" | "classical_additive" | "classical_multiplicative";
+      /** Seasons */
+      seasons: number[];
+      /** Trend */
+      trend: (number | null)[];
+      /** Seasonal */
+      seasonal: (number | null)[][];
+      /** Resid */
+      resid: (number | null)[];
+      /** Strength Trend */
+      strength_trend: number | null;
+      /** Strength Seasonal */
+      strength_seasonal: number | null;
+      /** Notes */
+      notes?: string[];
+    };
+    /** Density */
+    Density: {
+      /** X Edges */
+      x_edges: number[];
+      /** Y Edges */
+      y_edges: number[];
+      /** Counts */
+      counts: number[][];
+    };
+    /** Describe */
+    Describe: {
+      /** Rows */
+      rows: number;
+      /** Count */
+      count: number;
+      /** Missing */
+      missing: number;
+      /** Infinite */
+      infinite: number;
+      /** Zeros */
+      zeros: number;
+      /** Negatives */
+      negatives: number;
+      /** Distinct */
+      distinct: number;
+      /** Distinct Approx */
+      distinct_approx: boolean;
+      /** Mean */
+      mean: number | null;
+      /** Std */
+      std: number | null;
+      /** Cv */
+      cv: number | null;
+      /** Min */
+      min: number | null;
+      /** P1 */
+      p1: number | null;
+      /** P5 */
+      p5: number | null;
+      /** P10 */
+      p10: number | null;
+      /** Q1 */
+      q1: number | null;
+      /** Median */
+      median: number | null;
+      /** Q3 */
+      q3: number | null;
+      /** P90 */
+      p90: number | null;
+      /** P95 */
+      p95: number | null;
+      /** P99 */
+      p99: number | null;
+      /** Max */
+      max: number | null;
+      /** Iqr */
+      iqr: number | null;
+      /** Mad */
+      mad: number | null;
+      /** Skewness */
+      skewness: number | null;
+      /** Kurtosis */
+      kurtosis: number | null;
+      /** Sum */
+      sum: number | null;
+    };
+    /**
+     * DetectionSettings
+     * @description Bounds keep detection sensible: below half, "mostly numbers" would mean nothing.
+     */
+    DetectionSettings: {
+      /**
+       * Parse Rate
+       * @default 0.95
+       */
+      parse_rate: number;
+      /**
+       * Empty Rate
+       * @default 0.95
+       */
+      empty_rate: number;
+      /**
+       * Discrete Max
+       * @default 20
+       */
+      discrete_max: number;
+      /**
+       * Identifier Unique
+       * @default 0.95
+       */
+      identifier_unique: number;
+    };
+    /** Distribution */
+    Distribution: {
+      /**
+       * Source
+       * @enum {string}
+       */
+      source: "residuals" | "series" | "returns";
+      /** Method */
+      method: string | null;
+      describe: components["schemas"]["Describe"];
+      normality: components["schemas"]["Normality"];
+      density: components["schemas"]["Curve"] | null;
+      qq: components["schemas"]["QQ"] | null;
+      /** Bins */
+      bins: components["schemas"]["Bin"][];
+      fit: components["schemas"]["Fit"];
+    };
+    /** Effect */
+    Effect: {
+      /** Name */
+      name: string;
+      /** Value */
+      value: number | null;
+      /** Magnitude */
+      magnitude: ("negligible" | "small" | "medium" | "large") | null;
+    };
+    /** Entry */
+    Entry: {
+      /** Name */
+      name: string;
+      /** Path */
+      path: string;
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: "dir" | "file";
+      /** Format */
+      format?: ("csv" | "parquet" | "excel") | null;
+      /** Size */
+      size?: number | null;
+    };
+    /** Excluded */
+    Excluded: {
+      /** Name */
+      name: string;
+      /** Reason */
+      reason: string;
+    };
+    /** FileInfo */
+    FileInfo: {
+      /** Name */
+      name: string;
+      /**
+       * Format
+       * @enum {string}
+       */
+      format: "csv" | "parquet" | "excel";
+      /** Size */
+      size: number;
+    };
+    /** Fit */
+    Fit: {
+      /** N */
+      n: number;
+      /** Grid */
+      grid: number[];
+      /** Sample Quantiles */
+      sample_quantiles: number[];
+      /** Laws */
+      laws?: components["schemas"]["Law"][];
+      /** Transforms */
+      transforms?: components["schemas"]["Transform"][];
+      /** Reason */
+      reason?: string | null;
+    };
+    /** ForecastJob */
+    ForecastJob: {
+      /** Id */
+      id: string;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "running" | "done" | "cancelled" | "failed";
+      /** Done */
+      done: number;
+      /** Total */
+      total: number;
+      /** Current */
+      current?: string | null;
+      result?: components["schemas"]["SeriesForecast"] | null;
+      /** Error */
+      error?: string | null;
+    };
+    /** Group */
+    Group: {
+      /** Label */
+      label: string;
+      /** N */
+      n: number;
+      /** Mean */
+      mean: number | null;
+      /** Std */
+      std: number | null;
+      /** Q1 */
+      q1: number | null;
+      /** Median */
+      median: number | null;
+      /** Q3 */
+      q3: number | null;
+      /** Low */
+      low: number | null;
+      /** High */
+      high: number | null;
+      /** Ci Low */
+      ci_low: number | null;
+      /** Ci High */
+      ci_high: number | null;
+      /** Sample */
+      sample?: number[];
+    };
+    /** HTTPValidationError */
+    HTTPValidationError: {
+      /** Detail */
+      detail?: components["schemas"]["ValidationError"][];
+    };
+    /** HeadOut */
+    HeadOut: {
+      /** Columns */
+      columns: string[];
+      /** Rows */
+      rows: (string | null)[][];
+    };
+    /** HealthOut */
+    HealthOut: {
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "ok" | "degraded";
+      /** Version */
+      version: string;
+      /**
+       * Db
+       * @enum {string}
+       */
+      db: "ok" | "error";
+    };
+    /** HistogramBar */
+    HistogramBar: {
+      /** Label */
+      label: string;
+      /** Count */
+      count: number;
+    };
+    /** IdentifierProfile */
+    IdentifierProfile: {
+      /** Rows */
+      rows: number;
+      /** Missing */
+      missing: number;
+      /** Distinct */
+      distinct: number;
+      /** Unique Pct */
+      unique_pct: number;
+      /** Duplicated Values */
+      duplicated_values: number;
+      /** Duplicates */
+      duplicates?: components["schemas"]["Bar"][];
+      /** Min Length */
+      min_length?: number | null;
+      /** Max Length */
+      max_length?: number | null;
+      /** Patterns */
+      patterns?: components["schemas"]["Bar"][];
+    };
+    /** ImportOptions */
+    ImportOptions: {
+      csv?: components["schemas"]["CsvOptions"] | null;
+      /** Sheets */
+      sheets?: string[] | null;
+      /** Files */
+      files?: string[] | null;
+      /**
+       * Folder Mode
+       * @default union
+       * @enum {string}
+       */
+      folder_mode: "union" | "intersection";
+      /** Columns */
+      columns?: string[] | null;
+      /**
+       * Sample Pct
+       * @default 100
+       */
+      sample_pct: number;
+    };
+    /** ImportRequest */
+    ImportRequest: {
+      /** Path */
+      path: string;
+      /** Name */
+      name?: string | null;
+      options?: components["schemas"]["ImportOptions"];
+    };
+    /** ImportResponse */
+    ImportResponse: {
+      dataset: components["schemas"]["DatasetOut"];
+      job: components["schemas"]["JobOut"] | null;
+      /** Reused */
+      reused: boolean;
+    };
+    /** Insight */
+    Insight: {
+      /** Id */
+      id: string;
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind:
+        | "skewed"
+        | "imbalanced"
+        | "missing"
+        | "correlated"
+        | "redundant"
+        | "group_difference"
+        | "associated";
+      /**
+       * Severity
+       * @enum {string}
+       */
+      severity: "warning" | "info";
+      /** Text */
+      text: string;
+      /** Columns */
+      columns: string[];
+      link: components["schemas"]["InsightLink"];
+      /** Score */
+      score: number;
+      /** Evidence */
+      evidence?: ("strong" | "moderate" | "weak") | null;
+    };
+    /** InsightLink */
+    InsightLink: {
+      /**
+       * Page
+       * @enum {string}
+       */
+      page: "variable" | "compare";
+      /** X */
+      x: string;
+      /** Y */
+      y?: string | null;
+    };
+    /** JobOut */
+    JobOut: {
+      /** Id */
+      id: string;
+      /** Kind */
+      kind: string;
+      /** Dataset Id */
+      dataset_id: string | null;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "pending" | "running" | "done" | "failed";
+      /** Progress */
+      progress: number;
+      /** Message */
+      message: string | null;
+      /** Created At */
+      created_at: string;
+      /** Finished At */
+      finished_at: string | null;
+    };
+    /** Law */
+    Law: {
+      /** Key */
+      key: string;
+      /** Label */
+      label: string;
+      /** Discrete */
+      discrete: boolean;
+      /** Params */
+      params: {
+        [key: string]: number;
+      };
+      /** Log Likelihood */
+      log_likelihood: number;
+      /** Aic */
+      aic: number;
+      /** Bic */
+      bic: number;
+      /** Ks */
+      ks: number;
+      /** Density */
+      density: number[];
+      /** Quantiles */
+      quantiles: number[];
+    };
+    /** Listing */
+    Listing: {
+      /** Path */
+      path: string;
+      /** Parent */
+      parent: string | null;
+      /** Roots */
+      roots: string[];
+      /** Entries */
+      entries: components["schemas"]["Entry"][];
+    };
+    /** Matrix */
+    Matrix: {
+      /**
+       * Method
+       * @enum {string}
+       */
+      method: "pearson" | "spearman";
+      /** Columns */
+      columns: components["schemas"]["MatrixMember"][];
+      /** Values */
+      values: (number | null)[][];
+      /** Metrics */
+      metrics: (("pearson" | "spearman" | "cramers_v" | "eta") | null)[][];
+      /** N */
+      n: number[][];
+      /** Clustered */
+      clustered: number[];
+      /** Rows */
+      rows: number;
+      /** Total */
+      total: number;
+      /** Sampled */
+      sampled: boolean;
+      /** Excluded */
+      excluded?: components["schemas"]["Excluded"][];
+      /**
+       * Truncated
+       * @default 0
+       */
+      truncated: number;
+      /** Pairs */
+      pairs?: components["schemas"]["Pair"][];
+    };
+    /** MatrixMember */
+    MatrixMember: {
+      /** Name */
+      name: string;
+      /** Type */
+      type: string;
+      /**
+       * Role
+       * @enum {string}
+       */
+      role: "num" | "cat";
+    };
+    /** MethodResult */
+    MethodResult: {
+      /** Key */
+      key: string;
+      /** Statistic */
+      statistic: number | null;
+      /** P Value */
+      p_value: number | null;
+      /** N */
+      n: number;
+      /** Significant */
+      significant: boolean | null;
+      /** Value */
+      value?: number | null;
+      /** Low */
+      low?: number | null;
+      /** High */
+      high?: number | null;
+      /** Note */
+      note?: string | null;
+    };
+    /** ModelResult */
+    ModelResult: {
+      /** Key */
+      key: string;
+      /** Info */
+      info: string | null;
+      scores: components["schemas"]["Scores"] | null;
+      /** Vs Reference */
+      vs_reference: number | null;
+      /** Forecast */
+      forecast?: number[];
+      /** Low80 */
+      low80?: number[];
+      /** High80 */
+      high80?: number[];
+      /** Low95 */
+      low95?: number[];
+      /** High95 */
+      high95?: number[];
+      residual_check?: components["schemas"]["MethodResult"] | null;
+      /**
+       * Seconds
+       * @default 0
+       */
+      seconds: number;
+      /** Error */
+      error?: string | null;
+    };
+    /** Normality */
+    Normality: {
+      /** N */
+      n: number;
+      /** Sample */
+      sample: number;
+      /** Tests */
+      tests?: components["schemas"]["TestResult"][];
+      /** Reason */
+      reason?: string | null;
+    };
+    /** NumericProfile */
+    NumericProfile: {
+      describe: components["schemas"]["Describe"];
+      normality: components["schemas"]["Normality"];
+      kde: components["schemas"]["Curve"] | null;
+      ecdf: components["schemas"]["Curve"] | null;
+      qq: components["schemas"]["QQ"] | null;
+      /** Sample */
+      sample: number[];
+    };
+    /** Others */
+    Others: {
+      /** Count */
+      count: number;
+      /** Categories */
+      categories: number;
+    };
+    /** OutlierRow */
+    OutlierRow: {
+      /** Row */
+      row: number;
+      /** Value */
+      value: number;
+    };
+    /** OutlierRule */
+    OutlierRule: {
+      /**
+       * Method
+       * @enum {string}
+       */
+      method: "iqr" | "iqr3" | "zscore" | "robust";
+      /** Low */
+      low: number | null;
+      /** High */
+      high: number | null;
+      /** Count */
+      count: number;
+      /** Pct */
+      pct: number;
+    };
+    /** Outliers */
+    Outliers: {
+      /**
+       * Method
+       * @enum {string}
+       */
+      method: "iqr" | "iqr3" | "zscore" | "robust";
+      /** Rules */
+      rules?: components["schemas"]["OutlierRule"][];
+      /** Rows */
+      rows?: components["schemas"]["OutlierRow"][];
+    };
+    /** Overview */
+    Overview: {
+      /** Rows */
+      rows: number;
+      /** Total Rows */
+      total_rows: number;
+      /** Columns */
+      columns: number;
+      /** Used Columns */
+      used_columns: number;
+      /** Missing Cells */
+      missing_cells: number;
+      /** Missing Pct */
+      missing_pct: number;
+      /** Duplicate Rows */
+      duplicate_rows: number;
+      /** Duplicate Columns */
+      duplicate_columns: string[][];
+      /** Size Bytes */
+      size_bytes: number;
+      /** Types */
+      types: {
+        [key: string]: number;
+      };
+      /** Alerts */
+      alerts: components["schemas"]["Alert"][];
+      /** Column Stats */
+      column_stats: {
+        [key: string]: components["schemas"]["ColumnStats"];
+      };
+    };
+    /** Pair */
+    Pair: {
+      /** A */
+      a: string;
+      /** B */
+      b: string;
+      /**
+       * Metric
+       * @enum {string}
+       */
+      metric: "pearson" | "spearman" | "cramers_v" | "eta";
+      /** Value */
+      value: number;
+      /** P Value */
+      p_value: number | null;
+      /** N */
+      n: number;
+      /** Q Value */
+      q_value?: number | null;
+      /**
+       * Evidence
+       * @default none
+       * @enum {string}
+       */
+      evidence: "strong" | "moderate" | "weak" | "none";
+    };
+    /**
+     * Parser
+     * @description How to read a stored value in its analysis type, applied at query time.
+     *
+     *     - raw: the stored value as is
+     *     - number: text with a given decimal separator (thousands separators, %, currency stripped)
+     *     - date: text with a strptime format
+     *     - boolean: text mapped with true/false vocabularies (empty lists: cast the value)
+     *     - year: integer year → date (January 1st)
+     *     - text: the value as text, null tokens removed
+     */
+    Parser: {
+      /**
+       * Kind
+       * @default raw
+       * @enum {string}
+       */
+      kind: "raw" | "number" | "date" | "boolean" | "year" | "text";
+      /**
+       * Decimal
+       * @default .
+       * @enum {string}
+       */
+      decimal: "." | ",";
+      /** Format */
+      format?: string | null;
+      /**
+       * True Values
+       * @default []
+       */
+      true_values: string[];
+      /**
+       * False Values
+       * @default []
+       */
+      false_values: string[];
+    };
+    /** Points */
+    Points: {
+      /** X */
+      x: number[];
+      /** Y */
+      y: number[];
+      /** Z */
+      z?: number[] | null;
+      /** Color */
+      color?: string[] | null;
+    };
+    /** Preview */
+    Preview: {
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: "file" | "folder";
+      /** Format */
+      format: ("csv" | "parquet" | "excel") | "mixed";
+      /** Files */
+      files: components["schemas"]["FileInfo"][];
+      /** Columns */
+      columns: components["schemas"]["ColumnInfo"][];
+      /** Rows */
+      rows: (string | null)[][];
+      /** Row Estimate */
+      row_estimate: number | null;
+      csv?: components["schemas"]["CsvOptions"] | null;
+      /** Sheets */
+      sheets?: string[] | null;
+      /**
+       * Schema Mismatch
+       * @default false
+       */
+      schema_mismatch: boolean;
+      /**
+       * Suggested Name
+       * @default
+       */
+      suggested_name: string;
+      /** Warnings */
+      warnings?: string[];
+    };
+    /** PreviewRequest */
+    PreviewRequest: {
+      /** Path */
+      path: string;
+      options?: components["schemas"]["SourceOptions"];
+    };
+    /**
+     * QQ
+     * @description Sample quantiles against the standard normal's, with the line through Q1 and Q3.
+     */
+    QQ: {
+      /** Theoretical */
+      theoretical: number[];
+      /** Sample */
+      sample: number[];
+      /** Slope */
+      slope: number;
+      /** Intercept */
+      intercept: number;
+    };
+    /** Regression */
+    Regression: {
+      /** Slope */
+      slope: number;
+      /** Intercept */
+      intercept: number;
+      /** R2 */
+      r2: number | null;
+    };
+    /** RenameRequest */
+    RenameRequest: {
+      /** Name */
+      name: string;
+    };
+    /** RoleOut */
+    RoleOut: {
+      /** Id */
+      id: string;
+      /** Label */
+      label: string;
+    };
+    /** RowsColumn */
+    RowsColumn: {
+      /** Name */
+      name: string;
+      /**
+       * Type
+       * @enum {string}
+       */
+      type:
+        | "numeric_continuous"
+        | "numeric_discrete"
+        | "categorical_nominal"
+        | "categorical_ordinal"
+        | "boolean"
+        | "datetime"
+        | "text"
+        | "identifier"
+        | "ignored";
+      /** Excluded */
+      excluded: boolean;
+    };
+    /** RowsPage */
+    RowsPage: {
+      /** Columns */
+      columns: components["schemas"]["RowsColumn"][];
+      /** Rows */
+      rows: unknown[][];
+      /** Total */
+      total: number;
+      /** Offset */
+      offset: number;
+    };
+    /** SampleOut */
+    SampleOut: {
+      /** Name */
+      name: string;
+      /** Path */
+      path: string;
+      /** Format */
+      format: string;
+      /** Size */
+      size: number;
+    };
+    /** SaveFilterRequest */
+    SaveFilterRequest: {
+      /** Name */
+      name: string;
+      /** Conditions */
+      conditions: components["schemas"]["Condition"][];
+    };
+    /** SavedFilter */
+    SavedFilter: {
+      /** Id */
+      id: string;
+      /** Name */
+      name: string;
+      /** Conditions */
+      conditions: components["schemas"]["Condition"][];
+      /** Created At */
+      created_at: string;
+    };
+    /** Scores */
+    Scores: {
+      /** Mae */
+      mae: number | null;
+      /** Rmse */
+      rmse: number | null;
+      /** Mape */
+      mape: number | null;
+      /** Smape */
+      smape: number | null;
+      /** Mase */
+      mase: number | null;
+      /** Rmsse */
+      rmsse: number | null;
+      /** Bias */
+      bias: number | null;
+      /** Coverage80 */
+      coverage80: number | null;
+      /** Coverage95 */
+      coverage95: number | null;
+      /** Winkler95 */
+      winkler95: number | null;
+    };
+    /** SeasonalProfile */
+    SeasonalProfile: {
+      /** Key */
+      key: string;
+      /** Labels */
+      labels: string[];
+      /** Values */
+      values: number[][];
+      /** Deviation */
+      deviation: (number | null)[];
+      test: components["schemas"]["MethodResult"];
+      /** Strongest */
+      strongest?: string | null;
+    };
+    /** Segment */
+    Segment: {
+      /** Start */
+      start: number;
+      /** End */
+      end: number;
+      /** Mean */
+      mean: number;
+      /**
+       * Slope
+       * @default 0
+       */
+      slope: number;
+      /**
+       * First
+       * @default 0
+       */
+      first: number;
+      /**
+       * Last
+       * @default 0
+       */
+      last: number;
+    };
+    /** Series */
+    Series: {
+      /** Label */
+      label: string | null;
+      /** Periods */
+      periods: string[];
+      /** Values */
+      values: (number | null)[];
+      /** Rolling Mean */
+      rolling_mean?: (number | null)[];
+      /** Rolling Std */
+      rolling_std?: (number | null)[];
+      /** Counts */
+      counts?: number[];
+    };
+    /** SeriesAutocorrelation */
+    SeriesAutocorrelation: {
+      setup: components["schemas"]["SeriesSetup"];
+      /**
+       * Transform
+       * @enum {string}
+       */
+      transform:
+        | "none"
+        | "log"
+        | "diff"
+        | "seasonal_diff"
+        | "log_diff"
+        | "diff2"
+        | "seasonal_diff_diff";
+      correlogram: components["schemas"]["Correlogram"] | null;
+      /** Methods */
+      methods: components["schemas"]["MethodResult"][];
+      /** Filled */
+      filled: number;
+      /** Message */
+      message?: string | null;
+    };
+    /** SeriesBreaks */
+    SeriesBreaks: {
+      setup: components["schemas"]["SeriesSetup"];
+      /** Periods */
+      periods: string[];
+      /** Values */
+      values: number[];
+      /** Deseasonalized */
+      deseasonalized: boolean;
+      breaks: components["schemas"]["Breaks"] | null;
+      /** Points */
+      points: components["schemas"]["BreakPoint"][];
+      /** Methods */
+      methods: components["schemas"]["MethodResult"][];
+      /** Anomalies */
+      anomalies: components["schemas"]["AnomalyRow"][];
+      /**
+       * Anomaly Method
+       * @enum {string}
+       */
+      anomaly_method: "robust_z" | "iqr" | "rolling_z" | "hampel";
+      /** Threshold */
+      threshold: number;
+      /** Residuals From */
+      residuals_from: string;
+      /** Filled */
+      filled: number;
+      /** Message */
+      message?: string | null;
+    };
+    /** SeriesDecomposition */
+    SeriesDecomposition: {
+      setup: components["schemas"]["SeriesSetup"];
+      /** Periods */
+      periods: string[];
+      /** Observed */
+      observed: (number | null)[];
+      result: components["schemas"]["Decomposition"] | null;
+      /** Filled */
+      filled: number;
+      /** Message */
+      message?: string | null;
+    };
+    /** SeriesFigures */
+    SeriesFigures: {
+      /** Start */
+      start: string;
+      /** End */
+      end: string;
+      /** Periods */
+      periods: number;
+      /** Missing */
+      missing: number;
+      /** Change */
+      change: number | null;
+    };
+    /** SeriesForecast */
+    SeriesForecast: {
+      /** Horizon */
+      horizon: number;
+      /** Periods */
+      periods: string[];
+      /** History */
+      history: (number | null)[];
+      /** Future */
+      future: string[];
+      /** Reference */
+      reference: string;
+      /** Origins */
+      origins: number;
+      /** Results */
+      results: components["schemas"]["ModelResult"][];
+      /** Best */
+      best: string | null;
+    };
+    /** SeriesLine */
+    SeriesLine: {
+      /** Label */
+      label: string | null;
+      /** Values */
+      values: (number | null)[];
+      /** Counts */
+      counts: number[];
+      /** Rolling Mean */
+      rolling_mean?: (number | null)[];
+      /** Rolling Std */
+      rolling_std?: (number | null)[];
+    };
+    /** SeriesOverview */
+    SeriesOverview: {
+      setup: components["schemas"]["SeriesSetup"];
+      /** Periods */
+      periods: string[];
+      analyzed: components["schemas"]["SeriesLine"];
+      /** Lines */
+      lines: components["schemas"]["SeriesLine"][];
+      figures: components["schemas"]["SeriesFigures"];
+      /** Window */
+      window: number | null;
+      /**
+       * Align
+       * @enum {string}
+       */
+      align: "trailing" | "centered";
+      /** Methods */
+      methods: components["schemas"]["MethodResult"][];
+      /** Message */
+      message?: string | null;
+    };
+    /** SeriesResiduals */
+    SeriesResiduals: {
+      setup: components["schemas"]["SeriesSetup"];
+      distribution: components["schemas"]["Distribution"] | null;
+      /** Filled */
+      filled: number;
+      /** Message */
+      message?: string | null;
+    };
+    /** SeriesSeasonality */
+    SeriesSeasonality: {
+      setup: components["schemas"]["SeriesSetup"];
+      /** Detrend */
+      detrend: string;
+      /** Profiles */
+      profiles: components["schemas"]["SeasonalProfile"][];
+      overlay: components["schemas"]["YearOverlay"] | null;
+      /** Methods */
+      methods: components["schemas"]["MethodResult"][];
+      /** Filled */
+      filled: number;
+      /** Message */
+      message?: string | null;
+    };
+    /**
+     * SeriesSetup
+     * @description The configuration actually used: every field chosen or defaulted.
+     */
+    SeriesSetup: {
+      /** Time */
+      time: string;
+      /** Value */
+      value: string;
+      /** Group */
+      group: string | null;
+      /** Series */
+      series: string | null;
+      /** Dates */
+      dates: string[];
+      /** Numbers */
+      numbers: string[];
+      /** Categories */
+      categories: string[];
+      /** Groups */
+      groups: string[];
+      /**
+       * Period
+       * @enum {string}
+       */
+      period: "hour" | "day" | "week" | "month" | "quarter" | "year";
+      /**
+       * Aggregate
+       * @enum {string}
+       */
+      aggregate: "sum" | "mean" | "median" | "min" | "max" | "count";
+      /** Period Auto */
+      period_auto: boolean;
+      /** Aggregate Auto */
+      aggregate_auto: boolean;
+      /** Coarsened */
+      coarsened: boolean;
+      /** First Partial */
+      first_partial: boolean;
+      /** Last Partial */
+      last_partial: boolean;
+      /**
+       * Gaps
+       * @enum {string}
+       */
+      gaps: "leave" | "interpolate" | "zero" | "carry";
+      /** Season */
+      season: number | null;
+      /** Periods */
+      periods: number;
+      /** Rows */
+      rows: number;
+      /** Total */
+      total: number;
+    };
+    /** SeriesStationarity */
+    SeriesStationarity: {
+      setup: components["schemas"]["SeriesSetup"];
+      /**
+       * Transform
+       * @enum {string}
+       */
+      transform:
+        | "none"
+        | "log"
+        | "diff"
+        | "seasonal_diff"
+        | "log_diff"
+        | "diff2"
+        | "seasonal_diff_diff";
+      /**
+       * Regression
+       * @enum {string}
+       */
+      regression: "c" | "ct";
+      /** Periods */
+      periods: string[];
+      /** Transformed */
+      transformed: number[];
+      synthesis: components["schemas"]["Synthesis"] | null;
+      suggestion: components["schemas"]["Suggestion"] | null;
+      /** Methods */
+      methods: components["schemas"]["MethodResult"][];
+      /** Filled */
+      filled: number;
+      /** Message */
+      message?: string | null;
+    };
+    /** SeriesVolatility */
+    SeriesVolatility: {
+      setup: components["schemas"]["SeriesSetup"];
+      /** Residuals From */
+      residuals_from: string;
+      /** Periods */
+      periods: string[];
+      /** Residuals */
+      residuals: number[];
+      /** Rolling Std */
+      rolling_std: (number | null)[];
+      /** Window */
+      window: number;
+      /** Rising */
+      rising: boolean | null;
+      /** Log Helps */
+      log_helps: boolean;
+      /** Methods */
+      methods: components["schemas"]["MethodResult"][];
+      /** Filled */
+      filled: number;
+      /** Message */
+      message?: string | null;
+    };
+    /**
+     * SourceOptions
+     * @description How to read a source. `None` fields mean "detect" or "everything".
+     */
+    SourceOptions: {
+      csv?: components["schemas"]["CsvOptions"] | null;
+      /** Sheets */
+      sheets?: string[] | null;
+      /** Files */
+      files?: string[] | null;
+      /**
+       * Folder Mode
+       * @default union
+       * @enum {string}
+       */
+      folder_mode: "union" | "intersection";
+    };
+    /** StorageInfo */
+    StorageInfo: {
+      /** Workspace */
+      workspace: string;
+      /** Total Bytes */
+      total_bytes: number;
+      /** Datasets */
+      datasets: components["schemas"]["DatasetUsage"][];
+    };
+    /** Suggestion */
+    Suggestion: {
+      /**
+       * Transform
+       * @enum {string}
+       */
+      transform:
+        | "none"
+        | "log"
+        | "diff"
+        | "seasonal_diff"
+        | "log_diff"
+        | "diff2"
+        | "seasonal_diff_diff";
+      /**
+       * Verdict
+       * @enum {string}
+       */
+      verdict:
+        "stationary" | "unit_root" | "trend_or_difference" | "inconclusive";
+    };
+    /** Synthesis */
+    Synthesis: {
+      /**
+       * Verdict
+       * @enum {string}
+       */
+      verdict:
+        "stationary" | "unit_root" | "trend_or_difference" | "inconclusive";
+      /** Adf Rejects */
+      adf_rejects: boolean;
+      /** Kpss Rejects */
+      kpss_rejects: boolean;
+    };
+    /** TestResult */
+    TestResult: {
+      /** Key */
+      key: string;
+      /** Statistic */
+      statistic: number | null;
+      /** P Value */
+      p_value: number | null;
+      /** N */
+      n: number;
+      /** Note */
+      note?: string | null;
+    };
+    /** TextProfile */
+    TextProfile: {
+      /** Rows */
+      rows: number;
+      /** Missing */
+      missing: number;
+      /** Distinct */
+      distinct: number;
+      /** Min Length */
+      min_length: number | null;
+      /** Max Length */
+      max_length: number | null;
+      /** Mean Length */
+      mean_length: number | null;
+      /** Words */
+      words?: components["schemas"]["Bar"][];
+    };
+    /**
+     * TimeView
+     * @description How a date and a number was turned into a series (each setting chosen or defaulted).
+     */
+    TimeView: {
+      /**
+       * Period
+       * @enum {string}
+       */
+      period: "hour" | "day" | "week" | "month" | "quarter" | "year";
+      /**
+       * Aggregate
+       * @enum {string}
+       */
+      aggregate: "sum" | "mean" | "median" | "min" | "max" | "count";
+      /** Window */
+      window: number | null;
+      /**
+       * Align
+       * @enum {string}
+       */
+      align: "trailing" | "centered";
+      /** Periods */
+      periods: number;
+      /** Period Auto */
+      period_auto: boolean;
+      /** Aggregate Auto */
+      aggregate_auto: boolean;
+      /** Coarsened */
+      coarsened: boolean;
+      /**
+       * First Partial
+       * @default false
+       */
+      first_partial: boolean;
+      /**
+       * Last Partial
+       * @default false
+       */
+      last_partial: boolean;
+    };
+    /** Transform */
+    Transform: {
+      /** Key */
+      key: string;
+      /** Lmbda */
+      lmbda: number | null;
+      /** Skewness Before */
+      skewness_before: number | null;
+      /** Skewness After */
+      skewness_after: number | null;
+      /** Shapiro Before */
+      shapiro_before: number | null;
+      /** Shapiro After */
+      shapiro_after: number | null;
+      /** Bins */
+      bins: components["schemas"]["Bin"][];
+    };
+    /** TrendSummary */
+    TrendSummary: {
+      /** Slope */
+      slope: number;
+      /** Slope Low */
+      slope_low: number;
+      /** Slope High */
+      slope_high: number;
+      /** Per Year */
+      per_year: number | null;
+      /** Lag1 */
+      lag1: number | null;
+    };
+    /** UploadOut */
+    UploadOut: {
+      /** Path */
+      path: string;
+      /** Size */
+      size: number;
+    };
+    /** ValidationError */
+    ValidationError: {
+      /** Location */
+      loc: (string | number)[];
+      /** Message */
+      msg: string;
+      /** Error Type */
+      type: string;
+      /** Input */
+      input?: unknown;
+      /** Context */
+      ctx?: Record<string, never>;
+    };
+    /** VariableProfile */
+    VariableProfile: {
+      /** Name */
+      name: string;
+      /** Type */
+      type: string;
+      numeric?: components["schemas"]["NumericProfile"] | null;
+      categorical?: components["schemas"]["CategoricalProfile"] | null;
+      date?:
+        | components["schemas"]["app__domain__variable__profiles__DateProfile"]
+        | null;
+      text?: components["schemas"]["TextProfile"] | null;
+      identifier?: components["schemas"]["IdentifierProfile"] | null;
+    };
+    /** YearLine */
+    YearLine: {
+      /** Year */
+      year: number;
+      /** X */
+      x: number[];
+      /** Y */
+      y: (number | null)[];
+    };
+    /** YearOverlay */
+    YearOverlay: {
+      /** Unit */
+      unit: string;
+      /** Years */
+      years?: components["schemas"]["YearLine"][];
+    };
+    /** DateProfile */
+    app__domain__variable__profiles__DateProfile: {
+      /** Rows */
+      rows: number;
+      /** Missing */
+      missing: number;
+      /** Distinct */
+      distinct: number;
+      /** Min */
+      min: string | null;
+      /** Max */
+      max: string | null;
+      /** Has Time */
+      has_time: boolean;
+      /** Granularity */
+      granularity: string;
+      /** Step */
+      step: string | null;
+      /** Periods */
+      periods: number;
+      /** Gap Count */
+      gap_count: number;
+      /** Gaps */
+      gaps?: string[];
+      /** Calendar */
+      calendar?: components["schemas"]["Bar"][];
+    };
+    /** DateProfile */
+    app__schemas__columns__DateProfile: {
+      /** Has Time */
+      has_time: boolean;
+      /** Min */
+      min: string | null;
+      /** Max */
+      max: string | null;
+      /** Step */
+      step: string;
+      /** Parts */
+      parts: string[];
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    health_api_v1_health_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HealthOut"];
-                };
-            };
-        };
+  health_api_v1_health_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    list_datasets_api_v1_datasets_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DatasetOut"][];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["HealthOut"];
         };
+      };
     };
-    import_dataset_api_v1_datasets_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ImportRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ImportResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  list_datasets_api_v1_datasets_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    get_dataset_api_v1_datasets__dataset_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DatasetOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["DatasetOut"][];
         };
+      };
     };
-    delete_dataset_api_v1_datasets__dataset_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  import_dataset_api_v1_datasets_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    rename_dataset_api_v1_datasets__dataset_id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RenameRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DatasetOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ImportRequest"];
+      };
     };
-    reimport_dataset_api_v1_datasets__dataset_id__reimport_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JobOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["ImportResponse"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    open_dataset_api_v1_datasets__dataset_id__open_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DatasetOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  get_dataset_api_v1_datasets__dataset_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
     };
-    dataset_schema_api_v1_datasets__dataset_id__schema_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ColumnInfo"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["DatasetOut"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    dataset_head_api_v1_datasets__dataset_id__head_get: {
-        parameters: {
-            query?: {
-                limit?: number;
-            };
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HeadOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  delete_dataset_api_v1_datasets__dataset_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
     };
-    preview_source_api_v1_sources_preview_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PreviewRequest"];
-            };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
         };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Preview"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
     };
-    browse_api_v1_browse_get: {
-        parameters: {
-            query?: {
-                path?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Listing"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  rename_dataset_api_v1_datasets__dataset_id__patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
     };
-    list_samples_api_v1_samples_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SampleOut"][];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RenameRequest"];
+      };
     };
-    upload_api_v1_uploads_put: {
-        parameters: {
-            query: {
-                filename: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UploadOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["DatasetOut"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    get_job_api_v1_jobs__job_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                job_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JobOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  reimport_dataset_api_v1_datasets__dataset_id__reimport_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
     };
-    list_columns_api_v1_datasets__dataset_id__columns_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ColumnOut"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["JobOut"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    update_columns_api_v1_datasets__dataset_id__columns_patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ColumnChangesRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ColumnOut"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  open_dataset_api_v1_datasets__dataset_id__open_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
     };
-    detect_columns_api_v1_datasets__dataset_id__columns_detect_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ColumnOut"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["DatasetOut"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    conversion_preview_api_v1_datasets__dataset_id__columns_conversion_get: {
-        parameters: {
-            query: {
-                column: string;
-                type: "numeric_continuous" | "numeric_discrete" | "categorical_nominal" | "categorical_ordinal" | "boolean" | "datetime" | "text" | "identifier" | "ignored";
-            };
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConversionOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  dataset_schema_api_v1_datasets__dataset_id__schema_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
     };
-    review_types_api_v1_datasets__dataset_id__columns_review_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DatasetOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["ColumnInfo"][];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    list_roles_api_v1_column_roles_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RoleOut"][];
-                };
-            };
-        };
+  };
+  dataset_head_api_v1_datasets__dataset_id__head_get: {
+    parameters: {
+      query?: {
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
     };
-    overview_api_v1_datasets__dataset_id__overview_get: {
-        parameters: {
-            query?: {
-                /** @description JSON list of conditions, combined with AND. */
-                filters?: string | null;
-            };
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Overview"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["HeadOut"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    chart_api_v1_datasets__dataset_id__columns_chart_get: {
-        parameters: {
-            query: {
-                column: string;
-                view?: string | null;
-                top_n?: number;
-                full?: boolean;
-                step?: string | null;
-                bins?: number | null;
-                /** @description JSON list of conditions, combined with AND. */
-                filters?: string | null;
-            };
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Chart"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  preview_source_api_v1_sources_preview_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    summaries_api_v1_datasets__dataset_id__columns_summaries_get: {
-        parameters: {
-            query?: {
-                /** @description JSON list of conditions, combined with AND. */
-                filters?: string | null;
-            };
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: components["schemas"]["ColumnSummary"];
-                    };
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PreviewRequest"];
+      };
     };
-    profile_api_v1_datasets__dataset_id__variable_get: {
-        parameters: {
-            query: {
-                column: string;
-                /** @description JSON list of conditions, combined with AND. */
-                filters?: string | null;
-            };
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["VariableProfile"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["Preview"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    fit_api_v1_datasets__dataset_id__variable_fit_get: {
-        parameters: {
-            query: {
-                column: string;
-                /** @description JSON list of conditions, combined with AND. */
-                filters?: string | null;
-            };
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Fit"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  browse_api_v1_browse_get: {
+    parameters: {
+      query?: {
+        path?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    outliers_api_v1_datasets__dataset_id__variable_outliers_get: {
-        parameters: {
-            query: {
-                column: string;
-                method?: "iqr" | "iqr3" | "zscore" | "robust";
-                /** @description JSON list of conditions, combined with AND. */
-                filters?: string | null;
-            };
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Outliers"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["Listing"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    list_saved_api_v1_datasets__dataset_id__saved_filters_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SavedFilter"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  list_samples_api_v1_samples_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    save_api_v1_datasets__dataset_id__saved_filters_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SaveFilterRequest"];
-            };
+        content: {
+          "application/json": components["schemas"]["SampleOut"][];
         };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SavedFilter"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+      };
     };
-    delete_api_v1_datasets__dataset_id__saved_filters__filter_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                dataset_id: string;
-                filter_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  upload_api_v1_uploads_put: {
+    parameters: {
+      query: {
+        filename: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    compare_api_v1_datasets__dataset_id__compare_get: {
-        parameters: {
-            query: {
-                x: string;
-                y: string;
-                z?: string | null;
-                color?: string | null;
-                /** @description JSON list of conditions, combined with AND. */
-                filters?: string | null;
-            };
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Comparison"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["UploadOut"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    correlations_api_v1_datasets__dataset_id__correlations_get: {
-        parameters: {
-            query?: {
-                method?: "pearson" | "spearman";
-                /** @description Comma-separated column names (default: every column). */
-                columns?: string | null;
-                /** @description JSON list of conditions, combined with AND. */
-                filters?: string | null;
-            };
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Correlations"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  get_job_api_v1_jobs__job_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        job_id: string;
+      };
+      cookie?: never;
     };
-    rows_api_v1_datasets__dataset_id__rows_get: {
-        parameters: {
-            query?: {
-                offset?: number;
-                limit?: number;
-                /** @description JSON list of conditions, combined with AND. */
-                filters?: string | null;
-                mode?: "first" | "sample" | "duplicates" | "missing";
-                search?: string;
-                sort?: string | null;
-                desc?: boolean;
-            };
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RowsPage"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["JobOut"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    export_api_v1_datasets__dataset_id__export_get: {
-        parameters: {
-            query?: {
-                format?: "csv" | "parquet" | "xlsx";
-                /** @description Comma-separated column names (default: every column). */
-                columns?: string | null;
-                /** @description JSON list of conditions, combined with AND. */
-                filters?: string | null;
-                mode?: "first" | "sample" | "duplicates" | "missing";
-                search?: string;
-                sort?: string | null;
-                desc?: boolean;
-            };
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  list_columns_api_v1_datasets__dataset_id__columns_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
     };
-    export_summary_api_v1_datasets__dataset_id__export_summary_get: {
-        parameters: {
-            query?: {
-                /** @description JSON list of conditions, combined with AND. */
-                filters?: string | null;
-            };
-            header?: never;
-            path: {
-                dataset_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["ColumnOut"][];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    read_settings_api_v1_settings_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AppSettings"];
-                };
-            };
-        };
+  };
+  update_columns_api_v1_datasets__dataset_id__columns_patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
     };
-    write_settings_api_v1_settings_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AppSettings"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AppSettings"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ColumnChangesRequest"];
+      };
     };
-    storage_api_v1_storage_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StorageInfo"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["ColumnOut"][];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    clear_caches_api_v1_storage_clear_caches_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  detect_columns_api_v1_datasets__dataset_id__columns_detect_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
     };
-    hello_api_v1_modules_hello_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HelloOut"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["ColumnOut"][];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
+  };
+  conversion_preview_api_v1_datasets__dataset_id__columns_conversion_get: {
+    parameters: {
+      query: {
+        column: string;
+        type:
+          | "numeric_continuous"
+          | "numeric_discrete"
+          | "categorical_nominal"
+          | "categorical_ordinal"
+          | "boolean"
+          | "datetime"
+          | "text"
+          | "identifier"
+          | "ignored";
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConversionOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  review_types_api_v1_datasets__dataset_id__columns_review_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DatasetOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_roles_api_v1_column_roles_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RoleOut"][];
+        };
+      };
+    };
+  };
+  overview_api_v1_datasets__dataset_id__overview_get: {
+    parameters: {
+      query?: {
+        /** @description JSON list of conditions, combined with AND. */
+        filters?: string | null;
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Overview"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  chart_api_v1_datasets__dataset_id__columns_chart_get: {
+    parameters: {
+      query: {
+        column: string;
+        view?: string | null;
+        top_n?: number;
+        full?: boolean;
+        step?: string | null;
+        bins?: number | null;
+        /** @description JSON list of conditions, combined with AND. */
+        filters?: string | null;
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Chart"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  summaries_api_v1_datasets__dataset_id__columns_summaries_get: {
+    parameters: {
+      query?: {
+        /** @description JSON list of conditions, combined with AND. */
+        filters?: string | null;
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: components["schemas"]["ColumnSummary"];
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  profile_api_v1_datasets__dataset_id__variable_get: {
+    parameters: {
+      query: {
+        column: string;
+        /** @description JSON list of conditions, combined with AND. */
+        filters?: string | null;
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["VariableProfile"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  fit_api_v1_datasets__dataset_id__variable_fit_get: {
+    parameters: {
+      query: {
+        column: string;
+        /** @description JSON list of conditions, combined with AND. */
+        filters?: string | null;
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Fit"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  outliers_api_v1_datasets__dataset_id__variable_outliers_get: {
+    parameters: {
+      query: {
+        column: string;
+        method?: "iqr" | "iqr3" | "zscore" | "robust";
+        /** @description JSON list of conditions, combined with AND. */
+        filters?: string | null;
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Outliers"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_saved_api_v1_datasets__dataset_id__saved_filters_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SavedFilter"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  save_api_v1_datasets__dataset_id__saved_filters_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SaveFilterRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SavedFilter"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_api_v1_datasets__dataset_id__saved_filters__filter_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dataset_id: string;
+        filter_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  compare_api_v1_datasets__dataset_id__compare_get: {
+    parameters: {
+      query: {
+        x: string;
+        y: string;
+        z?: string | null;
+        color?: string | null;
+        period?:
+          ("hour" | "day" | "week" | "month" | "quarter" | "year") | "auto";
+        agg?: ("sum" | "mean" | "median" | "min" | "max" | "count") | "auto";
+        window?: number | null;
+        align?: "trailing" | "centered";
+        /** @description JSON list of conditions, combined with AND. */
+        filters?: string | null;
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Comparison"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  correlations_api_v1_datasets__dataset_id__correlations_get: {
+    parameters: {
+      query?: {
+        method?: "pearson" | "spearman";
+        /** @description Comma-separated column names (default: every column). */
+        columns?: string | null;
+        /** @description JSON list of conditions, combined with AND. */
+        filters?: string | null;
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Correlations"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  rows_api_v1_datasets__dataset_id__rows_get: {
+    parameters: {
+      query?: {
+        offset?: number;
+        limit?: number;
+        /** @description JSON list of conditions, combined with AND. */
+        filters?: string | null;
+        mode?: "first" | "sample" | "duplicates" | "missing";
+        search?: string;
+        sort?: string | null;
+        desc?: boolean;
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RowsPage"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_api_v1_datasets__dataset_id__export_get: {
+    parameters: {
+      query?: {
+        format?: "csv" | "parquet" | "xlsx";
+        /** @description Comma-separated column names (default: every column). */
+        columns?: string | null;
+        /** @description JSON list of conditions, combined with AND. */
+        filters?: string | null;
+        mode?: "first" | "sample" | "duplicates" | "missing";
+        search?: string;
+        sort?: string | null;
+        desc?: boolean;
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_summary_api_v1_datasets__dataset_id__export_summary_get: {
+    parameters: {
+      query?: {
+        /** @description JSON list of conditions, combined with AND. */
+        filters?: string | null;
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  read_settings_api_v1_settings_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AppSettings"];
+        };
+      };
+    };
+  };
+  write_settings_api_v1_settings_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AppSettings"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AppSettings"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  storage_api_v1_storage_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["StorageInfo"];
+        };
+      };
+    };
+  };
+  clear_caches_api_v1_storage_clear_caches_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  overview_api_v1_modules_timeseries_datasets__dataset_id__overview_get: {
+    parameters: {
+      query?: {
+        /** @description Comma-separated method keys. */
+        methods?: string | null;
+        time?: string | null;
+        value?: string | null;
+        group?: string | null;
+        series?: string | null;
+        period?:
+          ("hour" | "day" | "week" | "month" | "quarter" | "year") | "auto";
+        agg?: ("sum" | "mean" | "median" | "min" | "max" | "count") | "auto";
+        window?: number | null;
+        align?: "trailing" | "centered";
+        gaps?: "leave" | "interpolate" | "zero" | "carry";
+        season?: number | null;
+        filters?: string | null;
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SeriesOverview"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  seasonality_api_v1_modules_timeseries_datasets__dataset_id__seasonality_get: {
+    parameters: {
+      query?: {
+        /** @description Comma-separated method keys. */
+        methods?: string | null;
+        time?: string | null;
+        value?: string | null;
+        group?: string | null;
+        series?: string | null;
+        period?:
+          ("hour" | "day" | "week" | "month" | "quarter" | "year") | "auto";
+        agg?: ("sum" | "mean" | "median" | "min" | "max" | "count") | "auto";
+        window?: number | null;
+        align?: "trailing" | "centered";
+        gaps?: "leave" | "interpolate" | "zero" | "carry";
+        season?: number | null;
+        filters?: string | null;
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SeriesSeasonality"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  stationarity_api_v1_modules_timeseries_datasets__dataset_id__stationarity_get: {
+    parameters: {
+      query?: {
+        transform?:
+          | "none"
+          | "log"
+          | "diff"
+          | "seasonal_diff"
+          | "log_diff"
+          | "diff2"
+          | "seasonal_diff_diff";
+        /** @description Comma-separated method keys. */
+        methods?: string | null;
+        time?: string | null;
+        value?: string | null;
+        group?: string | null;
+        series?: string | null;
+        period?:
+          ("hour" | "day" | "week" | "month" | "quarter" | "year") | "auto";
+        agg?: ("sum" | "mean" | "median" | "min" | "max" | "count") | "auto";
+        window?: number | null;
+        align?: "trailing" | "centered";
+        gaps?: "leave" | "interpolate" | "zero" | "carry";
+        season?: number | null;
+        filters?: string | null;
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SeriesStationarity"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  autocorrelation_api_v1_modules_timeseries_datasets__dataset_id__autocorrelation_get: {
+    parameters: {
+      query?: {
+        transform?:
+          | "none"
+          | "log"
+          | "diff"
+          | "seasonal_diff"
+          | "log_diff"
+          | "diff2"
+          | "seasonal_diff_diff";
+        /** @description Comma-separated method keys. */
+        methods?: string | null;
+        pacf?: "ywm" | "ols" | "burg";
+        time?: string | null;
+        value?: string | null;
+        group?: string | null;
+        series?: string | null;
+        period?:
+          ("hour" | "day" | "week" | "month" | "quarter" | "year") | "auto";
+        agg?: ("sum" | "mean" | "median" | "min" | "max" | "count") | "auto";
+        window?: number | null;
+        align?: "trailing" | "centered";
+        gaps?: "leave" | "interpolate" | "zero" | "carry";
+        season?: number | null;
+        filters?: string | null;
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SeriesAutocorrelation"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  volatility_api_v1_modules_timeseries_datasets__dataset_id__volatility_get: {
+    parameters: {
+      query?: {
+        /** @description Comma-separated method keys. */
+        methods?: string | null;
+        time?: string | null;
+        value?: string | null;
+        group?: string | null;
+        series?: string | null;
+        period?:
+          ("hour" | "day" | "week" | "month" | "quarter" | "year") | "auto";
+        agg?: ("sum" | "mean" | "median" | "min" | "max" | "count") | "auto";
+        window?: number | null;
+        align?: "trailing" | "centered";
+        gaps?: "leave" | "interpolate" | "zero" | "carry";
+        season?: number | null;
+        filters?: string | null;
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SeriesVolatility"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  residuals_api_v1_modules_timeseries_datasets__dataset_id__residuals_get: {
+    parameters: {
+      query?: {
+        source?: "residuals" | "series" | "returns";
+        time?: string | null;
+        value?: string | null;
+        group?: string | null;
+        series?: string | null;
+        period?:
+          ("hour" | "day" | "week" | "month" | "quarter" | "year") | "auto";
+        agg?: ("sum" | "mean" | "median" | "min" | "max" | "count") | "auto";
+        window?: number | null;
+        align?: "trailing" | "centered";
+        gaps?: "leave" | "interpolate" | "zero" | "carry";
+        season?: number | null;
+        filters?: string | null;
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SeriesResiduals"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  breaks_api_v1_modules_timeseries_datasets__dataset_id__breaks_get: {
+    parameters: {
+      query?: {
+        search?: "pelt" | "binseg";
+        cost?: ("mean" | "mean_var" | "trend") | "auto";
+        sensitivity?: "low" | "medium" | "high";
+        /** @description Comma-separated method keys. */
+        methods?: string | null;
+        anomaly?: "robust_z" | "iqr" | "rolling_z" | "hampel";
+        threshold?: number;
+        time?: string | null;
+        value?: string | null;
+        group?: string | null;
+        series?: string | null;
+        period?:
+          ("hour" | "day" | "week" | "month" | "quarter" | "year") | "auto";
+        agg?: ("sum" | "mean" | "median" | "min" | "max" | "count") | "auto";
+        window?: number | null;
+        align?: "trailing" | "centered";
+        gaps?: "leave" | "interpolate" | "zero" | "carry";
+        season?: number | null;
+        filters?: string | null;
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SeriesBreaks"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  start_forecast_api_v1_modules_timeseries_datasets__dataset_id__forecast_post: {
+    parameters: {
+      query?: {
+        horizon?: number | null;
+        /** @description Comma-separated method keys. */
+        methods?: string | null;
+        order?: string;
+        sorder?: string;
+        time?: string | null;
+        value?: string | null;
+        group?: string | null;
+        series?: string | null;
+        period?:
+          ("hour" | "day" | "week" | "month" | "quarter" | "year") | "auto";
+        agg?: ("sum" | "mean" | "median" | "min" | "max" | "count") | "auto";
+        window?: number | null;
+        align?: "trailing" | "centered";
+        gaps?: "leave" | "interpolate" | "zero" | "carry";
+        season?: number | null;
+        filters?: string | null;
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ForecastJob"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  forecast_job_api_v1_modules_timeseries_forecast_jobs__job_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        job_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ForecastJob"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  cancel_forecast_api_v1_modules_timeseries_forecast_jobs__job_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        job_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ForecastJob"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  decomposition_api_v1_modules_timeseries_datasets__dataset_id__decomposition_get: {
+    parameters: {
+      query?: {
+        method?:
+          "stl" | "mstl" | "classical_additive" | "classical_multiplicative";
+        time?: string | null;
+        value?: string | null;
+        group?: string | null;
+        series?: string | null;
+        period?:
+          ("hour" | "day" | "week" | "month" | "quarter" | "year") | "auto";
+        agg?: ("sum" | "mean" | "median" | "min" | "max" | "count") | "auto";
+        window?: number | null;
+        align?: "trailing" | "centered";
+        gaps?: "leave" | "interpolate" | "zero" | "carry";
+        season?: number | null;
+        filters?: string | null;
+      };
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SeriesDecomposition"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
 }

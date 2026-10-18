@@ -12,7 +12,7 @@ Vérifier et corriger les **types** détectés, l'étape dont dépend tout le re
 |---|---|
 | Nom | En monospace, renommable pour l'affichage (le nom d'origine reste visible) |
 | Type d'analyse | `TypeBadge` modifiable (menu déroulant) |
-| Rôle | Âge, montant, pays… modifiable, ou « aucun » |
+| Rôle | Âge, montant, pays… modifiable, ou « aucun » ; menu compact dont la liste défile (320 px max, jamais hors écran). Le menu des types se limite aussi à la hauteur disponible |
 | Confiance | Haute / moyenne / faible, avec icône |
 | Raisons | « Nom contient *age* · entiers 0–97 · 84 valeurs distinctes » |
 | Aperçu | 5 valeurs exemples + mini-sparkline de la distribution |

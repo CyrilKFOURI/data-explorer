@@ -97,7 +97,7 @@ Backend  :  api ─▶ domain ─▶ core                       modules ─▶ (
 | Je veux ajouter… | Je fais |
 |---|---|
 | Une page V1 | `frontend/src/pages/<nom>/` + une route dans `app/router.tsx` + `docs/pages/NN-nom.md` |
-| Un module (ex. séries temporelles) | `backend/app/modules/<nom>/` (router, service, schemas) + l'enregistrer dans `modules/registry.py` ; `frontend/src/modules/<nom>/manifest.ts` (id, libellé, icône, routes, types de colonnes requis) + l'enregistrer dans `modules/registry.ts`. La barre latérale et les routes apparaissent seules. |
+| Un module (ex. séries temporelles) | `backend/app/modules/<nom>/` (router, service) + l'enregistrer dans `modules/registry.py` avec son `setup(app)` (crée ses services sur `app.state`) ; `frontend/src/modules/<nom>/manifest.ts` : `scope: "global"` (`/modules/<nom>`) ou `scope: "dataset"` (`/d/$datasetId/<nom>`, `requires` = types de colonnes nécessaires, grisé sinon), `validateSearch` optionnel, + l'enregistrer dans `modules/registry.ts`. La barre latérale et les routes apparaissent seules. Le calcul partagé avec une page V1 descend dans `domain/` (ex. `domain/timeseries/`, utilisé par Comparer et le module). |
 | Un visuel | `frontend/src/charts/builders/<visuel>.ts` (+ préparation dans `backend/app/domain/charts/` si besoin), voir [VISUALS.md](VISUALS.md) |
 | Un test statistique | Une fonction dans `domain/stats/<famille>.py` enregistrée dans `stats/registry.py` (nom, types d'entrée, résultat + phrase d'explication). L'interface le liste automatiquement. |
 | Un rôle de colonne | Une entrée TOML dans `domain/typing/knowledge_base/roles.toml` + un cas de test, voir [COLUMN_DETECTION.md](COLUMN_DETECTION.md) |
