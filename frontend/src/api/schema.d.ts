@@ -944,6 +944,44 @@ export interface components {
         AppSettings: {
             detection?: components["schemas"]["DetectionSettings"];
         };
+        /** ArCoefficient */
+        ArCoefficient: {
+            /** Term */
+            term: string;
+            /** Estimate */
+            estimate: number;
+            /** Std Error */
+            std_error: number | null;
+            /** P Value */
+            p_value: number | null;
+        };
+        /** ArFit */
+        ArFit: {
+            /** Order */
+            order: number;
+            /** Chosen By */
+            chosen_by: string;
+            /** Coefficients */
+            coefficients: components["schemas"]["ArCoefficient"][];
+            /** Sigma */
+            sigma: number | null;
+            /** Aic */
+            aic: number | null;
+            /** Bic */
+            bic: number | null;
+            residuals: components["schemas"]["MethodResult"];
+            /** Orders */
+            orders: components["schemas"]["ArOrder"][];
+        };
+        /** ArOrder */
+        ArOrder: {
+            /** Order */
+            order: number;
+            /** Aic */
+            aic: number | null;
+            /** Bic */
+            bic: number | null;
+        };
         /** Bar */
         Bar: {
             /** Label */
@@ -2568,6 +2606,7 @@ export interface components {
              */
             transform: "none" | "log" | "diff" | "seasonal_diff" | "log_diff" | "diff2" | "seasonal_diff_diff";
             correlogram: components["schemas"]["Correlogram"] | null;
+            ar: components["schemas"]["ArFit"] | null;
             /** Methods */
             methods: components["schemas"]["MethodResult"][];
             /** Filled */
@@ -2595,7 +2634,7 @@ export interface components {
              * Anomaly Method
              * @enum {string}
              */
-            anomaly_method: "robust_z" | "iqr" | "rolling_z" | "hampel";
+            anomaly_method: "robust_z" | "iqr" | "rolling_z" | "hampel" | "gesd" | "isolation_forest" | "lof" | "autoencoder";
             /** Threshold */
             threshold: number;
             /** Residuals From */
@@ -4489,6 +4528,8 @@ export interface operations {
                 /** @description Comma-separated method keys. */
                 methods?: string | null;
                 pacf?: "ywm" | "ols" | "burg";
+                /** @description AR order (default: by AIC). */
+                ar?: number | null;
                 time?: string | null;
                 value?: string | null;
                 group?: string | null;
@@ -4534,6 +4575,8 @@ export interface operations {
             query?: {
                 /** @description Comma-separated method keys. */
                 methods?: string | null;
+                /** @description Rolling window. */
+                spread?: number | null;
                 time?: string | null;
                 value?: string | null;
                 group?: string | null;
@@ -4626,7 +4669,7 @@ export interface operations {
                 sensitivity?: "low" | "medium" | "high";
                 /** @description Comma-separated method keys. */
                 methods?: string | null;
-                anomaly?: "robust_z" | "iqr" | "rolling_z" | "hampel";
+                anomaly?: "robust_z" | "iqr" | "rolling_z" | "hampel" | "gesd" | "isolation_forest" | "lof" | "autoencoder";
                 threshold?: number;
                 time?: string | null;
                 value?: string | null;

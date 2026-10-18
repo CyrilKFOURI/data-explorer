@@ -3125,6 +3125,26 @@
             }
           },
           {
+            "name": "ar",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 24,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "AR order (default: by AIC).",
+              "title": "Ar"
+            },
+            "description": "AR order (default: by AIC)."
+          },
+          {
             "name": "time",
             "in": "query",
             "required": false,
@@ -3386,6 +3406,26 @@
               "title": "Methods"
             },
             "description": "Comma-separated method keys."
+          },
+          {
+            "name": "spread",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 365,
+                  "minimum": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Rolling window.",
+              "title": "Spread"
+            },
+            "description": "Rolling window."
           },
           {
             "name": "time",
@@ -3971,7 +4011,11 @@
                 "robust_z",
                 "iqr",
                 "rolling_z",
-                "hampel"
+                "hampel",
+                "gesd",
+                "isolation_forest",
+                "lof",
+                "autoencoder"
               ],
               "type": "string",
               "default": "robust_z",
@@ -5400,6 +5444,159 @@
         },
         "type": "object",
         "title": "AppSettings"
+      },
+      "ArCoefficient": {
+        "properties": {
+          "term": {
+            "type": "string",
+            "title": "Term"
+          },
+          "estimate": {
+            "type": "number",
+            "title": "Estimate"
+          },
+          "std_error": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Std Error"
+          },
+          "p_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "term",
+          "estimate",
+          "std_error",
+          "p_value"
+        ],
+        "title": "ArCoefficient"
+      },
+      "ArFit": {
+        "properties": {
+          "order": {
+            "type": "integer",
+            "title": "Order"
+          },
+          "chosen_by": {
+            "type": "string",
+            "title": "Chosen By"
+          },
+          "coefficients": {
+            "items": {
+              "$ref": "#/components/schemas/ArCoefficient"
+            },
+            "type": "array",
+            "title": "Coefficients"
+          },
+          "sigma": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sigma"
+          },
+          "aic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aic"
+          },
+          "bic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bic"
+          },
+          "residuals": {
+            "$ref": "#/components/schemas/MethodResult"
+          },
+          "orders": {
+            "items": {
+              "$ref": "#/components/schemas/ArOrder"
+            },
+            "type": "array",
+            "title": "Orders"
+          }
+        },
+        "type": "object",
+        "required": [
+          "order",
+          "chosen_by",
+          "coefficients",
+          "sigma",
+          "aic",
+          "bic",
+          "residuals",
+          "orders"
+        ],
+        "title": "ArFit"
+      },
+      "ArOrder": {
+        "properties": {
+          "order": {
+            "type": "integer",
+            "title": "Order"
+          },
+          "aic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aic"
+          },
+          "bic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bic"
+          }
+        },
+        "type": "object",
+        "required": [
+          "order",
+          "aic",
+          "bic"
+        ],
+        "title": "ArOrder"
       },
       "Bar": {
         "properties": {
@@ -10954,6 +11151,16 @@
               }
             ]
           },
+          "ar": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ArFit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "methods": {
             "items": {
               "$ref": "#/components/schemas/MethodResult"
@@ -10982,6 +11189,7 @@
           "setup",
           "transform",
           "correlogram",
+          "ar",
           "methods",
           "filled"
         ],
@@ -11047,7 +11255,11 @@
               "robust_z",
               "iqr",
               "rolling_z",
-              "hampel"
+              "hampel",
+              "gesd",
+              "isolation_forest",
+              "lof",
+              "autoencoder"
             ],
             "title": "Anomaly Method"
           },

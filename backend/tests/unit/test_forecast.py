@@ -159,3 +159,18 @@ def test_jobs_cancel_between_models_and_reuse_finished_ones() -> None:
     assert finished.status == "done"
     assert jobs.start(("b",), values, periods, "month", None, 3, {"naive": fc.naive}) is finished
     assert future_periods("2004-12", "month", 2) == ["2005-01", "2005-02"]
+
+
+@pytest.mark.parametrize("key", ["tslm", "gbm_lags", "mlp_lags"])
+def test_regression_and_lag_models_beat_naive_on_a_seasonal_series(key: str) -> None:
+    naive = fc.evaluate(SEASONAL, fc.naive, 12, 12)
+    model = fc.evaluate(SEASONAL, fc.MODELS[key], 12, 12)
+
+    assert model.mase is not None and naive.mase is not None and model.mase < naive.mase
+
+
+def test_tslm_recovers_the_trend() -> None:
+    prediction = fc.linear_trend_season(SEASONAL, 12, 12)
+
+    assert prediction.info == "Trend + seasonal dummies"
+    assert prediction.mean[-1] - prediction.mean[0] == pytest.approx(0.3 * 11, abs=6)

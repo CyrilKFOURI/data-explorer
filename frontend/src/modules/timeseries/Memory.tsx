@@ -165,10 +165,14 @@ export function AutocorrelationBody({
   data,
   pacf,
   onPacf,
+  arOrder,
+  onAr,
 }: {
   data: SeriesAutocorrelation;
   pacf: string;
   onPacf: (value: string) => void;
+  arOrder: number | undefined;
+  onAr: (order: number | undefined) => void;
 }) {
   const gram = data.correlogram;
   if (data.message || !gram)
@@ -221,6 +225,7 @@ export function AutocorrelationBody({
           />
         </div>
       </div>
+      {data.ar && <ArPanel fit={data.ar} order={arOrder} onOrder={onAr} />}
       <MethodsTable results={data.methods ?? []} />
       {data.filled ? (
         <p className="text-xs text-ink-3">
@@ -246,4 +251,86 @@ export function autocorrelationVerdict(data: SeriesAutocorrelation): Verdict {
       : t("ts.memory.some"),
     tone: "ok",
   };
+}
+
+type ArFitView = NonNullable<SeriesAutocorrelation["ar"]>;
+
+/** An AR(p) model: p chosen by AIC or by the user, its coefficients, and the AIC / BIC of every
+ *  order to help choose. */
+function ArPanel({ fit, order, onOrder }: { fit: ArFitView; order: number | undefined; onOrder: (order: number | undefined) => void }) {
+  const best = [...fit.orders].sort((a, b) => (a.aic ?? Infinity) - (b.aic ?? Infinity))[0];
+  return (
+    <div className="space-y-2 rounded-lg border border-line bg-surface-1 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-[13px] font-medium">{t("ts.ar.title", { order: String(fit.order) })}</h3>
+        <label className="flex items-center gap-1.5 text-xs text-ink-2">
+          {t("ts.ar.order")}
+          <Select
+            value={order ? String(order) : ""}
+            onChange={(event) => onOrder(event.target.value ? Number(event.target.value) : undefined)}
+            className="h-7 text-xs"
+          >
+            <option value="">{t("ts.ar.auto", { order: String(best?.order ?? fit.order) })}</option>
+            {fit.orders.map((o) => (
+              <option key={o.order} value={o.order}>
+                {o.order}
+              </option>
+            ))}
+          </Select>
+        </label>
+      </div>
+      <p className="text-xs text-ink-3">
+        {fit.chosen_by === "AIC" ? t("ts.ar.byAic") : t("ts.ar.byYou")}
+        {fit.sigma !== null ? ` · σ = ${fit.sigma.toPrecision(4)}` : ""}
+      </p>
+      {best && best.order === fit.orders[fit.orders.length - 1]?.order && (
+        <p className="text-[13px] text-warn">{t("ts.ar.atBoundary", { order: String(best.order) })}</p>
+      )}
+      <p className={`text-[13px] ${fit.residuals.significant ? "text-warn" : "text-ink-2"}`}>
+        {fit.residuals.significant ? t("ts.ar.residualsLinked") : t("ts.ar.residualsWhite")}
+      </p>
+      <div className="grid gap-3 xl:grid-cols-2">
+        <table className="w-full border-collapse text-[13px] tabular-nums">
+          <thead className="text-left text-xs text-ink-3">
+            <tr>
+              <th className="py-1 font-normal">{t("ts.ar.term")}</th>
+              <th className="py-1 text-right font-normal">{t("ts.ar.coefficient")}</th>
+              <th className="py-1 text-right font-normal">{t("ts.ar.stdError")}</th>
+              <th className="py-1 text-right font-normal">p</th>
+            </tr>
+          </thead>
+          <tbody>
+            {fit.coefficients.map((c) => (
+              <tr key={c.term} className="border-t border-line">
+                <td className="py-1">{c.term}</td>
+                <td className="py-1 text-right">{c.estimate.toPrecision(4)}</td>
+                <td className="py-1 text-right text-ink-2">{c.std_error === null ? "—" : c.std_error.toPrecision(3)}</td>
+                <td className={`py-1 text-right ${c.p_value !== null && c.p_value < 0.05 ? "text-ink-1" : "text-ink-3"}`}>
+                  {c.p_value === null ? "—" : c.p_value < 0.001 ? "< 0.001" : c.p_value.toFixed(3)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <table className="w-full border-collapse text-[13px] tabular-nums">
+          <thead className="text-left text-xs text-ink-3">
+            <tr>
+              <th className="py-1 font-normal">p</th>
+              <th className="py-1 text-right font-normal">AIC</th>
+              <th className="py-1 text-right font-normal">BIC</th>
+            </tr>
+          </thead>
+          <tbody>
+            {fit.orders.map((o) => (
+              <tr key={o.order} className={`border-t border-line ${o.order === fit.order ? "bg-accent-soft" : ""}`}>
+                <td className="py-1">{o.order}{o.order === best?.order ? " ★" : ""}</td>
+                <td className="py-1 text-right">{o.aic === null ? "—" : o.aic.toFixed(1)}</td>
+                <td className="py-1 text-right text-ink-2">{o.bic === null ? "—" : o.bic.toFixed(1)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 }

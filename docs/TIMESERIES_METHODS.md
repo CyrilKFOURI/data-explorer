@@ -71,6 +71,7 @@ Légende : ★ = coché par défaut.
 | Méthode | H0 / rôle | Implémentation |
 |---|---|---|
 | ★ ACF · ★ PACF | profils (PACF : Yule-Walker, OLS, Burg au choix) | statsmodels |
+| ★ Modèle AR(p) | p choisi par l'AIC ou par l'utilisateur ; coefficients, AIC / BIC de chaque ordre, Ljung–Box des résidus | statsmodels |
 | ★ Ljung–Box | pas d'autocorrélation jusqu'au retard k | statsmodels |
 | Box–Pierce | idem (version d'origine) | statsmodels |
 | ★ Durbin–Watson | autocorrélation d'ordre 1 des résidus | statsmodels |
@@ -121,7 +122,11 @@ Légende : ★ = coché par défaut.
 | IQR sur résidus | maison |
 | z-score glissant | maison |
 | Filtre de Hampel | maison |
-| Isolation forest | pas encore (scikit-learn arrive en 016) |
+| Test ESD généralisé (Rosner, α = 5 %) | maison |
+| Isolation forest (fenêtres glissantes) | scikit-learn |
+| Local outlier factor (fenêtres glissantes) | scikit-learn |
+| Autoencodeur masqué (MLP : chaque période reconstruite à partir de ses voisines) | scikit-learn |
+| LSTM-autoencoder | non retenu : PyTorch (1 à 2 Go dans l'image), lent sur CPU, rarement meilleur sur une série courte |
 
 ### Prévision (015)
 
@@ -132,6 +137,10 @@ Légende : ★ = coché par défaut.
 | ★ ETS automatique (AICc ; multiplicatif seulement si valeurs > 0) | statsmodels |
 | Theta | statsmodels |
 | ★ ARIMA automatique · SARIMA (ordres manuels) | statsmodels |
+| Régression linéaire : tendance + indicatrices de saison (TSLM) | statsmodels |
+| Gradient boosting sur les retards (tendance retirée, récursif) | scikit-learn |
+| Réseau de neurones MLP sur les retards | scikit-learn |
+| RNN / LSTM | non retenus : PyTorch, et sur une série isolée et courte ils font en général moins bien qu'ETS / ARIMA (compétition M4) |
 
 Métriques de prévision (toutes affichables, ★ par défaut) : ★ MAE, ★ RMSE, ★ MASE, MAPE, sMAPE, RMSSE, biais (ME), couverture des intervalles, score d'intervalle (Winkler).
 

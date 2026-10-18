@@ -35,6 +35,7 @@ import {
 } from "./Memory";
 import { ForecastSection } from "./Forecast";
 import { MethodsRow, MethodsTable, useMethods } from "./Methods";
+import { parseWindows, rolling, WindowsPicker } from "./Windows";
 import {
   BreaksBody,
   breaksVerdict,
@@ -60,7 +61,6 @@ const HORIZON: Record<string, number> = {
   quarter: 8,
   year: 3,
 };
-const WINDOWS = [3, 4, 6, 7, 12, 14, 24, 26, 30, 52, 90];
 const SECTIONS = [
   "overview",
   "seasonality",
@@ -166,7 +166,12 @@ export function TimeSeriesPage() {
     datasetId,
     "autocorrelation",
     params,
-    { transform, pacf, methods: memoryMethods.join(",") },
+    {
+      transform,
+      pacf,
+      methods: memoryMethods.join(","),
+      ...(search.ar ? { ar: String(search.ar) } : {}),
+    },
     ready && okay && memorySeen,
   );
 
@@ -179,7 +184,10 @@ export function TimeSeriesPage() {
     datasetId,
     "volatility",
     params,
-    { methods: volatilityMethods.join(",") },
+    {
+      methods: volatilityMethods.join(","),
+      ...(search.spread ? { spread: String(search.spread) } : {}),
+    },
     ready && okay && volatilitySeen,
   );
   const residuals = useSeriesSection<SeriesResiduals>(
@@ -395,6 +403,8 @@ export function TimeSeriesPage() {
                     <AutocorrelationBody
                       data={data}
                       pacf={pacf}
+                      arOrder={search.ar}
+                      onAr={(order) => set({ ar: order })}
                       onPacf={(value) =>
                         set({
                           pacf:
@@ -418,7 +428,13 @@ export function TimeSeriesPage() {
                   onChange={setVolatilityMethods}
                 />
                 <SectionBody query={volatility}>
-                  {(data) => <VolatilityBody data={data} />}
+                  {(data) => (
+                    <VolatilityBody
+                      data={data}
+                      windows={search.spread ? [search.spread] : []}
+                      onWindow={(window) => set({ spread: window })}
+                    />
+                  )}
                 </SectionBody>
               </Section>
               <Section
@@ -699,6 +715,8 @@ function OverviewSection({
       }).replace(" ± 1σ", "")
     : "";
   const showAll = Boolean(search.all);
+  const windows = parseWindows(search.windows ?? (search.window ? String(search.window) : undefined));
+  const extraKey = windows.slice(1).join(",");
   const figure = useMemo(() => {
     const others = showAll
       ? data.lines.filter((line) => line.label !== data.analyzed.label)
@@ -710,8 +728,12 @@ function OverviewSection({
       layers,
       what,
       rolled,
+      parseWindows(extraKey).map((window) => ({
+        window,
+        mean: rolling(data.analyzed.values, window, data.align).mean,
+      })),
     );
-  }, [data, showAll, layers, what, rolled]);
+  }, [data, showAll, layers, what, rolled, extraKey]);
   const figures = data.figures;
   const unit = t("ts.perPeriod", { period: periodName(setup.period) });
   return (
@@ -742,29 +764,19 @@ function OverviewSection({
         <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-ink-2">
           {data.window !== null && (
             <>
-              <label className="flex items-center gap-1.5">
-                {t("time.window")}
-                <Select
-                  value={search.window ? String(search.window) : ""}
-                  onChange={(event) =>
-                    onChange({
-                      window: event.target.value
-                        ? Number(event.target.value)
-                        : undefined,
-                    })
-                  }
-                  className="h-7 text-xs"
-                >
-                  <option value="">
-                    {t("time.auto", { value: String(data.window) })}
-                  </option>
-                  {WINDOWS.filter((w) => w <= setup.periods).map((w) => (
-                    <option key={w} value={w}>
-                      {w}
-                    </option>
-                  ))}
-                </Select>
-              </label>
+              <WindowsPicker
+                label={t("time.window")}
+                windows={windows}
+                auto={windows.length ? null : data.window}
+                maximum={setup.periods}
+                multiple
+                onChange={(next) =>
+                  onChange({
+                    windows: next.length ? next.join(",") : undefined,
+                    window: undefined,
+                  })
+                }
+              />
               <Select
                 aria-label={t("time.align")}
                 value={data.align}

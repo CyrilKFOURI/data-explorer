@@ -158,6 +158,7 @@ class SeriesAutocorrelation:
     setup: SeriesSetup
     transform: st.Transform
     correlogram: ac.Correlogram | None
+    ar: ac.ArFit | None
     methods: list[MethodResult]
     filled: int
     message: str | None = None
@@ -503,14 +504,16 @@ class TimeSeriesService:
         how: st.Transform = "none",
         chosen: list[str] | None = None,
         pacf: ac.PacfMethod = "ywm",
+        ar_order: int | None = None,
     ) -> SeriesAutocorrelation:
         prepared = self.prepare(dataset_id, request, conditions)
         setup = prepared.setup
         _, changed, filled, problem = self._transformed(prepared, how)
-        view = SeriesAutocorrelation(setup, how, None, [], filled, problem)
+        view = SeriesAutocorrelation(setup, how, None, None, [], filled, problem)
         if problem:
             return view
         view.correlogram = ac.correlogram(changed, setup.season, pacf)
+        view.ar = ac.fit_ar(changed, ar_order, setup.season)
         view.methods = [
             ac.AUTOCORRELATION[key](changed, setup.season)
             for key in chosen or ac.DEFAULT_AUTOCORRELATION
@@ -523,11 +526,14 @@ class TimeSeriesService:
         request: Request,
         conditions: list[Condition],
         chosen: list[str] | None = None,
+        spread_window: int | None = None,
     ) -> SeriesVolatility:
         prepared = self.prepare(dataset_id, request, conditions)
         setup, built = prepared.setup, prepared.built
         series, filled = ts.complete(prepared.core)
-        window = prepared.window or ts.resolve_window(None, built.period, max(setup.periods, 8))
+        window = ts.resolve_window(
+            spread_window or prepared.window, built.period, max(setup.periods, 8)
+        )
         view = SeriesVolatility(setup, "", [], [], [], window, None, False, [], filled)
         if setup.periods < vo.MIN_PERIODS:
             view.message = f"Needs at least {vo.MIN_PERIODS} periods."
@@ -621,7 +627,7 @@ class TimeSeriesService:
                 point.expected,
                 point.score,
             )
-            for point in br.anomalies(remainder.values, series, anomaly, threshold)
+            for point in br.anomalies(remainder.values, series, anomaly, threshold, setup.season)
         ]
         return view
 

@@ -215,3 +215,74 @@ AUTOCORRELATION: dict[str, AutocorrelationMethod] = {
     "bartels": bartels,
 }
 DEFAULT_AUTOCORRELATION = ("ljung_box", "durbin_watson")
+
+
+MAX_AR = 12
+
+
+@dataclass
+class ArOrder:
+    order: int
+    aic: float | None
+    bic: float | None
+
+
+@dataclass
+class ArCoefficient:
+    term: str  # "const" or "lag k"
+    estimate: float
+    std_error: float | None
+    p_value: float | None
+
+
+@dataclass
+class ArFit:
+    order: int
+    chosen_by: str  # "you" or "AIC"
+    coefficients: list[ArCoefficient]
+    sigma: float | None  # standard deviation of the innovations
+    aic: float | None
+    bic: float | None
+    residuals: MethodResult  # Ljung-Box on the residuals
+    orders: list[ArOrder]  # AIC / BIC for every order tried
+
+
+def fit_ar(series: np.ndarray, order: int | None, season: int | None) -> ArFit | None:
+    """An autoregressive model AR(p): p as asked, or the order with the lowest AIC."""
+    from statsmodels.tsa.ar_model import AutoReg
+
+    n = len(series)
+    highest = min(MAX_AR, max(1, n // 5))
+    if n < MIN_PERIODS or np.ptp(series) == 0:
+        return None
+    fits = {}
+    orders = []
+    for p in range(1, highest + 1):
+        fit = _quiet(lambda p=p: AutoReg(series, lags=p, trend="c").fit())
+        fits[p] = fit
+        orders.append(ArOrder(p, clean(fit.aic), clean(fit.bic)))
+    if order is None or order > highest:
+        chosen = min(fits, key=lambda p: fits[p].aic if np.isfinite(fits[p].aic) else np.inf)
+        chosen_by = "AIC"
+    else:
+        chosen, chosen_by = order, "you"
+    fit = fits[chosen]
+    names = ["const", *[f"lag {k}" for k in range(1, chosen + 1)]]
+    params, errors, pvalues = (
+        np.asarray(x, dtype=float) for x in (fit.params, fit.bse, fit.pvalues)
+    )
+    coefficients = [
+        ArCoefficient(name, float(params[i]), clean(errors[i]), clean(pvalues[i]))
+        for i, name in enumerate(names)
+    ]
+    resid = np.asarray(fit.resid, dtype=float)
+    return ArFit(
+        chosen,
+        chosen_by,
+        coefficients,
+        clean(float(np.sqrt(fit.sigma2))),
+        clean(fit.aic),
+        clean(fit.bic),
+        ljung_box(resid, season),
+        orders,
+    )

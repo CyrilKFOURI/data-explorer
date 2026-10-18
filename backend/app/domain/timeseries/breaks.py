@@ -24,8 +24,21 @@ SEARCHES: tuple[Search, ...] = ("pelt", "binseg")
 Cost = Literal["mean", "mean_var", "trend"]  # trend: a straight line per segment
 Sensitivity = Literal["low", "medium", "high"]
 PENALTY_FACTOR: dict[Sensitivity, float] = {"high": 0.5, "medium": 1.0, "low": 2.0}
-Anomaly = Literal["robust_z", "iqr", "rolling_z", "hampel"]
-ANOMALIES: tuple[Anomaly, ...] = ("robust_z", "iqr", "rolling_z", "hampel")
+Anomaly = Literal[
+    "robust_z", "iqr", "rolling_z", "hampel", "gesd", "isolation_forest", "lof", "autoencoder"
+]
+ANOMALIES: tuple[Anomaly, ...] = (
+    "robust_z",
+    "iqr",
+    "rolling_z",
+    "hampel",
+    "gesd",
+    "isolation_forest",
+    "lof",
+    "autoencoder",
+)
+GESD_ALPHA = 0.05
+GESD_MAX_SHARE = 0.1  # at most 10 % of the periods tested as outliers
 MAX_ANOMALIES = 50
 SIMULATIONS = 2_000  # Buishand and SNHT p-values by simulation (seeded)
 
@@ -315,13 +328,122 @@ DEFAULT_BREAK_TESTS = ("pettitt",)
 # --- Anomalies -----------------------------------------------------------------------------------
 
 
+def _robust_z(scores: np.ndarray) -> np.ndarray:
+    """How far each score sits above the typical one, in robust standard deviations."""
+    median = float(np.median(scores))
+    mad = float(np.median(np.abs(scores - median)))
+    return (scores - median) / (1.4826 * mad) if mad else np.zeros_like(scores)
+
+
+def _windows(values: np.ndarray, width: int) -> np.ndarray:
+    """Sliding windows of `width` values, one per period (edges padded with the nearest value)."""
+    half = width // 2
+    padded = np.concatenate(
+        [np.full(half, values[0]), values, np.full(width - half - 1, values[-1])]
+    )
+    return np.lib.stride_tricks.sliding_window_view(padded, width)
+
+
+def gesd_scores(resid: np.ndarray, alpha: float = GESD_ALPHA) -> np.ndarray:
+    """Generalized ESD test (Rosner 1983). Returns R_i / λ_i for the points it removes: the
+    outliers are the first k removed, k being the largest i with R_i > λ_i (score > 1)."""
+    from scipy import stats as sstats
+
+    n = len(resid)
+    values = resid.astype(float).copy()
+    index = np.arange(n)
+    removed: list[tuple[int, float]] = []
+    for i in range(1, max(1, int(GESD_MAX_SHARE * n)) + 1):
+        sd = values.std(ddof=1)
+        if len(values) < 3 or sd == 0:
+            break
+        deviation = np.abs(values - values.mean())
+        j = int(np.argmax(deviation))
+        r = float(deviation[j] / sd)
+        m = n - i + 1
+        p = 1 - alpha / (2 * m)
+        t = float(sstats.t.ppf(p, m - 2))
+        lam = (m - 1) * t / np.sqrt((m - 2 + t * t) * m)
+        removed.append((int(index[j]), r / lam))
+        values, index = np.delete(values, j), np.delete(index, j)
+    last = max((k for k, (_, ratio) in enumerate(removed) if ratio > 1), default=-1)
+    scores = np.zeros(n)
+    for k, (position, ratio) in enumerate(removed[: last + 1]):
+        scores[position] = max(ratio, 1.0 + 1e-9) if k <= last else ratio
+    return scores
+
+
+def _learned_scores(
+    resid: np.ndarray, method: str, season: int | None
+) -> tuple[np.ndarray, np.ndarray]:
+    """Isolation forest, local outlier factor or an autoencoder on sliding windows of the
+    residuals; returns each period's raw outlier score and how much the period itself stands out
+    in its window (0 to 1)."""
+    from sklearn.ensemble import IsolationForest
+    from sklearn.neighbors import LocalOutlierFactor
+    from sklearn.neural_network import MLPRegressor
+
+    scale = resid.std() or 1.0
+    standard = (resid - resid.mean()) / scale
+    width = max(3, min(season or 7, 13, len(resid) // 4))
+    windows = _windows(standard, width)
+    center = width // 2
+    # A window is unusual when one of its values is: the score goes to the period at its centre,
+    # weighted by how much that period stands out in its window (otherwise every window that
+    # merely contains a spike would flag its neighbours too).
+    share = np.abs(windows[:, center]) / np.maximum(np.abs(windows).max(axis=1), 1e-12)
+    if method == "isolation_forest":
+        forest = IsolationForest(n_estimators=200, random_state=42).fit(windows)
+        return -forest.score_samples(windows), share
+    if method == "lof":
+        lof = LocalOutlierFactor(n_neighbors=min(20, len(windows) - 1)).fit(windows)
+        return -lof.negative_outlier_factor_, share
+    # masked autoencoder: a small network rebuilds each period from its neighbours only (the
+    # centre of the window is hidden); a period it cannot rebuild does not follow the pattern
+    neighbours = np.delete(windows, center, axis=1)
+    encoder = MLPRegressor(
+        hidden_layer_sizes=(max(2, width // 2),), max_iter=2_000, random_state=42, alpha=1e-3
+    )
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        encoder.fit(neighbours, windows[:, center])
+    error = encoder.predict(neighbours) - windows[:, center]  # signed, close to normal
+    return error, np.ones(len(error))  # the masked centre is already the period's own error
+
+
 def anomalies(
-    resid: np.ndarray, series: np.ndarray, method: Anomaly = "robust_z", threshold: float = 3.5
+    resid: np.ndarray,
+    series: np.ndarray,
+    method: Anomaly = "robust_z",
+    threshold: float = 3.5,
+    season: int | None = None,
 ) -> list[AnomalyPoint]:
-    """Periods whose residual is unusual; at most MAX_ANOMALIES, the strongest first."""
+    """Periods whose residual is unusual; at most MAX_ANOMALIES, the strongest first.
+
+    Statistical rules score in their own unit (robust z, IQRs, …); the generalized ESD test
+    flags points with a score above 1 at alpha = 5 %; learned methods (isolation forest, LOF,
+    autoencoder) are scored as robust z-scores of their outlier score.
+    """
     n = len(resid)
     scores = np.zeros(n)
-    if method == "robust_z":
+    if method == "gesd":
+        scores = gesd_scores(resid)
+        flagged = [i for i in np.argsort(-scores) if scores[i] > 1][:MAX_ANOMALIES]
+        return [
+            AnomalyPoint(int(i), float(series[i]), float(series[i] - resid[i]), float(scores[i]))
+            for i in flagged
+        ]
+    if method in ("isolation_forest", "lof", "autoencoder"):
+        # outlier scores are skewed: robust z on a log scale, then weighted by how much the
+        # period itself stands out in its window
+        raw, share = _learned_scores(resid, method, season)
+        if method == "autoencoder":  # robust z of the signed rebuilding error, like a residual
+            scores = np.abs(_robust_z(raw))
+        else:
+            scores = _robust_z(np.log(np.maximum(raw, 1e-12))) * share
+    elif method == "robust_z":
         mad = float(np.median(np.abs(resid - np.median(resid))))
         scores = np.abs(resid - np.median(resid)) / (1.4826 * mad) if mad else scores
     elif method == "iqr":

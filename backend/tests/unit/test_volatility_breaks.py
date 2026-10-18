@@ -180,7 +180,7 @@ def test_pettitt_locates_the_change() -> None:
 
 
 @pytest.mark.parametrize("method", list(br.ANOMALIES))
-def test_injected_spikes_are_flagged(method: str) -> None:
+def test_injected_spikes_are_flagged(method: str) -> None:  # every method, learned ones included
     resid = np.random.default_rng(4).normal(0, 1, 300)
     resid[[50, 200]] += 12
     series = resid + 100
@@ -190,3 +190,19 @@ def test_injected_spikes_are_flagged(method: str) -> None:
     assert {50, 200} <= {a.index for a in found}
     assert found[0].expected == pytest.approx(100, abs=1)
     assert len(found) <= 6
+
+
+def test_gesd_flags_only_real_outliers() -> None:
+    clean_noise = np.random.default_rng(4).normal(0, 1, 200)
+    spiked = clean_noise.copy()
+    spiked[[20, 120, 170]] += [9, -8, 10]
+
+    assert {a.index for a in br.anomalies(spiked, spiked + 50, "gesd")} == {20, 120, 170}
+    assert br.anomalies(clean_noise, clean_noise, "gesd") == []
+
+
+@pytest.mark.parametrize("method", ["isolation_forest", "lof", "autoencoder"])
+def test_learned_methods_stay_quiet_on_noise(method: str) -> None:
+    noise = np.random.default_rng(10).normal(0, 1, 300)
+
+    assert len(br.anomalies(noise, noise, method)) <= 3  # type: ignore[arg-type]  # ≤ 1 % false alarms

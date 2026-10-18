@@ -179,6 +179,20 @@ def test_forecast_job(client: TestClient, sales: str) -> None:
     assert client.get("/api/v1/modules/timeseries/forecast-jobs/nope").status_code == 422
 
 
+def test_ar_order_and_volatility_window(client: TestClient, sales: str) -> None:
+    auto = get(client, sales, "autocorrelation", value="revenue").json()["ar"]
+    assert auto["chosen_by"] == "AIC" and len(auto["orders"]) >= 5
+    assert auto["order"] == min(auto["orders"], key=lambda o: o["aic"])["order"]
+
+    fixed = get(client, sales, "autocorrelation", value="revenue", ar=3).json()["ar"]
+    assert fixed["order"] == 3 and fixed["chosen_by"] == "you"
+    assert [c["term"] for c in fixed["coefficients"]] == ["const", "lag 1", "lag 2", "lag 3"]
+
+    spread = get(client, sales, "volatility", value="revenue", spread=10).json()
+    assert spread["window"] == 10
+    assert get(client, sales, "volatility", spread=1).status_code == 422
+
+
 @pytest.mark.slow
 def test_five_million_rows(client: TestClient, tmp_path: Path) -> None:
     import duckdb

@@ -19,6 +19,7 @@ import { t, type MessageKey } from "../../lib/i18n";
 import { Select } from "../../ui/fields";
 import { SegmentedControl } from "../../ui/SegmentedControl";
 import { MethodsTable } from "./Methods";
+import { WindowsPicker } from "./Windows";
 import type { TimeSeriesSearch } from "./search";
 
 type Verdict = { text: string; tone: "ok" | "none"; detail?: string } | null;
@@ -68,10 +69,28 @@ function volatilityFigure(data: SeriesVolatility): Figure {
   };
 }
 
-export function VolatilityBody({ data }: { data: SeriesVolatility }) {
+export function VolatilityBody({
+  data,
+  windows,
+  onWindow,
+}: {
+  data: SeriesVolatility;
+  windows: number[];
+  onWindow: (window: number | undefined) => void;
+}) {
   if (data.message) return <p className="text-ink-2">{data.message}</p>;
   return (
     <div className="space-y-3">
+      <div className="text-xs text-ink-2">
+        <WindowsPicker
+          label={t("ts.volatility.window")}
+          windows={windows}
+          auto={windows.length ? null : data.window}
+          maximum={data.periods.length}
+          multiple={false}
+          onChange={(next) => onWindow(next[0])}
+        />
+      </div>
       <div className="rounded-lg border border-line bg-surface-1 p-3">
         <p className="mb-1 text-xs text-ink-3">
           {t("ts.volatility.on", {
@@ -451,7 +470,7 @@ export function BreaksBody({
             }
             className="h-7 text-xs"
           >
-            {(["robust_z", "iqr", "rolling_z", "hampel"] as const).map(
+            {(["robust_z", "iqr", "rolling_z", "hampel", "gesd", "isolation_forest", "lof", "autoencoder"] as const).map(
               (method) => (
                 <option key={method} value={method}>
                   {t(`ts.anomalies.${method}` as MessageKey)}
@@ -463,6 +482,8 @@ export function BreaksBody({
             {t("ts.anomalies.threshold")}
             <Select
               value={String(data.threshold)}
+              disabled={data.anomaly_method === "gesd"}
+              title={data.anomaly_method === "gesd" ? t("ts.anomalies.gesdAlpha") : undefined}
               onChange={(event) =>
                 onChange({
                   threshold:

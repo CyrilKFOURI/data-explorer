@@ -25,6 +25,7 @@ export function overviewFigure(
   layers: Layers,
   what: string,
   rolled: string,
+  extra: { window: number; mean: (number | null)[] }[] = [],
 ): Figure {
   return (tokens) => {
     const color = tokens.palette[0] ?? tokens.date;
@@ -102,6 +103,17 @@ export function overviewFigure(
         hovertemplate: `%{x}<br>${rolled}: %{y:,.4g}<extra></extra>`,
       } as Data);
     }
+    extra.forEach((line, i) => {
+      data.push({
+        type: "scatter",
+        mode: "lines",
+        name: `${line.window}-period mean`,
+        x: periods,
+        y: line.mean,
+        line: { color: tokens.palette[(i + 2) % 8] ?? tokens.ink2, width: 2 },
+        hovertemplate: `%{x}<br>${line.window}-period mean: %{y:,.4g}<extra></extra>`,
+      } as Data);
+    });
     return {
       data,
       layout: {

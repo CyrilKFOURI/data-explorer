@@ -115,19 +115,25 @@ def autocorrelation(
     transform: st.Transform = "none",
     methods_: Methods = None,
     pacf: ac.PacfMethod = "ywm",
+    ar: Annotated[int | None, Query(ge=1, le=24, description="AR order (default: by AIC).")] = None,
 ) -> SeriesAutocorrelation:
     """ACF, PACF, a reading of their shapes, and autocorrelation / randomness tests."""
     keys = chosen_methods(methods_, ac.AUTOCORRELATION)
-    return service.autocorrelation(dataset_id, request, filters, transform, keys, pacf)
+    return service.autocorrelation(dataset_id, request, filters, transform, keys, pacf, ar)
 
 
 @router.get("/datasets/{dataset_id}/volatility")
 def volatility(
-    dataset_id: str, service: Service, request: Series, filters: Filters, methods_: Methods = None
+    dataset_id: str,
+    service: Service,
+    request: Series,
+    filters: Filters,
+    methods_: Methods = None,
+    spread: Annotated[int | None, Query(ge=2, le=365, description="Rolling window.")] = None,
 ) -> SeriesVolatility:
     """Rolling spread of the residuals and heteroscedasticity / ARCH tests."""
     keys = chosen_methods(methods_, vo.VOLATILITY)
-    return service.volatility(dataset_id, request, filters, keys)
+    return service.volatility(dataset_id, request, filters, keys, spread)
 
 
 @router.get("/datasets/{dataset_id}/residuals")

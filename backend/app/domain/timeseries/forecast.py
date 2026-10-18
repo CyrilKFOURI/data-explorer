@@ -338,6 +338,98 @@ def sarima_manual(
     return fit
 
 
+# --- Regression on time, and machine learning on lags --------------------------------------------
+
+
+def _season_dummies(t: np.ndarray, season: int | None) -> np.ndarray:
+    if not season or season < 2 or season > 52:
+        return np.empty((len(t), 0))
+    position = t % season
+    return np.column_stack([(position == k).astype(float) for k in range(1, season)])
+
+
+def linear_trend_season(y: np.ndarray, h: int, season: int | None) -> Prediction:
+    """Linear regression on a time trend and one indicator per position of the cycle
+    (Hyndman's TSLM), with its exact prediction intervals."""
+    import statsmodels.api as sm
+
+    n = len(y)
+    use_season = bool(season and 2 <= season <= 52 and n >= 2 * season)
+    t = np.arange(n + h, dtype=float)
+    design = np.column_stack(
+        [np.ones(n + h), t, _season_dummies(t, season if use_season else None)]
+    )
+    fit = _quiet(lambda: sm.OLS(y, design[:n]).fit())
+    frames = [fit.get_prediction(design[n:]).summary_frame(alpha=a) for a in (0.2, 0.05)]
+    label = "Trend + seasonal dummies" if use_season else "Linear trend"
+    return Prediction(
+        np.asarray(frames[0]["mean"], dtype=float),
+        np.asarray(frames[0]["obs_ci_lower"], dtype=float),
+        np.asarray(frames[0]["obs_ci_upper"], dtype=float),
+        np.asarray(frames[1]["obs_ci_lower"], dtype=float),
+        np.asarray(frames[1]["obs_ci_upper"], dtype=float),
+        label,
+        np.asarray(fit.resid, dtype=float),
+    )
+
+
+def _lag_model(kind: str) -> Callable[[np.ndarray, int, int | None], Prediction]:
+    """Gradient boosting or a small neural network predicting each period from the previous
+    ones, on the series with its linear trend removed (trees cannot extrapolate a trend), then
+    forecasting one step at a time. Intervals come from the in-sample one-step errors widened
+    with the horizon: an approximation, said in the label."""
+
+    def fit(y: np.ndarray, h: int, season: int | None) -> Prediction:
+        from sklearn.ensemble import HistGradientBoostingRegressor
+        from sklearn.neural_network import MLPRegressor
+        from sklearn.pipeline import make_pipeline
+        from sklearn.preprocessing import StandardScaler
+
+        n = len(y)
+        lags = max(3, min(season or 12, 24, n // 4))
+        if n < lags + 10:
+            raise ModelError(f"Needs at least {lags + 10} periods.")
+        t = np.arange(n, dtype=float)
+        slope, intercept = np.polyfit(t, y, 1)
+        rest = y - (slope * t + intercept)
+
+        def features(history: np.ndarray, position: int) -> list[float]:
+            row = list(history[-lags:][::-1])
+            if season and season >= 2:
+                angle = 2 * np.pi * (position % season) / season
+                row += [float(np.sin(angle)), float(np.cos(angle))]
+            return row
+
+        x = np.array([features(rest[:i], i) for i in range(lags, n)])
+        target = rest[lags:]
+        if kind == "gbm":
+            model = HistGradientBoostingRegressor(
+                max_iter=200, learning_rate=0.05, max_leaf_nodes=15, random_state=42
+            )
+        else:
+            model = make_pipeline(
+                StandardScaler(),
+                MLPRegressor(
+                    hidden_layer_sizes=(32, 16), alpha=1e-3, max_iter=2_000, random_state=42
+                ),
+            )
+        _quiet(lambda: model.fit(x, target))
+        resid = target - np.asarray(model.predict(x), dtype=float)
+        history = list(rest)
+        steps = []
+        for step in range(h):
+            value = float(model.predict(np.array([features(np.array(history), n + step)]))[0])
+            history.append(value)
+            steps.append(value + slope * (n + step) + intercept)
+        sigma = float(np.sqrt(np.mean(resid**2))) * np.sqrt(np.arange(1, h + 1))
+        label = (
+            "Gradient boosting" if kind == "gbm" else "Neural network (MLP)"
+        ) + f" on {lags} lags"
+        return _band(np.array(steps), sigma, label + " · approximate intervals", resid)
+
+    return fit
+
+
 Model = Callable[[np.ndarray, int, int | None], Prediction]
 MODELS: dict[str, Model] = {
     "naive": naive,
@@ -351,6 +443,9 @@ MODELS: dict[str, Model] = {
     "holt_winters": holt_winters,
     "theta": theta,
     "sarima": naive,  # replaced by sarima_manual(...) with the user's orders
+    "tslm": linear_trend_season,
+    "gbm_lags": _lag_model("gbm"),
+    "mlp_lags": _lag_model("mlp"),
 }
 DEFAULT_MODELS = ("naive", "seasonal_naive", "ets_auto", "arima_auto")
 
