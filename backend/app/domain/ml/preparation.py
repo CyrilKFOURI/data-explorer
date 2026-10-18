@@ -20,6 +20,7 @@ from scipy import stats
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
+from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import (
     FunctionTransformer,
@@ -277,6 +278,7 @@ def decide(
     model: ModelProfile,
     excluded_columns: set[str] | None = None,
     choices: Choices | None = None,
+    source_numeric: bool = False,
 ) -> Preparation:
     """One decision per column: the rules of the 017 spec, then the user's choices."""
     choices = choices or Choices()
@@ -290,7 +292,9 @@ def decide(
         choice = choices.columns.get(fld.name)
         prof = profile(_col(frame, fld.name), fld)
         decision.missing = prof.missing_share
-        _exclusion(decision, fld, prof, frame, target, task, model, excluded_columns)
+        _exclusion(
+            decision, fld, prof, frame, target, task, model, excluded_columns, source_numeric
+        )
         decision.auto["use"] = "yes" if decision.use else "no"
         wants = choice.use if choice else None
         if not decision.use and wants is True:
@@ -313,7 +317,7 @@ def decide(
                 _apply(decision, choice, prof, model, warnings)
         decision.options = _options(decision, prof, model)
     if model.sensitive_to_collinearity:
-        _collinearity(frame, decisions, target, task == "regression", forced)
+        _collinearity(frame, decisions, target, task == "regression" or source_numeric, forced)
     custom = choices.model_dump(exclude={"columns"}) != GLOBAL_DEFAULTS or any(
         d.manual for d in decisions
     )
@@ -335,8 +339,10 @@ def _exclusion(
     task: Task,
     model: ModelProfile,
     excluded_columns: set[str],
+    source_numeric: bool = False,
 ) -> None:
-    """R-SEL-01 to R-SEL-06 and R-SEL-08: is the column left out, and may it come back?"""
+    """R-SEL-01 to R-SEL-06 and R-SEL-08: is the column left out, and may it come back?
+    With a number predicted as classes (018), leakage is measured against the number."""
 
     def out(rule: str, sentence: str, reactivable: bool = True, leak: bool = False) -> None:
         decision.use, decision.reactivable, decision.leak = False, reactivable, leak
@@ -371,7 +377,7 @@ def _exclusion(
             _col(frame, fld.name),
             _col(frame, target.name),
             fld.type in NUMERIC,
-            task == "regression",
+            task == "regression" or source_numeric,
         )
         if strength >= 0.98:
             return out(
@@ -381,7 +387,7 @@ def _exclusion(
             )
         separation = (
             _separation(_col(frame, fld.name), _col(frame, target.name))
-            if task == "binary" and fld.type in NUMERIC
+            if task == "binary" and fld.type in NUMERIC and not source_numeric
             else 0.0
         )
         if separation >= 0.995:
@@ -869,8 +875,9 @@ def build(
                         TargetEncoder(
                             target_type=target_type,  # type: ignore[arg-type]
                             smooth=choices.target_smoothing,  # type: ignore[arg-type]
-                            cv=5,
-                            random_state=42,  # type: ignore[arg-type]
+                            cv=(KFold if task == "regression" else StratifiedKFold)(  # type: ignore[arg-type]
+                                5, shuffle=True, random_state=42
+                            ),
                         ),
                     )
                 )

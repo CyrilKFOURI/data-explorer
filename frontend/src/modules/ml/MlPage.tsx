@@ -3,13 +3,25 @@ import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import type { MlCandidate, MlChoicesInput, MlRun, MlSetting } from "../../api/client";
-import { useDataset, useMlCatalog, useMlJob, useMlRun, useMlRuns, useMlTargets, useMlTrain } from "../../api/hooks";
+import type { MlCandidate, MlChoicesInput, MlClasses, MlRun, MlSetting } from "../../api/client";
+import {
+  useDataset,
+  useMlCatalog,
+  useMlDistribution,
+  useMlJob,
+  useMlRun,
+  useMlRuns,
+  useMlTargets,
+  useMlTrain,
+} from "../../api/hooks";
 import { formatNumber } from "../../charts/figures";
 import { t, type MessageKey } from "../../lib/i18n";
 import { Button } from "../../ui/Button";
 import { ErrorNote, Select, TextInput } from "../../ui/fields";
 import { InfoTip } from "../../ui/InfoTip";
+import { SegmentedControl } from "../../ui/SegmentedControl";
+import { classCounts, DEFAULT_SETUP, edgesFor, namesFor, type Setup } from "./bins";
+import { ClassesPanel, setupFromRun, type Cut } from "./ClassesPanel";
 import { PreparationEditor, preparationSummary } from "./PreparationEditor";
 import { Results } from "./Results";
 
@@ -160,7 +172,33 @@ function Workbench({
   const runs = useMlRuns(datasetId, candidate.name);
   const shownRunId = runId ?? runs.data?.[0]?.id ?? null;
   const run = useMlRun(datasetId, shownRunId);
-  const catalog = useMlCatalog(task, rows, null);
+
+  // A number can be predicted as ordered classes (018): mode and cut follow the shown run until
+  // the user changes them.
+  const numeric = task === "regression";
+  const fewValues = candidate.type === "numeric_discrete" && (candidate.classes ?? Infinity) <= 10;
+  const runClasses = run.data?.classes ?? null;
+  const [modeEdited, setModeEdited] = useState<"number" | "classes" | null>(null);
+  const [setupEdited, setSetupEdited] = useState<Setup | null>(null);
+  const mode = numeric ? (modeEdited ?? (runClasses ? "classes" : "number")) : "number";
+  const distribution = useMlDistribution(datasetId, candidate.name, numeric && mode === "classes");
+  const setup = useMemo<Setup>(
+    () => setupEdited ?? (runClasses ? setupFromRun(runClasses) : fewValues ? { ...DEFAULT_SETUP, method: "values" } : DEFAULT_SETUP),
+    [setupEdited, runClasses, fewValues],
+  );
+  const cut = useMemo<Cut | null>(() => {
+    const shape = distribution.data;
+    if (!shape || shape.rows === 0) return null;
+    const edges = edgesFor(setup, shape);
+    return { edges, names: namesFor(setup, edges.length + 1, shape, formatNumber), counts: classCounts(shape, edges) };
+  }, [distribution.data, setup]);
+  const classes = useMemo<MlClasses | null>(
+    () => (mode === "classes" && cut && cut.names.length >= 2 ? { method: setup.method, edges: cut.edges, names: cut.names } : null),
+    [mode, cut, setup.method],
+  );
+  const effectiveTask = mode === "classes" ? (cut?.names.length === 2 ? "binary" : "multiclass") : task;
+
+  const catalog = useMlCatalog(effectiveTask, rows, null);
   const model = catalog.data?.[0];
   const [values, setValues] = useState<Record<string, unknown>>({});
   const [jobId, setJobId] = useState<string | null>(null);
@@ -170,7 +208,8 @@ function Workbench({
   const [editing, setEditing] = useState(false);
   // Preparation choices: what the user changed, else what the shown run used.
   const [edited, setEdited] = useState<MlChoicesInput | null>(null);
-  const choices: MlChoicesInput = edited ?? run.data?.preparation.choices ?? {};
+  const runChoices = run.data?.preparation.choices;
+  const choices = useMemo<MlChoicesInput>(() => edited ?? runChoices ?? {}, [edited, runChoices]);
 
   const settings = useMemo(() => {
     const merged: Record<string, unknown> = {};
@@ -180,11 +219,12 @@ function Workbench({
     return merged;
   }, [model, values, run.data]);
 
-  // Only the settings the user changed: the server resolves every other default on the data.
-  const changedSettings = Object.keys(values).length ? values : null;
+  // Only the settings the user changed (for this model): the server resolves the other defaults.
+  const changed = Object.fromEntries(Object.entries(values).filter(([key]) => model?.settings.some((s) => s.key === key)));
+  const changedSettings = Object.keys(changed).length ? changed : null;
   const launch = () =>
     train.mutate(
-      { target: candidate.name, model: model?.key ?? null, settings: changedSettings, choices },
+      { target: candidate.name, model: model?.key ?? null, settings: changedSettings, choices, classes },
       {
         onSuccess: (created) => {
           setJobId(created.id);
@@ -194,8 +234,34 @@ function Workbench({
     );
   const pickRun = (id: string) => {
     setEdited(null);
+    setModeEdited(null);
+    setSetupEdited(null);
     onRun(id);
   };
+  const switchMode = (next: "number" | "classes") => {
+    const existing = runs.data?.find((r) => (next === "classes") === Boolean(r.classes));
+    if (existing && !(next === "classes" && setupEdited)) return pickRun(existing.id);
+    setModeEdited(next);
+    if (next === "number")
+      train.mutate({ target: candidate.name, model: null, settings: null, choices }, { onSuccess: (created) => setJobId(created.id) });
+  };
+
+  // Classes retrain on their own 600 ms after the last change (not at every click).
+  const payload = classes ? JSON.stringify(classes) : null;
+  const shownPayload = runClasses ? JSON.stringify({ method: runClasses.method, edges: runClasses.edges, names: runClasses.names }) : null;
+  const sent = useRef<string | null>(null);
+  const modelReady = Boolean(model?.tasks.includes(effectiveTask));
+  useEffect(() => {
+    if (!payload || !classes || !modelReady || payload === shownPayload || payload === sent.current) return;
+    const timer = window.setTimeout(() => {
+      sent.current = payload;
+      train.mutate(
+        { target: candidate.name, model: model?.key ?? null, settings: null, choices, classes },
+        { onSuccess: (created) => setJobId(created.id) },
+      );
+    }, 600);
+    return () => window.clearTimeout(timer);
+  }, [payload, shownPayload, modelReady, classes, candidate.name, model, choices, train]);
 
   // The reference model trains on its own the first time a target is chosen.
   useEffect(() => {
@@ -235,8 +301,45 @@ function Workbench({
                 ))}
             </Select>
           </label>
-          <p className="text-xs text-ink-2">{t(`ml.taskLong.${task}` as MessageKey)}</p>
-          {candidate.reason && <p className="text-xs text-ink-3">{candidate.reason}</p>}
+          {numeric && (
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs text-ink-3">{t("ml.predictAs")}</span>
+              <SegmentedControl
+                label={t("ml.predictAs")}
+                value={mode}
+                options={[
+                  { value: "number", label: t("ml.predictAs.number") },
+                  { value: "classes", label: t("ml.predictAs.classes") },
+                ]}
+                onChange={switchMode}
+              />
+            </div>
+          )}
+          <p className="text-xs text-ink-2">{t(`ml.taskLong.${effectiveTask}` as MessageKey)}</p>
+          {mode === "number" && fewValues ? (
+            <p className="flex flex-wrap items-center gap-2 text-xs text-ink-2">
+              {t("ml.classes.suggest")}
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setSetupEdited({ ...DEFAULT_SETUP, method: "values" });
+                  setModeEdited("classes");
+                }}
+              >
+                {t("ml.classes.suggestAction")}
+              </Button>
+            </p>
+          ) : (
+            candidate.reason && mode === "number" && <p className="text-xs text-ink-3">{candidate.reason}</p>
+          )}
+          {mode === "classes" &&
+            (distribution.data && cut ? (
+              <ClassesPanel target={candidate.name} shape={distribution.data} setup={setup} cut={cut} onSetup={setSetupEdited} />
+            ) : distribution.isError ? (
+              <ErrorNote>{distribution.error.message}</ErrorNote>
+            ) : (
+              <div className="h-40 animate-pulse rounded-md bg-surface-1" aria-busy="true" />
+            ))}
         </section>
         {model && (
           <section className="space-y-2">
@@ -273,6 +376,7 @@ function Workbench({
           settings={changedSettings}
           choices={choices}
           onChoices={setEdited}
+          classes={classes}
         />
         <Button variant="primary" onClick={launch} disabled={training || !model}>
           {training ? t(`ml.stage.${job.data?.stage ?? "loading"}` as MessageKey) : t("ml.train")}
@@ -296,7 +400,10 @@ function Workbench({
 }
 
 function RunStrip({ runs, shown, onPick }: { runs: NonNullable<ReturnType<typeof useMlRuns>["data"]>; shown: MlRun | undefined; onPick: (id: string) => void }) {
-  const best = [...runs].filter((r) => r.score !== null).sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0];
+  // Only runs scored the same way compare (R² and accuracy do not).
+  const metric = shown?.primary ?? runs[0]?.metric;
+  const comparable = runs.filter((r) => r.score !== null && r.metric === metric);
+  const best = comparable.length > 1 ? [...comparable].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0] : undefined;
   return (
     <section aria-label={t("ml.runs")} className="space-y-1.5">
       <h3 className="text-xs text-ink-3">{t("ml.runs")}</h3>
@@ -314,7 +421,8 @@ function RunStrip({ runs, shown, onPick }: { runs: NonNullable<ReturnType<typeof
               {typeof r.settings.regularization === "string" && r.settings.regularization !== "none"
                 ? ` · ${t(`ml.option.${r.settings.regularization}` as MessageKey)}`
                 : ""}
-              {best?.id === r.id && runs.length > 1 ? " ★" : ""}
+              {r.classes ? ` · ${t("ml.classes.runLabel", { count: String(r.classes.names.length) })}` : ""}
+              {best?.id === r.id ? " ★" : ""}
             </span>
             <span className="block text-ink-3 tabular-nums">
               {t(`ml.metric.${r.metric}` as MessageKey)} {formatNumber(r.score)} · {r.seconds.toFixed(1)} s

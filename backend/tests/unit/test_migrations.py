@@ -17,6 +17,7 @@ def test_migrations_create_tables(tmp_path: Path) -> None:
         "0003_columns",
         "0004_saved_filters",
         "0005_ml",
+        "0006_ml_classes",
     ]
     expected = {
         "schema_migrations",

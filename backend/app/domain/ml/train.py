@@ -16,6 +16,7 @@ from sklearn.pipeline import Pipeline
 from statsmodels.stats.diagnostic import het_breuschpagan
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
+from app.domain.ml import classes as binning
 from app.domain.ml import models as catalogue
 from app.domain.ml import preparation as prep
 from app.domain.ml import steps
@@ -30,6 +31,7 @@ PROBABILITIES = 5_000  # test probabilities sent for the threshold slider
 PREDICTION_ROWS = 500
 OTHER = "Other"
 MAX_VIF_FEATURES = 60
+MIN_CLASS_ROWS = 5  # rows per class: split in train / test, 5-fold target encoding
 
 
 @dataclass
@@ -94,6 +96,8 @@ class ClassificationResult:
     calibration: Curve | None = None
     truth: list[int] = field(default_factory=list)  # binary: 1 = positive (sample)
     probability: list[float] = field(default_factory=list)
+    within_one: float | None = None  # ordered classes: share right or off by one class
+    mean_class_error: float | None = None  # ordered classes: mean distance in classes
 
 
 @dataclass
@@ -123,6 +127,7 @@ class Trained:
     predictions: list[PredictionRow]
     primary: str  # name of the main score
     score: float | None
+    classes: binning.Classes | None = None  # a number predicted as classes (018)
     pipeline: Any = field(default=None, repr=False)
 
 
@@ -180,6 +185,9 @@ class _Setup:
     row_test: pd.Series
     minority: float | None
     unregularized: bool
+    task: Task
+    target: Field  # with the class order when the classes are ordered
+    classes: binning.Classes | None
 
 
 def _counts(y: pd.Series) -> dict[str, int]:
@@ -237,19 +245,41 @@ def _setup(
     given: dict[str, Any] | None,
     excluded_columns: set[str] | None,
     choices: prep.Choices | None,
+    classes: binning.Classes | None = None,
 ) -> _Setup:
     choices = choices or prep.Choices()
     spec = catalogue.CATALOGUE[model_key]
+    if classes is not None:
+        y, target, classes = _as_classes(cast(pd.Series, frame[target.name]), target, classes)
+        task = "binary" if y.nunique() == 2 else "multiclass"
+    else:
+        y = prepare_target(cast(pd.Series, frame[target.name]), task)
     if task not in spec.tasks:
         raise TrainingError(f"{spec.label} does not handle {task} problems.")
-    y = prepare_target(cast(pd.Series, frame[target.name]), task)
     if task != "regression" and y.nunique() < 2:
         raise TrainingError("The target has a single class in these rows.")
+    if task != "regression":
+        counts = y.value_counts()
+        if counts.min() < MIN_CLASS_ROWS:
+            raise TrainingError(
+                f"Class “{counts.idxmin()}” has only {int(counts.min())} "
+                f"row{'s' if int(counts.min()) != 1 else ''} "
+                f"(at least {MIN_CLASS_ROWS} needed): use fewer classes or move the limits."
+            )
     minority = float(y.value_counts(normalize=True).min()) if task != "regression" else None
     context = catalogue.Context(len(frame), task, minority)
     values = catalogue.resolve(spec, context, given)
     model_profile = catalogue.profile_for(spec, values)
-    preparation = prep.decide(frame, fields, target, task, model_profile, excluded_columns, choices)
+    preparation = prep.decide(
+        frame,
+        fields,
+        target,
+        task,
+        model_profile,
+        excluded_columns,
+        choices,
+        source_numeric=classes is not None,
+    )
     if not preparation.used:
         raise TrainingError("No usable feature: every column was left out (see Preparation).")
     features = [d.column for d in preparation.used]
@@ -293,7 +323,23 @@ def _setup(
         cast(pd.Series, row_test),
         minority,
         model_key == "linear_regression" and values.get("regularization") == "none",
+        task,
+        target,
+        classes,
     )
+
+
+def _as_classes(
+    values: pd.Series, target: Field, classes: binning.Classes
+) -> tuple[pd.Series, Field, binning.Classes]:
+    """The number cut into the given classes; empty classes are left out of the order."""
+    labels = binning.apply(values, classes)
+    counts = [int((labels == name).sum()) for name in classes.names]
+    used = [name for name, count in zip(classes.names, counts, strict=True) if count]
+    if len(used) < 2:
+        raise TrainingError("Fewer than two classes have rows: move the limits.")
+    ordered = Field(target.name, "categorical_ordinal", target.parser, target.role, used)
+    return labels.astype(str), ordered, classes.model_copy(update={"counts": counts})
 
 
 def _selection(pipeline: Pipeline) -> list[prep.SelectionReport]:
@@ -320,9 +366,13 @@ def train(
     sampled: bool,
     excluded_columns: set[str] | None = None,
     choices: prep.Choices | None = None,
+    classes: binning.Classes | None = None,
 ) -> Trained:
     started = time.monotonic()
-    setup = _setup(frame, fields, target, task, model_key, given, excluded_columns, choices)
+    setup = _setup(
+        frame, fields, target, task, model_key, given, excluded_columns, choices, classes
+    )
+    task, target = setup.task, setup.target
     spec, context, values, preparation = setup.spec, setup.context, setup.values, setup.preparation
     x_train, x_test, y_train, y_test = setup.x_train, setup.x_test, setup.y_train, setup.y_test
     row_test, minority, unregularized = setup.row_test, setup.minority, setup.unregularized
@@ -361,7 +411,7 @@ def train(
         ]
         primary, score = "r2", regression.r2
     else:
-        classification, predicted_labels, probabilities, classes = _classification_scores(
+        classification, predicted_labels, probabilities, class_names = _classification_scores(
             pipeline, x_test, y_test, target
         )
         coefficients = (
@@ -369,7 +419,7 @@ def train(
         )
         actual_labels = y_test.to_numpy()
         pick = rng.permutation(len(actual_labels))[:PREDICTION_ROWS]
-        column = {label: i for i, label in enumerate(classes)}
+        column = {label: i for i, label in enumerate(class_names)}
         predictions = [
             PredictionRow(
                 int(row_test.iloc[i]),
@@ -401,6 +451,7 @@ def train(
         predictions,
         primary,
         score,
+        setup.classes,
         pipeline,
     )
 
@@ -553,6 +604,13 @@ def _classification_scores(
                 lambda: skm.roc_auc_score(actual, probabilities, multi_class="ovr", labels=classes)
             )
         )
+    if target.order and len(labels) > 2:
+        rank = {label: i for i, label in enumerate(target.order)}
+        distance = np.array(
+            [abs(rank.get(a, 0) - rank.get(p, 0)) for a, p in zip(actual, predicted, strict=True)]
+        )
+        result.within_one = clean(float(np.mean(distance <= 1)))
+        result.mean_class_error = clean(float(np.mean(distance)))
     return result, predicted, probabilities, classes
 
 
@@ -593,9 +651,13 @@ def preview(
     given: dict[str, Any] | None,
     choices: prep.Choices | None = None,
     excluded_columns: set[str] | None = None,
+    classes: binning.Classes | None = None,
 ) -> PreparationPreview:
     """`prepare.fit(train).transform(train)[:20]`, with the decisions behind it."""
-    setup = _setup(frame, fields, target, task, model_key, given, excluded_columns, choices)
+    setup = _setup(
+        frame, fields, target, task, model_key, given, excluded_columns, choices, classes
+    )
+    task = setup.task
     preparation, x_train = setup.preparation, setup.x_train
     prepare = Pipeline(prep.steps(preparation, len(x_train), task, drop_first=setup.unregularized))
     _quiet(lambda: prepare.fit(x_train, setup.y_train))

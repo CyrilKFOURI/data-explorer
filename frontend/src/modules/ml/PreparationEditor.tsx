@@ -1,7 +1,7 @@
 import { RotateCcw } from "lucide-react";
 import { useState } from "react";
 
-import type { MlChoicesInput, MlColumnChoice, MlDecision, MlPreparation, MlPreparationPreview, MlTask } from "../../api/client";
+import type { MlChoicesInput, MlClasses, MlColumnChoice, MlDecision, MlPreparation, MlPreparationPreview, MlTask } from "../../api/client";
 import { useMlPreparation } from "../../api/hooks";
 import { t, type MessageKey } from "../../lib/i18n";
 import { Button } from "../../ui/Button";
@@ -54,7 +54,9 @@ export function PreparationEditor({
   settings,
   choices,
   onChoices,
+  classes = null,
 }: {
+  classes?: MlClasses | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   datasetId: string;
@@ -66,7 +68,7 @@ export function PreparationEditor({
   onChoices: (next: MlChoicesInput) => void;
 }) {
   const [tab, setTab] = useState<Tab>("columns");
-  const preview = useMlPreparation(datasetId, target, model, settings, choices, open);
+  const preview = useMlPreparation(datasetId, target, model, settings, choices, open, classes);
   const preparation = preview.data?.preparation;
 
   const setColumn = (column: string, key: keyof MlColumnChoice, value: string | boolean | undefined) => {

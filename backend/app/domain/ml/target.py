@@ -100,5 +100,5 @@ def candidate(
     elif task == "regression" and analysis_type == "numeric_discrete" and distinct <= 10:
         reason = "Few distinct values: predicting them as classes may suit better."
     suggested = role in SUGGESTED_ROLES or (task != "regression" and distinct <= 10)
-    classes = distinct if task != "regression" else None
+    classes = distinct if task != "regression" or analysis_type == "numeric_discrete" else None
     return Candidate(name, analysis_type, role, task, reason, suggested, classes, missing_share)

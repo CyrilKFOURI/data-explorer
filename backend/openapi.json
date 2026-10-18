@@ -5111,6 +5111,24 @@
             "description": "JSON object of settings."
           },
           {
+            "name": "classes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON: a number cut into classes.",
+              "title": "Classes"
+            },
+            "description": "JSON: a number cut into classes."
+          },
+          {
             "name": "filters",
             "in": "query",
             "required": false,
@@ -5294,6 +5312,24 @@
             "description": "JSON object of settings."
           },
           {
+            "name": "classes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON: a number cut into classes.",
+              "title": "Classes"
+            },
+            "description": "JSON: a number cut into classes."
+          },
+          {
             "name": "filters",
             "in": "query",
             "required": false,
@@ -5336,6 +5372,75 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PreparationPreview"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/ml/datasets/{dataset_id}/targets/{column}/distribution": {
+      "get": {
+        "tags": [
+          "module:ml"
+        ],
+        "summary": "Distribution",
+        "description": "Quantiles, histogram and sample of a numeric target, to cut it into classes.",
+        "operationId": "distribution_api_v1_modules_ml_datasets__dataset_id__targets__column__distribution_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "column",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Column"
+            }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filters"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TargetDistribution"
                 }
               }
             }
@@ -6496,6 +6601,54 @@
         ],
         "title": "ClassReport"
       },
+      "Classes": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "quantile",
+              "width",
+              "jenks",
+              "custom",
+              "values"
+            ],
+            "title": "Method",
+            "default": "quantile"
+          },
+          "edges": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "maxItems": 9,
+            "minItems": 1,
+            "title": "Edges"
+          },
+          "names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "minItems": 2,
+            "title": "Names"
+          },
+          "counts": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Counts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "edges",
+          "names"
+        ],
+        "title": "Classes",
+        "description": "How the numeric target is cut: k - 1 inner limits, k names, intervals (a, b]."
+      },
       "ClassificationResult": {
         "properties": {
           "labels": {
@@ -6646,6 +6799,28 @@
             },
             "type": "array",
             "title": "Probability"
+          },
+          "within_one": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Within One"
+          },
+          "mean_class_error": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean Class Error"
           }
         },
         "type": "object",
@@ -11147,6 +11322,16 @@
               }
             ],
             "title": "Score"
+          },
+          "classes": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Classes"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -11219,6 +11404,16 @@
           "created_at": {
             "type": "string",
             "title": "Created At"
+          },
+          "classes": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Classes"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -12888,6 +13083,152 @@
         ],
         "title": "Synthesis"
       },
+      "TargetDistribution": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "distinct": {
+            "type": "integer",
+            "title": "Distinct"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "p1": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P1"
+          },
+          "p99": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P99"
+          },
+          "quantiles": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Quantiles"
+          },
+          "equal_counts": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Equal Counts"
+          },
+          "histogram_start": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Histogram Start"
+          },
+          "histogram_width": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Histogram Width"
+          },
+          "histogram": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Histogram"
+          },
+          "sample": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Sample"
+          },
+          "values": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ValueCount"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "column",
+          "rows",
+          "distinct",
+          "min",
+          "max",
+          "p1",
+          "p99",
+          "quantiles",
+          "equal_counts",
+          "histogram_start",
+          "histogram_width",
+          "histogram",
+          "sample",
+          "values"
+        ],
+        "title": "TargetDistribution",
+        "description": "What the browser needs to cut the target: exact quantiles, a fine histogram, a sorted\nsample (natural breaks) and, for few distinct values, each value with its count."
+      },
       "Targets": {
         "properties": {
           "candidates": {
@@ -13355,6 +13696,24 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "ValueCount": {
+        "properties": {
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "count"
+        ],
+        "title": "ValueCount"
       },
       "VariableProfile": {
         "properties": {

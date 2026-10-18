@@ -25,11 +25,12 @@ from app.core.storage import Workspace
 from app.domain.columns.service import ColumnService
 from app.domain.filters.model import Condition
 from app.domain.filters.scope import scoped_source, where_for
+from app.domain.ml import classes as binning
 from app.domain.ml import data as ml_data
 from app.domain.ml import models as catalogue
 from app.domain.ml import preparation as prep
 from app.domain.ml import train as trainer
-from app.domain.ml.data import Field
+from app.domain.ml.data import NUMERIC, Field
 from app.domain.ml.target import Candidate, Task, candidate
 
 Stage = Literal["loading", "preparing", "training", "saving"]
@@ -94,6 +95,7 @@ class Run:
     predictions: list[trainer.PredictionRow]
     primary: str
     score: float | None
+    classes: binning.Classes | None = None
 
 
 @dataclass
@@ -107,6 +109,7 @@ class RunSummary:
     score: float | None
     seconds: float
     created_at: str
+    classes: binning.Classes | None = None
 
 
 @dataclass
@@ -214,8 +217,9 @@ class MlService:
         settings: dict[str, Any] | None,
         conditions: list[Condition],
         choices: prep.Choices | None = None,
+        classes: binning.Classes | None = None,
     ) -> TrainingJob:
-        fields, field_, source = self._request(dataset_id, target, model, conditions)
+        fields, field_, source = self._request(dataset_id, target, model, conditions, classes)
         job = TrainingJob(uuid.uuid4().hex[:12], "running", "loading")
         with self._lock:
             self._jobs[job.id] = job
@@ -232,11 +236,17 @@ class MlService:
             source,
             conditions,
             choices,
+            classes,
         )
         return job
 
     def _request(
-        self, dataset_id: str, target: str, model: str | None, conditions: list[Condition]
+        self,
+        dataset_id: str,
+        target: str,
+        model: str | None,
+        conditions: list[Condition],
+        classes: binning.Classes | None = None,
     ) -> tuple[list[Field], Field, str]:
         fields, (dataset, views) = self._fields(dataset_id)
         by_name = {f.name: f for f in fields}
@@ -247,6 +257,10 @@ class MlService:
             raise MlError(f"{target!r} cannot be predicted: it is {field_.type}.", "bad_target")
         if model is not None and model not in catalogue.CATALOGUE:
             raise MlError(f"Unknown model {model!r}.", "unknown_model")
+        if classes is not None and field_.type not in NUMERIC:
+            raise MlError(
+                f"{target!r} is not a number: it cannot be cut into classes.", "bad_classes"
+            )
         source = scoped_source(dataset.storage_path, where_for(views, conditions), numbered=True)
         return fields, field_, source
 
@@ -272,10 +286,13 @@ class MlService:
         settings: dict[str, Any] | None,
         conditions: list[Condition],
         choices: prep.Choices | None,
+        classes: binning.Classes | None = None,
     ) -> trainer.PreparationPreview:
         """The preparation the next training would use, and its first prepared rows."""
-        fields, field_, source = self._request(dataset_id, target, model, conditions)
+        fields, field_, source = self._request(dataset_id, target, model, conditions, classes)
         frame, task = self._load(fields, field_, source)
+        if classes is not None:
+            task = "binary" if len(classes.names) == 2 else "multiclass"
         try:
             return trainer.preview(
                 frame.data,
@@ -285,6 +302,7 @@ class MlService:
                 model or catalogue.default_model(task),
                 settings,
                 choices,
+                classes=classes,
             )
         except (trainer.TrainingError, catalogue.SettingsError) as error:
             raise MlError(str(error)) from None
@@ -306,9 +324,12 @@ class MlService:
         source: str,
         conditions: list[Condition],
         choices: prep.Choices | None = None,
+        classes: binning.Classes | None = None,
     ) -> None:
         try:
             frame, task = self._load(fields, target, source)
+            if classes is not None:
+                task = "binary" if len(classes.names) == 2 else "multiclass"
             job.stage = "preparing"
             key = model or catalogue.default_model(task)
             job.stage = "training"
@@ -322,6 +343,7 @@ class MlService:
                 frame.rows,
                 frame.sampled,
                 choices=choices,
+                classes=classes,
             )
             job.stage = "saving"
             job.run_id = self._save(dataset_id, target.name, trained, conditions)
@@ -344,7 +366,8 @@ class MlService:
         with self._db() as connection, connection:
             connection.execute(
                 "INSERT INTO ml_runs (id, dataset_id, target, task, model, settings, conditions,"
-                " metric, score, seconds, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                " metric, score, seconds, created_at, classes)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     run_id,
                     dataset_id,
@@ -357,6 +380,7 @@ class MlService:
                     trained.score,
                     trained.seconds,
                     run.created_at,
+                    trained.classes.model_dump_json() if trained.classes else None,
                 ),
             )
         return run_id
@@ -383,9 +407,23 @@ class MlService:
                 r["score"],
                 r["seconds"],
                 r["created_at"],
+                binning.Classes.model_validate_json(r["classes"]) if r["classes"] else None,
             )
             for r in rows
         ]
+
+    def distribution(
+        self, dataset_id: str, column: str, conditions: list[Condition]
+    ) -> binning.TargetDistribution:
+        """A numeric target's distribution, for cutting it into classes in the browser."""
+        _, field_, source = self._request(dataset_id, column, None, conditions)
+        if field_.type not in NUMERIC:
+            raise MlError(f"{column!r} is not a number.", "bad_classes")
+        connection = duckdb.connect()
+        try:
+            return binning.distribution(connection, source, field_)
+        finally:
+            connection.close()
 
     def run(self, dataset_id: str, run_id: str) -> Run:
         path = self._folder(dataset_id) / f"{run_id}.json"

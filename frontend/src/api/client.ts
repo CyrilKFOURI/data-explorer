@@ -90,6 +90,8 @@ export type MlSelectionChoice = MlChoices["selection"][number];
 /** What the preparation editor sends: anything left out is automatic. */
 export type MlChoicesInput = Partial<Omit<MlChoices, "columns">> & { columns?: Record<string, Partial<MlColumnChoice>> };
 export type MlPreparationPreview = Complete<Schemas["PreparationPreview"]>;
+export type MlDistribution = Complete<Schemas["TargetDistribution"]>;
+export type MlClasses = { method: string; edges: number[]; names: string[] };
 export type SeriesSetup = SeriesOverview["setup"];
 export type SeriesLine = SeriesOverview["analyzed"];
 export type MethodResult = SeriesOverview["methods"][number];
@@ -210,10 +212,17 @@ async function errorMessage(response: Response): Promise<string> {
   return `Request failed (${response.status})`;
 }
 
-function mlQuery(target: string, model: string | null, settings: Record<string, unknown> | null, filters?: Condition[]) {
+function mlQuery(
+  target: string,
+  model: string | null,
+  settings: Record<string, unknown> | null,
+  filters?: Condition[],
+  classes?: MlClasses | null,
+) {
   const query = new URLSearchParams({ target, ...filtersParam(filters) });
   if (model) query.set("model", model);
   if (settings) query.set("settings", JSON.stringify(settings));
+  if (classes) query.set("classes", JSON.stringify(classes));
   return query;
 }
 
@@ -373,7 +382,8 @@ export const api = {
     settings: Record<string, unknown> | null,
     filters?: Condition[],
     choices?: MlChoicesInput | null,
-  ) => request<MlJob>("POST", `/modules/ml/datasets/${id}/runs?${mlQuery(target, model, settings, filters)}`, choices ?? undefined),
+    classes?: MlClasses | null,
+  ) => request<MlJob>("POST", `/modules/ml/datasets/${id}/runs?${mlQuery(target, model, settings, filters, classes)}`, choices ?? undefined),
   mlPreparation: (
     id: string,
     target: string,
@@ -381,11 +391,17 @@ export const api = {
     settings: Record<string, unknown> | null,
     choices: MlChoicesInput,
     filters?: Condition[],
+    classes?: MlClasses | null,
   ) =>
     request<MlPreparationPreview>(
       "POST",
-      `/modules/ml/datasets/${id}/preparation?${mlQuery(target, model, settings, filters)}`,
+      `/modules/ml/datasets/${id}/preparation?${mlQuery(target, model, settings, filters, classes)}`,
       choices,
+    ),
+  mlDistribution: (id: string, column: string, filters?: Condition[]) =>
+    request<MlDistribution>(
+      "GET",
+      `/modules/ml/datasets/${id}/targets/${encodeURIComponent(column)}/distribution?${new URLSearchParams(filtersParam(filters))}`,
     ),
   mlJob: (jobId: string) => request<MlJob>("GET", `/modules/ml/jobs/${jobId}`),
   mlRuns: (id: string, target: string) =>

@@ -44,7 +44,8 @@ export function verdict(run: MlRun): string {
     const text = t("ml.verdict.noBetterMajority", { majority: c.majority });
     return c.roc_auc !== null ? `${text} ${t("ml.verdict.auc", { auc: c.roc_auc.toFixed(2) })}` : text;
   }
-  return t("ml.verdict.classification", { accuracy: pct(c.accuracy), majority: c.majority, baseline: pct(c.baseline_accuracy) });
+  const text = t("ml.verdict.classification", { accuracy: pct(c.accuracy), majority: c.majority, baseline: pct(c.baseline_accuracy) });
+  return c.within_one !== null ? `${text} ${t("ml.verdict.withinOne", { share: pct(c.within_one) })}` : text;
 }
 
 export function Results({ run, datasetId }: { run: MlRun; datasetId: string }) {
@@ -96,6 +97,16 @@ function ScoreTiles({ run }: { run: MlRun }) {
       items={[
         { label: t("ml.accuracy"), value: pct(c.accuracy, 1), note: `${t("ml.majority")} ${pct(c.baseline_accuracy)}`, explain: t("ml.explain.accuracy") },
         { label: t("ml.balancedAccuracy"), value: pct(c.balanced_accuracy, 1), explain: t("ml.explain.balanced") },
+        ...(c.within_one !== null
+          ? [
+              {
+                label: t("ml.withinOne"),
+                value: pct(c.within_one, 1),
+                note: c.mean_class_error !== null ? t("ml.meanClassError", { error: c.mean_class_error.toFixed(2) }) : undefined,
+                explain: t("ml.explain.withinOne"),
+              },
+            ]
+          : []),
         { label: "F1 (macro)", value: formatNumber(c.f1_macro), explain: t("ml.explain.f1") },
         ...(c.roc_auc !== null ? [{ label: "ROC AUC", value: formatNumber(c.roc_auc), explain: t("ml.explain.auc") }] : []),
         ...(c.log_loss !== null ? [{ label: "Log loss", value: formatNumber(c.log_loss), explain: t("ml.explain.logloss") }] : []),

@@ -871,6 +871,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/modules/ml/datasets/{dataset_id}/targets/{column}/distribution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Distribution
+         * @description Quantiles, histogram and sample of a numeric target, to cut it into classes.
+         */
+        get: operations["distribution_api_v1_modules_ml_datasets__dataset_id__targets__column__distribution_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/modules/ml/jobs/{job_id}": {
         parameters: {
             query?: never;
@@ -1284,6 +1304,24 @@ export interface components {
             /** Support */
             support: number;
         };
+        /**
+         * Classes
+         * @description How the numeric target is cut: k - 1 inner limits, k names, intervals (a, b].
+         */
+        Classes: {
+            /**
+             * Method
+             * @default quantile
+             * @enum {string}
+             */
+            method: "quantile" | "width" | "jenks" | "custom" | "values";
+            /** Edges */
+            edges: number[];
+            /** Names */
+            names: string[];
+            /** Counts */
+            counts?: number[];
+        };
         /** ClassificationResult */
         ClassificationResult: {
             /** Labels */
@@ -1315,6 +1353,10 @@ export interface components {
             truth?: number[];
             /** Probability */
             probability?: number[];
+            /** Within One */
+            within_one?: number | null;
+            /** Mean Class Error */
+            mean_class_error?: number | null;
         };
         /** Coefficient */
         Coefficient: {
@@ -2641,6 +2683,7 @@ export interface components {
             primary: string;
             /** Score */
             score: number | null;
+            classes?: components["schemas"]["Classes"] | null;
         };
         /** RunSummary */
         RunSummary: {
@@ -2664,6 +2707,7 @@ export interface components {
             seconds: number;
             /** Created At */
             created_at: string;
+            classes?: components["schemas"]["Classes"] | null;
         };
         /** SampleOut */
         SampleOut: {
@@ -3124,6 +3168,41 @@ export interface components {
             /** Kpss Rejects */
             kpss_rejects: boolean;
         };
+        /**
+         * TargetDistribution
+         * @description What the browser needs to cut the target: exact quantiles, a fine histogram, a sorted
+         *     sample (natural breaks) and, for few distinct values, each value with its count.
+         */
+        TargetDistribution: {
+            /** Column */
+            column: string;
+            /** Rows */
+            rows: number;
+            /** Distinct */
+            distinct: number;
+            /** Min */
+            min: number | null;
+            /** Max */
+            max: number | null;
+            /** P1 */
+            p1: number | null;
+            /** P99 */
+            p99: number | null;
+            /** Quantiles */
+            quantiles: number[];
+            /** Equal Counts */
+            equal_counts: number[][];
+            /** Histogram Start */
+            histogram_start: number | null;
+            /** Histogram Width */
+            histogram_width: number | null;
+            /** Histogram */
+            histogram: number[];
+            /** Sample */
+            sample: number[];
+            /** Values */
+            values: components["schemas"]["ValueCount"][] | null;
+        };
         /** Targets */
         Targets: {
             /** Candidates */
@@ -3270,6 +3349,13 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** ValueCount */
+        ValueCount: {
+            /** Value */
+            value: number;
+            /** Count */
+            count: number;
         };
         /** VariableProfile */
         VariableProfile: {
@@ -5165,6 +5251,8 @@ export interface operations {
                 model?: string | null;
                 /** @description JSON object of settings. */
                 settings?: string | null;
+                /** @description JSON: a number cut into classes. */
+                classes?: string | null;
                 filters?: string | null;
             };
             header?: never;
@@ -5206,6 +5294,8 @@ export interface operations {
                 model?: string | null;
                 /** @description JSON object of settings. */
                 settings?: string | null;
+                /** @description JSON: a number cut into classes. */
+                classes?: string | null;
                 filters?: string | null;
             };
             header?: never;
@@ -5227,6 +5317,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PreparationPreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    distribution_api_v1_modules_ml_datasets__dataset_id__targets__column__distribution_get: {
+        parameters: {
+            query?: {
+                filters?: string | null;
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+                column: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TargetDistribution"];
                 };
             };
             /** @description Validation Error */

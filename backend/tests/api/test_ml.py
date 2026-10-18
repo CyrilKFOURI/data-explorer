@@ -1,3 +1,4 @@
+import json
 import time
 
 import pytest
@@ -140,3 +141,34 @@ def test_preparation_preview_and_training_with_choices(client: TestClient, traps
         json={"outliers": "explode"},
     )
     assert bad.status_code == 422
+
+
+def test_a_number_predicted_as_classes(client: TestClient, traps: str) -> None:
+    shape = client.get(f"{BASE}/datasets/{traps}/targets/income/distribution").json()
+    assert shape["rows"] > 0 and len(shape["quantiles"]) == 1001
+    low, high = shape["quantiles"][333], shape["quantiles"][667]
+    classes = json.dumps(
+        {"method": "quantile", "edges": [low, high], "names": ["Low", "Medium", "High"]}
+    )
+
+    job = wait(
+        client,
+        client.post(
+            f"{BASE}/datasets/{traps}/runs", params={"target": "income", "classes": classes}
+        ).json(),
+    )
+    assert job["status"] == "done", job
+    run = client.get(f"{BASE}/datasets/{traps}/runs/{job['run_id']}").json()
+    assert run["task"] == "multiclass" and run["classes"]["names"] == ["Low", "Medium", "High"]
+    assert run["classification"]["labels"] == ["Low", "Medium", "High"]
+    listed = client.get(f"{BASE}/datasets/{traps}/runs", params={"target": "income"}).json()
+    assert listed[0]["classes"]["edges"] == [low, high]
+
+    bad = json.dumps({"edges": [2, 1], "names": ["a", "b", "c"]})
+    assert (
+        client.post(
+            f"{BASE}/datasets/{traps}/runs", params={"target": "income", "classes": bad}
+        ).status_code
+        == 422
+    )
+    assert client.get(f"{BASE}/datasets/{traps}/targets/segment/distribution").status_code == 422

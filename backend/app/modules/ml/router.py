@@ -3,8 +3,10 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Body, Depends, Query, Request
 from fastapi.responses import Response
+from pydantic import TypeAdapter, ValidationError
 
 from app.domain.filters.model import Condition, parse_filters
+from app.domain.ml.classes import Classes, TargetDistribution
 from app.domain.ml.preparation import Choices
 from app.domain.ml.target import Task
 from app.domain.ml.train import PreparationPreview
@@ -61,9 +63,12 @@ def train(
     model: str | None = None,
     settings: Annotated[str | None, Query(description="JSON object of settings.")] = None,
     choices: Annotated[Choices | None, Body(description="Preparation choices.")] = None,
+    classes: Annotated[str | None, Query(description="JSON: a number cut into classes.")] = None,
 ) -> TrainingJob:
     """Train a model in the background (defaults for everything not given)."""
-    return service.start(dataset_id, target, model, _settings(settings), filters, choices)
+    return service.start(
+        dataset_id, target, model, _settings(settings), filters, choices, _classes(classes)
+    )
 
 
 @router.post("/datasets/{dataset_id}/preparation")
@@ -75,9 +80,33 @@ def preparation(
     model: str | None = None,
     settings: Annotated[str | None, Query(description="JSON object of settings.")] = None,
     choices: Annotated[Choices | None, Body(description="Preparation choices.")] = None,
+    classes: Annotated[str | None, Query(description="JSON: a number cut into classes.")] = None,
 ) -> PreparationPreview:
     """The decisions the next training would take, and its first 20 training rows prepared."""
-    return service.preview(dataset_id, target, model, _settings(settings), filters, choices)
+    return service.preview(
+        dataset_id, target, model, _settings(settings), filters, choices, _classes(classes)
+    )
+
+
+@router.get("/datasets/{dataset_id}/targets/{column}/distribution")
+def distribution(
+    dataset_id: str, column: str, service: Service, filters: Filters
+) -> TargetDistribution:
+    """Quantiles, histogram and sample of a numeric target, to cut it into classes."""
+    return service.distribution(dataset_id, column, filters)
+
+
+CLASSES = TypeAdapter(Classes)
+
+
+def _classes(classes: str | None) -> Classes | None:
+    if not classes:
+        return None
+    try:
+        return CLASSES.validate_json(classes)
+    except ValidationError as error:
+        message = error.errors()[0].get("msg", "Invalid classes.")
+        raise MlError(f"Classes: {message}", "bad_classes") from None
 
 
 def _settings(settings: str | None) -> dict[str, Any] | None:

@@ -37,7 +37,7 @@ Roadmap en **sprints**, chacun composé de **tranches verticales** : chaque case
 ### Sprint 5 — Machine learning (page : `docs/pages/11-machine-learning.md`)
 - [x] 016-ml-premier-modele — page `/ml` (module), cible seule obligatoire, problème déduit, modèle linéaire / logistique entraîné aussitôt, résultats, runs
 - [x] 017-ml-preparation-donnees — moteur de règles (type détecté × profil du modèle) : sélection, imputation, encodage, transformations, échelle, déséquilibre ; éditeur (choix par colonne et globaux, sélection statistique, aberrantes, aperçu)
-- [ ] 018-ml-cible-en-classes — cible numérique découpée en classes (nombre, méthode, aperçu en direct, noms)
+- [x] 018-ml-cible-en-classes — cible numérique découpée en classes (nombre, méthode, aperçu en direct, noms, limites glissables, métriques « off by one »)
 - [ ] 019-ml-catalogue-modeles — tous les modèles par familles, réglages à 3 niveaux (essentiels, avancés, expert / optimiseurs), validation
 - [ ] 020-ml-explicabilite — permutation importance, SHAP (natif boosting / forme close), dépendance partielle, explication par ligne
 - [ ] 021-ml-comparaison-optimisation — comparer les modèles et les runs, optimisation Optuna (TPE, CMA-ES…) avec budget

@@ -18,6 +18,7 @@ import {
   type Dataset,
   type ImportOptions,
   type MlChoicesInput,
+  type MlClasses,
   type OutlierMethod,
   type DetectionSettings,
   type RowsView,
@@ -478,12 +479,14 @@ export function useMlTrain(id: string) {
       model,
       settings,
       choices,
+      classes,
     }: {
       target: string;
       model: string | null;
       settings: Record<string, unknown> | null;
       choices?: MlChoicesInput | null;
-    }) => api.mlTrain(id, target, model, settings, filters, choices),
+      classes?: MlClasses | null;
+    }) => api.mlTrain(id, target, model, settings, filters, choices, classes),
   });
 }
 
@@ -495,15 +498,27 @@ export function useMlPreparation(
   settings: Record<string, unknown> | null,
   choices: MlChoicesInput,
   enabled: boolean,
+  classes: MlClasses | null = null,
 ) {
   const filters = useActiveFilters(id);
   return useQuery({
-    queryKey: ["datasets", id, "ml", "preparation", target, model, settings, choices, filters],
-    queryFn: () => api.mlPreparation(id, target, model, settings, choices, filters),
+    queryKey: ["datasets", id, "ml", "preparation", target, model, settings, choices, classes, filters],
+    queryFn: () => api.mlPreparation(id, target, model, settings, choices, filters, classes),
     enabled,
     placeholderData: keepPreviousData,
     staleTime: 60_000,
     retry: false,
+  });
+}
+
+/** A numeric target's distribution, to cut it into classes in the browser. */
+export function useMlDistribution(id: string, column: string, enabled: boolean) {
+  const filters = useActiveFilters(id);
+  return useQuery({
+    queryKey: ["datasets", id, "ml", "distribution", column, filters],
+    queryFn: () => api.mlDistribution(id, column, filters),
+    enabled,
+    staleTime: 60_000,
   });
 }
 

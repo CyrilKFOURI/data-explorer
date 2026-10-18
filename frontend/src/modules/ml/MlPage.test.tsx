@@ -222,6 +222,62 @@ describe("Preparation editor", () => {
   });
 });
 
+describe("Predict a number as classes", () => {
+  it("cuts the target live and trains a classification 600 ms after the last change", async () => {
+    const values = Array.from({ length: 300 }, (_, i) => i + 1);
+    const at = (level: number) => values[Math.max(0, Math.ceil(level * 300) - 1)] as number;
+    const calls = mockApi({
+      "GET /health": health,
+      "GET /datasets": [dataset()],
+      "GET /datasets/d1": dataset(),
+      "GET /datasets/d1/columns": [column({ name: "price" })],
+      "GET /column-roles": roles,
+      "GET /modules/ml/datasets/d1/targets": { candidates: [candidate("price", "regression")], rows: 300 },
+      "GET /modules/ml/catalog": [
+        { key: "logistic_regression", label: "Logistic regression", family: "Linear models", description: "", tasks: ["binary", "multiclass"], settings: [] },
+      ],
+      "GET /modules/ml/datasets/d1/runs": [
+        { id: "r1", target: "price", task: "regression", model: "linear_regression", settings: {}, metric: "r2", score: 0.82, seconds: 0.3, created_at: "2026-10-18T10:00:00Z", classes: null },
+      ],
+      "GET /modules/ml/datasets/d1/runs/r1": regressionRun,
+      "GET /modules/ml/datasets/d1/targets/price/distribution": {
+        column: "price",
+        rows: 300,
+        distinct: 300,
+        min: 1,
+        max: 300,
+        p1: 3,
+        p99: 297,
+        quantiles: Array.from({ length: 1001 }, (_, i) => at(i / 1000)),
+        equal_counts: Array.from({ length: 9 }, (_, j) => Array.from({ length: j + 1 }, (_, i) => at((i + 1) / (j + 2)))),
+        histogram_start: 1,
+        histogram_width: 299 / 80,
+        histogram: Array.from({ length: 80 }, () => 4),
+        sample: values,
+        values: null,
+      },
+      "POST /modules/ml/datasets/d1/runs": { id: "job1", status: "running", stage: "loading", run_id: null, error: null },
+      "GET /modules/ml/jobs/job1": { id: "job1", status: "running", stage: "loading", run_id: null, error: null },
+    });
+    renderAt("/d/d1/ml?target=price");
+
+    fireEvent.click(await screen.findByRole("radio", { name: "Classes" }));
+    expect(await screen.findByRole("textbox", { name: "Name of class 3" })).toHaveValue("High");
+    expect(screen.getByText("≤ 100")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "More classes" }));
+    expect(await screen.findByRole("textbox", { name: "Name of class 4" })).toHaveValue("High");
+
+    await waitFor(() => expect(calls.some((c) => c.key === "POST /modules/ml/datasets/d1/runs")).toBe(true), { timeout: 3000 });
+    const posted = calls.filter((c) => c.key === "POST /modules/ml/datasets/d1/runs");
+    expect(posted).toHaveLength(1); // one training for the last setup only
+    expect(JSON.parse(posted[0]?.params.get("classes") ?? "{}")).toMatchObject({
+      method: "quantile",
+      edges: [75, 150, 230],
+      names: ["Low", "Medium-low", "Medium-high", "High"],
+    });
+  });
+});
+
 describe("ML verdicts", () => {
   const run = regressionRun as unknown as MlRun;
 
