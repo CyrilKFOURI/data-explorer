@@ -4862,6 +4862,455 @@
           }
         }
       }
+    },
+    "/api/v1/modules/ml/datasets/{dataset_id}/targets": {
+      "get": {
+        "tags": [
+          "module:ml"
+        ],
+        "summary": "Targets",
+        "description": "Every column as a possible target: the problem it defines, or why it cannot be one.",
+        "operationId": "targets_api_v1_modules_ml_datasets__dataset_id__targets_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filters"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Targets"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/ml/catalog": {
+      "get": {
+        "tags": [
+          "module:ml"
+        ],
+        "summary": "Catalog",
+        "description": "The models that handle a task, with their settings and data-dependent defaults.",
+        "operationId": "catalog_api_v1_modules_ml_catalog_get",
+        "parameters": [
+          {
+            "name": "task",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "regression",
+                "binary",
+                "multiclass"
+              ],
+              "type": "string",
+              "title": "Task"
+            }
+          },
+          {
+            "name": "rows",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 1000,
+              "title": "Rows"
+            }
+          },
+          {
+            "name": "minority",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 1,
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Minority"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ModelView"
+                  },
+                  "title": "Response Catalog Api V1 Modules Ml Catalog Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/ml/datasets/{dataset_id}/runs": {
+      "post": {
+        "tags": [
+          "module:ml"
+        ],
+        "summary": "Train",
+        "description": "Train a model in the background (defaults for everything not given).",
+        "operationId": "train_api_v1_modules_ml_datasets__dataset_id__runs_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "target",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Target"
+            }
+          },
+          {
+            "name": "model",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Model"
+            }
+          },
+          {
+            "name": "settings",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON object of settings.",
+              "title": "Settings"
+            },
+            "description": "JSON object of settings."
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filters"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "module:ml"
+        ],
+        "summary": "Runs",
+        "description": "Saved runs, most recent first (for one target when given).",
+        "operationId": "runs_api_v1_modules_ml_datasets__dataset_id__runs_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "target",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Target"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RunSummary"
+                  },
+                  "title": "Response Runs Api V1 Modules Ml Datasets  Dataset Id  Runs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/ml/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "module:ml"
+        ],
+        "summary": "Job",
+        "operationId": "job_api_v1_modules_ml_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/ml/datasets/{dataset_id}/runs/{run_id}": {
+      "get": {
+        "tags": [
+          "module:ml"
+        ],
+        "summary": "Run",
+        "operationId": "run_api_v1_modules_ml_datasets__dataset_id__runs__run_id__get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Run"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/ml/datasets/{dataset_id}/runs/{run_id}/predictions.csv": {
+      "get": {
+        "tags": [
+          "module:ml"
+        ],
+        "summary": "Predictions",
+        "description": "Predictions on the test rows (sample), as CSV.",
+        "operationId": "predictions_api_v1_modules_ml_datasets__dataset_id__runs__run_id__predictions_csv_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5192,6 +5641,87 @@
         ],
         "title": "Breaks"
       },
+      "Candidate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "task": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "regression",
+                  "binary",
+                  "multiclass"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "suggested": {
+            "type": "boolean",
+            "title": "Suggested"
+          },
+          "classes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Classes"
+          },
+          "missing_share": {
+            "type": "number",
+            "title": "Missing Share"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "type",
+          "role",
+          "task",
+          "reason",
+          "suggested",
+          "classes",
+          "missing_share"
+        ],
+        "title": "Candidate"
+      },
       "CategoricalProfile": {
         "properties": {
           "rows": {
@@ -5462,6 +5992,302 @@
           "views"
         ],
         "title": "Chart"
+      },
+      "ClassReport": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "precision": {
+            "type": "number",
+            "title": "Precision"
+          },
+          "recall": {
+            "type": "number",
+            "title": "Recall"
+          },
+          "f1": {
+            "type": "number",
+            "title": "F1"
+          },
+          "support": {
+            "type": "integer",
+            "title": "Support"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "precision",
+          "recall",
+          "f1",
+          "support"
+        ],
+        "title": "ClassReport"
+      },
+      "ClassificationResult": {
+        "properties": {
+          "labels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Labels"
+          },
+          "positive": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Positive"
+          },
+          "accuracy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accuracy"
+          },
+          "balanced_accuracy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Balanced Accuracy"
+          },
+          "f1_macro": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "F1 Macro"
+          },
+          "roc_auc": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roc Auc"
+          },
+          "log_loss": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Log Loss"
+          },
+          "baseline_accuracy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Accuracy"
+          },
+          "majority": {
+            "type": "string",
+            "title": "Majority"
+          },
+          "confusion": {
+            "items": {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Confusion"
+          },
+          "report": {
+            "items": {
+              "$ref": "#/components/schemas/ClassReport"
+            },
+            "type": "array",
+            "title": "Report"
+          },
+          "roc": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/app__domain__ml__train__Curve"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pr": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/app__domain__ml__train__Curve"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "calibration": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/app__domain__ml__train__Curve"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "truth": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Truth"
+          },
+          "probability": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Probability"
+          }
+        },
+        "type": "object",
+        "required": [
+          "labels",
+          "positive",
+          "accuracy",
+          "balanced_accuracy",
+          "f1_macro",
+          "roc_auc",
+          "log_loss",
+          "baseline_accuracy",
+          "majority",
+          "confusion",
+          "report"
+        ],
+        "title": "ClassificationResult"
+      },
+      "Coefficient": {
+        "properties": {
+          "feature": {
+            "type": "string",
+            "title": "Feature"
+          },
+          "estimate": {
+            "type": "number",
+            "title": "Estimate"
+          },
+          "std_error": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Std Error"
+          },
+          "low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Low"
+          },
+          "high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High"
+          },
+          "p_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Value"
+          },
+          "vif": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vif"
+          },
+          "per_unit": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Per Unit"
+          },
+          "odds_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Odds Ratio"
+          }
+        },
+        "type": "object",
+        "required": [
+          "feature",
+          "estimate"
+        ],
+        "title": "Coefficient"
       },
       "ColumnChange": {
         "properties": {
@@ -6328,30 +7154,6 @@
         "type": "object",
         "title": "CsvOptions"
       },
-      "Curve": {
-        "properties": {
-          "x": {
-            "items": {
-              "type": "number"
-            },
-            "type": "array",
-            "title": "X"
-          },
-          "y": {
-            "items": {
-              "type": "number"
-            },
-            "type": "array",
-            "title": "Y"
-          }
-        },
-        "type": "object",
-        "required": [
-          "x",
-          "y"
-        ],
-        "title": "Curve"
-      },
       "DatasetOut": {
         "properties": {
           "id": {
@@ -6540,6 +7342,106 @@
           "bytes"
         ],
         "title": "DatasetUsage"
+      },
+      "Decision": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "use": {
+            "type": "boolean",
+            "title": "Use"
+          },
+          "rules": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Rules"
+          },
+          "why": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Why"
+          },
+          "impute": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Impute"
+          },
+          "indicator": {
+            "type": "boolean",
+            "title": "Indicator",
+            "default": false
+          },
+          "transform": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transform"
+          },
+          "encoding": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Encoding"
+          },
+          "scaling": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scaling"
+          },
+          "order": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order"
+          }
+        },
+        "type": "object",
+        "required": [
+          "column",
+          "type",
+          "use"
+        ],
+        "title": "Decision"
       },
       "Decomposition": {
         "properties": {
@@ -7024,7 +7926,7 @@
           "density": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/Curve"
+                "$ref": "#/components/schemas/app__domain__variable__numeric__Curve"
               },
               {
                 "type": "null"
@@ -8399,6 +9301,50 @@
         ],
         "title": "ModelResult"
       },
+      "ModelView": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "family": {
+            "type": "string",
+            "title": "Family"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "tasks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tasks"
+          },
+          "settings": {
+            "items": {
+              "$ref": "#/components/schemas/SettingView"
+            },
+            "type": "array",
+            "title": "Settings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "family",
+          "description",
+          "tasks",
+          "settings"
+        ],
+        "title": "ModelView"
+      },
       "Normality": {
         "properties": {
           "n": {
@@ -8446,7 +9392,7 @@
           "kde": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/Curve"
+                "$ref": "#/components/schemas/app__domain__variable__numeric__Curve"
               },
               {
                 "type": "null"
@@ -8456,7 +9402,7 @@
           "ecdf": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/Curve"
+                "$ref": "#/components/schemas/app__domain__variable__numeric__Curve"
               },
               {
                 "type": "null"
@@ -8878,6 +9824,88 @@
         ],
         "title": "Points"
       },
+      "PredictionRow": {
+        "properties": {
+          "row": {
+            "type": "integer",
+            "title": "Row"
+          },
+          "actual": {
+            "type": "string",
+            "title": "Actual"
+          },
+          "predicted": {
+            "type": "string",
+            "title": "Predicted"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "probability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Probability"
+          },
+          "correct": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "row",
+          "actual",
+          "predicted"
+        ],
+        "title": "PredictionRow"
+      },
+      "Preparation": {
+        "properties": {
+          "decisions": {
+            "items": {
+              "$ref": "#/components/schemas/Decision"
+            },
+            "type": "array",
+            "title": "Decisions"
+          },
+          "inputs": {
+            "type": "integer",
+            "title": "Inputs",
+            "default": 0
+          },
+          "excluded": {
+            "type": "integer",
+            "title": "Excluded",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "decisions"
+        ],
+        "title": "Preparation"
+      },
       "Preview": {
         "properties": {
           "kind": {
@@ -9081,6 +10109,136 @@
         ],
         "title": "Regression"
       },
+      "RegressionResult": {
+        "properties": {
+          "r2": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "R2"
+          },
+          "mae": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mae"
+          },
+          "rmse": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rmse"
+          },
+          "mape": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mape"
+          },
+          "baseline_mae": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Mae"
+          },
+          "baseline_rmse": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Rmse"
+          },
+          "skill": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skill"
+          },
+          "actual": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Actual"
+          },
+          "predicted": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Predicted"
+          },
+          "residual_bins": {
+            "items": {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Residual Bins"
+          },
+          "heteroscedasticity_p": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Heteroscedasticity P"
+          }
+        },
+        "type": "object",
+        "required": [
+          "r2",
+          "mae",
+          "rmse",
+          "mape",
+          "baseline_mae",
+          "baseline_rmse",
+          "skill",
+          "actual",
+          "predicted",
+          "residual_bins"
+        ],
+        "title": "RegressionResult"
+      },
       "RenameRequest": {
         "properties": {
           "name": {
@@ -9182,6 +10340,201 @@
           "offset"
         ],
         "title": "RowsPage"
+      },
+      "Run": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "task": {
+            "type": "string",
+            "enum": [
+              "regression",
+              "binary",
+              "multiclass"
+            ],
+            "title": "Task"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "settings": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Settings"
+          },
+          "preparation": {
+            "$ref": "#/components/schemas/Preparation"
+          },
+          "train_rows": {
+            "type": "integer",
+            "title": "Train Rows"
+          },
+          "test_rows": {
+            "type": "integer",
+            "title": "Test Rows"
+          },
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "sampled": {
+            "type": "boolean",
+            "title": "Sampled"
+          },
+          "seconds": {
+            "type": "number",
+            "title": "Seconds"
+          },
+          "regression": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RegressionResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "classification": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClassificationResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "coefficients": {
+            "items": {
+              "$ref": "#/components/schemas/Coefficient"
+            },
+            "type": "array",
+            "title": "Coefficients"
+          },
+          "predictions": {
+            "items": {
+              "$ref": "#/components/schemas/PredictionRow"
+            },
+            "type": "array",
+            "title": "Predictions"
+          },
+          "primary": {
+            "type": "string",
+            "title": "Primary"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "dataset_id",
+          "target",
+          "created_at",
+          "task",
+          "model",
+          "settings",
+          "preparation",
+          "train_rows",
+          "test_rows",
+          "rows",
+          "sampled",
+          "seconds",
+          "regression",
+          "classification",
+          "coefficients",
+          "predictions",
+          "primary",
+          "score"
+        ],
+        "title": "Run",
+        "description": "A trained model as the page shows it (stored as JSON next to the fitted pipeline)."
+      },
+      "RunSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "settings": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Settings"
+          },
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "seconds": {
+            "type": "number",
+            "title": "Seconds"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "target",
+          "task",
+          "model",
+          "settings",
+          "metric",
+          "score",
+          "seconds",
+          "created_at"
+        ],
+        "title": "RunSummary"
       },
       "SampleOut": {
         "properties": {
@@ -10516,6 +11869,98 @@
         ],
         "title": "SeriesVolatility"
       },
+      "SettingView": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "default": {
+            "title": "Default"
+          },
+          "level": {
+            "type": "string",
+            "title": "Level"
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Options"
+          },
+          "minimum": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimum"
+          },
+          "maximum": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maximum"
+          },
+          "log": {
+            "type": "boolean",
+            "title": "Log"
+          },
+          "why": {
+            "type": "string",
+            "title": "Why"
+          },
+          "shown_when": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shown When"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "kind",
+          "default",
+          "level",
+          "options",
+          "minimum",
+          "maximum",
+          "log",
+          "why",
+          "shown_when"
+        ],
+        "title": "SettingView"
+      },
       "SourceOptions": {
         "properties": {
           "csv": {
@@ -10657,6 +12102,27 @@
           "kpss_rejects"
         ],
         "title": "Synthesis"
+      },
+      "Targets": {
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/Candidate"
+            },
+            "type": "array",
+            "title": "Candidates"
+          },
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "candidates",
+          "rows"
+        ],
+        "title": "Targets"
       },
       "TestResult": {
         "properties": {
@@ -10862,6 +12328,62 @@
         ],
         "title": "TimeView",
         "description": "How a date and a number was turned into a series (each setting chosen or defaulted)."
+      },
+      "TrainingJob": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "done",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "loading",
+              "preparing",
+              "training",
+              "saving"
+            ],
+            "title": "Stage"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "stage"
+        ],
+        "title": "TrainingJob"
       },
       "Transform": {
         "properties": {
@@ -11172,6 +12694,61 @@
           "unit"
         ],
         "title": "YearOverlay"
+      },
+      "app__domain__ml__train__Curve": {
+        "properties": {
+          "x": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "X"
+          },
+          "y": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Y"
+          },
+          "thresholds": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Thresholds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "x",
+          "y"
+        ],
+        "title": "Curve"
+      },
+      "app__domain__variable__numeric__Curve": {
+        "properties": {
+          "x": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "X"
+          },
+          "y": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Y"
+          }
+        },
+        "type": "object",
+        "required": [
+          "x",
+          "y"
+        ],
+        "title": "Curve"
       },
       "app__domain__variable__profiles__DateProfile": {
         "properties": {

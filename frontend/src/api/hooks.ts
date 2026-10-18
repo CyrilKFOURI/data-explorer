@@ -449,6 +449,63 @@ export function useCancelForecast() {
   });
 }
 
+/** Every column as a possible target, through the active filters. */
+export function useMlTargets(id: string, enabled: boolean) {
+  const filters = useActiveFilters(id);
+  return useQuery({
+    queryKey: ["datasets", id, "ml", "targets", filters],
+    queryFn: () => api.mlTargets(id, filters),
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
+export function useMlCatalog(task: string | null, rows: number, minority: number | null) {
+  return useQuery({
+    queryKey: ["ml", "catalog", task, rows, minority],
+    queryFn: () => api.mlCatalog(task ?? "regression", rows, minority),
+    enabled: Boolean(task),
+    staleTime: Infinity,
+  });
+}
+
+export function useMlTrain(id: string) {
+  const filters = useActiveFilters(id);
+  return useMutation({
+    mutationFn: ({ target, model, settings }: { target: string; model: string | null; settings: Record<string, unknown> | null }) =>
+      api.mlTrain(id, target, model, settings, filters),
+  });
+}
+
+/** Follow a training until it ends (also while the tab is in the background). */
+export function useMlJob(jobId: string | null) {
+  return useQuery({
+    queryKey: ["ml", "jobs", jobId ?? ""],
+    queryFn: () => api.mlJob(jobId ?? ""),
+    enabled: Boolean(jobId),
+    refetchInterval: (query) => (query.state.data?.status === "running" || !query.state.data ? 400 : false),
+    refetchIntervalInBackground: true,
+    retry: false,
+  });
+}
+
+export function useMlRuns(id: string, target: string | null) {
+  return useQuery({
+    queryKey: ["datasets", id, "ml", "runs", target ?? ""],
+    queryFn: () => api.mlRuns(id, target ?? ""),
+    enabled: Boolean(target),
+  });
+}
+
+export function useMlRun(id: string, runId: string | null) {
+  return useQuery({
+    queryKey: ["datasets", id, "ml", "run", runId ?? ""],
+    queryFn: () => api.mlRun(id, runId ?? ""),
+    enabled: Boolean(runId),
+    staleTime: Infinity,
+  });
+}
+
 /** Association matrix and insights over the filtered rows. */
 export function useCorrelations(
   id: string,

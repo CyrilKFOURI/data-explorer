@@ -106,6 +106,19 @@ Pick an **X** and a **Y**: the chart and the statistical tests follow their type
 - **Stationarity** — does the series keep a stable level and spread? ADF (H0: unit root) and KPSS (H0: stationary) ask opposite questions, so together they conclude: *stationary*, *not stationary*, *trend- or difference-stationary*, or *inconclusive*. Pick a **transformation** — log, difference, seasonal difference, log + difference, difference ×2, seasonal + difference — and the tests run on it; the simplest one that makes the series stationary is marked **Suggested**. With a strong trend, the tests are run around the trend.
 - **Autocorrelation** — on the series as transformed above: the **ACF** (correlation with the value k periods earlier) and **PACF** (the same once shorter lags are accounted for; Yule-Walker, OLS or Burg), with the significance band ± 1.96/√n, and a reading of their shapes: slow decay → trend or unit root; spikes every cycle → seasonality; PACF stopping after lag p → an AR(p) model is a good start; nothing beyond chance → white noise.
 
+### Machine learning
+
+*Modules › Machine learning* trains a model in one click. The only choice is **what to predict**: every column is listed with the problem it defines — a **number** (regression), **two classes** or **several classes** — or why it cannot be predicted (identifiers, free text, dates, mostly empty columns, categories with almost one value per row). Suggested targets come first.
+
+- Choosing a target **trains a first model at once**: linear regression for a number, logistic regression for classes. Change its **essential settings** on the left (regularization: none, Ridge or Lasso and its strength; for classes, the strength C and *Balance classes*, on by default when the rarest class is under 20 %), then click **Train** again. Each training is kept in **Runs** (★ = best score): click one to see it again.
+- **Preparation** is automatic and explained: each column gets decisions from named rules — left out (the target itself, identifiers, free text, constant or mostly empty columns, columns that *look like they contain the answer*, near-duplicates of another number), missing values filled (mean or median, plus a “was missing” indicator above 5 %), skewed numbers log-transformed or Yeo-Johnson, numbers standardised (robust scaling with many outliers), categories one-hot encoded (up to 15) or target-encoded, ordered categories coded in the order set in Columns, dates split into year, month, weekday… (month, weekday and hour as sine / cosine). Everything that learns from the data is fitted on the training rows only.
+- **Validation**: 80 % of the rows to train, 20 % to test (stratified for classes), at most 200,000 training rows (a reproducible sample beyond).
+- **Results** start with a sentence comparing the model with a naive reference — always predicting the average, or always answering the most frequent class — and say plainly when the model does no better.
+  - *Regression*: R², MAE, RMSE (next to the average's), predicted against actual, residuals against predicted, residual distribution, and a Breusch–Pagan check of whether the error grows with the value.
+  - *Classification*: accuracy (next to the majority class), balanced accuracy, macro F1, ROC AUC, log loss, the confusion matrix (counts or % of each actual class), precision / recall / F1 per class; for two classes, ROC, precision–recall and calibration curves and a **threshold** slider that updates the confusion matrix live.
+  - *Features*: coefficients with 95 % interval, p-value and VIF (linear regression without penalty), the effect per unit of the original column, odds ratios for logistic regression.
+  - *Predictions*: test rows with actual, predicted and error or probability; *Export CSV*.
+
 ### Correlations
 
 Every pair of variables measured at once, whatever their types.

@@ -139,6 +139,10 @@ def test_jobs_cancel_between_models_and_reuse_finished_ones() -> None:
     job = jobs.start(
         ("a",), values, periods, "month", None, 3, {"naive": slow, "mean": fc.mean_model}
     )
+    for _ in range(200):  # cancel once the first model is really running
+        if job.current == "naive":
+            break
+        time.sleep(0.01)
     jobs.cancel(job.id)
     gate.set()
     for _ in range(100):

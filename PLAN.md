@@ -35,7 +35,7 @@ Roadmap en **sprints**, chacun composé de **tranches verticales** : chaque case
 - [x] 015-ts-prevision — naïves, ETS, ARIMA auto, validation glissante, intervalles
 
 ### Sprint 5 — Machine learning (page : `docs/pages/11-machine-learning.md`)
-- [ ] 016-ml-premier-modele — page `/ml` (module), cible seule obligatoire, problème déduit, modèle linéaire / logistique entraîné aussitôt, résultats, runs
+- [x] 016-ml-premier-modele — page `/ml` (module), cible seule obligatoire, problème déduit, modèle linéaire / logistique entraîné aussitôt, résultats, runs
 - [ ] 017-ml-preparation-donnees — moteur de règles (type détecté × profil du modèle) : sélection, imputation, encodage, transformations, échelle, déséquilibre ; éditeur
 - [ ] 018-ml-cible-en-classes — cible numérique découpée en classes (nombre, méthode, aperçu en direct, noms)
 - [ ] 019-ml-catalogue-modeles — tous les modèles par familles, réglages à 3 niveaux (essentiels, avancés, expert / optimiseurs), validation

@@ -22,7 +22,7 @@
 | Table | Module |
 |---|---|
 | `ts_configs` (colonne de temps, fréquence, série) | Séries temporelles |
-| `ml_experiments`, `ml_runs` (modèle, paramètres, métriques, chemin de l'artefact) | Machine learning |
+| `ml_runs` (migration 0005 : dataset, cible, problème, modèle, réglages, filtres, score principal, durée ; résultat JSON et pipeline `joblib` dans `datasets/<id>/ml/`, supprimés avec le dataset) | Machine learning (016) |
 | `kpi_definitions` | Builder KPI |
 | `synthetic_runs` (méthode, paramètres, scores de fidélité, chemin du dataset généré) | Données synthétiques |
 

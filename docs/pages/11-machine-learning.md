@@ -1,6 +1,6 @@
 # Machine learning — `/d/:id/ml`
 
-> Module (après la V1). Jalons : [016](../features/016-ml-premier-modele/spec.md) premier modèle · [017](../features/017-ml-preparation-donnees/spec.md) préparation des données · [018](../features/018-ml-cible-en-classes/spec.md) cible en classes · [019](../features/019-ml-catalogue-modeles/spec.md) catalogue de modèles, réglages, optimiseurs · [020](../features/020-ml-explicabilite/spec.md) explicabilité · [021](../features/021-ml-comparaison-optimisation/spec.md) comparaison et optimisation. Intention d'origine : [modules-futurs/machine-learning.md](../modules-futurs/machine-learning.md).
+> Module (après la V1). **Livré : 016.** Jalons : [016](../features/016-ml-premier-modele/spec.md) premier modèle · [017](../features/017-ml-preparation-donnees/spec.md) préparation des données · [018](../features/018-ml-cible-en-classes/spec.md) cible en classes · [019](../features/019-ml-catalogue-modeles/spec.md) catalogue de modèles, réglages, optimiseurs · [020](../features/020-ml-explicabilite/spec.md) explicabilité · [021](../features/021-ml-comparaison-optimisation/spec.md) comparaison et optimisation. Intention d'origine : [modules-futurs/machine-learning.md](../modules-futurs/machine-learning.md).
 
 ## Rôle
 

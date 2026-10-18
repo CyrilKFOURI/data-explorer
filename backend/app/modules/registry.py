@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from fastapi import APIRouter, FastAPI
 
-from app.modules import timeseries
+from app.modules import ml, timeseries
 
 
 @dataclass(frozen=True)
@@ -17,6 +17,7 @@ class Module:
 
 MODULES: list[Module] = [
     Module(id="timeseries", router=timeseries.router, setup=timeseries.setup),
+    Module(id="ml", router=ml.router, setup=ml.setup),
 ]
 
 

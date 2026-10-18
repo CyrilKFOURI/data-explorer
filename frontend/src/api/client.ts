@@ -74,6 +74,14 @@ export type SeriesVolatility = Complete<Schemas["SeriesVolatility"]>;
 export type SeriesResiduals = Complete<Schemas["SeriesResiduals"]>;
 export type SeriesBreaks = Complete<Schemas["SeriesBreaks"]>;
 export type ForecastJob = Complete<Schemas["ForecastJob"]>;
+export type MlTargets = Complete<Schemas["Targets"]>;
+export type MlCandidate = MlTargets["candidates"][number];
+export type MlModel = Complete<Schemas["ModelView"]>;
+export type MlSetting = MlModel["settings"][number];
+export type MlJob = Complete<Schemas["TrainingJob"]>;
+export type MlRun = Complete<Schemas["Run"]>;
+export type MlRunSummary = Complete<Schemas["RunSummary"]>;
+export type MlTask = MlRun["task"];
 export type SeriesSetup = SeriesOverview["setup"];
 export type SeriesLine = SeriesOverview["analyzed"];
 export type MethodResult = SeriesOverview["methods"][number];
@@ -336,6 +344,24 @@ export const api = {
       "DELETE",
       `/modules/timeseries/forecast-jobs/${jobId}`,
     ),
+  mlTargets: (id: string, filters?: Condition[]) =>
+    request<MlTargets>("GET", `/modules/ml/datasets/${id}/targets?${new URLSearchParams(filtersParam(filters))}`),
+  mlCatalog: (task: string, rows: number, minority: number | null) => {
+    const query = new URLSearchParams({ task, rows: String(rows) });
+    if (minority !== null) query.set("minority", String(minority));
+    return request<MlModel[]>("GET", `/modules/ml/catalog?${query}`);
+  },
+  mlTrain: (id: string, target: string, model: string | null, settings: Record<string, unknown> | null, filters?: Condition[]) => {
+    const query = new URLSearchParams({ target, ...filtersParam(filters) });
+    if (model) query.set("model", model);
+    if (settings) query.set("settings", JSON.stringify(settings));
+    return request<MlJob>("POST", `/modules/ml/datasets/${id}/runs?${query}`);
+  },
+  mlJob: (jobId: string) => request<MlJob>("GET", `/modules/ml/jobs/${jobId}`),
+  mlRuns: (id: string, target: string) =>
+    request<MlRunSummary[]>("GET", `/modules/ml/datasets/${id}/runs?${new URLSearchParams({ target })}`),
+  mlRun: (id: string, runId: string) => request<MlRun>("GET", `/modules/ml/datasets/${id}/runs/${runId}`),
+  mlPredictionsUrl: (id: string, runId: string) => `/api/v1/modules/ml/datasets/${id}/runs/${runId}/predictions.csv`,
   correlations: (
     id: string,
     method: CorrelationMethod,
