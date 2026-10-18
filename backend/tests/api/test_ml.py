@@ -94,3 +94,12 @@ def test_catalog_and_errors(client: TestClient, traps: str) -> None:
     )
     assert failed["status"] == "failed" and "between" in failed["error"]
     assert client.get(f"{BASE}/datasets/{traps}/runs/nope").status_code == 404
+
+
+def test_predictions_csv_neutralises_formulas() -> None:
+    from app.modules.ml.service import _cell
+
+    assert _cell("=HYPERLINK(1)") == "'=HYPERLINK(1)"
+    assert _cell("@cmd") == "'@cmd" and _cell("+1+1") == "'+1+1"
+    assert _cell("\tx") == "'\tx"
+    assert _cell("-12.5") == "-12.5" and _cell("yes") == "yes"

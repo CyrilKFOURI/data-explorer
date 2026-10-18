@@ -122,6 +122,19 @@ RUN = TypeAdapter(Run)
 KEPT_JOBS = 32
 
 
+FORMULA_STARTS = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _cell(text: str) -> str:
+    """A label that a spreadsheet would run as a formula gets a leading apostrophe; numbers
+    (including negative ones) are left as they are."""
+    try:
+        float(text)
+        return text
+    except ValueError:
+        return f"'{text}" if text.startswith(FORMULA_STARTS) else text
+
+
 def _now() -> str:
     return datetime.now(UTC).isoformat()
 
@@ -334,5 +347,7 @@ class MlService:
         writer = csv.writer(buffer)
         writer.writerow(["row", "actual", "predicted", "error", "probability", "correct"])
         for p in run.predictions:
-            writer.writerow([p.row, p.actual, p.predicted, p.error, p.probability, p.correct])
+            writer.writerow(
+                [p.row, _cell(p.actual), _cell(p.predicted), p.error, p.probability, p.correct]
+            )
         return buffer.getvalue()
