@@ -15,3 +15,4 @@ Chaque module :
 | Builder KPI | Sprint 6 | [kpi-builder.md](kpi-builder.md) |
 | Données synthétiques | Sprint 7 | [donnees-synthetiques.md](donnees-synthetiques.md) |
 | Assistant IA | À planifier | [assistant-ia.md](assistant-ia.md) |
+| Bibliothèque Python (tout le moteur en `pip install`) | Dernière étape | [bibliotheque-python.md](bibliotheque-python.md) |

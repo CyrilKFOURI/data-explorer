@@ -89,6 +89,7 @@ Backend  :  api ─▶ domain ─▶ core                       modules ─▶ (
 ```
 
 - `ui/` ne connaît rien du métier. `domain/` ne connaît rien de HTTP.
+- **Préparer la bibliothèque Python** ([modules-futurs/bibliotheque-python.md](modules-futurs/bibliotheque-python.md)) : un calcul de `domain/` prend des entrées simples (connexion DuckDB + relation, ou tableaux, + descriptions de colonnes) et rend des dataclasses ; il ne dépend ni de FastAPI, ni de SQLite, ni des services de l'app (la persistance reste dans les services et `modules/`).
 - **Un module n'importe jamais un autre module.** Ce qui doit être partagé descend dans `features/` ou `domain/`.
 - Les pages n'appellent pas `fetch` directement : elles passent par `api/`.
 

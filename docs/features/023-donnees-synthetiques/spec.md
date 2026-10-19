@@ -126,7 +126,7 @@ Calculée avec les lignes réelles **tenues à l'écart** (jamais vues par le mo
   - `POST …/runs/{run}/dataset` : crée le dataset ;
   - `POST …/runs/{run}/utility` : évaluation d'utilité, avec la cible en paramètre ;
   - `DELETE …/runs/{run}`.
-- **Code** :
+- **Code** (forme compatible avec la future bibliothèque Python : calculs purs, entrées simples, dataclasses en sortie) :
   - `backend/app/domain/synthetic/` : `plan.py` (règles R-SYN), `encode.py` (aller-retour colonnes ↔ matrice), `methods/` (cart, copula, bayes, independent), `fidelity.py`, `privacy.py` ;
   - `backend/app/modules/synthetic/` ;
   - frontend `modules/synthetic/`.
