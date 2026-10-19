@@ -16,10 +16,10 @@ function Spark({ values, marked }: { values: (number | null)[]; marked: number |
   const path = points.map(([i, v], k) => `${k ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
   const mark = marked !== null ? values[marked] : null;
   return (
-    <svg viewBox="0 0 120 30" className="h-7 w-28" aria-hidden>
-      <path d={path} fill="none" stroke="var(--chart-1)" strokeWidth={1.5} strokeLinejoin="round" />
+    <svg viewBox="0 0 120 30" preserveAspectRatio="none" className="h-10 w-full min-w-24" aria-hidden>
+      <path d={path} fill="none" stroke="var(--chart-1)" strokeWidth={1.5} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
       {marked !== null && mark !== null && mark !== undefined && (
-        <circle cx={x(marked)} cy={y(mark)} r={2.5} fill="var(--chart-1)" stroke="var(--surface-1)" strokeWidth={1} />
+        <line x1={x(marked)} x2={x(marked)} y1={2} y2={28} stroke="var(--ink-3)" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" />
       )}
     </svg>
   );
@@ -48,7 +48,7 @@ export function Tiles({
   formats: Record<string, Format>;
 }) {
   return (
-    <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label={t("kpi.tiles")}>
+    <ul className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-3" aria-label={t("kpi.tiles")}>
       {result.tiles.map((tile) => {
         const measure = result.measures.find((m) => m.id === tile.measure);
         if (!measure) return null;
@@ -60,14 +60,16 @@ export function Tiles({
               {labels[tile.measure]}
               {measure.approximate && <span title={t("kpi.approximate")}> ≈</span>}
             </p>
-            <div className="mt-1 flex items-end justify-between gap-2">
-              <div>
+            <div className="mt-1 flex items-end justify-between gap-4">
+              <div className="shrink-0">
                 <p className="text-2xl font-semibold tracking-tight tabular-nums text-ink-1" title={formatValue(tile.value, measure.format, custom)}>
                   {value}
                 </p>
                 <p className="text-xs text-ink-3">{tile.period ?? t("kpi.tile.overall")}</p>
               </div>
-              <Spark values={tile.spark} marked={tile.spark_index} />
+              <div className="max-w-[28rem] min-w-0 flex-1">
+                <Spark values={tile.spark} marked={tile.spark_index} />
+              </div>
             </div>
             <div className="mt-2 flex flex-col gap-0.5">
               <Change

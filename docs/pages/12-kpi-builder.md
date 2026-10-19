@@ -9,26 +9,33 @@ Obtenir en un clic un indicateur métier (tuiles, graphique, tableau croisé), p
 ## Principes UX
 
 - **Automatique d'abord.** La page s'ouvre sur un KPI suggéré déjà calculé. Les autres suggestions sont des pastilles en haut ; « Split by » propose les meilleurs regroupements.
-- **Builder en une ligne** : Measure · Over time · Split by · Period. Un changement de données active **Calculate** ; rien ne se recalcule à chaque réglage.
+- **Builder en trois colonnes** : Measure · Over time (date, grain, période) · Split by. Un changement de données active **Calculate** ; rien ne se recalcule à chaque réglage.
 - **Customize** : chaque réglage affiche « Auto · choix » et sa raison. Une option impossible est grisée avec la raison. Un réglage modifié porte une pastille et « Reset to auto ». Les réglages d'affichage s'appliquent sans recalcul.
 - **Why this view** : une ligne sous le graphique explique les choix automatiques.
 
-## Disposition
+## Disposition (revue le 2026-10-19)
+
+Toute la largeur sert au KPI : pas de colonne latérale vide.
 
 ```
-┌ Saved ─────┐ ┌ Suggested: [Rows] [Total revenue] [Distinct customers] … ────────────────┐
-│ KPI 1      │ │ Measure [Sum of revenue ▾] [+ Measure] [+ Ratio]                         │
-│ KPI 2      │ │ Over time [order_date ▾] [Auto · month ▾]  Period [All ▾]  ☑ page filters│
-│ + New      │ │ Split by [country ▾] [+]                         [Calculate] [Save]      │
-│            │ ├──────────────────────────────────────────────────────────────────────────┤
-│            │ │ Tuiles (une par mesure)                                                  │
-│            │ │ Graphique(s) — un par mesure, axe x partagé           [Customize ▸]      │
-│            │ │ Why this view · Split by: [country] [segment] [status]                   │
-│            │ │ Tableau croisé                          [⇄] [Copy] [Download CSV]        │
-└────────────┘ └──────────────────────────────────────────────────────────────────────────┘
+┌ KPI builder ── description ─────────────────────────── [Saved KPIs · 3 ▾] [+ New KPI] ┐
+│ ✦ Suggested: [Rows] [Total revenue] [Distinct customers] [% churned] …                 │
+├ Builder (3 colonnes, une par question) ────────────────────────────────────────────────┤
+│ MEASURE                  │ OVER TIME                     │ SPLIT BY                    │
+│ [Sum of ▾][revenue ▾] ×  │ [order_date            ▾]     │ [country ▾] ×               │
+│ + Measure  + Ratio       │ [Auto · Month ▾][All dates ▾] │ then [segment ▾] ×          │
+│                          │ ☑ Use the page filters        │ + Split                     │
+│ ── Changes not applied yet ─────────────────────────────── [Calculate] [Save] ─────────│
+├ Tuiles : toute la largeur (une seule tuile = une bande large, mini-courbe étirée) ──────┤
+│ Graphique(s) ─────────────────────────────────────────────────── [Customize]           │
+│ Why this view · Split by: [country] [segment]                                          │
+│ Tableau croisé ───────────────────────────────── [Swap] [Copy] [Download CSV]          │
+└────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Le panneau Customize s'ouvre à droite : sections Chart · Table · Values · Groups · Format.
+- **Saved KPIs** : menu dans l'en-tête (compteur), avec ouvrir, renommer, dupliquer, supprimer.
+- **Builder** : trois colonnes de largeur égale sur grand écran, empilées sur petit écran ; contrôles pleine largeur de leur colonne ; pied avec l'état (« Changes not applied yet ») et les boutons.
+- Le panneau Customize s'ouvre à droite des résultats : sections Chart · Values · Table · Groups · Format.
 
 ## États
 

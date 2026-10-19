@@ -1887,5 +1887,11 @@
   "kpi.partialNote": "† Incomplete period: left out of the tiles and of the changes.",
   "kpi.hiddenOther": "“Other” is hidden; the totals still include it.",
   "kpi.useGrain": "Show by {grain}",
-  "kpi.useAllDates": "Use all dates"
+  "kpi.useAllDates": "Use all dates",
+  "kpi.measure.hint": "What to count or add up",
+  "kpi.period.lastN": "The last",
+  "kpi.period.periods": "periods",
+  "kpi.split.hint": "Optional: one or two columns",
+  "kpi.pending": "Changes not applied yet: click Calculate.",
+  "kpi.upToDate": "The result matches these settings."
 }

@@ -1,5 +1,5 @@
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
-import { Copy, Pencil, Plus, SlidersHorizontal, Sparkles, Trash2 } from "lucide-react";
+import { ChevronDown, Copy, FolderOpen, Pencil, Plus, SlidersHorizontal, Sparkles, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { ApiError, type KpiDefinition, type KpiResult, type SavedKpi } from "../../api/client";
@@ -7,6 +7,7 @@ import { useColumns, useDataset, useKpiActions, useKpiCompute, useKpis, useKpiSu
 import { t } from "../../lib/i18n";
 import { Button } from "../../ui/Button";
 import { ErrorNote } from "../../ui/fields";
+import { Popover } from "../../ui/Popover";
 import { Builder } from "./Builder";
 import { Customize } from "./Customize";
 import {
@@ -26,7 +27,8 @@ import { PivotTable } from "./PivotTable";
 import type { KpiSearch } from "./search";
 import { Tiles } from "./Tiles";
 
-function SavedList({
+/** Saved KPIs, in a menu of the header: open, rename, duplicate, delete, or start a new one. */
+function SavedMenu({
   kpis,
   current,
   onOpen,
@@ -36,47 +38,64 @@ function SavedList({
   onDelete,
 }: {
   kpis: SavedKpi[];
-  current: string | undefined;
+  current: SavedKpi | undefined;
   onOpen: (id: string) => void;
   onNew: () => void;
   onRename: (kpi: SavedKpi) => void;
   onDuplicate: (id: string) => void;
   onDelete: (kpi: SavedKpi) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const run = (action: () => void) => () => {
+    setOpen(false);
+    action();
+  };
   return (
-    <nav aria-label={t("kpi.saved")} className="space-y-1 text-[13px]">
-      <p className="px-2 text-xs font-medium text-ink-3">{t("kpi.saved")}</p>
-      {kpis.length === 0 && <p className="px-2 text-xs text-ink-3">{t("kpi.savedEmpty")}</p>}
-      <ul className="space-y-0.5">
-        {kpis.map((kpi) => (
-          <li key={kpi.id} className="group flex items-center">
-            <button
-              type="button"
-              onClick={() => onOpen(kpi.id)}
-              aria-current={kpi.id === current ? "page" : undefined}
-              className={`min-w-0 flex-1 truncate rounded-md px-2 py-1 text-left ${kpi.id === current ? "bg-surface-2 text-ink-1" : "text-ink-2 hover:bg-surface-1 hover:text-ink-1"}`}
-              title={kpi.name}
-            >
-              {kpi.name}
-            </button>
-            <span className="flex opacity-0 group-focus-within:opacity-100 group-hover:opacity-100">
-              {[
-                { icon: Pencil, label: t("kpi.rename"), run: () => onRename(kpi) },
-                { icon: Copy, label: t("kpi.duplicate"), run: () => onDuplicate(kpi.id) },
-                { icon: Trash2, label: t("kpi.delete"), run: () => onDelete(kpi) },
-              ].map(({ icon: Icon, label, run }) => (
-                <button key={label} type="button" aria-label={`${label} ${kpi.name}`} title={label} onClick={run} className="inline-flex size-6 items-center justify-center rounded text-ink-3 hover:bg-surface-2 hover:text-ink-1">
-                  <Icon size={12} aria-hidden />
+    <div className="flex items-center gap-2">
+      <Popover
+        open={open}
+        onOpenChange={setOpen}
+        label={t("kpi.saved")}
+        trigger={
+          <Button icon={FolderOpen} onClick={() => setOpen(!open)} aria-expanded={open}>
+            <span className="max-w-56 truncate">{current ? current.name : t("kpi.saved")}</span>
+            <span className="rounded-full bg-surface-2 px-1.5 text-[11px] text-ink-2">{kpis.length}</span>
+            <ChevronDown size={14} aria-hidden />
+          </Button>
+        }
+      >
+        <div className="max-h-80 overflow-auto p-1.5 text-[13px]">
+          {kpis.length === 0 && <p className="px-2 py-3 text-xs text-ink-3">{t("kpi.savedEmpty")}</p>}
+          <ul>
+            {kpis.map((kpi) => (
+              <li key={kpi.id} className="group flex items-center rounded-md hover:bg-surface-2">
+                <button
+                  type="button"
+                  onClick={run(() => onOpen(kpi.id))}
+                  aria-current={kpi.id === current?.id ? "page" : undefined}
+                  className={`min-w-0 flex-1 truncate px-2 py-1.5 text-left ${kpi.id === current?.id ? "font-medium text-ink-1" : "text-ink-2 group-hover:text-ink-1"}`}
+                  title={kpi.name}
+                >
+                  {kpi.name}
                 </button>
-              ))}
-            </span>
-          </li>
-        ))}
-      </ul>
-      <button type="button" onClick={onNew} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-accent hover:bg-accent-soft">
-        <Plus size={13} aria-hidden /> {t("kpi.new")}
-      </button>
-    </nav>
+                {[
+                  { icon: Pencil, label: t("kpi.rename"), action: () => onRename(kpi) },
+                  { icon: Copy, label: t("kpi.duplicate"), action: () => onDuplicate(kpi.id) },
+                  { icon: Trash2, label: t("kpi.delete"), action: () => onDelete(kpi) },
+                ].map(({ icon: Icon, label, action }) => (
+                  <button key={label} type="button" aria-label={`${label} ${kpi.name}`} title={label} onClick={run(action)} className="inline-flex size-7 shrink-0 items-center justify-center rounded text-ink-3 hover:text-ink-1">
+                    <Icon size={13} aria-hidden />
+                  </button>
+                ))}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </Popover>
+      <Button icon={Plus} variant="ghost" onClick={onNew}>
+        {t("kpi.new")}
+      </Button>
+    </div>
   );
 }
 
@@ -166,35 +185,34 @@ export function KpiPage() {
 
   return (
     <div className="flex flex-col">
-      <header className="px-8 pt-6 pb-3">
-        <h1 className="text-xl font-semibold tracking-tight">{t("kpi.title")}</h1>
-        <p className="mt-1 max-w-prose text-ink-2">{t("kpi.description")}</p>
-      </header>
-      <div className="grid gap-6 px-8 pb-10 lg:grid-cols-[180px_minmax(0,1fr)]">
-        <div className="lg:sticky lg:top-4 lg:self-start">
-          <SavedList
-            kpis={saved.data ?? []}
-            current={search.kpi}
-            onOpen={(id) => {
-              go({ kpi: id, def: undefined });
-              setEdit(null);
-            }}
-            onNew={() => {
-              go({ kpi: undefined, def: undefined });
-              setEdit(null);
-            }}
-            onRename={(kpi) => {
-              const name = window.prompt(t("kpi.renamePrompt"), kpi.name);
-              if (name?.trim()) actions.update.mutate({ kpiId: kpi.id, name: name.trim() });
-            }}
-            onDuplicate={(id) => actions.duplicate.mutate(id, { onSuccess: (copy) => go({ kpi: copy.id, def: undefined }) })}
-            onDelete={(kpi) => {
-              if (!window.confirm(t("kpi.deleteConfirm", { name: kpi.name }))) return;
-              actions.remove.mutate(kpi.id, { onSuccess: () => search.kpi === kpi.id && go({ kpi: undefined, def: undefined }) });
-            }}
-          />
+      <header className="flex flex-wrap items-start justify-between gap-4 px-8 pt-6 pb-4">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">{t("kpi.title")}</h1>
+          <p className="mt-1 max-w-prose text-ink-2">{t("kpi.description")}</p>
         </div>
-
+        <SavedMenu
+          kpis={saved.data ?? []}
+          current={savedKpi}
+          onOpen={(id) => {
+            go({ kpi: id, def: undefined });
+            setEdit(null);
+          }}
+          onNew={() => {
+            go({ kpi: undefined, def: undefined });
+            setEdit(null);
+          }}
+          onRename={(kpi) => {
+            const name = window.prompt(t("kpi.renamePrompt"), kpi.name);
+            if (name?.trim()) actions.update.mutate({ kpiId: kpi.id, name: name.trim() });
+          }}
+          onDuplicate={(id) => actions.duplicate.mutate(id, { onSuccess: (copy) => go({ kpi: copy.id, def: undefined }) })}
+          onDelete={(kpi) => {
+            if (!window.confirm(t("kpi.deleteConfirm", { name: kpi.name }))) return;
+            actions.remove.mutate(kpi.id, { onSuccess: () => search.kpi === kpi.id && go({ kpi: undefined, def: undefined }) });
+          }}
+        />
+      </header>
+      <div className="px-8 pb-10">
         <div className="min-w-0 space-y-4">
           {suggestions.data && suggestions.data.kpis.length > 0 && (
             <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t("kpi.suggested")}>
