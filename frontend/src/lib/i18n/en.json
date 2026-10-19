@@ -1893,5 +1893,7 @@
   "kpi.period.periods": "periods",
   "kpi.split.hint": "Optional: one or two columns",
   "kpi.pending": "Changes not applied yet: click Calculate.",
-  "kpi.upToDate": "The result matches these settings."
+  "kpi.upToDate": "The result matches these settings.",
+  "ml.classCurves": "Each class against all the others (one-vs-rest): the further a curve bows to the top left, the better the model tells that class apart.",
+  "ml.classShare": "{share} % of rows"
 }

@@ -109,6 +109,51 @@ export function confusionFigure(labels: string[], matrix: number[][], percent: b
   };
 }
 
+/** Several curves on one chart, one colour per class in the fixed palette order, with a legend
+ *  (multiclass ROC, precision-recall and calibration: each class against the others). */
+export function classCurvesFigure(
+  curves: { name: string; x: number[]; y: number[] }[],
+  xTitle: string,
+  yTitle: string,
+  diagonal: boolean,
+): Figure {
+  return (tokens) => {
+    const data: Data[] = curves.map(
+      (curve, i) =>
+        ({
+          type: "scatter",
+          mode: "lines",
+          name: curve.name,
+          x: curve.x,
+          y: curve.y,
+          line: { color: tokens.palette[i % tokens.palette.length] ?? tokens.numeric, width: 2 },
+          hovertemplate: `${curve.name}<br>${xTitle} %{x:.3f}<br>${yTitle} %{y:.3f}<extra></extra>`,
+        }) as Data,
+    );
+    if (diagonal) {
+      data.push({
+        type: "scatter",
+        mode: "lines",
+        x: [0, 1],
+        y: [0, 1],
+        line: { color: tokens.ink3, dash: "dash", width: 1 },
+        hoverinfo: "skip",
+        showlegend: false,
+      } as Data);
+    }
+    return {
+      data,
+      layout: {
+        showlegend: true,
+        legend: { orientation: "h", x: 0, y: -0.28, font: { size: 11, color: tokens.ink2 } },
+        margin: { l: 8, r: 8, t: 4, b: 8 },
+        xaxis: { ...title(xTitle), range: [0, 1] },
+        yaxis: { ...title(yTitle), range: [0, 1.02] },
+      },
+    };
+  };
+}
+
 export function curveFigure(
   x: number[],
   y: number[],

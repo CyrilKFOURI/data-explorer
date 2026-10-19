@@ -7690,6 +7690,56 @@
         "title": "Choices",
         "description": "Everything the preparation editor can change. The defaults are the automatic rules."
       },
+      "ClassCurves": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "share": {
+            "type": "number",
+            "title": "Share"
+          },
+          "auc": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auc"
+          },
+          "roc": {
+            "$ref": "#/components/schemas/app__domain__ml__train__Curve"
+          },
+          "pr": {
+            "$ref": "#/components/schemas/app__domain__ml__train__Curve"
+          },
+          "calibration": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/app__domain__ml__train__Curve"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "share",
+          "auc",
+          "roc",
+          "pr",
+          "calibration"
+        ],
+        "title": "ClassCurves",
+        "description": "One class against all the others (multiclass): its ROC, precision-recall and calibration."
+      },
       "ClassReport": {
         "properties": {
           "label": {
@@ -7954,6 +8004,13 @@
               }
             ],
             "title": "Mean Class Error"
+          },
+          "class_curves": {
+            "items": {
+              "$ref": "#/components/schemas/ClassCurves"
+            },
+            "type": "array",
+            "title": "Class Curves"
           }
         },
         "type": "object",

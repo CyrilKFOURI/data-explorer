@@ -12,6 +12,7 @@ import { ExplainTab, RowExplanation } from "./Explain";
 import {
   coefficientsFigure,
   confusionFigure,
+  classCurvesFigure,
   curveFigure,
   predictedFigure,
   residualHistogram,
@@ -281,6 +282,51 @@ function ClassificationPerformance({ run }: { run: MlRun }) {
           <Panel title={t("ml.calibration")}>
             <Plot figure={curveFigure(c.calibration.x, c.calibration.y, "Predicted probability", "Observed share", "diagonal")} height={240} label={t("ml.calibration")} />
           </Panel>
+        </div>
+      )}
+      {c.class_curves.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs text-ink-3">{t("ml.classCurves")}</p>
+          <div className="grid gap-4 xl:grid-cols-3">
+            <Panel title={t("ml.roc")}>
+              <Plot
+                figure={classCurvesFigure(
+                  c.class_curves.map((k) => ({ name: k.auc === null ? k.label : `${k.label} · AUC ${k.auc.toFixed(2)}`, x: k.roc.x, y: k.roc.y })),
+                  "False positive rate",
+                  "True positive rate",
+                  true,
+                )}
+                height={280}
+                label={t("ml.roc")}
+              />
+            </Panel>
+            <Panel title={t("ml.pr")}>
+              <Plot
+                figure={classCurvesFigure(
+                  c.class_curves.map((k) => ({ name: `${k.label} · ${t("ml.classShare", { share: (k.share * 100).toFixed(0) })}`, x: k.pr.x, y: k.pr.y })),
+                  "Recall",
+                  "Precision",
+                  false,
+                )}
+                height={280}
+                label={t("ml.pr")}
+              />
+            </Panel>
+            {c.class_curves.some((k) => k.calibration) && (
+              <Panel title={t("ml.calibration")}>
+                <Plot
+                  figure={classCurvesFigure(
+                    c.class_curves.flatMap((k) => (k.calibration ? [{ name: k.label, x: k.calibration.x, y: k.calibration.y }] : [])),
+                    "Predicted probability",
+                    "Observed share",
+                    true,
+                  )}
+                  height={280}
+                  label={t("ml.calibration")}
+                />
+              </Panel>
+            )}
+          </div>
         </div>
       )}
     </div>

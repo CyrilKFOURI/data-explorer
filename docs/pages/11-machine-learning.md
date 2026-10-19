@@ -59,7 +59,7 @@ Un outil **no-code** pour entraîner, évaluer et comprendre un modèle prédict
 
 | Onglet | Régression | Classification |
 |---|---|---|
-| Performance | Prédit vs réel (+ diagonale), résidus vs prédit, distribution des résidus, courbe d'apprentissage (modèles itératifs) ; linéaire : Breusch–Pagan des résidus | Matrice de confusion (effectifs / %), rapport par classe, ROC et PR (binaire), calibration ; curseur de seuil (binaire) ; classes ordonnées (018) : « exact or off by one » |
+| Performance | Prédit vs réel (+ diagonale), résidus vs prédit, distribution des résidus, courbe d'apprentissage (modèles itératifs) ; linéaire : Breusch–Pagan des résidus | Matrice de confusion (effectifs / %), rapport par classe, ROC, PR et calibration (binaire : une courbe ; 3 classes ou plus, dont les classes d'un nombre découpé : une courbe « cette classe contre les autres » par classe, avec l'AUC de chacune dans la légende, revu le 2026-10-19) ; curseur de seuil (binaire) ; classes ordonnées (018) : « exact or off by one » |
 | Features | Coefficients (linéaire : IC et p) ou importance (arbres) | idem |
 | Predictions | Lignes de test : réel, prédit, erreur (triable, exportable) ; clic → explication de la ligne (020) | réel, prédit, probabilité, correct ? |
 | Explain (020) | Permutation importance, SHAP global et par ligne, dépendance partielle | idem |

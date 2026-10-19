@@ -1518,6 +1518,21 @@ export interface components {
             /** Selection */
             selection?: components["schemas"]["SelectionChoice"][];
         };
+        /**
+         * ClassCurves
+         * @description One class against all the others (multiclass): its ROC, precision-recall and calibration.
+         */
+        ClassCurves: {
+            /** Label */
+            label: string;
+            /** Share */
+            share: number;
+            /** Auc */
+            auc: number | null;
+            roc: components["schemas"]["app__domain__ml__train__Curve"];
+            pr: components["schemas"]["app__domain__ml__train__Curve"];
+            calibration: components["schemas"]["app__domain__ml__train__Curve"] | null;
+        };
         /** ClassReport */
         ClassReport: {
             /** Label */
@@ -1586,6 +1601,8 @@ export interface components {
             within_one?: number | null;
             /** Mean Class Error */
             mean_class_error?: number | null;
+            /** Class Curves */
+            class_curves?: components["schemas"]["ClassCurves"][];
         };
         /** Coefficient */
         Coefficient: {

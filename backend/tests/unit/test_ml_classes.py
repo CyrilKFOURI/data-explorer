@@ -55,6 +55,12 @@ def test_training_on_classes_is_an_ordered_classification() -> None:
     assert result.classification.within_one is not None
     assert result.classification.within_one >= (result.classification.accuracy or 0)
     assert result.classification.mean_class_error is not None
+    # one ROC, precision-recall and calibration curve per class, each against the others
+    curves = result.classification.class_curves
+    assert [c.label for c in curves] == ["Low", "Medium", "High"]
+    assert all(c.roc.x[0] == 0 and c.roc.x[-1] == 1 and c.auc is not None for c in curves)
+    assert sum(c.share for c in curves) == pytest.approx(1)
+    assert result.classification.roc is None  # the single binary curve stays for two classes
     decisions = {d.column: d for d in result.preparation.decisions}
     assert decisions["price"].rules == ["R-SEL-01"]  # the source number is never an input
     assert decisions["price_copy"].rules == ["R-SEL-06"]  # leak measured against the number

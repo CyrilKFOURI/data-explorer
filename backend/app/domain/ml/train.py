@@ -65,6 +65,18 @@ class Curve:
 
 
 @dataclass
+class ClassCurves:
+    """One class against all the others (multiclass): its ROC, precision-recall and calibration."""
+
+    label: str
+    share: float  # of the test rows: the precision-recall chance level
+    auc: float | None
+    roc: Curve
+    pr: Curve
+    calibration: Curve | None
+
+
+@dataclass
 class RegressionResult:
     r2: float | None
     mae: float | None
@@ -100,6 +112,7 @@ class ClassificationResult:
     probability: list[float] = field(default_factory=list)
     within_one: float | None = None  # ordered classes: share right or off by one class
     mean_class_error: float | None = None  # ordered classes: mean distance in classes
+    class_curves: list[ClassCurves] = field(default_factory=list)  # 3 classes or more
 
 
 @dataclass
@@ -996,12 +1009,16 @@ def _classification_scores(
         pick = np.random.default_rng(SEED).permutation(len(truth))[:PROBABILITIES]
         result.truth = [int(v) for v in truth[pick]]
         result.probability = [float(v) for v in scores[pick]]
-    elif len(set(actual)) == len(classes):
-        result.roc_auc = clean(
-            _quiet(
-                lambda: skm.roc_auc_score(actual, probabilities, multi_class="ovr", labels=classes)
+    else:
+        if len(set(actual)) == len(classes):
+            result.roc_auc = clean(
+                _quiet(
+                    lambda: skm.roc_auc_score(
+                        actual, probabilities, multi_class="ovr", labels=classes
+                    )
+                )
             )
-        )
+        result.class_curves = _class_curves(actual, probabilities, classes, labels)
     if target.order and len(labels) > 2:
         rank = {label: i for i, label in enumerate(target.order)}
         distance = np.array(
@@ -1010,6 +1027,42 @@ def _classification_scores(
         result.within_one = clean(float(np.mean(distance <= 1)))
         result.mean_class_error = clean(float(np.mean(distance)))
     return result, predicted
+
+
+def _class_curves(
+    actual: np.ndarray, probabilities: np.ndarray, classes: list[str], labels: list[str]
+) -> list[ClassCurves]:
+    """One-vs-rest curves of every class present among the test rows, in display order."""
+    curves = []
+    for label in labels:
+        if label not in classes:
+            continue
+        truth = (actual == label).astype(int)
+        if not 0 < truth.sum() < len(truth):
+            continue  # a class absent from the test rows (or alone) has no curve
+        scores = probabilities[:, classes.index(label)]
+        fpr, tpr, thresholds = skm.roc_curve(truth, scores)
+        precision, recall, _ = skm.precision_recall_curve(truth, scores)
+        calibration = None
+        if truth.sum() >= 10:
+            bins = min(10, max(2, int(truth.sum()) // 10))
+            observed, expected = _quiet(
+                lambda t=truth, s=scores, b=bins: calibration_curve(
+                    t, s, n_bins=b, strategy="quantile"
+                )
+            )
+            calibration = Curve([float(v) for v in expected], [float(v) for v in observed])
+        curves.append(
+            ClassCurves(
+                label,
+                float(truth.mean()),
+                clean(skm.roc_auc_score(truth, scores)),
+                _thin(fpr, tpr, thresholds),
+                _thin(recall[::-1], precision[::-1]),
+                calibration,
+            )
+        )
+    return curves
 
 
 def _model_coefficients(pipeline: Pipeline, names: list[str]) -> list[Coefficient]:
