@@ -213,10 +213,10 @@ export function KpiPage() {
         />
       </header>
       <div className="px-8 pb-10">
-        <div className="min-w-0 space-y-4">
+        <div className="min-w-0 space-y-6">
           {suggestions.data && suggestions.data.kpis.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t("kpi.suggested")}>
-              <span className="inline-flex items-center gap-1 text-xs text-ink-3">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1" role="group" aria-label={t("kpi.suggested")}>
+              <span className="inline-flex items-center gap-1 pr-1 text-xs text-ink-3">
                 <Sparkles size={12} aria-hidden /> {t("kpi.suggested")}
               </span>
               {suggestions.data.kpis.map((kpi) => {
@@ -230,7 +230,7 @@ export function KpiPage() {
                       go({ kpi: undefined, def: kpi.definition });
                       setEdit(null);
                     }}
-                    className={`rounded-full border px-2.5 py-1 text-xs ${active ? "border-accent bg-accent-soft text-ink-1" : "border-line text-ink-2 hover:border-ink-3 hover:text-ink-1"}`}
+                    className={`border-b-2 px-0.5 pb-0.5 text-[13px] ${active ? "border-accent font-medium text-ink-1" : "border-transparent text-ink-2 hover:border-line hover:text-ink-1"}`}
                   >
                     {kpi.name}
                   </button>
@@ -268,12 +268,12 @@ export function KpiPage() {
               )}
             </div>
           ) : !result || !view || !tableOptions || !applied ? (
-            <div className="h-[420px] animate-pulse rounded-lg bg-surface-1" aria-busy="true" />
+            <div className="h-[420px] animate-pulse border-y border-line bg-surface-1/40" aria-busy="true" />
           ) : (
             <div className={`grid gap-6 ${panel ? "xl:grid-cols-[minmax(0,1fr)_300px]" : ""}`}>
-              <div className={`min-w-0 space-y-5 ${compute.isFetching ? "opacity-60 transition-opacity" : ""}`} aria-busy={compute.isFetching}>
+              <div className={`min-w-0 space-y-8 ${compute.isFetching ? "opacity-60 transition-opacity" : ""}`} aria-busy={compute.isFetching}>
                 {result.warnings.map((w) => (
-                  <p key={w} className="rounded-md border border-line bg-surface-1 px-3 py-2 text-xs text-ink-2">
+                  <p key={w} className="border-l-2 border-accent pl-3 text-xs text-ink-2">
                     {w}
                   </p>
                 ))}
@@ -310,7 +310,7 @@ export function KpiPage() {
                           key={column}
                           type="button"
                           onClick={() => apply({ ...applied, groups: [...(applied.groups ?? []), { column }] })}
-                          className="rounded-full border border-line px-2.5 py-1 text-xs text-ink-2 hover:border-ink-3 hover:text-ink-1"
+                          className="px-0.5 text-[13px] text-accent hover:underline"
                         >
                           + {column}
                         </button>

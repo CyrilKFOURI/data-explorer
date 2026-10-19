@@ -1,10 +1,9 @@
 import { Plus, Save, X } from "lucide-react";
-import type { ReactNode } from "react";
+import type { ReactNode, SelectHTMLAttributes } from "react";
 
 import type { Column, KpiDefinition, KpiResult } from "../../api/client";
 import { t, type MessageKey } from "../../lib/i18n";
 import { Button } from "../../ui/Button";
-import { Checkbox, Select, TextInput } from "../../ui/fields";
 import {
   AGGS,
   columnsFor,
@@ -22,29 +21,54 @@ import {
 type Period = NonNullable<NonNullable<KpiDefinition["time"]>["period"]>;
 const PERIOD_KINDS: Period["kind"][] = ["all", "last", "ytd", "range"];
 
-/** One question of the builder: a titled column whose controls take its full width. */
-function Question({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
+/** A choice inside the sentence: an underlined word that opens a native menu, as wide as its
+ *  text. Red underline when the server asked to fix it. */
+function Word({ invalid = false, className = "", ...props }: SelectHTMLAttributes<HTMLSelectElement> & { invalid?: boolean }) {
   return (
-    <div className="flex min-w-0 flex-col gap-2" role="group" aria-label={title}>
-      <div>
-        <h3 className="text-xs font-semibold tracking-wide text-ink-1 uppercase">{title}</h3>
-        <p className="mt-0.5 min-h-4 truncate text-xs text-ink-3" title={hint}>
-          {hint}
-        </p>
-      </div>
-      {children}
-    </div>
+    <select
+      {...props}
+      className={`cursor-pointer appearance-none border-0 border-b-2 bg-transparent px-0.5 pb-0.5 font-semibold text-ink-1 outline-none [field-sizing:content] hover:border-accent focus-visible:border-accent ${invalid ? "border-bad" : "border-line"} ${className}`}
+    />
   );
 }
 
-const control = "h-9 w-full min-w-0 text-[13px]";
-const iconButton =
-  "inline-flex size-9 shrink-0 items-center justify-center rounded-md text-ink-3 hover:bg-surface-2 hover:text-ink-1";
-const addButton =
-  "inline-flex h-8 items-center gap-1 rounded-md px-2 text-[13px] text-accent hover:bg-accent-soft disabled:text-ink-3 disabled:hover:bg-transparent";
+/** A small inline input in the sentence (a number of periods, a date). */
+function Blank(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <input
+      {...props}
+      className="border-0 border-b-2 border-line bg-transparent px-0.5 pb-0.5 text-center font-semibold text-ink-1 outline-none [field-sizing:content] focus-visible:border-accent"
+    />
+  );
+}
 
-/** The KPI's three questions side by side: what to measure, over which dates, split by what.
- *  A change here only takes effect with Calculate (spec 022, story 6). */
+/** An addition inside the sentence: "+ measure", "+ split". */
+function Add({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      {...props}
+      className="inline-flex items-center gap-0.5 rounded px-1 text-[13px] text-accent hover:underline disabled:text-ink-3 disabled:no-underline"
+    >
+      <Plus size={12} aria-hidden />
+      {children}
+    </button>
+  );
+}
+
+function Remove({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button type="button" aria-label={label} title={label} onClick={onClick} className="inline-flex size-5 items-center justify-center rounded text-ink-3 hover:text-ink-1">
+      <X size={12} aria-hidden />
+    </button>
+  );
+}
+
+/** Connecting words of the sentence, in a quieter ink. */
+const Glue = ({ children }: { children: ReactNode }) => <span className="text-ink-3">{children}</span>;
+
+/** The KPI as a sentence: "Show Sum of revenue per month of date over all dates, split by
+ *  country". Every underlined word is a choice. Changes take effect with Calculate. */
 export function Builder({
   definition,
   columns,
@@ -76,7 +100,6 @@ export function Builder({
   const time = definition.time ?? null;
   const groups = definition.groups ?? [];
   const grain = result?.resolved.grain;
-  const mark = (field: string) => (invalid === field ? "border-bad" : "");
 
   const setMeasure = (id: string, patch: Partial<Measure>) =>
     onChange({ ...definition, measures: measures.map((m) => (m.id === id ? { ...m, ...patch } : m)) });
@@ -98,204 +121,173 @@ export function Builder({
     time && onChange({ ...definition, time: { ...time, period: { ...(time.period ?? { kind: "all" }), ...patch } } });
   const period = time?.period ?? { kind: "all" as const };
   const measureName = (m: Measure) =>
-    m.label || (m.agg === "count" ? t("kpi.agg.count") : `${t(`kpi.agg.${m.agg}` as MessageKey)} ${m.column}`);
+    m.label || (m.agg === "count" ? t("kpi.agg.count") : `${t(`kpi.aggShort.${m.agg}` as MessageKey).toLowerCase()} ${m.column}`);
 
   return (
-    <section className="rounded-lg border border-line bg-surface-1" aria-label={t("kpi.builder")}>
-      <div className="grid gap-x-8 gap-y-5 p-4 lg:grid-cols-3">
-        <Question title={t("kpi.measure")} hint={t("kpi.measure.hint")}>
-          {measures.map((measure) => (
-            <div key={measure.id} className="flex items-center gap-1.5">
-              <Select
-                aria-label={t("kpi.aggregate")}
-                value={measure.agg}
-                onChange={(e) => setAgg(measure, e.target.value as Agg)}
-                className={`${control} ${measure.agg === "count" ? "" : "max-w-40"} ${mark(`measures.${measure.id}.agg`)}`}
-              >
+    <section aria-label={t("kpi.builder")}>
+      <div className="space-y-2.5 text-[17px] leading-9">
+        <p className="flex flex-wrap items-baseline gap-x-1.5">
+          <Glue>{t("kpi.s.show")}</Glue>
+          {measures.map((measure, index) => (
+            <span key={measure.id} className="inline-flex flex-wrap items-baseline gap-x-1.5">
+              {index > 0 && <Glue>{index === measures.length - 1 ? t("kpi.s.and") : ","}</Glue>}
+              <Word aria-label={t("kpi.aggregate")} value={measure.agg} onChange={(e) => setAgg(measure, e.target.value as Agg)} invalid={invalid === `measures.${measure.id}.agg`}>
                 {AGGS.filter((agg) => agg === "count" || columnsFor(agg, columns).length > 0).map((agg) => (
                   <option key={agg} value={agg}>
-                    {t(`kpi.agg.${agg}` as MessageKey)}
+                    {t(`kpi.aggShort.${agg}` as MessageKey)}
                   </option>
                 ))}
-              </Select>
+              </Word>
               {measure.agg !== "count" && (
-                <Select
-                  aria-label={t("kpi.column")}
-                  value={measure.column ?? ""}
-                  onChange={(e) => setColumn(measure, e.target.value)}
-                  className={`${control} ${mark(`measures.${measure.id}.column`)}`}
-                >
-                  {!columnsFor(measure.agg, columns).some((c) => c.name === measure.column) && measure.column && (
-                    <option value={measure.column}>{measure.column}</option>
-                  )}
-                  {columnsFor(measure.agg, columns).map((c) => (
-                    <option key={c.name} value={c.name}>
-                      {c.name}
-                    </option>
-                  ))}
-                </Select>
+                <>
+                  <Glue>{t("kpi.s.of")}</Glue>
+                  <Word aria-label={t("kpi.column")} value={measure.column ?? ""} onChange={(e) => setColumn(measure, e.target.value)} invalid={invalid === `measures.${measure.id}.column`}>
+                    {!columnsFor(measure.agg, columns).some((c) => c.name === measure.column) && measure.column && (
+                      <option value={measure.column}>{measure.column}</option>
+                    )}
+                    {columnsFor(measure.agg, columns).map((c) => (
+                      <option key={c.name} value={c.name}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </Word>
+                </>
               )}
-              {measures.length > 1 && (
-                <button type="button" className={iconButton} aria-label={t("kpi.removeMeasure")} onClick={() => removeMeasure(measure.id)}>
-                  <X size={14} aria-hidden />
-                </button>
-              )}
-            </div>
+              {measures.length > 1 && <Remove label={t("kpi.removeMeasure")} onClick={() => removeMeasure(measure.id)} />}
+            </span>
           ))}
           {definition.ratio && (
-            <div className="space-y-1.5 rounded-md bg-surface-2 p-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-ink-2">{t("kpi.ratio")}</span>
-                <button type="button" className="inline-flex size-6 items-center justify-center rounded text-ink-3 hover:text-ink-1" aria-label={t("kpi.removeRatio")} onClick={() => onChange({ ...definition, ratio: null })}>
-                  <X size={13} aria-hidden />
-                </button>
-              </div>
-              <div className="flex items-center gap-1.5">
-                {(["numerator", "denominator"] as const).map((side, index) => (
-                  <span key={side} className="contents">
-                    {index === 1 && <span className="text-ink-3">÷</span>}
-                    <Select
-                      aria-label={t(`kpi.ratio.${side}`)}
-                      value={definition.ratio?.[side]}
-                      onChange={(e) => definition.ratio && onChange({ ...definition, ratio: { ...definition.ratio, [side]: e.target.value } })}
-                      className={control}
-                    >
-                      {measures.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {measureName(m)}
-                        </option>
-                      ))}
-                    </Select>
-                  </span>
-                ))}
-              </div>
-              <Checkbox
-                label={t("kpi.ratio.percent")}
-                checked={Boolean(definition.ratio.percent)}
-                onChange={(e) => definition.ratio && onChange({ ...definition, ratio: { ...definition.ratio, percent: e.target.checked } })}
-                className="text-xs text-ink-2"
-              />
-            </div>
+            <span className="inline-flex flex-wrap items-baseline gap-x-1.5">
+              <Glue>{t("kpi.s.ratio")}</Glue>
+              {(["numerator", "denominator"] as const).map((side, index) => (
+                <span key={side} className="contents">
+                  {index === 1 && <Glue>÷</Glue>}
+                  <Word
+                    aria-label={t(`kpi.ratio.${side}`)}
+                    value={definition.ratio?.[side]}
+                    onChange={(e) => definition.ratio && onChange({ ...definition, ratio: { ...definition.ratio, [side]: e.target.value } })}
+                  >
+                    {measures.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {measureName(m)}
+                      </option>
+                    ))}
+                  </Word>
+                </span>
+              ))}
+              <label className="inline-flex items-center gap-1 text-[13px] text-ink-2">
+                <input
+                  type="checkbox"
+                  className="size-3.5 accent-(--accent)"
+                  checked={Boolean(definition.ratio.percent)}
+                  onChange={(e) => definition.ratio && onChange({ ...definition, ratio: { ...definition.ratio, percent: e.target.checked } })}
+                />
+                {t("kpi.ratio.percent")}
+              </label>
+              <Remove label={t("kpi.removeRatio")} onClick={() => onChange({ ...definition, ratio: null })} />
+            </span>
           )}
-          <div className="flex flex-wrap gap-1">
-            <button
-              type="button"
-              className={addButton}
-              disabled={measures.length >= MAX_MEASURES}
-              onClick={() => onChange({ ...definition, measures: [...measures, { id: nextMeasureId(measures), agg: "count" }] })}
-            >
-              <Plus size={13} aria-hidden /> {t("kpi.addMeasure")}
-            </button>
-            {!definition.ratio && (
-              <button
-                type="button"
-                className={addButton}
-                disabled={measures.length < 2}
-                title={measures.length < 2 ? t("kpi.ratioNeedsTwo") : undefined}
-                onClick={() => measures[0] && measures[1] && onChange({ ...definition, ratio: { numerator: measures[0].id, denominator: measures[1].id } })}
-              >
-                <Plus size={13} aria-hidden /> {t("kpi.addRatio")}
-              </button>
-            )}
-          </div>
-        </Question>
+          <Add disabled={measures.length >= MAX_MEASURES} onClick={() => onChange({ ...definition, measures: [...measures, { id: nextMeasureId(measures), agg: "count" }] })}>
+            {t("kpi.s.addMeasure")}
+          </Add>
+          {!definition.ratio && measures.length >= 2 && (
+            <Add onClick={() => measures[0] && measures[1] && onChange({ ...definition, ratio: { numerator: measures[0].id, denominator: measures[1].id } })}>
+              {t("kpi.s.addRatio")}
+            </Add>
+          )}
+        </p>
 
-        <Question title={t("kpi.overTime")} hint={time && grain ? grain.reason : undefined}>
-          {dates.length === 0 ? (
-            <p className="text-[13px] text-ink-3">{t("kpi.noDate")}</p>
+        <p className="flex flex-wrap items-baseline gap-x-1.5">
+          {dates.length === 0 || !time ? (
+            <>
+              <Glue>{t("kpi.s.overWhole")}</Glue>
+              {dates.length > 0 && (
+                <Add onClick={() => dates[0] && onChange({ ...definition, time: { column: dates[0].name } })}>{t("kpi.s.addTime")}</Add>
+              )}
+            </>
           ) : (
             <>
-              <Select
-                aria-label={t("kpi.dateColumn")}
-                value={time?.column ?? ""}
-                onChange={(e) => onChange({ ...definition, time: e.target.value ? { ...(time ?? {}), column: e.target.value } : null })}
-                className={`${control} ${mark("time.column")}`}
+              <Glue>{t("kpi.s.per")}</Glue>
+              <Word
+                aria-label={t("kpi.grain")}
+                value={time.grain ?? "auto"}
+                title={grain?.reason}
+                invalid={invalid === "time.grain"}
+                onChange={(e) => onChange({ ...definition, time: { ...time, grain: e.target.value as typeof time.grain } })}
               >
-                <option value="">{t("kpi.noTime")}</option>
+                <option value="auto">
+                  {grain && (time.grain ?? "auto") === "auto"
+                    ? t("kpi.s.autoGrain", { grain: t(`kpi.grain.${grain.value}` as MessageKey).toLowerCase() })
+                    : t("kpi.autoPlain")}
+                </option>
+                {GRAINS.map((g) => {
+                  const option = grain?.options.find((o) => o.value === g);
+                  return (
+                    <option key={g} value={g} disabled={option ? !option.allowed : false} title={option?.reason ?? undefined}>
+                      {t(`kpi.grain.${g}` as MessageKey).toLowerCase()}
+                    </option>
+                  );
+                })}
+              </Word>
+              <Glue>{t("kpi.s.of")}</Glue>
+              <Word
+                aria-label={t("kpi.dateColumn")}
+                value={time.column}
+                invalid={invalid === "time.column"}
+                onChange={(e) => onChange({ ...definition, time: e.target.value ? { ...time, column: e.target.value } : null })}
+              >
                 {dates.map((c) => (
                   <option key={c.name} value={c.name}>
                     {c.name}
                   </option>
                 ))}
-              </Select>
-              {time && (
+                <option value="">{t("kpi.s.noDate")}</option>
+              </Word>
+              <Glue>{t("kpi.s.over")}</Glue>
+              <Word aria-label={t("kpi.period")} value={period.kind ?? "all"} invalid={invalid === "time.period"} onChange={(e) => setPeriod({ kind: e.target.value as Period["kind"] })}>
+                {PERIOD_KINDS.map((kind) => (
+                  <option key={kind} value={kind}>
+                    {t(`kpi.s.period.${kind}` as MessageKey)}
+                  </option>
+                ))}
+              </Word>
+              {period.kind === "last" && (
                 <>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    <Select
-                      aria-label={t("kpi.grain")}
-                      value={time.grain ?? "auto"}
-                      onChange={(e) => onChange({ ...definition, time: { ...time, grain: e.target.value as typeof time.grain } })}
-                      className={`${control} ${mark("time.grain")}`}
-                      title={grain?.reason}
-                    >
-                      <option value="auto">
-                        {grain && (time.grain ?? "auto") === "auto" ? t("kpi.auto", { choice: t(`kpi.grain.${grain.value}` as MessageKey) }) : t("kpi.autoPlain")}
-                      </option>
-                      {GRAINS.map((g) => {
-                        const option = grain?.options.find((o) => o.value === g);
-                        return (
-                          <option key={g} value={g} disabled={option ? !option.allowed : false} title={option?.reason ?? undefined}>
-                            {t(`kpi.grain.${g}` as MessageKey)}
-                          </option>
-                        );
-                      })}
-                    </Select>
-                    <Select
-                      aria-label={t("kpi.period")}
-                      value={period.kind ?? "all"}
-                      onChange={(e) => setPeriod({ kind: e.target.value as Period["kind"] })}
-                      className={`${control} ${mark("time.period")}`}
-                    >
-                      {PERIOD_KINDS.map((kind) => (
-                        <option key={kind} value={kind}>
-                          {t(`kpi.period.${kind}` as MessageKey)}
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
-                  {period.kind === "last" && (
-                    <label className="flex items-center gap-2 text-xs text-ink-2">
-                      {t("kpi.period.lastN")}
-                      <TextInput
-                        type="number"
-                        min={1}
-                        max={2000}
-                        aria-label={t("kpi.period.n")}
-                        value={period.n ?? 12}
-                        onChange={(e) => setPeriod({ n: Math.max(1, Number(e.target.value) || 1) })}
-                        className="h-9 w-20 text-[13px]"
-                      />
-                      {t("kpi.period.periods")}
-                    </label>
-                  )}
-                  {period.kind === "range" && (
-                    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1.5">
-                      <TextInput type="date" aria-label={t("kpi.period.from")} value={period.from ?? ""} onChange={(e) => setPeriod({ from: e.target.value || null })} className={control} />
-                      <span className="text-ink-3">→</span>
-                      <TextInput type="date" aria-label={t("kpi.period.to")} value={period.to ?? ""} onChange={(e) => setPeriod({ to: e.target.value || null })} className={control} />
-                    </div>
-                  )}
-                  <Checkbox
-                    label={t("kpi.pageFilters")}
-                    checked={time.page_filters ?? true}
-                    onChange={(e) => onChange({ ...definition, time: { ...time, page_filters: e.target.checked } })}
-                    className="text-xs text-ink-2"
-                  />
+                  <Blank type="number" min={1} max={2000} aria-label={t("kpi.period.n")} value={period.n ?? 12} onChange={(e) => setPeriod({ n: Math.max(1, Number(e.target.value) || 1) })} />
+                  <Glue>{t("kpi.period.periods")}</Glue>
                 </>
               )}
+              {period.kind === "range" && (
+                <>
+                  <Glue>{t("kpi.s.from")}</Glue>
+                  <Blank type="date" aria-label={t("kpi.period.from")} value={period.from ?? ""} onChange={(e) => setPeriod({ from: e.target.value || null })} />
+                  <Glue>{t("kpi.s.to")}</Glue>
+                  <Blank type="date" aria-label={t("kpi.period.to")} value={period.to ?? ""} onChange={(e) => setPeriod({ to: e.target.value || null })} />
+                </>
+              )}
+              <label className="ml-2 inline-flex items-center gap-1 self-center text-[13px] text-ink-2" title={t("kpi.pageFilters.help")}>
+                <input
+                  type="checkbox"
+                  className="size-3.5 accent-(--accent)"
+                  checked={time.page_filters ?? true}
+                  onChange={(e) => onChange({ ...definition, time: { ...time, page_filters: e.target.checked } })}
+                />
+                {t("kpi.pageFilters")}
+              </label>
             </>
           )}
-        </Question>
+        </p>
 
-        <Question title={t("kpi.splitBy")} hint={groups.length ? undefined : t("kpi.split.hint")}>
+        <p className="flex flex-wrap items-baseline gap-x-1.5">
+          {groups.length > 0 && <Glue>{t("kpi.s.splitBy")}</Glue>}
           {groups.map((group, index) => (
-            <div key={index} className="flex items-center gap-1.5">
-              {index > 0 && <span className="w-8 shrink-0 text-xs text-ink-3">{t("kpi.then")}</span>}
-              <Select
+            <span key={index} className="inline-flex items-baseline gap-x-1.5">
+              {index > 0 && <Glue>{t("kpi.then")}</Glue>}
+              <Word
                 aria-label={t("kpi.splitColumn")}
                 value={group.column}
+                invalid={invalid === `groups.${index}.column`}
                 onChange={(e) => onChange({ ...definition, groups: groups.map((g, i) => (i === index ? { column: e.target.value } : g)) })}
-                className={`${control} ${mark(`groups.${index}.column`)}`}
               >
                 {splits
                   .filter((c) => c.name === group.column || !groups.some((g) => g.column === c.name))
@@ -304,39 +296,32 @@ export function Builder({
                       {c.name}
                     </option>
                   ))}
-              </Select>
-              <button type="button" className={iconButton} aria-label={t("kpi.removeSplit")} onClick={() => onChange({ ...definition, groups: groups.filter((_, i) => i !== index) })}>
-                <X size={14} aria-hidden />
-              </button>
-            </div>
+              </Word>
+              <Remove label={t("kpi.removeSplit")} onClick={() => onChange({ ...definition, groups: groups.filter((_, i) => i !== index) })} />
+            </span>
           ))}
           {groups.length < MAX_SPLITS && splits.some((c) => !groups.some((g) => g.column === c.name)) && (
-            <button
-              type="button"
-              className={`${addButton} self-start`}
+            <Add
               onClick={() => {
                 const free = splits.find((c) => !groups.some((g) => g.column === c.name));
                 if (free) onChange({ ...definition, groups: [...groups, { column: free.name }] });
               }}
             >
-              <Plus size={13} aria-hidden /> {groups.length ? t("kpi.addSplit") : t("kpi.split")}
-            </button>
+              {groups.length ? t("kpi.s.addSplitThen") : t("kpi.s.addSplit")}
+            </Add>
           )}
-          {groups.length === 0 && splits.length === 0 && <p className="text-[13px] text-ink-3">{t("kpi.noSplit")}</p>}
-        </Question>
-      </div>
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-2.5">
-        <p className="text-xs text-ink-3" aria-live="polite">
-          {dirty ? <span className="text-ink-1">{t("kpi.pending")}</span> : t("kpi.upToDate")}
         </p>
-        <div className="flex items-center gap-2">
-          <Button variant="primary" onClick={onCalculate} disabled={!dirty}>
-            {t("kpi.calculate")}
-          </Button>
-          <Button icon={Save} onClick={onSave} disabled={saving || (saved && !changed && !dirty)}>
-            {saved ? t("kpi.saveChanges") : t("kpi.save")}
-          </Button>
-        </div>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center justify-end gap-3">
+        <p className="mr-auto text-xs" aria-live="polite">
+          {dirty ? <span className="text-ink-1">{t("kpi.pending")}</span> : <span className="text-ink-3">{t("kpi.upToDate")}</span>}
+        </p>
+        <Button variant="primary" onClick={onCalculate} disabled={!dirty}>
+          {t("kpi.calculate")}
+        </Button>
+        <Button variant="ghost" icon={Save} onClick={onSave} disabled={saving || (saved && !changed && !dirty)}>
+          {saved ? t("kpi.saveChanges") : t("kpi.save")}
+        </Button>
       </div>
     </section>
   );

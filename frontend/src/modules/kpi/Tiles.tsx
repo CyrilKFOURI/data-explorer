@@ -48,26 +48,26 @@ export function Tiles({
   formats: Record<string, Format>;
 }) {
   return (
-    <ul className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-3" aria-label={t("kpi.tiles")}>
+    <ul className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] border-y border-line" aria-label={t("kpi.tiles")}>
       {result.tiles.map((tile) => {
         const measure = result.measures.find((m) => m.id === tile.measure);
         if (!measure) return null;
         const custom = formats[tile.measure] ?? {};
         const value = formatValue(tile.value, measure.format, custom, "compact") || "—";
         return (
-          <li key={tile.measure} className="rounded-lg border border-line bg-surface-1 px-4 py-3">
-            <p className="truncate text-xs text-ink-2" title={labels[tile.measure]}>
+          <li key={tile.measure} className="border-line px-5 py-4 first:pl-0 [&:not(:first-child)]:border-l">
+            <p className="truncate text-xs text-ink-2 first-letter:uppercase" title={labels[tile.measure]}>
               {labels[tile.measure]}
               {measure.approximate && <span title={t("kpi.approximate")}> ≈</span>}
             </p>
-            <div className="mt-1 flex items-end justify-between gap-4">
+            <div className="mt-1 flex items-end gap-6">
               <div className="shrink-0">
-                <p className="text-2xl font-semibold tracking-tight tabular-nums text-ink-1" title={formatValue(tile.value, measure.format, custom)}>
+                <p className="text-[32px] leading-tight font-semibold tracking-tight tabular-nums text-ink-1" title={formatValue(tile.value, measure.format, custom)}>
                   {value}
                 </p>
                 <p className="text-xs text-ink-3">{tile.period ?? t("kpi.tile.overall")}</p>
               </div>
-              <div className="max-w-[28rem] min-w-0 flex-1">
+              <div className="w-full max-w-72 min-w-24 pb-1">
                 <Spark values={tile.spark} marked={tile.spark_index} />
               </div>
             </div>

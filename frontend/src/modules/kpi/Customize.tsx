@@ -63,7 +63,7 @@ function Setting({
 function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="space-y-3 border-t border-line pt-3 first:border-0 first:pt-0">
-      <h3 className="text-xs font-semibold tracking-wide text-ink-1 uppercase">{title}</h3>
+      <h3 className="text-[13px] font-semibold text-ink-1">{title}</h3>
       {children}
     </section>
   );
@@ -98,7 +98,7 @@ export function Customize({
   const layoutOptions = result.resolved.layout.options;
 
   return (
-    <aside className="space-y-4 rounded-lg border border-line bg-surface-1 p-4" aria-label={t("kpi.customize")}>
+    <aside className="space-y-4 border-line xl:border-l xl:pl-6" aria-label={t("kpi.customize")}>
       <div className="flex items-center justify-between">
         <h2 className="text-[15px] font-semibold text-ink-1">{t("kpi.customize")}</h2>
         <div className="flex items-center gap-1">

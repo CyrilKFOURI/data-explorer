@@ -81,7 +81,7 @@ export function PivotTable({
         </div>
       </div>
       {table.note && <p className="text-xs text-ink-3">{table.note}</p>}
-      <div className="max-h-[560px] overflow-auto rounded-lg border border-line">
+      <div className="max-h-[560px] overflow-auto border-t border-line">
         <table className="w-full border-separate border-spacing-0 text-[13px] tabular-nums">
           <thead>
             {table.head.map((row, r) => (
