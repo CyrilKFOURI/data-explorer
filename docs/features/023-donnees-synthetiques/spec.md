@@ -12,6 +12,8 @@ Origine : [modules-futurs/donnees-synthetiques.md](../../modules-futurs/donnees-
 
 **023b (plus tard, avec accord sur PyTorch)** : CTGAN et TVAE (paquet `ctgan`, licence MIT), TimeGAN (codé dans le projet). SDV est écarté : sa licence (Business Source License) n'est pas open source.
 
+**Références de l'évaluation** : SDMetrics (MIT), table-evaluator (MIT) et Sweetviz (MIT), étudiés dans [la note de recherche](../../research/evaluation-donnees-synthetiques.md). Leurs formules sont **réimplémentées** (numpy, scipy, scikit-learn) ; aucun de ces paquets n'est ajouté.
+
 ## Principe : automatique d'abord, comme le reste de l'app
 
 - La page s'ouvre **prête à générer** : toutes les colonnes utilisables, la méthode recommandée, autant de lignes que l'original. Un seul clic : **Generate**.
@@ -25,13 +27,12 @@ Origine : [modules-futurs/donnees-synthetiques.md](../../modules-futurs/donnees-
 
 1. J'ouvre **Synthetic data**. Les colonnes sont listées avec ce que l'app va en faire. Je clique **Generate**.
 2. Une barre de progression suit les étapes : apprentissage, génération, évaluation. Je peux annuler.
-3. Je vois un **score de fidélité** global et une phrase de verdict, puis le détail :
-   - colonne par colonne, avec la distribution réelle et la distribution synthétique superposées ;
-   - les liens entre colonnes ;
-   - le test « réel ou synthétique ? ».
-4. Je vois un **bilan de confidentialité** : aucune ligne copiée, distance au plus proche enregistrement réel, catégories rares reproduites.
-5. Je compare plusieurs générations (méthodes ou réglages différents) dans une liste de runs.
-6. Je clique **Save as dataset** : un nouveau dataset « sales (synthetic) » apparaît, avec les mêmes types de colonnes, ouvert dans Overview.
+3. En tête, quatre chiffres avec leur verdict : **Diagnostic** (données valides), **Quality** (ressemblance, calculée comme SDMetrics), **Detection** (un classifieur ne les distingue pas), **Privacy** (pas de copie ni de mémorisation).
+4. Je parcours les colonnes **de la plus abîmée à la moins abîmée**, réel et synthétique côte à côte (en %, mêmes intervalles, statistiques appariées avec leur écart), puis les liens entre colonnes (réel, synthétique, écart).
+5. Je choisis une cible pour voir si le synthétique garde son **pouvoir prédictif** (entraîné sur synthétique vs sur réel, testés sur les mêmes vraies lignes) et si le lien avec la cible est conservé colonne par colonne.
+6. Je vois le **bilan de confidentialité** : copies exactes, protection contre la mémorisation, valeurs rares reproduites, et en option le risque de deviner une colonne sensible.
+7. Je compare plusieurs générations (méthodes ou réglages différents) côte à côte.
+8. Je clique **Save as dataset** : un nouveau dataset « sales (synthetic) » apparaît, avec les mêmes types de colonnes, ouvert dans Overview.
 
 ## 1. Préparation automatique des colonnes
 
@@ -68,39 +69,153 @@ Chaque colonne reçoit un **traitement**, choisi par une règle identifiée (rai
 - **Nombre de lignes générées** : par défaut autant que l'original, de 100 à 1 000 000.
 - **Graine** : fixe par défaut (42), modifiable. La même graine avec les mêmes réglages redonne le même jeu.
 
-## 3. Évaluation de la fidélité
+## 3. Le rapport : vue d'ensemble
 
-Calculée sur un échantillon de 20 000 lignes réelles (lignes d'apprentissage) et 20 000 lignes synthétiques au plus.
+Le rapport suit la structure de SDMetrics, que les spécialistes connaissent :
+- des **propriétés** notées de 0 à 100 % ;
+- chaque propriété est la moyenne de ses détails (par colonne ou par paire) ;
+- chaque détail est consultable.
 
-| Mesure | Calcul | Score (0–100 %) |
+L'évaluation porte sur un échantillon reproductible de 20 000 lignes d'apprentissage et 20 000 lignes synthétiques au plus. Les lignes réelles **tenues à l'écart** (20 %, section 2) servent à l'utilité et à la confidentialité.
+
+En tête de page, quatre chiffres, chacun avec un verdict en une phrase :
+
+| Chiffre | Ce qu'il dit | Bon si |
 |---|---|---|
-| **Column shapes** | numériques et dates : statistique de Kolmogorov–Smirnov ; catégories : distance de variation totale ; plus l'écart du taux de vides | 1 − écart, moyenne sur les colonnes |
-| **Column pairs** | matrice d'associations réelle et synthétique (Pearson entre nombres, V de Cramér entre catégories, rapport de corrélation η en mixte, comme Correlations) ; écart absolu moyen | 1 − écart moyen |
-| **Real or synthetic?** | un classifieur (HistGradientBoosting, validation croisée 5 plis) apprend à distinguer les lignes réelles des synthétiques ; AUC | 1 − 2 × \|AUC − 0,5\| (100 % = indiscernables) |
+| **Diagnostic** | Les données sont valides : bornes, catégories, identifiants, structure | 100 % (sinon c'est un défaut du générateur, signalé) |
+| **Quality** | Les données ressemblent au réel : formes des colonnes et liens entre colonnes | ≥ 85 % « Very close », ≥ 70 % « Close », ≥ 50 % « Rough », sinon « Far from the real data » |
+| **Detection** | Un classifieur ne sait pas distinguer réel et synthétique | proche de 100 % |
+| **Privacy** | Aucune ligne copiée, pas de mémorisation | voir section 6 |
 
-- **Score global** = moyenne des trois scores, avec un verdict en une phrase :
-  - ≥ 85 % : « Very close to the real data » ;
-  - ≥ 70 % : « Close: most patterns are kept » ;
-  - ≥ 50 % : « Rough: shapes are kept, some links are lost » ;
-  - en dessous : « Far from the real data ».
-- **Détail par colonne** : score, distributions superposées (histogrammes ou barres, réel en gris, synthétique dans la couleur d'accent), moyenne et écart-type ou part des modalités principales, réel vs synthétique.
-- **Détail des liens** : deux matrices côte à côte (réel, synthétique) et la matrice des écarts (divergente, gris à 0) ; les 5 paires les plus abîmées sont listées.
-- **Ce qui trahit le synthétique** : les colonnes que le classifieur utilise le plus (importance par permutation) pour reconnaître une ligne synthétique.
-- **Utilité (option)** : « Train on synthetic, test on real ». Je choisis une colonne cible ; un modèle est entraîné sur le synthétique puis testé sur les lignes réelles tenues à l'écart, et comparé au même modèle entraîné sur les lignes réelles. Résultat affiché comme le rapport des deux scores (R² ou exactitude équilibrée).
+**Le score Quality est calculé exactement comme celui de SDMetrics** : moyenne de Column shapes et de Column pair trends. Il est donc comparable aux scores publiés. Les autres mesures (couverture, vides, détection, utilité) sont affichées à côté, sans être fondues dans un score unique. Un score fourre-tout qui moyenne des échelles différentes est le défaut relevé chez table-evaluator.
 
-## 4. Confidentialité
+## 4. Diagnostic et qualité
 
-Calculée avec les lignes réelles **tenues à l'écart** (jamais vues par le modèle) comme référence. Distances de Gower : numériques normalisées par leur étendue, catégories 0/1.
+**Diagnostic** (contrôles de validité, attendu 100 %, un détail par colonne) :
 
-- **Exact copies** : lignes synthétiques identiques à une ligne d'apprentissage, sur toutes les colonnes modélisées. Attendu : 0. Au-delà, avertissement nommant le nombre.
-- **Distance to closest record (DCR)** : pour chaque ligne synthétique, la distance à la ligne d'apprentissage la plus proche, comparée à la même distance calculée pour les lignes tenues à l'écart.
-  - Si les lignes synthétiques sont nettement plus proches des lignes d'apprentissage que ne le sont des lignes réelles jamais vues (médiane DCR synthétique < 0,8 × médiane DCR tenue à l'écart), le modèle **a mémorisé** : avertissement.
-  - Graphique : les deux distributions de DCR superposées.
-- **Rare values** : modalités rares (< 5 lignes réelles) présentes dans le synthétique, listées.
-- **Verdict** : « No copied rows, synthetic rows are no closer to the real ones than new real rows would be » ou l'avertissement correspondant.
-- Le synthétique **n'est pas** une garantie de confidentialité différentielle ; la page le dit en une ligne.
+| Contrôle | Colonnes | Calcul |
+|---|---|---|
+| Boundary adherence | numériques, dates | part des valeurs synthétiques dans [min, max] du réel (ou des bornes choisies) |
+| Category adherence | catégories, booléens, ordinaux | part des valeurs synthétiques qui existent dans le réel |
+| Key uniqueness | identifiants régénérés, colonnes « Keep unique » | 1 − part de doublons |
+| Table structure | toutes | colonnes du synthétique = colonnes modélisées, avec le même type |
+| Integer adherence | entiers | part des valeurs entières (contrôle propre à l'app) |
 
-## 5. Résultat et nouveau dataset
+Par construction, les méthodes de la 023 doivent toujours obtenir 100 %. Le diagnostic sert de filet de sécurité, et il deviendra utile avec CTGAN et TVAE (023b), qui peuvent sortir des bornes.
+
+**Quality, propriété Column shapes** (une note par colonne) :
+- numériques et dates : **KSComplement** = 1 − statistique de Kolmogorov–Smirnov (dates converties en nombres, valeurs vides ignorées) ;
+- catégories, booléens, ordinaux : **TVComplement** = 1 − ½ Σ |part réelle − part synthétique|.
+
+**Quality, propriété Column pair trends** (une note par paire) :
+- deux colonnes numériques ou dates : **CorrelationSimilarity** = 1 − |r_synthétique − r_réel| / 2 (Pearson ; Spearman en option) ;
+- deux colonnes catégorielles : **ContingencySimilarity** = 1 − ½ ΣΣ |part réelle − part synthétique| sur le tableau croisé normalisé, la valeur vide comptant comme une modalité ;
+- paire mixte : la colonne continue est découpée en 10 intervalles égaux **calculés sur le réel**, appliqués aux deux jeux, puis ContingencySimilarity.
+- **Seules les paires où le réel montre un vrai lien comptent dans la moyenne** : |r| > 0,5, ou V de Cramér > 0,3 pour les paires catégorielles et mixtes, comme SDMetrics depuis la 0.27. Le détail liste toutes les paires avec une colonne « Meets threshold ». Sans aucune paire retenue, la propriété dit « No strong link in the real data to keep ».
+
+**À côté du score (couverture et vides)**, une note par colonne :
+- **Range coverage** = 1 − (part de l'étendue réelle manquée en bas + en haut) ;
+- **Category coverage** = part des modalités réelles présentes dans le synthétique ;
+- **Missing values** = 1 − |taux de vides réel − synthétique| ;
+- **Outlier coverage** = min(1, part synthétique / part réelle des valeurs hors des clôtures 1,5 × IQR du réel).
+
+Une faible couverture signale un générateur qui « s'effondre » sur les valeurs les plus fréquentes.
+
+**Écarté** : le test du khi-deux (CSTest, déconseillé par SDMetrics), les vraisemblances BN, GM et LSTM, le score « basic statistics » de table-evaluator.
+
+## 5. Détection et utilité
+
+**Detection** (« real or synthetic? »), présentée comme une mesure de **fidélité**, pas de confidentialité :
+- réel et synthétique (même nombre de lignes, 10 000 au plus de chaque côté) sont empilés et étiquetés ;
+- deux détecteurs, chacun en validation croisée stratifiée 3 plis :
+  - régression logistique (après imputation et mise à l'échelle robuste), comme SDMetrics, donc comparable ;
+  - **HistGradientBoosting**, un détecteur plus fort qui voit les interactions ;
+- score = 1 − (max(AUC, 0,5) × 2 − 1) : 100 % = indiscernables ; on garde le **plus sévère** des deux ;
+- **What gives it away** : les colonnes que le détecteur fort utilise le plus (importance par permutation), avec un lien vers leur comparaison détaillée.
+
+**Utility** (option : je choisis une colonne cible) :
+- deux modèles identiques (HistGradientBoosting) :
+  - **TRTR** : entraîné sur les lignes réelles d'apprentissage ;
+  - **TSTR** : entraîné sur le synthétique ;
+- **les deux sont testés sur les mêmes lignes réelles tenues à l'écart**. C'est la correction des défauts de table-evaluator (test sur du synthétique, pas de lignes tenues à l'écart) et de SDMetrics (pas de référence TRTR) ;
+- métriques : R² et MAE pour une régression ; exactitude équilibrée, F1 macro et AUC pour une classification ;
+- résultat : les deux scores côte à côte et leur rapport, par exemple « The synthetic data keeps 92 % of the real data's predictive power ».
+
+## 6. Confidentialité
+
+Calculée avec les lignes réelles **tenues à l'écart** (jamais vues par le générateur) comme référence.
+
+**Distance entre deux lignes** (définition de SDMetrics) :
+- nombre ou date : |a − b| / étendue réelle, plafonnée à 1 ;
+- catégorie ou valeur vide : 0 si identiques, 1 sinon ;
+- distance de la ligne = moyenne sur les colonnes modélisées.
+
+**DCR** (distance to closest record) d'une ligne : la distance à la ligne la plus proche d'un jeu de référence. Calcul par blocs, sur 5 000 lignes synthétiques au plus.
+
+**Mesures :**
+
+| Mesure | Calcul | Lecture |
+|---|---|---|
+| **Exact copies** (New row synthesis) | part des lignes synthétiques égales à une ligne d'apprentissage (nombres mis à l'échelle min-max, tolérance 0,01) | attendu 0 % ; sinon avertissement avec le nombre de lignes |
+| **Overfitting protection** | min(1, 2 × (1 − part des lignes synthétiques plus proches de l'apprentissage que des lignes tenues à l'écart)) | 100 % = le générateur n'a pas mémorisé ; sous 80 %, avertissement « memorisation » |
+| **Baseline protection** | min(1, médiane DCR(synthétique → apprentissage) / médiane DCR(données aléatoires uniformes dans les étendues → apprentissage)) | proche de 100 % = les lignes synthétiques ne sont pas plus proches du réel que du hasard. Un score bas n'est pas un défaut en soi (des données fidèles sont proches du réel) ; il se lit avec l'Overfitting protection |
+| **Rare values** | modalités rares (< 5 lignes réelles) reproduites dans le synthétique | liste ; une valeur rare peut identifier une personne |
+| **Disclosure protection (CAP)**, option | je choisis des colonnes « connues » (ex. âge, code postal) et une colonne « sensible » (ex. revenu). Pour chaque ligne réelle, les lignes synthétiques ayant les mêmes valeurs connues votent pour la valeur sensible ; protection = part de votes faux, rapportée à une référence aléatoire, plafonnée à 1. Variantes : zero-CAP et generalized-CAP | 100 % = connaître les colonnes connues n'aide pas à deviner la colonne sensible |
+
+- **Graphique** : distributions des DCR superposées, synthétique → apprentissage et tenu à l'écart → apprentissage.
+- **Verdict** : « No copied rows, and synthetic rows are no closer to the real ones than new real rows would be » ou l'avertissement correspondant.
+- Une ligne rappelle que le synthétique **n'est pas** une garantie de confidentialité différentielle.
+- **Écarté** : les attaques par modèle (beta chez SDMetrics), la « membership inference » et le k-anonymat de table-evaluator (mal construits).
+
+## 7. Comparaison réel / synthétique (colonne par colonne)
+
+Inspirée de Sweetviz, mais avec des mesures d'écart, ce qui manque à Sweetviz.
+
+**Règles communes :**
+- **une couleur fixe par jeu** dans tous les graphiques et nombres (réel : gris foncé ; synthétique : couleur d'accent, avec contour pour ne pas dépendre de la couleur) ;
+- **tout comptage est aussi donné en % de son propre jeu**, car les deux jeux n'ont pas forcément la même taille.
+
+**En-tête :**
+- lignes réelles et synthétiques, lignes dupliquées dans chaque jeu ;
+- colonnes par type ;
+- colonnes laissées de côté, avec leur raison.
+
+**Liste des colonnes :**
+- une ligne compacte par colonne : nom, type, score (KS ou TV), mini-graphique superposé, et la plus grosse différence en clair (par exemple « mean +4 % », « 'Lyon' 12 % → 18 % ») ;
+- **triée par défaut de la colonne la plus abîmée à la moins abîmée** ;
+- un clic déplie le détail.
+
+**Détail d'une colonne numérique ou date :**
+- **bande de base** : valeurs, vides, distinctes, zéros, en comptage et en % pour chaque jeu ;
+- **histogrammes superposés sur les mêmes intervalles** (calculés sur le réel), en % de chaque jeu ; boutons Auto · 10 · 30 intervalles ; bascule **ECDF** (fonctions de répartition superposées, lisibles pour voir des queues coupées) ;
+- **statistiques appariées** : libellé, réel, synthétique, **Δ** (absolu et en %), sur min, 5 %, Q1, médiane, Q3, 95 %, max, moyenne, écart-type, IQR, asymétrie, aplatissement ;
+- **valeurs les plus fréquentes, plus petites et plus grandes** (10 chacune), avec leur fréquence dans l'autre jeu. Elles repèrent la mémorisation, les queues coupées et les arrondis.
+
+**Détail d'une colonne catégorielle :**
+- même bande de base ;
+- **tableau aligné** : modalité, réel %, synthétique %, Δ, sur l'union des modalités (0 % si absente d'un côté, marquée « missing in synthetic » ou « invented »), trié par fréquence réelle ; au-delà de 20, le reste en « Others » ;
+- barres horizontales appariées.
+
+**Cible superposée** (option, je choisis une cible) :
+- par intervalle ou par modalité, la moyenne de la cible (ou la part de « vrai ») dans le réel et dans le synthétique, en deux lignes ;
+- elle montre si le **lien avec la cible** est conservé, pas seulement les distributions.
+
+**Liens entre colonnes :**
+- trois matrices : réel, synthétique et **|écart|** (séquentielle, plafonnée à 0,3 comme table-evaluator) ;
+- mesures du module Correlations : Pearson ou Spearman, V de Cramér, η ;
+- un clic sur une case ouvre la paire : nuage de points réel et synthétique côte à côte (deux nombres), boîtes à moustaches par modalité (mixte), tableaux croisés en % (deux catégories) ;
+- **les 5 paires les plus abîmées** sont listées.
+
+**Vues d'ensemble** (onglet Overview) :
+- **nuage moyenne / écart-type** : un point par colonne numérique, réel en x, synthétique en y, échelles log, diagonale ; les colonnes loin de la diagonale sont nommées ;
+- **PCA** : 2 composantes ajustées sur le réel, réel et synthétique projetés et superposés.
+
+**Comparaison de runs :**
+- cochez 2 à 5 runs du même dataset ;
+- tableau côte à côte : Diagnostic, Quality (et ses propriétés), Detection, Privacy, Utility si calculée, durée ;
+- le meilleur score de chaque ligne est marqué ; un graphique en barres groupées montre les propriétés par méthode.
+
+## 8. Résultat et nouveau dataset
 
 - **Aperçu** : les 100 premières lignes synthétiques.
 - **Save as dataset** :
@@ -124,10 +239,13 @@ Calculée avec les lignes réelles **tenues à l'écart** (jamais vues par le mo
   - `GET …/runs/{run}/preview` : aperçu ;
   - `GET …/runs/{run}/download?format=csv|parquet` : téléchargement ;
   - `POST …/runs/{run}/dataset` : crée le dataset ;
-  - `POST …/runs/{run}/utility` : évaluation d'utilité, avec la cible en paramètre ;
+  - `POST …/runs/{run}/utility` : évaluation d'utilité (TSTR / TRTR), avec la cible en paramètre ;
+  - `POST …/runs/{run}/disclosure` : risque de divulgation (CAP), avec les colonnes connues et la colonne sensible ;
+  - `GET …/runs/{run}/columns/{column}` : comparaison détaillée d'une colonne (section 7), avec la cible en option ;
+  - `GET …/runs/compare?runs=a,b,c` : scores côte à côte de plusieurs runs ;
   - `DELETE …/runs/{run}`.
 - **Code** (forme compatible avec la future bibliothèque Python : calculs purs, entrées simples, dataclasses en sortie) :
-  - `backend/app/domain/synthetic/` : `plan.py` (règles R-SYN), `encode.py` (aller-retour colonnes ↔ matrice), `methods/` (cart, copula, bayes, independent), `fidelity.py`, `privacy.py` ;
+  - `backend/app/domain/synthetic/` : `plan.py` (règles R-SYN), `encode.py` (aller-retour colonnes ↔ matrice), `methods/` (cart, copula, bayes, independent), `diagnostic.py`, `quality.py` (formes, paires, couverture), `detection.py`, `utility.py`, `privacy.py` (copies, DCR, CAP), `compare.py` (vue colonne par colonne) ;
   - `backend/app/modules/synthetic/` ;
   - frontend `modules/synthetic/`.
 
@@ -146,13 +264,26 @@ Calculée avec les lignes réelles **tenues à l'écart** (jamais vues par le mo
 - GIVEN un identifiant régénéré THEN toutes les valeurs sont uniques, au même format, et aucune n'existe dans la source.
 - GIVEN la même graine et les mêmes réglages THEN le même jeu est produit.
 
-**Fidélité :**
-- GIVEN deux colonnes très liées (corrélation 0,9) THEN CART et la copule gardent la corrélation à ± 0,1, la méthode indépendante la perd, et le score « Column pairs » les classe dans cet ordre.
-- GIVEN un synthétique qui recopie les données réelles THEN l'AUC « real or synthetic » est proche de 0,5 et la confidentialité signale 100 % de copies exactes (le test vérifie que les deux mesures se répondent).
+**Diagnostic :**
+- GIVEN une génération de chacune des 4 méthodes THEN le Diagnostic vaut 100 % (bornes, catégories, identifiants uniques, structure, entiers).
+- GIVEN un jeu synthétique trafiqué (une valeur hors bornes, une catégorie inventée, un identifiant en double) THEN chaque contrôle concerné tombe sous 100 % et nomme la colonne.
+
+**Qualité (formules vérifiées) :**
+- GIVEN des jeux construits à la main THEN KSComplement, TVComplement, CorrelationSimilarity, ContingencySimilarity, RangeCoverage, CategoryCoverage et MissingValueSimilarity donnent les valeurs calculées à la main (tests unitaires par formule, mêmes définitions que SDMetrics).
+- GIVEN une paire réelle sans lien (|r| < 0,5, V < 0,3) THEN elle apparaît dans le détail avec « Meets threshold: no » et ne compte pas dans le score Column pair trends.
+- GIVEN deux colonnes très liées (corrélation 0,9) THEN CART et la copule gardent la corrélation à ± 0,1, la méthode indépendante la perd, et le score Column pair trends les classe dans cet ordre.
+
+**Détection et utilité :**
+- GIVEN le synthétique = une copie des lignes d'apprentissage THEN le score de détection est proche de 100 % (indiscernable) et la confidentialité signale 100 % de copies : les deux mesures se répondent.
+- GIVEN une cible WHEN je lance l'utilité THEN les deux modèles (TSTR, TRTR) sont testés sur les mêmes lignes réelles tenues à l'écart, et le rapport s'affiche.
 
 **Confidentialité :**
-- GIVEN un synthétique sain THEN 0 copie exacte et un rapport DCR synthétique / tenu à l'écart ≥ 0,8.
-- GIVEN un synthétique fabriqué en bruitant à peine les lignes d'apprentissage THEN l'avertissement de mémorisation apparaît.
+- GIVEN un synthétique sain THEN 0 copie exacte, Overfitting protection ≥ 0,9, Baseline protection proche de 1.
+- GIVEN un synthétique fabriqué en bruitant à peine les lignes d'apprentissage THEN Overfitting protection chute et l'avertissement de mémorisation apparaît.
+- GIVEN des colonnes connues et une colonne sensible WHEN je lance le CAP THEN le score est comparé à la référence aléatoire.
+
+**Comparaison :**
+- GIVEN réel et synthétique de tailles différentes THEN tous les comptages sont aussi donnés en % de leur jeu, et les histogrammes partagent les mêmes intervalles.
 
 **Résultat :**
 - GIVEN un run WHEN je clique Save as dataset THEN un dataset prêt apparaît avec les mêmes types de colonnes que la source et la mention de son origine.
