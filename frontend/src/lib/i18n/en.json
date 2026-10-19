@@ -1737,7 +1737,7 @@
   "module.kpi.label": "KPI",
   "kpi.title": "KPI builder",
   "kpi.description": "A business indicator in one click: the measure, grain, chart and table are chosen for you. Customise anything afterwards.",
-  "kpi.suggested": "Try",
+  "kpi.suggested": "Try:",
   "kpi.saved": "Saved KPIs",
   "kpi.savedEmpty": "None yet: save the one you see.",
   "kpi.new": "New KPI",
@@ -1802,8 +1802,8 @@
   "kpi.tiles": "Key figures",
   "kpi.approximate": "Approximate median (over 200,000 rows)",
   "kpi.tile.overall": "Whole data",
-  "kpi.tile.vsPrevious": "vs previous ({value})",
-  "kpi.tile.vsLastYear": "vs last year ({value})",
+  "kpi.tile.vsPrevious": "vs prev. ({value})",
+  "kpi.tile.vsLastYear": "vs last yr ({value})",
   "kpi.tile.top": "Top: {label} · {share}",
   "kpi.customize": "Customize",
   "kpi.customised": "Changed from Auto",
@@ -1925,5 +1925,10 @@
   "kpi.s.splitBy": "split by",
   "kpi.s.addSplit": "split by",
   "kpi.s.addSplitThen": "then by",
-  "kpi.pageFilters.help": "Unticked, the KPI ignores the filters set at the top of the page."
+  "kpi.pageFilters.help": "Unticked, the KPI ignores the filters set at the top of the page.",
+  "kpi.time": "Time",
+  "kpi.grainAuto": "{grain} (auto)",
+  "kpi.pageFiltersShort": "Page filters",
+  "kpi.none": "none",
+  "kpi.notApplied": "Not applied yet"
 }

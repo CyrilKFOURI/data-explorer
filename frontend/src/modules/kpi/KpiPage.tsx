@@ -213,7 +213,7 @@ export function KpiPage() {
         />
       </header>
       <div className="px-8 pb-10">
-        <div className="min-w-0 space-y-6">
+        <div className="min-w-0 space-y-3">
           {suggestions.data && suggestions.data.kpis.length > 0 && (
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1" role="group" aria-label={t("kpi.suggested")}>
               <span className="inline-flex items-center gap-1 pr-1 text-xs text-ink-3">
@@ -271,7 +271,7 @@ export function KpiPage() {
             <div className="h-[420px] animate-pulse border-y border-line bg-surface-1/40" aria-busy="true" />
           ) : (
             <div className={`grid gap-6 ${panel ? "xl:grid-cols-[minmax(0,1fr)_300px]" : ""}`}>
-              <div className={`min-w-0 space-y-8 ${compute.isFetching ? "opacity-60 transition-opacity" : ""}`} aria-busy={compute.isFetching}>
+              <div className={`min-w-0 space-y-6 ${compute.isFetching ? "opacity-60 transition-opacity" : ""}`} aria-busy={compute.isFetching}>
                 {result.warnings.map((w) => (
                   <p key={w} className="border-l-2 border-accent pl-3 text-xs text-ink-2">
                     {w}

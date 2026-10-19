@@ -35,7 +35,7 @@ export function levelColor(levels: string[], label: string, ordinal: boolean, to
   const index = Math.max(0, real.indexOf(label));
   if (ordinal) {
     const step = real.length > 1 ? index / (real.length - 1) : 1;
-    return withAlpha(tokens.palette[0] ?? tokens.ink2, 0.3 + 0.7 * step);
+    return withAlpha(tokens.palette[0] ?? tokens.ink2, 0.5 + 0.5 * step);
   }
   return tokens.palette[index % tokens.palette.length] ?? tokens.ink2;
 }

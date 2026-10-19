@@ -9,38 +9,32 @@ Obtenir en un clic un indicateur métier (tuiles, graphique, tableau croisé), p
 ## Principes UX
 
 - **Automatique d'abord.** La page s'ouvre sur un KPI suggéré déjà calculé. Les autres suggestions sont des pastilles en haut ; « Split by » propose les meilleurs regroupements.
-- **Builder en phrase** : « Show Sum of revenue per month of order_date over all dates, split by country ». Un changement de données active **Calculate** ; rien ne se recalcule à chaque réglage.
+- **Barre de réglages compacte** : Measure · Time · Split by, un libellé devant chaque menu. Un changement de données active **Calculate** ; rien ne se recalcule à chaque réglage.
 - **Customize** : chaque réglage affiche « Auto · choix » et sa raison. Une option impossible est grisée avec la raison. Un réglage modifié porte une pastille et « Reset to auto ». Les réglages d'affichage s'appliquent sans recalcul.
 - **Why this view** : une ligne sous le graphique explique les choix automatiques.
 
-## Disposition (revue le 2026-10-19, 2e version)
+## Disposition (revue le 2026-10-19, 3e version)
 
-Pas de cartes : la page se lit comme un rapport. Les groupes sont séparés par des filets et de l'espace, jamais par des blocs arrondis.
+Compacte et lisible d'un coup d'œil, sur le modèle de la barre de configuration de Séries temporelles : un libellé court devant chaque menu, pas de cartes.
 
 ```
-KPI builder                                                   [Saved KPIs 3 ▾]  + New KPI
-Try  Rows   Total revenue   Distinct customers   % churned
-
-Show  Sum̲ ̲o̲f̲ ̲r̲e̲v̲e̲n̲u̲e̲ ▾  + measure
-per  Auto (month) ▾  of  order_date ▾  over  all dates ▾   ☑ page filters
-split by  country ▾  then  segment ▾  + split
-─────────────────────────────────────────────────────────── Changes not applied  [Calculate] [Save]
-
- Total revenue          │ Orders               │ Revenue per order
- 1.2M  Sep 2026  ~~~~~  │ 8,412  Sep 2026 ~~~  │ 142.6  Sep 2026 ~~~
- ↑ 4 % vs previous      │ ↑ 2 % vs previous    │ ↑ 1.9 % vs previous
-──────────────────────────────────────────────────────────────────────────────────────────
+KPI builder                                                  [Saved KPIs 3 ▾]  + New KPI
+Try: Rows · Total revenue · Distinct customers · % churned
+┌ barre collante ───────────────────────────────────────────────────────────────────────┐
+│ Measure [Sum ▾][revenue ▾] + Measure + Ratio │ Time [date ▾][Month (auto) ▾][All dates ▾] │
+│ ☑ Page filters │ Split by [country ▾] + Split                      [Calculate] [Save]  │
+└───────────────────────────────────────────────────────────────────────────────────────┘
+ Total revenue  1.2M  ~~~   │ Units  48.3K ~~~   │ Revenue per unit  18.6 ~~~
+ Sep 2026 ↑ 4 % prev.       │ …                  │ …
 Revenue by month by country                                                    Customize
-[graphique, posé sur la page]
-Why this view: …      Split by: + country  + segment
-Table                                                     Swap  Copy  Download CSV
-[tableau : filets horizontaux seulement]
+[graphique 240 px]
+Why this view: …   Split by: + country + segment
+Table                                                      Swap  Copy  Download CSV
 ```
 
-- **Builder en phrase** : chaque choix est un mot souligné (menu natif, largeur ajustée au texte) ; les ajouts (+ measure, + ratio, + split) sont des liens dans la phrase ; sans date, la phrase dit « over the whole data ».
-- **Chiffres clés** : une bande entre deux filets, une colonne par mesure séparée par un filet vertical ; une seule mesure occupe toute la bande, mini-courbe étirée.
-- **Saved KPIs** : menu dans l'en-tête.
-- **Customize** : colonne à droite des résultats, séparée par un filet vertical (pas de carte).
+- **Barre de réglages** : collante en haut au défilement ; groupes Measure · Time · Split by séparés par un filet vertical ; menus de 28 px ; Calculate (actif seulement s'il y a des changements, avec « Not applied yet ») et Save à droite.
+- **Chiffres clés** : une bande compacte entre deux filets, une colonne par mesure.
+- **Customize** : colonne à droite des résultats, séparée par un filet.
 
 ## États
 

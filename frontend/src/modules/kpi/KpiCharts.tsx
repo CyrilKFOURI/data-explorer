@@ -57,7 +57,7 @@ export function KpiCharts({
           hideOther,
         };
         const name = labels[measure.id] ?? measure.label;
-        const height = result.resolved.time ? 300 : Math.min(520, 70 + 26 * (result.splits[0]?.levels.length ?? 4));
+        const height = result.resolved.time ? 240 : Math.min(520, 70 + 26 * (result.splits[0]?.levels.length ?? 4));
         return (
           <figure key={measure.id} className="space-y-1">
             {result.measures.length > 1 && <figcaption className="text-[13px] font-medium text-ink-1">{name}</figcaption>}
@@ -76,7 +76,7 @@ export function KpiCharts({
             {share && measure.share.allowed && !multiples && (
               <div>
                 <p className="text-xs text-ink-2">{t("kpi.shareChart", { measure: name })}</p>
-                <Plot figure={shareFigure(input)} height={170} label={t("kpi.shareChart", { measure: name })} />
+                <Plot figure={shareFigure(input)} height={140} label={t("kpi.shareChart", { measure: name })} />
               </div>
             )}
           </figure>

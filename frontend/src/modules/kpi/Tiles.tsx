@@ -16,7 +16,7 @@ function Spark({ values, marked }: { values: (number | null)[]; marked: number |
   const path = points.map(([i, v], k) => `${k ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
   const mark = marked !== null ? values[marked] : null;
   return (
-    <svg viewBox="0 0 120 30" preserveAspectRatio="none" className="h-10 w-full min-w-24" aria-hidden>
+    <svg viewBox="0 0 120 30" preserveAspectRatio="none" className="h-8 w-full min-w-20" aria-hidden>
       <path d={path} fill="none" stroke="var(--chart-1)" strokeWidth={1.5} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
       {marked !== null && mark !== null && mark !== undefined && (
         <line x1={x(marked)} x2={x(marked)} y1={2} y2={28} stroke="var(--ink-3)" strokeDasharray="2 2" vectorEffect="non-scaling-stroke" />
@@ -30,7 +30,7 @@ function Change({ change, against }: { change: number | null; against: string })
   if (change === null) return null;
   const Icon = change > 0.0005 ? ArrowUpRight : change < -0.0005 ? ArrowDownRight : ArrowRight;
   return (
-    <span className="inline-flex items-center gap-0.5 text-xs text-ink-2">
+    <span className="inline-flex items-center gap-0.5 text-[11px] text-ink-2">
       <Icon size={13} strokeWidth={1.75} aria-hidden />
       <span className="tabular-nums text-ink-1">{formatChange(change)}</span>
       <span className="text-ink-3">{against}</span>
@@ -48,30 +48,30 @@ export function Tiles({
   formats: Record<string, Format>;
 }) {
   return (
-    <ul className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] border-y border-line" aria-label={t("kpi.tiles")}>
+    <ul className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] border-b border-line" aria-label={t("kpi.tiles")}>
       {result.tiles.map((tile) => {
         const measure = result.measures.find((m) => m.id === tile.measure);
         if (!measure) return null;
         const custom = formats[tile.measure] ?? {};
         const value = formatValue(tile.value, measure.format, custom, "compact") || "—";
         return (
-          <li key={tile.measure} className="border-line px-5 py-4 first:pl-0 [&:not(:first-child)]:border-l">
+          <li key={tile.measure} className="border-line px-4 py-2.5 first:pl-0 [&:not(:first-child)]:border-l">
             <p className="truncate text-xs text-ink-2 first-letter:uppercase" title={labels[tile.measure]}>
               {labels[tile.measure]}
               {measure.approximate && <span title={t("kpi.approximate")}> ≈</span>}
             </p>
-            <div className="mt-1 flex items-end gap-6">
+            <div className="flex items-end gap-4">
               <div className="shrink-0">
-                <p className="text-[32px] leading-tight font-semibold tracking-tight tabular-nums text-ink-1" title={formatValue(tile.value, measure.format, custom)}>
+                <p className="text-2xl leading-tight font-semibold tracking-tight tabular-nums text-ink-1" title={formatValue(tile.value, measure.format, custom)}>
                   {value}
                 </p>
-                <p className="text-xs text-ink-3">{tile.period ?? t("kpi.tile.overall")}</p>
+                <p className="text-[11px] text-ink-3">{tile.period ?? t("kpi.tile.overall")}</p>
               </div>
-              <div className="w-full max-w-72 min-w-24 pb-1">
+              <div className="w-full max-w-44 min-w-20 pb-1">
                 <Spark values={tile.spark} marked={tile.spark_index} />
               </div>
             </div>
-            <div className="mt-2 flex flex-col gap-0.5">
+            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
               <Change
                 change={tile.change}
                 against={t("kpi.tile.vsPrevious", { value: formatValue(tile.previous, measure.format, custom, "compact") })}
