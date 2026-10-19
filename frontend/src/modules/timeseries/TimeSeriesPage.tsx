@@ -35,7 +35,8 @@ import {
 } from "./Memory";
 import { ForecastSection } from "./Forecast";
 import { MethodsRow, MethodsTable, useMethods } from "./Methods";
-import { parseWindows, rolling, WindowsPicker } from "./Windows";
+import { RollingControls } from "./RollingControls";
+import { parseWindows, rolling } from "./Windows";
 import {
   BreaksBody,
   breaksVerdict,
@@ -731,9 +732,13 @@ function OverviewSection({
       parseWindows(extraKey).map((window) => ({
         window,
         mean: rolling(data.analyzed.values, window, data.align).mean,
+        name: t(data.align === "centered" ? "time.rollingCentered" : "time.rolling", {
+          window: String(window),
+          period: periodName(setup.period),
+        }).replace(" ± 1σ", ""),
       })),
     );
-  }, [data, showAll, layers, what, rolled, extraKey]);
+  }, [data, showAll, layers, what, rolled, extraKey, setup.period]);
   const figures = data.figures;
   const unit = t("ts.perPeriod", { period: periodName(setup.period) });
   return (
@@ -761,49 +766,21 @@ function OverviewSection({
         />
       </dl>
       <div className="rounded-lg border border-line bg-surface-1 p-3">
-        <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-ink-2">
+        <div className="mb-3 space-y-2 border-b border-line pb-3 text-xs text-ink-2">
           {data.window !== null && (
-            <>
-              <WindowsPicker
-                label={t("time.window")}
-                windows={windows}
-                auto={windows.length ? null : data.window}
-                maximum={setup.periods}
-                multiple
-                onChange={(next) =>
-                  onChange({
-                    windows: next.length ? next.join(",") : undefined,
-                    window: undefined,
-                  })
-                }
-              />
-              <Select
-                aria-label={t("time.align")}
-                value={data.align}
-                onChange={(event) =>
-                  onChange({
-                    align:
-                      event.target.value === "centered"
-                        ? "centered"
-                        : undefined,
-                  })
-                }
-                className="h-7 text-xs"
-              >
-                <option value="trailing">{t("time.align.trailing")}</option>
-                <option value="centered">{t("time.align.centered")}</option>
-              </Select>
-              {(["values", "mean", "band"] as const).map((layer) => (
-                <Checkbox
-                  key={layer}
-                  label={t(`time.layer.${layer}` as MessageKey)}
-                  checked={layers[layer]}
-                  onChange={(event) =>
-                    setLayers({ ...layers, [layer]: event.target.checked })
-                  }
-                />
-              ))}
-            </>
+            <RollingControls
+              windows={windows}
+              auto={windows.length ? null : data.window}
+              period={setup.period}
+              maximum={setup.periods}
+              align={data.align}
+              layers={layers}
+              onWindows={(next) =>
+                onChange({ windows: next.length ? next.join(",") : undefined, window: undefined })
+              }
+              onAlign={(next) => onChange({ align: next === "centered" ? "centered" : undefined })}
+              onLayers={setLayers}
+            />
           )}
           {setup.group && (
             <Checkbox

@@ -22,6 +22,8 @@ import { MethodsTable } from "./Methods";
 import { WindowsPicker } from "./Windows";
 import type { TimeSeriesSearch } from "./search";
 
+const FEW_ANOMALIES = 5;
+
 type Verdict = { text: string; tone: "ok" | "none"; detail?: string } | null;
 type Change = (patch: Partial<TimeSeriesSearch>) => void;
 
@@ -347,8 +349,11 @@ export function BreaksBody({
   onChange: Change;
 }) {
   const filters = useActiveFilters(datasetId);
+  const [everyAnomaly, setEveryAnomaly] = useState(false);
   if (data.message) return <p className="text-ink-2">{data.message}</p>;
   const time = data.setup.time;
+  // the table lists the strongest anomalies first; every one stays marked on the chart
+  const listed = everyAnomaly ? data.anomalies : data.anomalies.slice(0, FEW_ANOMALIES);
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3 text-xs">
@@ -528,7 +533,7 @@ export function BreaksBody({
                 </tr>
               </thead>
               <tbody>
-                {data.anomalies.map((row) => (
+                {listed.map((row) => (
                   <tr key={row.index} className="border-t border-line">
                     <td className="px-3 py-1.5">{row.period}</td>
                     <td className="px-3 py-1.5 text-right">
@@ -568,6 +573,18 @@ export function BreaksBody({
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+        {data.anomalies.length > FEW_ANOMALIES && (
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <span className="text-ink-3">
+              {everyAnomaly
+                ? null
+                : t("ts.anomalies.strongest", { shown: String(FEW_ANOMALIES), count: String(data.anomalies.length) })}
+            </span>
+            <button type="button" onClick={() => setEveryAnomaly(!everyAnomaly)} aria-expanded={everyAnomaly} className="rounded-md px-2 py-1 text-accent hover:bg-accent-soft">
+              {everyAnomaly ? t("ts.anomalies.showFewer") : t("ts.anomalies.showAll", { count: String(data.anomalies.length) })}
+            </button>
           </div>
         )}
       </div>

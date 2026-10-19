@@ -45,6 +45,18 @@ Analyser **une série** en profondeur : la voir, la décomposer, tester sa stati
 
 Tout est dans l'URL. Les filtres globaux s'appliquent (le bandeau filtres reste visible).
 
+## Réglages de la vue d'ensemble (revus le 2026-10-19)
+
+Au-dessus du graphique, deux lignes nommées au lieu d'une suite de contrôles :
+
+- **Rolling means** : une pastille par moyenne mobile, avec la couleur de sa courbe et son nom complet (« 7 weeks », « 15 weeks ») ; × pour la retirer ; sans choix, une pastille pointillée « Auto · 7 weeks ». **+ Add** ouvre un petit champ avec des fenêtres suggérées selon la période (jour : 7 · 14 · 30 · 90 ; semaine : 4 · 13 · 26 · 52 ; mois : 3 · 6 · 12…) ou une valeur libre ; 5 moyennes au plus. À droite : **Position** Trailing | Centered (contrôle segmenté).
+- **Show** : Values · Rolling means · ± 1σ band (autour de la première moyenne, dite dans le libellé).
+- Les légendes du graphique reprennent les mêmes noms (« 7-week rolling mean », « 15-week rolling mean »).
+
+## Anomalies (revu le 2026-10-19)
+
+Toutes les anomalies restent marquées sur le graphique ; le tableau sous le graphique n'en montre que les **5 plus fortes**, avec « Show all 23 anomalies » (et « Show fewer » une fois déplié).
+
 ## États
 
 - Aucune colonne date : la page est grisée dans la barre latérale avec l'infobulle « Needs a date column ».

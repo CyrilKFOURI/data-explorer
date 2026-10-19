@@ -25,7 +25,7 @@ export function overviewFigure(
   layers: Layers,
   what: string,
   rolled: string,
-  extra: { window: number; mean: (number | null)[] }[] = [],
+  extra: { window: number; mean: (number | null)[]; name?: string }[] = [],
 ): Figure {
   return (tokens) => {
     const color = tokens.palette[0] ?? tokens.date;
@@ -103,15 +103,17 @@ export function overviewFigure(
         hovertemplate: `%{x}<br>${rolled}: %{y:,.4g}<extra></extra>`,
       } as Data);
     }
-    extra.forEach((line, i) => {
+    // the extra means follow the "Rolling means" layer, like the first one
+    (layers.mean ? extra : []).forEach((line, i) => {
+      const name = line.name ?? `${line.window}-period mean`;
       data.push({
         type: "scatter",
         mode: "lines",
-        name: `${line.window}-period mean`,
+        name,
         x: periods,
         y: line.mean,
         line: { color: tokens.palette[(i + 2) % 8] ?? tokens.ink2, width: 2 },
-        hovertemplate: `%{x}<br>${line.window}-period mean: %{y:,.4g}<extra></extra>`,
+        hovertemplate: `%{x}<br>${name}: %{y:,.4g}<extra></extra>`,
       } as Data);
     });
     return {

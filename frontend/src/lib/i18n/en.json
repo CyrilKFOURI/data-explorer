@@ -1718,5 +1718,20 @@
   "ml.validation.threshold.default": "0.5",
   "ml.validation.threshold.f1": "Best F1",
   "ml.validation.threshold.balanced_accuracy": "Best balanced accuracy",
-  "ml.thresholdChosen": "Decision threshold {threshold} ({rule}, chosen on the training rows): the predicted classes and the scores use it."
+  "ml.thresholdChosen": "Decision threshold {threshold} ({rule}, chosen on the training rows): the predicted classes and the scores use it.",
+  "ts.rolling.means": "Rolling means",
+  "ts.rolling.auto": "Auto · {span}",
+  "ts.rolling.remove": "Remove the {span} mean",
+  "ts.rolling.add": "Add",
+  "ts.rolling.other": "other",
+  "ts.rolling.input": "Window in {period}s",
+  "ts.rolling.confirm": "Add this window",
+  "ts.rolling.close": "Close",
+  "ts.rolling.position": "Position",
+  "ts.rolling.show": "Show",
+  "ts.rolling.layerMeans": "Rolling means",
+  "ts.rolling.layerBand": "± 1σ band ({span} mean)",
+  "ts.anomalies.showAll": "Show all {count} anomalies",
+  "ts.anomalies.showFewer": "Show the 5 strongest only",
+  "ts.anomalies.strongest": "The {shown} strongest of {count}, strongest first; every one is marked on the chart."
 }
