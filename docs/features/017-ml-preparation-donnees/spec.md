@@ -58,7 +58,7 @@ Calculé une fois (réutilise les résumés de la page Colonnes et de la fiche v
 | R-SEL-04 | constante, ou modalité dominante > 99 % | exclue · « almost always the same value » |
 | R-SEL-05 | > 80 % de vides | exclue · « 92 % empty » |
 | R-SEL-06 | fuite suspectée : \|r\| ≥ 0,98 ou V de Cramér ≥ 0,98 avec la cible, ou une modalité prédit la classe à 100 % sur > 5 % des lignes | exclue · « looks like it contains the answer » (bien visible) |
-| R-SEL-07 | paire de numériques avec \|r\| > 0,95 et modèle `sensitive_to_collinearity` | la colonne la moins liée à la cible est exclue · « nearly duplicates mileage » |
+| R-SEL-07 | paire de numériques (ou de dates, prises comme du temps) avec \|r\| > 0,95 et modèle `sensitive_to_collinearity` | la colonne la moins liée à la cible est exclue · « nearly duplicates mileage » |
 | R-SEL-08 | colonne ignorée dans la page Colonnes | exclue |
 
 **Sélection statistique** (désactivée par défaut, au choix dans l'éditeur) : seuil de variance ; filtre de corrélation (seuil réglable) ; **VIF** > seuil (10) itératif ; information mutuelle (garder les k meilleures ou un % ) ; test univarié (F de Fisher / χ²) ; sélection par régularisation L1 ; **RFE** (élimination récursive) avec validation croisée ; importance par permutation (garder celles qui dégradent le score). Toute sélection statistique est ajustée dans le pipeline (sur l'apprentissage).

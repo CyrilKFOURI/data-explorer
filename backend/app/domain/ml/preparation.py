@@ -714,6 +714,13 @@ def _apply(
         decision.apply("USER", f"{key.capitalize()} set to {text}: your choice.")
 
 
+def _timeline(series: pd.Series) -> pd.Series:
+    """Dates as seconds since the earliest one; numbers as they are."""
+    if pd.api.types.is_datetime64_any_dtype(series):
+        return (series - series.min()).dt.total_seconds()
+    return series.astype(float)
+
+
 def _collinearity(
     frame: pd.DataFrame,
     decisions: list[Decision],
@@ -721,14 +728,18 @@ def _collinearity(
     target_numeric: bool,
     forced: set[str],
 ) -> None:
-    """R-SEL-07: of two numbers with |r| > 0.95, drop the one less linked to the target
-    (never one the user asked to keep)."""
-    numeric = [d for d in decisions if d.use and d.type in NUMERIC]
+    """R-SEL-07: of two numbers (or dates, as time) with |r| > 0.95, drop the one less linked to
+    the target (never one the user asked to keep). An age and a birth date are the same
+    information: kept together, their coefficients explode in opposite directions."""
+    numeric = [d for d in decisions if d.use and (d.type in NUMERIC or d.type == "datetime")]
+    as_number = {d.column: _timeline(_col(frame, d.column)) for d in numeric}
     for i, first in enumerate(numeric):
         for second in numeric[i + 1 :]:
             if not (first.use and second.use):
                 continue
-            pair = frame[[first.column, second.column]].dropna()
+            pair = pd.DataFrame(
+                {first.column: as_number[first.column], second.column: as_number[second.column]}
+            ).dropna()
             if len(pair) < 10 or float(np.min(np.asarray(pair.std(), dtype=float))) == 0:
                 continue
             r = abs(float(np.corrcoef(pair[first.column], pair[second.column])[0, 1]))
@@ -736,7 +747,7 @@ def _collinearity(
                 continue
             link = {
                 d.column: _association(
-                    _col(frame, d.column), _col(frame, target.name), True, target_numeric
+                    as_number[d.column], _col(frame, target.name), True, target_numeric
                 )
                 for d in (first, second)
             }

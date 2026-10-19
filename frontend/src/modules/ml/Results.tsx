@@ -8,6 +8,7 @@ import { pLabel } from "../../features/variable/normality";
 import { t, type MessageKey } from "../../lib/i18n";
 import { Checkbox } from "../../ui/fields";
 import { SegmentedControl } from "../../ui/SegmentedControl";
+import { ExplainTab, RowExplanation } from "./Explain";
 import {
   coefficientsFigure,
   confusionFigure,
@@ -18,7 +19,7 @@ import {
   importancesFigure,
 } from "./figures";
 
-type Tab = "performance" | "features" | "predictions";
+type Tab = "performance" | "features" | "explain" | "predictions";
 const pct = (value: number | null | undefined, digits = 0) =>
   value === null || value === undefined ? "—" : `${(value * 100).toFixed(digits)} %`;
 
@@ -67,11 +68,12 @@ export function Results({ run, datasetId }: { run: MlRun; datasetId: string }) {
       <SegmentedControl
         label={t("ml.tabs")}
         value={tab}
-        options={(["performance", "features", "predictions"] as const).map((value) => ({ value, label: t(`ml.tab.${value}`) }))}
+        options={(["performance", "features", "explain", "predictions"] as const).map((value) => ({ value, label: t(`ml.tab.${value}`) }))}
         onChange={setTab}
       />
       {tab === "performance" && (run.regression ? <RegressionPerformance run={run} /> : <ClassificationPerformance run={run} />)}
       {tab === "features" && <Features run={run} />}
+      {tab === "explain" && <ExplainTab run={run} datasetId={datasetId} />}
       {tab === "predictions" && <Predictions run={run} datasetId={datasetId} />}
     </div>
   );
@@ -385,8 +387,10 @@ function Features({ run }: { run: MlRun }) {
 
 function Predictions({ run, datasetId }: { run: MlRun; datasetId: string }) {
   const regression = Boolean(run.regression);
+  const [row, setRow] = useState<number | null>(null);
   return (
     <div className="space-y-2">
+      {row !== null && <RowExplanation datasetId={datasetId} run={run} row={row} />}
       <div className="flex items-center justify-between text-xs text-ink-3">
         <span>{t("ml.predictionsHint", { rows: run.predictions.length.toLocaleString("en-US") })}</span>
         <a href={api.mlPredictionsUrl(datasetId, run.id)} className="text-accent hover:underline">
@@ -405,8 +409,17 @@ function Predictions({ run, datasetId }: { run: MlRun; datasetId: string }) {
           </thead>
           <tbody>
             {run.predictions.map((p) => (
-              <tr key={p.row} className={`border-t border-line ${p.correct === false ? "text-warn" : ""}`}>
-                <td className="px-3 py-1.5 text-ink-3">{p.row + 1}</td>
+              <tr
+                key={p.row}
+                onClick={() => setRow(p.row)}
+                aria-selected={row === p.row}
+                className={`cursor-pointer border-t border-line hover:bg-surface-2 ${row === p.row ? "bg-accent-soft" : ""} ${p.correct === false ? "text-warn" : ""}`}
+              >
+                <td className="px-3 py-1.5 text-ink-3">
+                  <button type="button" className="underline-offset-2 hover:underline" aria-label={t("ml.explain.explainRow", { row: String(p.row + 1) })}>
+                    {p.row + 1}
+                  </button>
+                </td>
                 <td className="px-3 py-1.5">{p.actual}</td>
                 <td className="px-3 py-1.5">{p.predicted}</td>
                 <td className="px-3 py-1.5 text-right">{regression ? formatNumber(p.error) : pct(p.probability)}</td>

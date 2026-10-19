@@ -381,6 +381,62 @@ describe("Model catalogue", () => {
   });
 });
 
+describe("Explanations", () => {
+  it("shows what the model relies on, how columns move predictions, and explains one row", async () => {
+    let calls = 0;
+    mockApi({
+      "GET /health": health,
+      "GET /datasets": [dataset()],
+      "GET /datasets/d1": dataset(),
+      "GET /datasets/d1/columns": [column({ name: "price" })],
+      "GET /column-roles": roles,
+      "GET /modules/ml/datasets/d1/targets": { candidates: [candidate("price", "regression")], rows: 100 },
+      "GET /modules/ml/catalog": catalogue([{ key: "linear_regression", label: "Linear regression", tasks: ["regression"] }]),
+      "GET /modules/ml/datasets/d1/runs": [
+        { id: "r1", target: "price", task: "regression", model: "linear_regression", settings: {}, metric: "r2", score: 0.82, seconds: 0.3, created_at: "2026-10-18T10:00:00Z", classes: null, greater_is_better: true },
+      ],
+      "GET /modules/ml/datasets/d1/runs/r1": regressionRun,
+      "GET /modules/ml/datasets/d1/runs/r1/explanation": () =>
+        ++calls < 2
+          ? { status: "running", error: null, explanation: null }
+          : {
+              status: "done",
+              error: null,
+              explanation: {
+                permutation: { metric: "r2", rows: 20, sampled: false, items: [{ column: "size", mean: 0.6, std: 0.02 }] },
+                shap: {
+                  method: "Exact (linear model)",
+                  scale: "prediction",
+                  base: 100,
+                  positive: null,
+                  rows: [4],
+                  features: [{ column: "size", mean_abs: 12, values: [15], colors: [0.9], reading: "Higher size pushes the prediction up." }],
+                  columns: ["size", "city"],
+                  matrix: [[15, -4]],
+                  labels: [["120", "Nice"]],
+                },
+                shap_unavailable: null,
+                dependence: [{ column: "size", kind: "number", grid: [1, 2], curves: { prediction: [90, 110] }, counts: [5, 5], output: "Average prediction" }],
+                tree: null,
+                pairs: [{ first: "size", second: "rooms", strength: 0.91, measure: "|r|" }],
+                warnings: [],
+              },
+            },
+    });
+    renderAt("/d/d1/ml?target=price&run=r1");
+
+    fireEvent.click(await screen.findByRole("radio", { name: "Explain" }));
+    expect(await screen.findByText(/Computing the explanation/)).toBeInTheDocument();
+    expect(await screen.findByText("Higher size pushes the prediction up.", {}, { timeout: 3000 })).toBeInTheDocument();
+    expect(screen.getByText(/size and rooms are strongly linked/)).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Column" })).toHaveValue("size");
+
+    fireEvent.click(screen.getByRole("radio", { name: "Predictions" }));
+    fireEvent.click(screen.getByRole("button", { name: "Explain row 5" }));
+    expect(await screen.findByText("Row 5: the strongest pushes come from size (+15), city (-4).")).toBeInTheDocument();
+  });
+});
+
 describe("ML verdicts", () => {
   const run = regressionRun as unknown as MlRun;
 

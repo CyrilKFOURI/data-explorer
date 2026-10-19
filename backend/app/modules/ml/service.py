@@ -8,15 +8,16 @@ import threading
 import uuid
 from collections import OrderedDict
 from collections.abc import Iterator
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field, fields
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import duckdb
 import joblib
+import pandas as pd
 from pydantic import TypeAdapter
 
 from app.core import db
@@ -28,6 +29,7 @@ from app.domain.filters.scope import scoped_source, where_for
 from app.domain.ml import classes as binning
 from app.domain.ml import data as ml_data
 from app.domain.ml import evaluate
+from app.domain.ml import explain as explainer
 from app.domain.ml import models as catalogue
 from app.domain.ml import preparation as prep
 from app.domain.ml import train as trainer
@@ -132,6 +134,7 @@ class Run:
     cross_validation: trainer.CrossValidation | None = None
     importances: list[trainer.Importance] = field(default_factory=list)
     validation: evaluate.Validation = field(default_factory=evaluate.Validation)
+    evaluation_rows: list[int] = field(default_factory=list)
 
 
 @dataclass
@@ -159,7 +162,15 @@ class TrainingJob:
     error: str | None = None
 
 
+@dataclass
+class ExplanationState:
+    status: Literal["running", "done", "failed"]
+    error: str | None = None
+    explanation: explainer.Explanation | None = None
+
+
 RUN = TypeAdapter(Run)
+EXPLANATION = TypeAdapter(explainer.Explanation)
 KEPT_JOBS = 32
 
 
@@ -187,6 +198,8 @@ class MlService:
         self._executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="ml")
         self._jobs: OrderedDict[str, TrainingJob] = OrderedDict()
         self._lock = threading.Lock()
+        self._explainer = ThreadPoolExecutor(max_workers=1, thread_name_prefix="ml-explain")
+        self._explaining: dict[str, Future[explainer.Explanation]] = {}
 
     @contextmanager
     def _db(self) -> Iterator[sqlite3.Connection]:
@@ -501,6 +514,85 @@ class MlService:
         if not path.is_file():
             raise MlError("Unknown run.", "unknown_run", 404)
         return RUN.validate_json(path.read_bytes())
+
+    # --- Explanations ----------------------------------------------------------------------------
+
+    def explanation(self, dataset_id: str, run_id: str) -> ExplanationState:
+        """The run's explanation from the cache, or computed in the background (poll again)."""
+        cached = self._folder(dataset_id) / f"{run_id}.explain.json"
+        if cached.is_file():
+            return ExplanationState(
+                "done", explanation=EXPLANATION.validate_json(cached.read_bytes())
+            )
+        key = f"{dataset_id}/{run_id}"
+        with self._lock:
+            future = self._explaining.get(key)
+            if future is None:
+                run = self.run(dataset_id, run_id)
+                if not run.evaluation_rows:
+                    raise MlError(
+                        "This run was trained before explanations existed: train it again to "
+                        "explain it.",
+                        "no_evaluation_rows",
+                    )
+                future = self._explainer.submit(self._explain, dataset_id, run)
+                self._explaining[key] = future
+        if not future.done():
+            return ExplanationState("running")
+        with self._lock:
+            self._explaining.pop(key, None)
+        error = future.exception()
+        if error is not None:
+            message = (
+                str(error)
+                if isinstance(error, MlError | ValueError)
+                else f"Explanation failed: {error}"
+            )
+            return ExplanationState("failed", message)
+        return ExplanationState("done", explanation=future.result())
+
+    def _explain(self, dataset_id: str, run: Run) -> explainer.Explanation:
+        folder = self._folder(dataset_id)
+        # a file this app wrote itself in its own local workspace, never one received from outside
+        pipeline = joblib.load(folder / f"{run.id}.joblib")
+        with self._db() as connection:
+            row = connection.execute(
+                "SELECT conditions FROM ml_runs WHERE id = ?", (run.id,)
+            ).fetchone()
+        conditions = (
+            [Condition.model_validate(c) for c in json.loads(row["conditions"])] if row else []
+        )
+        fields, target, source = self._request(dataset_id, run.target, None, conditions)
+        connection = duckdb.connect()
+        try:
+            frame = ml_data.load(connection, source, fields, target.name, run.validation.max_rows)
+        finally:
+            connection.close()
+        data = frame.data[frame.data["__row"].isin(list(run.evaluation_rows))].reset_index(
+            drop=True
+        )
+        inputs = [str(c) for c in pipeline.feature_names_in_]
+        missing = [c for c in inputs if c not in data.columns]
+        if missing or data.empty:
+            raise MlError("The data changed since this run: train it again to explain it.")
+        series = cast(pd.Series, data[target.name])
+        if run.classes is not None:
+            y = binning.apply(series, run.classes).astype(str)
+        else:
+            y = trainer.prepare_target(series, run.task)
+        positive = run.classification.positive if run.classification else None
+        found = explainer.explain(
+            pipeline,
+            cast(pd.DataFrame, data[inputs]),
+            y,
+            data["__row"].to_numpy(dtype=int),
+            run.task,
+            run.primary,
+            [p.row for p in run.predictions],
+            positive,
+        )
+        (folder / f"{run.id}.explain.json").write_bytes(EXPLANATION.dump_json(found))
+        return found
 
     def predictions_csv(self, dataset_id: str, run_id: str) -> str:
         run = self.run(dataset_id, run_id)

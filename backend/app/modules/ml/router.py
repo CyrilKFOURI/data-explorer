@@ -14,6 +14,7 @@ from app.domain.ml.target import Task
 from app.domain.ml.train import PreparationPreview
 from app.modules.ml.service import (
     Catalogue,
+    ExplanationState,
     MlError,
     MlService,
     Run,
@@ -159,6 +160,13 @@ def runs(dataset_id: str, service: Service, target: str | None = None) -> list[R
 @router.get("/datasets/{dataset_id}/runs/{run_id}")
 def run(dataset_id: str, run_id: str, service: Service) -> Run:
     return service.run(dataset_id, run_id)
+
+
+@router.get("/datasets/{dataset_id}/runs/{run_id}/explanation")
+def explanation(dataset_id: str, run_id: str, service: Service) -> ExplanationState:
+    """Why the model predicts what it predicts: computed in the background on first call (status
+    "running": call again), then kept with the run."""
+    return service.explanation(dataset_id, run_id)
 
 
 @router.get("/datasets/{dataset_id}/runs/{run_id}/predictions.csv")

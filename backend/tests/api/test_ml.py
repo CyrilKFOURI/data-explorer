@@ -176,3 +176,24 @@ def test_a_number_predicted_as_classes(client: TestClient, traps: str) -> None:
         == 422
     )
     assert client.get(f"{BASE}/datasets/{traps}/targets/segment/distribution").status_code == 422
+
+
+def test_explanation_is_computed_in_the_background_then_cached(
+    client: TestClient, traps: str
+) -> None:
+    job = wait(
+        client, client.post(f"{BASE}/datasets/{traps}/runs", params={"target": "income"}).json()
+    )
+    url = f"{BASE}/datasets/{traps}/runs/{job['run_id']}/explanation"
+
+    state = client.get(url).json()
+    for _ in range(300):
+        if state["status"] != "running":
+            break
+        time.sleep(0.1)
+        state = client.get(url).json()
+
+    assert state["status"] == "done", state
+    found = state["explanation"]
+    assert found["permutation"]["items"] and found["shap"]["columns"]
+    assert client.get(url).json()["status"] == "done"  # from the cache

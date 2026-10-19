@@ -327,3 +327,15 @@ def test_choices_are_saved_with_the_run_and_reproduce_it() -> None:
     assert first.preparation.choices == choices
     assert first.regression is not None and again.regression is not None
     assert first.regression.r2 == again.regression.r2
+
+
+def test_a_number_that_duplicates_a_date_is_dropped_for_plain_linear_models() -> None:
+    frame = FRAME.copy()
+    days = (frame["when"] - frame["when"].min()).dt.days
+    frame["age_days"] = 400 - days + np.random.default_rng(2).normal(0, 0.5, len(frame))
+    fields = [*FIELDS, Field("age_days", "numeric_continuous", RAW)]
+
+    found = prep.decide(frame, fields, PRICE, "regression", catalogue.LINEAR)
+
+    dropped = [d.column for d in found.decisions if "R-SEL-07" in d.rules]
+    assert len(dropped) == 1 and dropped[0] in ("when", "age_days")

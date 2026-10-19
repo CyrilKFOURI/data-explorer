@@ -516,6 +516,19 @@ export function useMlPreparation(
   });
 }
 
+/** Why the run predicts what it predicts: computed in the background, polled until done. */
+export function useMlExplanation(id: string, runId: string | null, enabled: boolean) {
+  return useQuery({
+    queryKey: ["datasets", id, "ml", "explanation", runId ?? ""],
+    queryFn: () => api.mlExplanation(id, runId ?? ""),
+    enabled: enabled && Boolean(runId),
+    refetchInterval: (query) => (query.state.data?.status === "running" ? 800 : false),
+    refetchIntervalInBackground: true,
+    staleTime: Infinity,
+    retry: false,
+  });
+}
+
 /** A numeric target's distribution, to cut it into classes in the browser. */
 export function useMlDistribution(id: string, column: string, enabled: boolean) {
   const filters = useActiveFilters(id);

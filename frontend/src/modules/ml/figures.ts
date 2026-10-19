@@ -1,6 +1,6 @@
 import type { Data } from "plotly.js-dist-min";
 
-import type { MlRun } from "../../api/client";
+import type { MlExplanation, MlRun } from "../../api/client";
 import type { Figure } from "../../charts/Plot";
 import { withAlpha } from "../../charts/figures";
 
@@ -199,4 +199,153 @@ export function importancesFigure(importances: { feature: string; importance: nu
       layout: { showlegend: false, margin: { l: 160 }, xaxis: { ...title("Share of importance"), tickformat: ".0%" } },
     };
   };
+}
+
+type Explanation = NonNullable<MlExplanation>;
+type Shap = NonNullable<Explanation["shap"]>;
+type Dependence = Explanation["dependence"][number];
+type PermutationItem = NonNullable<Explanation["permutation"]>["items"][number];
+
+/** How much the score drops when each column is shuffled (mean ± sd over 5 repeats). */
+export function permutationFigure(items: PermutationItem[], metric: string): Figure {
+  return (tokens) => {
+    const top = items.slice(0, 15).reverse();
+    return {
+      data: [
+        {
+          type: "bar",
+          orientation: "h",
+          y: top.map((i) => i.column),
+          x: top.map((i) => i.mean),
+          error_x: { type: "data", array: top.map((i) => i.std), color: tokens.ink3 },
+          marker: { color: top.map((i) => (i.mean > 0 ? (tokens.palette[0] ?? tokens.numeric) : tokens.ink3)) },
+          hovertemplate: "%{y}: %{x:.4g}<extra></extra>",
+        } as Data,
+      ],
+      layout: {
+        showlegend: false,
+        margin: { l: 150 },
+        xaxis: { ...title(`Drop in ${metric} when shuffled`), zeroline: true, zerolinecolor: tokens.ink3 },
+      },
+    };
+  };
+}
+
+/** One line per column, one point per row: where its SHAP value falls, colored by its value. */
+export function beeswarmFigure(shap: Shap): Figure {
+  return (tokens) => {
+    const features = [...shap.features].reverse();
+    const low = tokens.palette[0] ?? tokens.numeric;
+    const high = tokens.palette[1] ?? tokens.categorical;
+    const data: Data[] = features.map((feature, index) => {
+      // a fixed jitter, so the swarm does not move between renders
+      const jitter = feature.values.map((_, i) => ((((i * 2654435761) >>> 0) % 1000) / 1000 - 0.5) * 0.6);
+      const numeric = feature.colors.some((c) => c !== null);
+      return {
+        type: "scattergl",
+        mode: "markers",
+        name: feature.column,
+        x: feature.values,
+        y: jitter.map((j) => index + j),
+        marker: numeric
+          ? {
+              size: 4,
+              opacity: 0.75,
+              color: feature.colors.map((c) => (c === null ? 0.5 : c)),
+              colorscale: [
+                [0, low],
+                [0.5, tokens.ink3],
+                [1, high],
+              ],
+              cmin: 0,
+              cmax: 1,
+              showscale: index === features.length - 1,
+              colorbar: {
+                title: { text: "value", side: "right", font: { size: 10 } },
+                tickvals: [0, 1],
+                ticktext: ["low", "high"],
+                thickness: 8,
+                len: 0.5,
+              },
+            }
+          : { size: 4, opacity: 0.6, color: tokens.ink3 },
+        hovertemplate: `${feature.column}: %{x:.4g}<extra></extra>`,
+      } as Data;
+    });
+    return {
+      data,
+      layout: {
+        showlegend: false,
+        margin: { l: 160 },
+        xaxis: { ...title(`SHAP value (${shap.scale})`), zeroline: true, zerolinecolor: tokens.ink3 },
+        yaxis: { tickvals: features.map((_, i) => i), ticktext: features.map((f) => f.column), range: [-0.6, features.length - 0.4] },
+      },
+    };
+  };
+}
+
+/** The average prediction as one column varies, with how many rows sit at each value below. */
+export function dependenceFigure(found: Dependence): Figure {
+  return (tokens) => {
+    const number = found.kind === "number";
+    const curves = Object.entries(found.curves);
+    const data: Data[] = curves.map(
+      ([name, values], index) =>
+        ({
+          type: number ? "scatter" : "bar",
+          mode: number ? "lines+markers" : undefined,
+          name,
+          x: found.grid,
+          y: values,
+          marker: { color: tokens.palette[index % 8], size: 4 },
+          line: { color: tokens.palette[index % 8], width: 2 },
+          hovertemplate: `${name}: %{y:.4g}<extra>%{x}</extra>`,
+        }) as Data,
+    );
+    data.push({
+      type: "bar",
+      x: found.grid,
+      y: found.counts,
+      yaxis: "y2",
+      marker: { color: tokens.line },
+      hovertemplate: "%{y} rows<extra>%{x}</extra>",
+      showlegend: false,
+    } as Data);
+    return {
+      data,
+      layout: {
+        showlegend: curves.length > 1,
+        barmode: "group",
+        xaxis: { ...title(found.column), type: number ? "linear" : "category" },
+        yaxis: { ...title(found.output), domain: [0.3, 1] },
+        yaxis2: { domain: [0, 0.2], showticklabels: false, title: { text: "rows", font: { size: 10 } } },
+      },
+    };
+  };
+}
+
+/** From the average prediction to this row's, one contribution at a time. */
+export function waterfallFigure(base: number, steps: { label: string; value: number }[], scale: string): Figure {
+  return (tokens) => ({
+    data: [
+      {
+        type: "waterfall",
+        orientation: "h",
+        measure: ["absolute", ...steps.map(() => "relative"), "total"],
+        y: ["average", ...steps.map((s) => s.label), "this row"],
+        x: [base, ...steps.map((s) => s.value), 0],
+        increasing: { marker: { color: tokens.palette[1] ?? tokens.categorical } },
+        decreasing: { marker: { color: tokens.palette[0] ?? tokens.numeric } },
+        totals: { marker: { color: tokens.ink3 } },
+        connector: { line: { color: tokens.line } },
+        hovertemplate: "%{y}: %{x:+.4g}<extra></extra>",
+      } as Data,
+    ],
+    layout: {
+      showlegend: false,
+      margin: { l: 220 },
+      yaxis: { autorange: "reversed" },
+      xaxis: title(scale === "prediction" ? "Prediction" : `Prediction (${scale})`),
+    },
+  });
 }

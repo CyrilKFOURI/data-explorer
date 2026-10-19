@@ -5602,6 +5602,58 @@
         }
       }
     },
+    "/api/v1/modules/ml/datasets/{dataset_id}/runs/{run_id}/explanation": {
+      "get": {
+        "tags": [
+          "module:ml"
+        ],
+        "summary": "Explanation",
+        "description": "Why the model predicts what it predicts: computed in the background on first call (status\n\"running\": call again), then kept with the run.",
+        "operationId": "explanation_api_v1_modules_ml_datasets__dataset_id__runs__run_id__explanation_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExplanationState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/modules/ml/datasets/{dataset_id}/runs/{run_id}/predictions.csv": {
       "get": {
         "tags": [
@@ -8489,6 +8541,63 @@
         ],
         "title": "Density"
       },
+      "Dependence": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "grid": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Grid"
+          },
+          "curves": {
+            "additionalProperties": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Curves"
+          },
+          "counts": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Counts"
+          },
+          "output": {
+            "type": "string",
+            "title": "Output"
+          }
+        },
+        "type": "object",
+        "required": [
+          "column",
+          "kind",
+          "grid",
+          "curves",
+          "counts",
+          "output"
+        ],
+        "title": "Dependence"
+      },
       "Describe": {
         "properties": {
           "rows": {
@@ -8986,6 +9095,125 @@
           "reason"
         ],
         "title": "Excluded"
+      },
+      "Explanation": {
+        "properties": {
+          "permutation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Permutation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "shap": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Shap"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "shap_unavailable": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shap Unavailable"
+          },
+          "dependence": {
+            "items": {
+              "$ref": "#/components/schemas/Dependence"
+            },
+            "type": "array",
+            "title": "Dependence"
+          },
+          "tree": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/TreeNode"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tree"
+          },
+          "pairs": {
+            "items": {
+              "$ref": "#/components/schemas/app__domain__ml__explain__Pair"
+            },
+            "type": "array",
+            "title": "Pairs"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "permutation",
+          "shap",
+          "shap_unavailable",
+          "dependence",
+          "tree",
+          "pairs"
+        ],
+        "title": "Explanation"
+      },
+      "ExplanationState": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "done",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Explanation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "ExplanationState"
       },
       "FileInfo": {
         "properties": {
@@ -9970,7 +10198,7 @@
           },
           "pairs": {
             "items": {
-              "$ref": "#/components/schemas/Pair"
+              "$ref": "#/components/schemas/app__domain__correlations__matrix__Pair"
             },
             "type": "array",
             "title": "Pairs"
@@ -10628,79 +10856,6 @@
         ],
         "title": "Overview"
       },
-      "Pair": {
-        "properties": {
-          "a": {
-            "type": "string",
-            "title": "A"
-          },
-          "b": {
-            "type": "string",
-            "title": "B"
-          },
-          "metric": {
-            "type": "string",
-            "enum": [
-              "pearson",
-              "spearman",
-              "cramers_v",
-              "eta"
-            ],
-            "title": "Metric"
-          },
-          "value": {
-            "type": "number",
-            "title": "Value"
-          },
-          "p_value": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "P Value"
-          },
-          "n": {
-            "type": "integer",
-            "title": "N"
-          },
-          "q_value": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Q Value"
-          },
-          "evidence": {
-            "type": "string",
-            "enum": [
-              "strong",
-              "moderate",
-              "weak",
-              "none"
-            ],
-            "title": "Evidence",
-            "default": "none"
-          }
-        },
-        "type": "object",
-        "required": [
-          "a",
-          "b",
-          "metric",
-          "value",
-          "p_value",
-          "n"
-        ],
-        "title": "Pair"
-      },
       "Parser": {
         "properties": {
           "kind": {
@@ -10756,6 +10911,60 @@
         "type": "object",
         "title": "Parser",
         "description": "How to read a stored value in its analysis type, applied at query time.\n\n- raw: the stored value as is\n- number: text with a given decimal separator (thousands separators, %, currency stripped)\n- date: text with a strptime format\n- boolean: text mapped with true/false vocabularies (empty lists: cast the value)\n- year: integer year \u2192 date (January 1st)\n- text: the value as text, null tokens removed"
+      },
+      "Permutation": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          },
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "sampled": {
+            "type": "boolean",
+            "title": "Sampled"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PermutationItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric",
+          "rows",
+          "sampled",
+          "items"
+        ],
+        "title": "Permutation"
+      },
+      "PermutationItem": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "mean": {
+            "type": "number",
+            "title": "Mean"
+          },
+          "std": {
+            "type": "number",
+            "title": "Std"
+          }
+        },
+        "type": "object",
+        "required": [
+          "column",
+          "mean",
+          "std"
+        ],
+        "title": "PermutationItem"
       },
       "Points": {
         "properties": {
@@ -11617,6 +11826,13 @@
           },
           "validation": {
             "$ref": "#/components/schemas/Validation"
+          },
+          "evaluation_rows": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Evaluation Rows"
           }
         },
         "type": "object",
@@ -13252,6 +13468,140 @@
         ],
         "title": "SettingView"
       },
+      "Shap": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "scale": {
+            "type": "string",
+            "title": "Scale"
+          },
+          "base": {
+            "type": "number",
+            "title": "Base"
+          },
+          "positive": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Positive"
+          },
+          "rows": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "features": {
+            "items": {
+              "$ref": "#/components/schemas/ShapFeature"
+            },
+            "type": "array",
+            "title": "Features"
+          },
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "matrix": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Matrix"
+          },
+          "labels": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Labels"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method",
+          "scale",
+          "base",
+          "positive",
+          "rows",
+          "features",
+          "columns",
+          "matrix",
+          "labels"
+        ],
+        "title": "Shap"
+      },
+      "ShapFeature": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "mean_abs": {
+            "type": "number",
+            "title": "Mean Abs"
+          },
+          "values": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Values"
+          },
+          "colors": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Colors"
+          },
+          "reading": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reading"
+          }
+        },
+        "type": "object",
+        "required": [
+          "column",
+          "mean_abs",
+          "values",
+          "colors",
+          "reading"
+        ],
+        "title": "ShapFeature"
+      },
       "SourceOptions": {
         "properties": {
           "csv": {
@@ -13903,6 +14253,82 @@
         ],
         "title": "Transform"
       },
+      "TreeNode": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "depth": {
+            "type": "integer",
+            "title": "Depth"
+          },
+          "feature": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feature"
+          },
+          "threshold": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Threshold"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "samples": {
+            "type": "integer",
+            "title": "Samples"
+          },
+          "left": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Left"
+          },
+          "right": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Right"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "depth",
+          "feature",
+          "threshold",
+          "value",
+          "samples",
+          "left",
+          "right"
+        ],
+        "title": "TreeNode"
+      },
       "TrendSummary": {
         "properties": {
           "slope": {
@@ -14247,6 +14673,107 @@
           "unit"
         ],
         "title": "YearOverlay"
+      },
+      "app__domain__correlations__matrix__Pair": {
+        "properties": {
+          "a": {
+            "type": "string",
+            "title": "A"
+          },
+          "b": {
+            "type": "string",
+            "title": "B"
+          },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "pearson",
+              "spearman",
+              "cramers_v",
+              "eta"
+            ],
+            "title": "Metric"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "p_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Value"
+          },
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "q_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q Value"
+          },
+          "evidence": {
+            "type": "string",
+            "enum": [
+              "strong",
+              "moderate",
+              "weak",
+              "none"
+            ],
+            "title": "Evidence",
+            "default": "none"
+          }
+        },
+        "type": "object",
+        "required": [
+          "a",
+          "b",
+          "metric",
+          "value",
+          "p_value",
+          "n"
+        ],
+        "title": "Pair"
+      },
+      "app__domain__ml__explain__Pair": {
+        "properties": {
+          "first": {
+            "type": "string",
+            "title": "First"
+          },
+          "second": {
+            "type": "string",
+            "title": "Second"
+          },
+          "strength": {
+            "type": "number",
+            "title": "Strength"
+          },
+          "measure": {
+            "type": "string",
+            "title": "Measure"
+          }
+        },
+        "type": "object",
+        "required": [
+          "first",
+          "second",
+          "strength",
+          "measure"
+        ],
+        "title": "Pair"
       },
       "app__domain__ml__train__Curve": {
         "properties": {

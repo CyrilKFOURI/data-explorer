@@ -146,6 +146,7 @@ class Trained:
     cross_validation: CrossValidation | None = None
     importances: list[Importance] = field(default_factory=list)
     validation: evaluate.Validation = field(default_factory=evaluate.Validation)
+    evaluation_rows: list[int] = field(default_factory=list)  # file rows the scores come from
     pipeline: Any = field(default=None, repr=False)
 
 
@@ -623,8 +624,23 @@ def train(
         cross_validation,
         _importances(pipeline, names),
         validation,
+        _evaluation_rows(rows_eval, [p.row for p in predictions]),
         pipeline,
     )
+
+
+EVALUATION_ROWS = 10_000
+
+
+def _evaluation_rows(rows: pd.Series, shown: list[int]) -> list[int]:
+    """The rows the scores come from (at most 10 000, drawn with a seed), always including the
+    rows of the predictions table so each of them can be explained."""
+    every = rows.to_numpy(dtype=int)
+    if len(every) <= EVALUATION_ROWS:
+        return [int(v) for v in every]
+    rest = np.setdiff1d(every, shown)
+    extra = np.random.default_rng(SEED).choice(rest, EVALUATION_ROWS - len(shown), replace=False)
+    return [*shown, *(int(v) for v in extra)]
 
 
 def _positive(y: pd.Series) -> str:

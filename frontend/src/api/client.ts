@@ -80,6 +80,8 @@ export type MlModel = Complete<Schemas["ModelView"]>;
 export type MlSetting = MlModel["settings"][number];
 export type MlCatalogue = Complete<Schemas["Catalogue"]>;
 export type MlValidation = Complete<Schemas["Validation"]>;
+export type MlExplanationState = Complete<Schemas["ExplanationState"]>;
+export type MlExplanation = MlExplanationState["explanation"];
 /** What the catalogue's recommendations and defaults depend on. */
 export type MlContext = { task: string; rows: number; minority: number | null; features: number; categoricalShare: number; missingShare: number };
 export type MlJob = Complete<Schemas["TrainingJob"]>;
@@ -422,6 +424,8 @@ export const api = {
   mlRuns: (id: string, target: string) =>
     request<MlRunSummary[]>("GET", `/modules/ml/datasets/${id}/runs?${new URLSearchParams({ target })}`),
   mlRun: (id: string, runId: string) => request<MlRun>("GET", `/modules/ml/datasets/${id}/runs/${runId}`),
+  mlExplanation: (id: string, runId: string) =>
+    request<MlExplanationState>("GET", `/modules/ml/datasets/${id}/runs/${runId}/explanation`),
   mlPredictionsUrl: (id: string, runId: string) => `/api/v1/modules/ml/datasets/${id}/runs/${runId}/predictions.csv`,
   correlations: (
     id: string,

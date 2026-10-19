@@ -926,6 +926,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/modules/ml/datasets/{dataset_id}/runs/{run_id}/explanation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Explanation
+         * @description Why the model predicts what it predicts: computed in the background on first call (status
+         *     "running": call again), then kept with the run.
+         */
+        get: operations["explanation_api_v1_modules_ml_datasets__dataset_id__runs__run_id__explanation_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/modules/ml/datasets/{dataset_id}/runs/{run_id}/predictions.csv": {
         parameters: {
             query?: never;
@@ -1808,6 +1829,23 @@ export interface components {
             /** Counts */
             counts: number[][];
         };
+        /** Dependence */
+        Dependence: {
+            /** Column */
+            column: string;
+            /** Kind */
+            kind: string;
+            /** Grid */
+            grid: (string | number)[];
+            /** Curves */
+            curves: {
+                [key: string]: number[];
+            };
+            /** Counts */
+            counts: number[];
+            /** Output */
+            output: string;
+        };
         /** Describe */
         Describe: {
             /** Rows */
@@ -1939,6 +1977,32 @@ export interface components {
             name: string;
             /** Reason */
             reason: string;
+        };
+        /** Explanation */
+        Explanation: {
+            permutation: components["schemas"]["Permutation"] | null;
+            shap: components["schemas"]["Shap"] | null;
+            /** Shap Unavailable */
+            shap_unavailable: string | null;
+            /** Dependence */
+            dependence: components["schemas"]["Dependence"][];
+            /** Tree */
+            tree: components["schemas"]["TreeNode"][] | null;
+            /** Pairs */
+            pairs: components["schemas"]["app__domain__ml__explain__Pair"][];
+            /** Warnings */
+            warnings?: string[];
+        };
+        /** ExplanationState */
+        ExplanationState: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "running" | "done" | "failed";
+            /** Error */
+            error?: string | null;
+            explanation?: components["schemas"]["Explanation"] | null;
         };
         /** FileInfo */
         FileInfo: {
@@ -2236,7 +2300,7 @@ export interface components {
              */
             truncated: number;
             /** Pairs */
-            pairs?: components["schemas"]["Pair"][];
+            pairs?: components["schemas"]["app__domain__correlations__matrix__Pair"][];
         };
         /** MatrixMember */
         MatrixMember: {
@@ -2425,32 +2489,6 @@ export interface components {
                 [key: string]: components["schemas"]["ColumnStats"];
             };
         };
-        /** Pair */
-        Pair: {
-            /** A */
-            a: string;
-            /** B */
-            b: string;
-            /**
-             * Metric
-             * @enum {string}
-             */
-            metric: "pearson" | "spearman" | "cramers_v" | "eta";
-            /** Value */
-            value: number;
-            /** P Value */
-            p_value: number | null;
-            /** N */
-            n: number;
-            /** Q Value */
-            q_value?: number | null;
-            /**
-             * Evidence
-             * @default none
-             * @enum {string}
-             */
-            evidence: "strong" | "moderate" | "weak" | "none";
-        };
         /**
          * Parser
          * @description How to read a stored value in its analysis type, applied at query time.
@@ -2487,6 +2525,26 @@ export interface components {
              * @default []
              */
             false_values: string[];
+        };
+        /** Permutation */
+        Permutation: {
+            /** Metric */
+            metric: string;
+            /** Rows */
+            rows: number;
+            /** Sampled */
+            sampled: boolean;
+            /** Items */
+            items: components["schemas"]["PermutationItem"][];
+        };
+        /** PermutationItem */
+        PermutationItem: {
+            /** Column */
+            column: string;
+            /** Mean */
+            mean: number;
+            /** Std */
+            std: number;
         };
         /** Points */
         Points: {
@@ -2758,6 +2816,8 @@ export interface components {
             /** Importances */
             importances?: components["schemas"]["Importance"][];
             validation?: components["schemas"]["Validation"];
+            /** Evaluation Rows */
+            evaluation_rows?: number[];
         };
         /** RunSummary */
         RunSummary: {
@@ -3209,6 +3269,40 @@ export interface components {
                 [key: string]: string;
             };
         };
+        /** Shap */
+        Shap: {
+            /** Method */
+            method: string;
+            /** Scale */
+            scale: string;
+            /** Base */
+            base: number;
+            /** Positive */
+            positive: string | null;
+            /** Rows */
+            rows: number[];
+            /** Features */
+            features: components["schemas"]["ShapFeature"][];
+            /** Columns */
+            columns: string[];
+            /** Matrix */
+            matrix: number[][];
+            /** Labels */
+            labels: string[][];
+        };
+        /** ShapFeature */
+        ShapFeature: {
+            /** Column */
+            column: string;
+            /** Mean Abs */
+            mean_abs: number;
+            /** Values */
+            values: number[];
+            /** Colors */
+            colors: (number | null)[];
+            /** Reading */
+            reading: string | null;
+        };
         /**
          * SourceOptions
          * @description How to read a source. `None` fields mean "detect" or "everything".
@@ -3409,6 +3503,25 @@ export interface components {
             /** Bins */
             bins: components["schemas"]["Bin"][];
         };
+        /** TreeNode */
+        TreeNode: {
+            /** Id */
+            id: number;
+            /** Depth */
+            depth: number;
+            /** Feature */
+            feature: string | null;
+            /** Threshold */
+            threshold: number | null;
+            /** Value */
+            value: string;
+            /** Samples */
+            samples: number;
+            /** Left */
+            left: number | null;
+            /** Right */
+            right: number | null;
+        };
         /** TrendSummary */
         TrendSummary: {
             /** Slope */
@@ -3519,6 +3632,43 @@ export interface components {
             unit: string;
             /** Years */
             years?: components["schemas"]["YearLine"][];
+        };
+        /** Pair */
+        app__domain__correlations__matrix__Pair: {
+            /** A */
+            a: string;
+            /** B */
+            b: string;
+            /**
+             * Metric
+             * @enum {string}
+             */
+            metric: "pearson" | "spearman" | "cramers_v" | "eta";
+            /** Value */
+            value: number;
+            /** P Value */
+            p_value: number | null;
+            /** N */
+            n: number;
+            /** Q Value */
+            q_value?: number | null;
+            /**
+             * Evidence
+             * @default none
+             * @enum {string}
+             */
+            evidence: "strong" | "moderate" | "weak" | "none";
+        };
+        /** Pair */
+        app__domain__ml__explain__Pair: {
+            /** First */
+            first: string;
+            /** Second */
+            second: string;
+            /** Strength */
+            strength: number;
+            /** Measure */
+            measure: string;
         };
         /** Curve */
         app__domain__ml__train__Curve: {
@@ -5555,6 +5705,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Run"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    explanation_api_v1_modules_ml_datasets__dataset_id__runs__run_id__explanation_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExplanationState"];
                 };
             };
             /** @description Validation Error */
