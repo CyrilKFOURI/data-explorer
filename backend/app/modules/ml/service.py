@@ -18,7 +18,8 @@ from typing import Any, Literal, cast
 import duckdb
 import joblib
 import pandas as pd
-from pydantic import TypeAdapter
+from pydantic import BaseModel, TypeAdapter
+from pydantic import Field as PydanticField
 
 from app.core import db
 from app.core.errors import AppError
@@ -33,6 +34,9 @@ from app.domain.ml import explain as explainer
 from app.domain.ml import models as catalogue
 from app.domain.ml import preparation as prep
 from app.domain.ml import train as trainer
+from app.domain.ml import tune as tuner
+from app.domain.ml.catalog import Context as ModelContext
+from app.domain.ml.catalog.spaces import Param
 from app.domain.ml.data import NUMERIC, Field
 from app.domain.ml.target import Candidate, Task, candidate
 
@@ -83,6 +87,7 @@ class ModelView:
     installed: bool
     unavailable: str | None  # why it cannot run on this data
     probabilities: bool
+    space: list[Param]  # where the optimizer searches (empty: nothing to tune)
 
 
 @dataclass
@@ -98,6 +103,7 @@ class Catalogue:
     recommended: list[Recommendation]
     metrics: list[str]  # every metric of the problem, the default first
     default_metric: str
+    compare: list[str]  # models compared by default: one per suitable family
 
 
 @dataclass
@@ -151,6 +157,46 @@ class RunSummary:
     classes: binning.Classes | None = None
     greater_is_better: bool = True
     label: str = ""  # the model's name in the catalogue
+    validation: evaluate.Validation = field(default_factory=evaluate.Validation)
+
+
+@dataclass
+class CompareItem:
+    key: str
+    label: str
+    status: Literal["waiting", "running", "done", "failed"] = "waiting"
+    run_id: str | None = None
+    score: float | None = None
+    seconds: float | None = None
+    error: str | None = None
+
+
+@dataclass
+class CompareJob:
+    id: str
+    status: Literal["running", "done"]
+    metric: str | None
+    items: list[CompareItem]
+
+
+@dataclass
+class TuneJob:
+    id: str
+    status: Literal["running", "done", "stopped", "failed"]
+    model: str
+    label: str
+    progress: tuner.TuneProgress | None = None
+    error: str | None = None
+    space: list[tuner.SearchParam] = field(default_factory=list)
+
+
+class CompareRequest(BaseModel):
+    models: list[str] = PydanticField(min_length=1, max_length=40)
+    preparation: prep.Choices | None = None
+
+
+class TuneStart(tuner.TuneRequest):
+    preparation: prep.Choices | None = None
 
 
 @dataclass
@@ -199,6 +245,10 @@ class MlService:
         self._jobs: OrderedDict[str, TrainingJob] = OrderedDict()
         self._lock = threading.Lock()
         self._explainer = ThreadPoolExecutor(max_workers=1, thread_name_prefix="ml-explain")
+        self._tuner = ThreadPoolExecutor(max_workers=1, thread_name_prefix="ml-tune")
+        self._comparisons: OrderedDict[str, CompareJob] = OrderedDict()
+        self._tunings: OrderedDict[str, TuneJob] = OrderedDict()
+        self._stops: set[str] = set()
         self._explaining: dict[str, Future[explainer.Explanation]] = {}
 
     @contextmanager
@@ -237,6 +287,7 @@ class MlService:
                     spec.installed,
                     spec.limit(context),
                     task == "regression" or spec.has_probabilities(defaults),
+                    catalogue.spaces.space(spec.key),
                 )
             )
         default = evaluate.default_metric(task, context.minority_share)
@@ -247,7 +298,26 @@ class MlService:
             [Recommendation(key, why) for key, why in catalogue.recommend(context)],
             [default, *(m for m in metrics if m != default)],
             default,
+            self._compare_default(models, context),
         )
+
+    @staticmethod
+    def _compare_default(models: list[ModelView], context: ModelContext) -> list[str]:
+        """One model per family that suits the problem and the data."""
+        ready = {m.key for m in models if m.installed and m.unavailable is None}
+        wanted = [
+            catalogue.default_model(context.task),
+            "random_forest",
+            "xgboost" if "xgboost" in ready else "hist_gradient_boosting",
+            "knn",
+            "mlp",
+            "decision_tree",
+        ]
+        if context.task != "regression":
+            wanted.append("gaussian_nb")
+        if context.rows <= 10_000:
+            wanted.append("kernel_svm")
+        return [key for key in wanted if key in ready]
 
     def _fields(self, dataset_id: str) -> tuple[list[Field], Any]:
         dataset = self.columns.ready(dataset_id)
@@ -448,8 +518,8 @@ class MlService:
         with self._db() as connection, connection:
             connection.execute(
                 "INSERT INTO ml_runs (id, dataset_id, target, task, model, settings, conditions,"
-                " metric, score, seconds, created_at, classes)"
-                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                " metric, score, seconds, created_at, classes, validation)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     run_id,
                     dataset_id,
@@ -463,6 +533,7 @@ class MlService:
                     trained.seconds,
                     run.created_at,
                     trained.classes.model_dump_json() if trained.classes else None,
+                    trained.validation.model_dump_json(),
                 ),
             )
         return run_id
@@ -492,6 +563,9 @@ class MlService:
                 binning.Classes.model_validate_json(r["classes"]) if r["classes"] else None,
                 r["metric"] not in evaluate.LOWER_IS_BETTER,
                 spec.label if (spec := catalogue.CATALOGUE.get(r["model"])) else r["model"],
+                evaluate.Validation.model_validate_json(r["validation"])
+                if r["validation"]
+                else evaluate.Validation(),
             )
             for r in rows
         ]
@@ -514,6 +588,231 @@ class MlService:
         if not path.is_file():
             raise MlError("Unknown run.", "unknown_run", 404)
         return RUN.validate_json(path.read_bytes())
+
+    # --- Comparing models --------------------------------------------------------------------
+
+    def compare(
+        self,
+        dataset_id: str,
+        target: str,
+        request: CompareRequest,
+        conditions: list[Condition],
+        classes: binning.Classes | None = None,
+        validation: evaluate.Validation | None = None,
+    ) -> CompareJob:
+        """Train several models one after the other with the same validation, seed and
+        preparation; one failing does not stop the others."""
+        unknown = [k for k in request.models if k not in catalogue.CATALOGUE]
+        if unknown:
+            raise MlError(f"Unknown model(s): {', '.join(unknown)}.", "unknown_model")
+        fields, field_, source = self._request(dataset_id, target, None, conditions, classes)
+        validation = validation or evaluate.Validation()
+        job = CompareJob(
+            uuid.uuid4().hex[:12],
+            "running",
+            validation.metric,
+            [CompareItem(k, catalogue.CATALOGUE[k].label) for k in dict.fromkeys(request.models)],
+        )
+        with self._lock:
+            self._comparisons[job.id] = job
+            while len(self._comparisons) > KEPT_JOBS:
+                self._comparisons.popitem(last=False)
+
+        def run_all() -> None:
+            for item in job.items:
+                item.status = "running"
+                inner = TrainingJob(uuid.uuid4().hex[:12], "running", "loading")
+                self._train(
+                    inner,
+                    dataset_id,
+                    fields,
+                    field_,
+                    item.key,
+                    None,
+                    source,
+                    conditions,
+                    request.preparation,
+                    classes,
+                    validation,
+                )
+                if inner.status == "done" and inner.run_id:
+                    run = self.run(dataset_id, inner.run_id)
+                    item.status, item.run_id = "done", inner.run_id
+                    item.score, item.seconds = run.score, run.seconds
+                    job.metric = run.primary
+                else:
+                    item.status, item.error = "failed", inner.error
+            job.status = "done"
+
+        self._executor.submit(run_all)
+        return job
+
+    def comparison(self, job_id: str) -> CompareJob:
+        job = self._comparisons.get(job_id)
+        if job is None:
+            raise MlError("This comparison is no longer followed: open the runs.", "unknown_job")
+        return job
+
+    # --- Tuning --------------------------------------------------------------------------------
+
+    def tune(
+        self,
+        dataset_id: str,
+        target: str,
+        request: TuneStart,
+        conditions: list[Condition],
+        classes: binning.Classes | None = None,
+        validation: evaluate.Validation | None = None,
+    ) -> TuneJob:
+        """Search the best settings of a model on the training rows, in the background."""
+        fields, field_, source = self._request(
+            dataset_id, target, request.model, conditions, classes
+        )
+        spec = catalogue.CATALOGUE[request.model]
+        if not spec.installed:
+            raise MlError(f"{spec.label} is not installed in this build.", "not_installed")
+        space = request.space if request.space is not None else tuner.default_space(spec.key)
+        job = TuneJob(uuid.uuid4().hex[:12], "running", spec.key, spec.label, space=space)
+        with self._lock:
+            self._tunings[job.id] = job
+            while len(self._tunings) > KEPT_JOBS:
+                self._tunings.popitem(last=False)
+        self._tuner.submit(
+            self._tune,
+            job,
+            dataset_id,
+            fields,
+            field_,
+            source,
+            request,
+            conditions,
+            classes,
+            validation or evaluate.Validation(),
+        )
+        return job
+
+    def _tune(
+        self,
+        job: TuneJob,
+        dataset_id: str,
+        fields: list[Field],
+        target: Field,
+        source: str,
+        request: TuneStart,
+        conditions: list[Condition],
+        classes: binning.Classes | None,
+        validation: evaluate.Validation,
+    ) -> None:
+        try:
+            frame, task = self._load(fields, target, source, validation.max_rows)
+            if classes is not None:
+                task = "binary" if len(classes.names) == 2 else "multiclass"
+            setup = trainer._setup(
+                frame.data,
+                fields,
+                target,
+                task,
+                request.model,
+                request.settings,
+                None,
+                request.preparation,
+                classes,
+                validation,
+            )
+            metric = validation.metric or evaluate.default_metric(setup.task, setup.minority)
+            job.progress = tuner.TuneProgress(metric, metric not in evaluate.LOWER_IS_BETTER)
+
+            def build(values: dict[str, Any], rows: int) -> Any:
+                return trainer.model_pipeline(
+                    setup.spec,
+                    values,
+                    setup.context,
+                    setup.preparation,
+                    setup.task,
+                    rows,
+                    setup.unregularized,
+                )
+
+            tuner.tune(
+                setup.x_train,
+                setup.y_train,
+                setup.task,
+                setup.spec,
+                setup.context,
+                setup.preparation,
+                request.model_copy(update={"space": job.space}),
+                metric,
+                job.progress,
+                lambda: job.id in self._stops,
+                build,
+            )
+            job.status = "stopped" if job.progress.stopped else "done"
+            self._save_tuning(dataset_id, target.name, job, request)
+        except (
+            MlError,
+            trainer.TrainingError,
+            tuner.TuneError,
+            catalogue.SettingsError,
+            ValueError,
+        ) as error:
+            job.status, job.error = "failed", str(error)
+        except Exception as error:
+            job.status, job.error = "failed", f"Tuning failed: {error}"
+        finally:
+            self._stops.discard(job.id)
+
+    def _save_tuning(self, dataset_id: str, target: str, job: TuneJob, request: TuneStart) -> None:
+        progress = job.progress
+        if progress is None:
+            return
+        with self._db() as connection, connection:
+            connection.execute(
+                "INSERT INTO ml_tunings (id, dataset_id, target, model, metric, request,"
+                " best_value, best_params, default_value, importances, status, seconds, created_at)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    job.id,
+                    dataset_id,
+                    target,
+                    job.model,
+                    progress.metric,
+                    request.model_dump_json(),
+                    progress.best_value,
+                    json.dumps(progress.best_params),
+                    progress.default_value,
+                    json.dumps(progress.importances),
+                    job.status,
+                    progress.seconds,
+                    _now(),
+                ),
+            )
+            connection.executemany(
+                "INSERT INTO ml_trials (tuning_id, number, value, state, params, seconds)"
+                " VALUES (?, ?, ?, ?, ?, ?)",
+                [
+                    (
+                        job.id,
+                        t.number,
+                        t.value,
+                        t.state,
+                        json.dumps(t.params, default=str),
+                        t.seconds,
+                    )
+                    for t in progress.trials
+                ],
+            )
+
+    def tuning(self, job_id: str) -> TuneJob:
+        job = self._tunings.get(job_id)
+        if job is None:
+            raise MlError("This search is no longer followed.", "unknown_job")
+        return job
+
+    def stop_tuning(self, job_id: str) -> TuneJob:
+        job = self.tuning(job_id)
+        if job.status == "running":
+            self._stops.add(job_id)
+        return job
 
     # --- Explanations ----------------------------------------------------------------------------
 

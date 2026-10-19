@@ -5509,6 +5509,363 @@
         }
       }
     },
+    "/api/v1/modules/ml/datasets/{dataset_id}/compare": {
+      "post": {
+        "tags": [
+          "module:ml"
+        ],
+        "summary": "Compare",
+        "description": "Train several models one after the other on the same rows and validation.",
+        "operationId": "compare_api_v1_modules_ml_datasets__dataset_id__compare_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "target",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Target"
+            }
+          },
+          {
+            "name": "classes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON: a number cut into classes.",
+              "title": "Classes"
+            },
+            "description": "JSON: a number cut into classes."
+          },
+          {
+            "name": "validation",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON: how the models are judged.",
+              "title": "Validation"
+            },
+            "description": "JSON: how the models are judged."
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filters"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompareRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompareJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/ml/compare-jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "module:ml"
+        ],
+        "summary": "Comparison",
+        "operationId": "comparison_api_v1_modules_ml_compare_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompareJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/ml/datasets/{dataset_id}/tune": {
+      "post": {
+        "tags": [
+          "module:ml"
+        ],
+        "summary": "Tune",
+        "description": "Search the best settings of a model within a budget, on the training rows only.",
+        "operationId": "tune_api_v1_modules_ml_datasets__dataset_id__tune_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "target",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Target"
+            }
+          },
+          {
+            "name": "classes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON: a number cut into classes.",
+              "title": "Classes"
+            },
+            "description": "JSON: a number cut into classes."
+          },
+          {
+            "name": "validation",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON: how the model is judged.",
+              "title": "Validation"
+            },
+            "description": "JSON: how the model is judged."
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filters"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TuneStart"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TuneJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/ml/tune-jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "module:ml"
+        ],
+        "summary": "Tuning",
+        "operationId": "tuning_api_v1_modules_ml_tune_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TuneJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "module:ml"
+        ],
+        "summary": "Stop Tuning",
+        "description": "Stop the search after the current trial and keep the best one found.",
+        "operationId": "stop_tuning_api_v1_modules_ml_tune_jobs__job_id__delete",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TuneJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/modules/ml/jobs/{job_id}": {
       "get": {
         "tags": [
@@ -6339,6 +6696,13 @@
           "default_metric": {
             "type": "string",
             "title": "Default Metric"
+          },
+          "compare": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Compare"
           }
         },
         "type": "object",
@@ -6347,7 +6711,8 @@
           "models",
           "recommended",
           "metrics",
-          "default_metric"
+          "default_metric",
+          "compare"
         ],
         "title": "Catalogue"
       },
@@ -7501,6 +7866,149 @@
           "histogram"
         ],
         "title": "ColumnSummary"
+      },
+      "CompareItem": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "running",
+              "done",
+              "failed"
+            ],
+            "title": "Status",
+            "default": "waiting"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seconds"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label"
+        ],
+        "title": "CompareItem"
+      },
+      "CompareJob": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "done"
+            ],
+            "title": "Status"
+          },
+          "metric": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metric"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CompareItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "metric",
+          "items"
+        ],
+        "title": "CompareJob"
+      },
+      "CompareRequest": {
+        "properties": {
+          "models": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 40,
+            "minItems": 1,
+            "title": "Models"
+          },
+          "preparation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Choices"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "models"
+        ],
+        "title": "CompareRequest"
       },
       "Comparison": {
         "properties": {
@@ -10516,6 +11024,13 @@
           "probabilities": {
             "type": "boolean",
             "title": "Probabilities"
+          },
+          "space": {
+            "items": {
+              "$ref": "#/components/schemas/Param"
+            },
+            "type": "array",
+            "title": "Space"
           }
         },
         "type": "object",
@@ -10530,7 +11045,8 @@
           "badges",
           "installed",
           "unavailable",
-          "probabilities"
+          "probabilities",
+          "space"
         ],
         "title": "ModelView"
       },
@@ -10855,6 +11371,63 @@
           "column_stats"
         ],
         "title": "Overview"
+      },
+      "Param": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "float",
+              "int",
+              "categorical"
+            ],
+            "title": "Kind"
+          },
+          "low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Low"
+          },
+          "high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High"
+          },
+          "log": {
+            "type": "boolean",
+            "title": "Log",
+            "default": false
+          },
+          "choices": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Choices"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "kind"
+        ],
+        "title": "Param"
       },
       "Parser": {
         "properties": {
@@ -11925,6 +12498,9 @@
             "type": "string",
             "title": "Label",
             "default": ""
+          },
+          "validation": {
+            "$ref": "#/components/schemas/Validation"
           }
         },
         "type": "object",
@@ -12152,6 +12728,69 @@
           "winkler95"
         ],
         "title": "Scores"
+      },
+      "SearchParam": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Key"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "float",
+              "int",
+              "categorical"
+            ],
+            "title": "Kind"
+          },
+          "low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Low"
+          },
+          "high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High"
+          },
+          "log": {
+            "type": "boolean",
+            "title": "Log",
+            "default": false
+          },
+          "choices": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Choices"
+          },
+          "fixed": {
+            "title": "Fixed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "kind"
+        ],
+        "title": "SearchParam",
+        "description": "One setting of the search space, as the user may change it."
       },
       "SeasonalProfile": {
         "properties": {
@@ -14375,6 +15014,271 @@
           "lag1"
         ],
         "title": "TrendSummary"
+      },
+      "Trial": {
+        "properties": {
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "params": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Params"
+          },
+          "seconds": {
+            "type": "number",
+            "title": "Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "number",
+          "value",
+          "state",
+          "params",
+          "seconds"
+        ],
+        "title": "Trial"
+      },
+      "TuneJob": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "done",
+              "stopped",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TuneProgress"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "space": {
+            "items": {
+              "$ref": "#/components/schemas/SearchParam"
+            },
+            "type": "array",
+            "title": "Space"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "model",
+          "label"
+        ],
+        "title": "TuneJob"
+      },
+      "TuneProgress": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          },
+          "greater_is_better": {
+            "type": "boolean",
+            "title": "Greater Is Better"
+          },
+          "trials": {
+            "items": {
+              "$ref": "#/components/schemas/Trial"
+            },
+            "type": "array",
+            "title": "Trials"
+          },
+          "best_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Value"
+          },
+          "best_params": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Best Params"
+          },
+          "default_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Value"
+          },
+          "importances": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Importances"
+          },
+          "stopped": {
+            "type": "boolean",
+            "title": "Stopped",
+            "default": false
+          },
+          "seconds": {
+            "type": "number",
+            "title": "Seconds",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric",
+          "greater_is_better"
+        ],
+        "title": "TuneProgress"
+      },
+      "TuneStart": {
+        "properties": {
+          "model": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Model"
+          },
+          "budget_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3600.0,
+                "minimum": 10.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget Seconds",
+            "default": 60
+          },
+          "trials": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 2000.0,
+                "minimum": 2.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trials"
+          },
+          "sampler": {
+            "type": "string",
+            "enum": [
+              "tpe",
+              "random",
+              "grid",
+              "cmaes",
+              "nsga2"
+            ],
+            "title": "Sampler",
+            "default": "tpe"
+          },
+          "pruner": {
+            "type": "string",
+            "enum": [
+              "median",
+              "halving",
+              "hyperband",
+              "none"
+            ],
+            "title": "Pruner",
+            "default": "median"
+          },
+          "space": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SearchParam"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Space"
+          },
+          "settings": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Settings"
+          },
+          "preparation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Choices"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "model"
+        ],
+        "title": "TuneStart"
       },
       "UploadOut": {
         "properties": {

@@ -34,6 +34,9 @@ ENV PATH="/opt/venv/bin:$PATH" \
     DATA_EXPLORER_SAMPLES_DIR=/app/samples \
     DATA_EXPLORER_DATA_DIR=/data
 
+# OpenMP runtime for LightGBM / XGBoost (the only system library the image needs).
+RUN apt-get update     && apt-get install -y --no-install-recommends libgomp1     && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 COPY --from=deps /opt/venv /opt/venv
 COPY --from=deps /app /app

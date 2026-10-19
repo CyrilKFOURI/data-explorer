@@ -14,6 +14,8 @@ from app.domain.ml.target import Task
 from app.domain.ml.train import PreparationPreview
 from app.modules.ml.service import (
     Catalogue,
+    CompareJob,
+    CompareRequest,
     ExplanationState,
     MlError,
     MlService,
@@ -21,6 +23,8 @@ from app.modules.ml.service import (
     RunSummary,
     Targets,
     TrainingJob,
+    TuneJob,
+    TuneStart,
 )
 
 router = APIRouter(tags=["module:ml"])
@@ -144,6 +148,54 @@ def _settings(settings: str | None) -> dict[str, Any] | None:
     if values is not None and not isinstance(values, dict):
         raise MlError("Settings must be a JSON object.", "bad_settings")
     return values
+
+
+@router.post("/datasets/{dataset_id}/compare", status_code=202)
+def compare(
+    dataset_id: str,
+    service: Service,
+    filters: Filters,
+    request: CompareRequest,
+    target: Annotated[str, Query(min_length=1)],
+    classes: Annotated[str | None, Query(description="JSON: a number cut into classes.")] = None,
+    validation: Annotated[str | None, Query(description="JSON: how the models are judged.")] = None,
+) -> CompareJob:
+    """Train several models one after the other on the same rows and validation."""
+    return service.compare(
+        dataset_id, target, request, filters, _classes(classes), _validation(validation)
+    )
+
+
+@router.get("/compare-jobs/{job_id}")
+def comparison(job_id: str, service: Service) -> CompareJob:
+    return service.comparison(job_id)
+
+
+@router.post("/datasets/{dataset_id}/tune", status_code=202)
+def tune(
+    dataset_id: str,
+    service: Service,
+    filters: Filters,
+    request: TuneStart,
+    target: Annotated[str, Query(min_length=1)],
+    classes: Annotated[str | None, Query(description="JSON: a number cut into classes.")] = None,
+    validation: Annotated[str | None, Query(description="JSON: how the model is judged.")] = None,
+) -> TuneJob:
+    """Search the best settings of a model within a budget, on the training rows only."""
+    return service.tune(
+        dataset_id, target, request, filters, _classes(classes), _validation(validation)
+    )
+
+
+@router.get("/tune-jobs/{job_id}")
+def tuning(job_id: str, service: Service) -> TuneJob:
+    return service.tuning(job_id)
+
+
+@router.delete("/tune-jobs/{job_id}")
+def stop_tuning(job_id: str, service: Service) -> TuneJob:
+    """Stop the search after the current trial and keep the best one found."""
+    return service.stop_tuning(job_id)
 
 
 @router.get("/jobs/{job_id}")

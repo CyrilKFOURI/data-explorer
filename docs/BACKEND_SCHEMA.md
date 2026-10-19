@@ -22,7 +22,7 @@
 | Table | Module |
 |---|---|
 | `ts_configs` (colonne de temps, fréquence, série) | Séries temporelles |
-| `ml_runs` (migration 0005 : dataset, cible, problème, modèle, réglages, filtres, score principal, durée ; migration 0006 : `classes`, JSON des limites et noms quand un nombre est prédit en classes (018) ; résultat JSON et pipeline `joblib` dans `datasets/<id>/ml/`, supprimés avec le dataset) | Machine learning (016) |
+| `ml_runs` (migration 0005 : dataset, cible, problème, modèle, réglages, filtres, score principal, durée ; migration 0007 : `validation` (JSON), et tables `ml_tunings` (une recherche : modèle, métrique, demande, meilleur score et réglages, score des défauts, importances, statut, durée) et `ml_trials` (chaque essai : numéro, score, état, réglages, durée) ; migration 0006 : `classes`, JSON des limites et noms quand un nombre est prédit en classes (018) ; résultat JSON et pipeline `joblib` dans `datasets/<id>/ml/`, supprimés avec le dataset) | Machine learning (016) |
 | `kpi_definitions` | Builder KPI |
 | `synthetic_runs` (méthode, paramètres, scores de fidélité, chemin du dataset généré) | Données synthétiques |
 

@@ -238,11 +238,20 @@ def _raw_boosting(model: Any, z: np.ndarray) -> tuple[np.ndarray, float, str] | 
     if library == "xgboost":
         import xgboost  # type: ignore[import-not-found]  (optional package)
 
+        # early stopping: the model predicts with its best iteration, so must the explanation
+        best = getattr(inner, "best_iteration", None)
+        stop = (0, int(best) + 1) if best is not None else (0, 0)
         values = np.asarray(
-            inner.get_booster().predict(xgboost.DMatrix(z), pred_contribs=True), dtype=float
+            inner.get_booster().predict(
+                xgboost.DMatrix(z), pred_contribs=True, iteration_range=stop
+            ),
+            dtype=float,
         )
     else:
-        values = np.asarray(inner.predict(z, pred_contrib=True), dtype=float)
+        values = np.asarray(
+            inner.predict(z, pred_contrib=True, num_iteration=inner.best_iteration_ or None),
+            dtype=float,
+        )
     if values.ndim != 2 or values.shape[1] != z.shape[1] + 1:
         return None  # several classes
     return values[:, :-1], float(values[0, -1]), "margin"

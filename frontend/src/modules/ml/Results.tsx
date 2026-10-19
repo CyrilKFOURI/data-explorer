@@ -27,7 +27,8 @@ const pct = (value: number | null | undefined, digits = 0) =>
 export function verdict(run: MlRun): string {
   if (run.regression) {
     const r = run.regression;
-    if (r.skill === null || r.skill <= 0) {
+    // no real gain: under 1 % better than the average, or a negative R²
+    if (r.skill === null || r.skill < 0.01 || (r.r2 !== null && r.r2 <= 0)) {
       const overfit = run.settings.regularization === "none" && run.preparation.inputs * 10 > run.train_rows;
       const text = t("ml.verdict.noBetterAverage", { target: run.target });
       return overfit ? `${text} ${t("ml.verdict.overfit", { inputs: String(run.preparation.inputs), rows: String(run.train_rows) })}` : text;

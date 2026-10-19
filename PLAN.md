@@ -40,7 +40,7 @@ Roadmap en **sprints**, chacun composé de **tranches verticales** : chaque case
 - [x] 018-ml-cible-en-classes — cible numérique découpée en classes (nombre, méthode, aperçu en direct, noms, limites glissables, métriques « off by one »)
 - [x] 019-ml-catalogue-modeles — tous les modèles par familles, réglages à 3 niveaux (essentiels, avancés, expert / optimiseurs), validation — livré sans nouvelle dépendance (XGBoost / LightGBM / CatBoost déclarés, « Not installed in this build » en attendant l'accord) ; reste 019b (durée estimée, annulation, courbe d'apprentissage, contraintes monotones, seuil de décision)
 - [x] 020-ml-explicabilite — permutation importance, SHAP (natif boosting / forme close), dépendance partielle, explication par ligne — permutation, SHAP exact (linéaires) / natif (XGBoost, LightGBM si installés), dépendance partielle, arbre, waterfall d'une ligne, colonnes liées
-- [ ] 021-ml-comparaison-optimisation — comparer les modèles et les runs, optimisation Optuna (TPE, CMA-ES…) avec budget
+- [x] 021-ml-comparaison-optimisation — comparer les modèles et les runs, optimisation Optuna (TPE, CMA-ES…) avec budget — Compare models, runs côte à côte, Tune (Optuna : TPE, aléatoire, grille, CMA-ES, NSGA-II ; élagage ; budget ; arrêt) ; xgboost, lightgbm, optuna, cmaes ajoutés
 
 ### Après
 - [ ] Sprint 6 — Module Builder KPI

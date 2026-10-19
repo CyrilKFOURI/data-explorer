@@ -1,6 +1,6 @@
 """The model catalogue (019): every model by family, declared once and served to the interface."""
 
-from app.domain.ml.catalog import linear, other, trees
+from app.domain.ml.catalog import linear, other, spaces, trees
 from app.domain.ml.catalog.base import (
     Context,
     ModelSpec,
@@ -87,5 +87,6 @@ __all__ = [
     "profile_for",
     "recommend",
     "resolve",
+    "spaces",
     "visible",
 ]

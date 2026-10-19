@@ -465,15 +465,7 @@ def train(
     regression_task = task == "regression"
 
     def make(n_rows: int) -> Pipeline:
-        estimator = spec.build(values, context)
-        if not regression_task and not spec.has_probabilities(values):
-            estimator = CalibratedClassifierCV(estimator, cv=3)
-        return Pipeline(
-            [
-                *prep.steps(preparation, n_rows, task, drop_first=unregularized),
-                ("model", estimator),
-            ]
-        )
+        return model_pipeline(spec, values, context, preparation, task, n_rows, unregularized)
 
     cross_validation = None
     if validation.cross:
@@ -641,6 +633,24 @@ def _evaluation_rows(rows: pd.Series, shown: list[int]) -> list[int]:
     rest = np.setdiff1d(every, shown)
     extra = np.random.default_rng(SEED).choice(rest, EVALUATION_ROWS - len(shown), replace=False)
     return [*shown, *(int(v) for v in extra)]
+
+
+def model_pipeline(
+    spec: catalogue.ModelSpec,
+    values: dict[str, Any],
+    context: catalogue.Context,
+    preparation: prep.Preparation,
+    task: Task,
+    rows: int,
+    drop_first: bool = False,
+) -> Pipeline:
+    """Preparation steps then the model (calibrated when it gives no probabilities)."""
+    estimator = spec.build(values, context)
+    if task != "regression" and not spec.has_probabilities(values):
+        estimator = CalibratedClassifierCV(estimator, cv=3)
+    return Pipeline(
+        [*prep.steps(preparation, rows, task, drop_first=drop_first), ("model", estimator)]
+    )
 
 
 def _positive(y: pd.Series) -> str:

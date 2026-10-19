@@ -21,7 +21,10 @@ import { ErrorNote, Select, TextInput } from "../../ui/fields";
 import { SegmentedControl } from "../../ui/SegmentedControl";
 import { classCounts, DEFAULT_SETUP, edgesFor, namesFor, type Setup } from "./bins";
 import { ClassesPanel, setupFromRun, type Cut } from "./ClassesPanel";
+import { CompareModels } from "./CompareModels";
 import { ModelPicker } from "./ModelPicker";
+import { incomparable, RunCompare } from "./RunCompare";
+import { TunePanel } from "./TunePanel";
 import { PreparationEditor, preparationSummary } from "./PreparationEditor";
 import { disabledOptions, isVisible, resolveValues, type Values } from "./rules";
 import { DEFAULT_VALIDATION, metricName, SettingField, SettingsDrawer } from "./SettingsDrawer";
@@ -187,6 +190,9 @@ function Workbench({
   const model = models?.find((m) => m.key === (modelEdited ?? runModel ?? reference)) ?? models?.find((m) => m.key === reference);
   const [values, setValues] = useState<Values>({});
   const [drawer, setDrawer] = useState(false);
+  const [comparing, setComparing] = useState(false);
+  const [tuning, setTuning] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
   const [jobId, setJobId] = useState<string | null>(null);
   const train = useMlTrain(datasetId);
   const job = useMlJob(jobId);
@@ -361,10 +367,59 @@ function Workbench({
                   onReset={() => resetSetting(s.key)}
                 />
               ))}
-            <Button variant="ghost" onClick={() => setDrawer(true)}>
-              {t("ml.settings.all")}
-            </Button>
+            <span className="flex flex-wrap gap-1">
+              <Button variant="ghost" onClick={() => setDrawer(true)}>
+                {t("ml.settings.all")}
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setTuning(true)}
+                disabled={model.space.length === 0 || training}
+                title={model.space.length === 0 ? t("ml.tune.nothing") : undefined}
+              >
+                {t("ml.tune.button")}
+              </Button>
+              <Button variant="ghost" onClick={() => setComparing(true)} disabled={training}>
+                {t("ml.compare.button")}
+              </Button>
+            </span>
           </section>
+        )}
+        {catalog.data && comparing && (
+          <CompareModels
+            open={comparing}
+            onOpenChange={setComparing}
+            datasetId={datasetId}
+            target={candidate.name}
+            catalogue={catalog.data}
+            choices={choices}
+            classes={classes}
+            validation={validation}
+            onRun={pickRun}
+          />
+        )}
+        {model && tuning && (
+          <TunePanel
+            key={model.key}
+            open={tuning}
+            onOpenChange={setTuning}
+            datasetId={datasetId}
+            target={candidate.name}
+            model={model}
+            settings={settings}
+            defaults={Object.fromEntries(model.settings.map((s) => [s.key, s.default]))}
+            choices={choices}
+            classes={classes}
+            validation={validation}
+            onUse={(found) => {
+              const chosen = Object.fromEntries(Object.entries(found).filter(([key]) => model.settings.some((s) => s.key === key)));
+              setValues(chosen);
+              train.mutate(
+                { target: candidate.name, model: model.key, settings: chosen, choices, classes, validation },
+                { onSuccess: (created) => setJobId(created.id) },
+              );
+            }}
+          />
         )}
         <section className="space-y-1 text-xs">
           <div className="flex items-center justify-between gap-2">
@@ -436,7 +491,17 @@ function Workbench({
           </div>
         )}
         {runs.data && runs.data.length > 0 && (
-          <RunStrip runs={runs.data} shown={run.data} onPick={pickRun} labels={Object.fromEntries((models ?? []).map((m) => [m.key, m.label]))} />
+          <RunStrip
+            runs={runs.data}
+            shown={run.data}
+            onPick={pickRun}
+            labels={Object.fromEntries((models ?? []).map((m) => [m.key, m.label]))}
+            selected={selected}
+            onSelect={setSelected}
+          />
+        )}
+        {runs.data && selected.length >= 2 && (
+          <RunCompare datasetId={datasetId} summaries={runs.data.filter((r) => selected.includes(r.id))} />
         )}
       </div>
     </div>
@@ -460,12 +525,17 @@ function RunStrip({
   shown,
   onPick,
   labels,
+  selected,
+  onSelect,
 }: {
   runs: NonNullable<ReturnType<typeof useMlRuns>["data"]>;
   shown: MlRun | undefined;
   onPick: (id: string) => void;
   labels: Record<string, string>;
+  selected: string[];
+  onSelect: (ids: string[]) => void;
 }) {
+  const first = runs.find((r) => r.id === selected[0]);
   // Only runs scored the same way compare (R² and accuracy do not).
   const metric = shown?.primary ?? runs[0]?.metric;
   const comparable = runs.filter((r) => r.score !== null && r.metric === metric);
@@ -477,27 +547,40 @@ function RunStrip({
     <section aria-label={t("ml.runs")} className="space-y-1.5">
       <h3 className="text-xs text-ink-3">{t("ml.runs")}</h3>
       <div className="flex flex-wrap gap-2">
-        {runs.map((r, index) => (
-          <button
-            key={r.id}
-            type="button"
-            onClick={() => onPick(r.id)}
-            aria-pressed={shown?.id === r.id}
-            className={`rounded-md border px-2.5 py-1.5 text-left text-xs ${shown?.id === r.id ? "border-accent bg-accent-soft" : "border-line hover:bg-surface-1"}`}
-          >
-            <span className="text-ink-1">
-              #{runs.length - index} {r.label || labels[r.model] || r.model}
-              {typeof r.settings.regularization === "string" && r.settings.regularization !== "none"
-                ? ` · ${t(`ml.option.${r.settings.regularization}` as MessageKey)}`
-                : ""}
-              {r.classes ? ` · ${t("ml.classes.runLabel", { count: String(r.classes.names.length) })}` : ""}
-              {best?.id === r.id ? " ★" : ""}
+        {runs.map((r, index) => {
+          const reason = first && first.id !== r.id ? incomparable(first, r) : null;
+          return (
+            <span key={r.id} className="inline-flex items-start gap-1">
+              <input
+                type="checkbox"
+                className="mt-2 size-3.5 accent-(--accent)"
+                aria-label={t("ml.runCompare.pick", { run: String(runs.length - index) })}
+                title={reason ?? t("ml.runCompare.pickHint")}
+                disabled={Boolean(reason)}
+                checked={selected.includes(r.id)}
+                onChange={(e) => onSelect(e.target.checked ? [...selected, r.id] : selected.filter((id) => id !== r.id))}
+              />
+              <button
+                type="button"
+                onClick={() => onPick(r.id)}
+                aria-pressed={shown?.id === r.id}
+                className={`rounded-md border px-2.5 py-1.5 text-left text-xs ${shown?.id === r.id ? "border-accent bg-accent-soft" : "border-line hover:bg-surface-1"}`}
+              >
+                <span className="text-ink-1">
+                  #{runs.length - index} {r.label || labels[r.model] || r.model}
+                  {typeof r.settings.regularization === "string" && r.settings.regularization !== "none"
+                    ? ` · ${t(`ml.option.${r.settings.regularization}` as MessageKey)}`
+                    : ""}
+                  {r.classes ? ` · ${t("ml.classes.runLabel", { count: String(r.classes.names.length) })}` : ""}
+                  {best?.id === r.id ? " ★" : ""}
+                </span>
+                <span className="block text-ink-3 tabular-nums">
+                  {t(`ml.metric.${r.metric}` as MessageKey)} {formatNumber(r.score)} · {r.seconds.toFixed(1)} s
+                </span>
+              </button>
             </span>
-            <span className="block text-ink-3 tabular-nums">
-              {t(`ml.metric.${r.metric}` as MessageKey)} {formatNumber(r.score)} · {r.seconds.toFixed(1)} s
-            </span>
-          </button>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

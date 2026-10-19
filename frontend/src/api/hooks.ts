@@ -21,6 +21,7 @@ import {
   type MlClasses,
   type MlContext,
   type MlValidation,
+  type MlTuneRequest,
   type OutlierMethod,
   type DetectionSettings,
   type RowsView,
@@ -527,6 +528,50 @@ export function useMlExplanation(id: string, runId: string | null, enabled: bool
     staleTime: Infinity,
     retry: false,
   });
+}
+
+/** Train several models one after the other on the same rows. */
+export function useMlCompare(id: string) {
+  const filters = useActiveFilters(id);
+  return useMutation({
+    mutationFn: (args: { target: string; models: string[]; choices: MlChoicesInput | null; classes: MlClasses | null; validation: MlValidation | null }) =>
+      api.mlCompare(id, args.target, args.models, args.choices, args.classes, args.validation, filters),
+  });
+}
+
+export function useMlComparison(jobId: string | null) {
+  return useQuery({
+    queryKey: ["ml", "compare-jobs", jobId ?? ""],
+    queryFn: () => api.mlComparison(jobId ?? ""),
+    enabled: Boolean(jobId),
+    refetchInterval: (query) => (query.state.data?.status === "done" ? false : 700),
+    refetchIntervalInBackground: true,
+    retry: false,
+  });
+}
+
+/** Search the best settings of a model within a budget. */
+export function useMlTune(id: string) {
+  const filters = useActiveFilters(id);
+  return useMutation({
+    mutationFn: (args: { target: string; body: MlTuneRequest; classes: MlClasses | null; validation: MlValidation | null }) =>
+      api.mlTune(id, args.target, args.body, args.classes, args.validation, filters),
+  });
+}
+
+export function useMlTuning(jobId: string | null) {
+  return useQuery({
+    queryKey: ["ml", "tune-jobs", jobId ?? ""],
+    queryFn: () => api.mlTuning(jobId ?? ""),
+    enabled: Boolean(jobId),
+    refetchInterval: (query) => (query.state.data && query.state.data.status !== "running" ? false : 700),
+    refetchIntervalInBackground: true,
+    retry: false,
+  });
+}
+
+export function useMlStopTuning() {
+  return useMutation({ mutationFn: (jobId: string) => api.mlStopTuning(jobId) });
 }
 
 /** A numeric target's distribution, to cut it into classes in the browser. */

@@ -892,6 +892,84 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/modules/ml/datasets/{dataset_id}/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Compare
+         * @description Train several models one after the other on the same rows and validation.
+         */
+        post: operations["compare_api_v1_modules_ml_datasets__dataset_id__compare_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/modules/ml/compare-jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Comparison */
+        get: operations["comparison_api_v1_modules_ml_compare_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/modules/ml/datasets/{dataset_id}/tune": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Tune
+         * @description Search the best settings of a model within a budget, on the training rows only.
+         */
+        post: operations["tune_api_v1_modules_ml_datasets__dataset_id__tune_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/modules/ml/tune-jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tuning */
+        get: operations["tuning_api_v1_modules_ml_tune_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Stop Tuning
+         * @description Stop the search after the current trial and keep the best one found.
+         */
+        delete: operations["stop_tuning_api_v1_modules_ml_tune_jobs__job_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/modules/ml/jobs/{job_id}": {
         parameters: {
             query?: never;
@@ -1187,6 +1265,8 @@ export interface components {
             metrics: string[];
             /** Default Metric */
             default_metric: string;
+            /** Compare */
+            compare: string[];
         };
         /** CategoricalProfile */
         CategoricalProfile: {
@@ -1529,6 +1609,47 @@ export interface components {
             /** Histogram */
             histogram: components["schemas"]["HistogramBar"][];
             date?: components["schemas"]["app__schemas__columns__DateProfile"] | null;
+        };
+        /** CompareItem */
+        CompareItem: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /**
+             * Status
+             * @default waiting
+             * @enum {string}
+             */
+            status: "waiting" | "running" | "done" | "failed";
+            /** Run Id */
+            run_id?: string | null;
+            /** Score */
+            score?: number | null;
+            /** Seconds */
+            seconds?: number | null;
+            /** Error */
+            error?: string | null;
+        };
+        /** CompareJob */
+        CompareJob: {
+            /** Id */
+            id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "running" | "done";
+            /** Metric */
+            metric: string | null;
+            /** Items */
+            items: components["schemas"]["CompareItem"][];
+        };
+        /** CompareRequest */
+        CompareRequest: {
+            /** Models */
+            models: string[];
+            preparation?: components["schemas"]["Choices"] | null;
         };
         /** Comparison */
         Comparison: {
@@ -2387,6 +2508,8 @@ export interface components {
             unavailable: string | null;
             /** Probabilities */
             probabilities: boolean;
+            /** Space */
+            space: components["schemas"]["Param"][];
         };
         /** Normality */
         Normality: {
@@ -2488,6 +2611,27 @@ export interface components {
             column_stats: {
                 [key: string]: components["schemas"]["ColumnStats"];
             };
+        };
+        /** Param */
+        Param: {
+            /** Key */
+            key: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "float" | "int" | "categorical";
+            /** Low */
+            low?: number | null;
+            /** High */
+            high?: number | null;
+            /**
+             * Log
+             * @default false
+             */
+            log: boolean;
+            /** Choices */
+            choices?: string[];
         };
         /**
          * Parser
@@ -2852,6 +2996,7 @@ export interface components {
              * @default
              */
             label: string;
+            validation?: components["schemas"]["Validation"];
         };
         /** SampleOut */
         SampleOut: {
@@ -2904,6 +3049,32 @@ export interface components {
             coverage95: number | null;
             /** Winkler95 */
             winkler95: number | null;
+        };
+        /**
+         * SearchParam
+         * @description One setting of the search space, as the user may change it.
+         */
+        SearchParam: {
+            /** Key */
+            key: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "float" | "int" | "categorical";
+            /** Low */
+            low?: number | null;
+            /** High */
+            high?: number | null;
+            /**
+             * Log
+             * @default false
+             */
+            log: boolean;
+            /** Choices */
+            choices?: string[];
+            /** Fixed */
+            fixed?: unknown;
         };
         /** SeasonalProfile */
         SeasonalProfile: {
@@ -3534,6 +3705,102 @@ export interface components {
             per_year: number | null;
             /** Lag1 */
             lag1: number | null;
+        };
+        /** Trial */
+        Trial: {
+            /** Number */
+            number: number;
+            /** Value */
+            value: number | null;
+            /** State */
+            state: string;
+            /** Params */
+            params: {
+                [key: string]: unknown;
+            };
+            /** Seconds */
+            seconds: number;
+        };
+        /** TuneJob */
+        TuneJob: {
+            /** Id */
+            id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "running" | "done" | "stopped" | "failed";
+            /** Model */
+            model: string;
+            /** Label */
+            label: string;
+            progress?: components["schemas"]["TuneProgress"] | null;
+            /** Error */
+            error?: string | null;
+            /** Space */
+            space?: components["schemas"]["SearchParam"][];
+        };
+        /** TuneProgress */
+        TuneProgress: {
+            /** Metric */
+            metric: string;
+            /** Greater Is Better */
+            greater_is_better: boolean;
+            /** Trials */
+            trials?: components["schemas"]["Trial"][];
+            /** Best Value */
+            best_value?: number | null;
+            /** Best Params */
+            best_params?: {
+                [key: string]: unknown;
+            };
+            /** Default Value */
+            default_value?: number | null;
+            /** Importances */
+            importances?: {
+                [key: string]: number;
+            };
+            /**
+             * Stopped
+             * @default false
+             */
+            stopped: boolean;
+            /**
+             * Seconds
+             * @default 0
+             */
+            seconds: number;
+        };
+        /** TuneStart */
+        TuneStart: {
+            /** Model */
+            model: string;
+            /**
+             * Budget Seconds
+             * @default 60
+             */
+            budget_seconds: number | null;
+            /** Trials */
+            trials?: number | null;
+            /**
+             * Sampler
+             * @default tpe
+             * @enum {string}
+             */
+            sampler: "tpe" | "random" | "grid" | "cmaes" | "nsga2";
+            /**
+             * Pruner
+             * @default median
+             * @enum {string}
+             */
+            pruner: "median" | "halving" | "hyperband" | "none";
+            /** Space */
+            space?: components["schemas"]["SearchParam"][] | null;
+            /** Settings */
+            settings?: {
+                [key: string]: unknown;
+            };
+            preparation?: components["schemas"]["Choices"] | null;
         };
         /** UploadOut */
         UploadOut: {
@@ -5642,6 +5909,183 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TargetDistribution"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    compare_api_v1_modules_ml_datasets__dataset_id__compare_post: {
+        parameters: {
+            query: {
+                target: string;
+                /** @description JSON: a number cut into classes. */
+                classes?: string | null;
+                /** @description JSON: how the models are judged. */
+                validation?: string | null;
+                filters?: string | null;
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompareRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompareJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    comparison_api_v1_modules_ml_compare_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompareJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tune_api_v1_modules_ml_datasets__dataset_id__tune_post: {
+        parameters: {
+            query: {
+                target: string;
+                /** @description JSON: a number cut into classes. */
+                classes?: string | null;
+                /** @description JSON: how the model is judged. */
+                validation?: string | null;
+                filters?: string | null;
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TuneStart"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TuneJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tuning_api_v1_modules_ml_tune_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TuneJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stop_tuning_api_v1_modules_ml_tune_jobs__job_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TuneJob"];
                 };
             };
             /** @description Validation Error */

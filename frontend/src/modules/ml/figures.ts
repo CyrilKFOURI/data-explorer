@@ -349,3 +349,108 @@ export function waterfallFigure(base: number, steps: { label: string; value: num
     },
   });
 }
+
+type TrialPoint = { number: number; value: number | null; state: string };
+
+/** Score of every trial and the best so far. */
+export function trialsFigure(trials: TrialPoint[], higher: boolean, metric: string): Figure {
+  return (tokens) => {
+    const done = trials.filter((t) => t.value !== null);
+    let best: number | null = null;
+    const running = done.map((t) => {
+      const v = t.value as number;
+      best = best === null ? v : higher ? Math.max(best, v) : Math.min(best, v);
+      return best;
+    });
+    return {
+      data: [
+        {
+          type: "scatter",
+          mode: "markers",
+          name: "trial",
+          x: done.map((t) => t.number),
+          y: done.map((t) => t.value),
+          marker: { color: done.map((t) => (t.state === "complete" ? (tokens.palette[0] ?? tokens.numeric) : tokens.ink3)), size: 6 },
+          hovertemplate: "trial %{x}: %{y:.4g}<extra></extra>",
+        } as Data,
+        {
+          type: "scatter",
+          mode: "lines",
+          name: "best so far",
+          x: done.map((t) => t.number),
+          y: running,
+          line: { color: tokens.palette[1] ?? tokens.categorical, width: 2, shape: "hv" },
+          hoverinfo: "skip",
+        } as Data,
+      ],
+      layout: { showlegend: true, xaxis: title("Trial"), yaxis: title(metric) },
+    };
+  };
+}
+
+/** How much each setting mattered in the search (fANOVA). */
+export function importanceBars(importances: Record<string, number>, labels: Record<string, string>): Figure {
+  return (tokens) => {
+    const entries = Object.entries(importances).sort((a, b) => a[1] - b[1]);
+    return {
+      data: [
+        {
+          type: "bar",
+          orientation: "h",
+          y: entries.map(([k]) => labels[k] ?? k),
+          x: entries.map(([, v]) => v),
+          marker: { color: tokens.palette[0] ?? tokens.numeric },
+          hovertemplate: "%{y}: %{x:.0%}<extra></extra>",
+        } as Data,
+      ],
+      layout: { showlegend: false, margin: { l: 160 }, xaxis: { ...title("Share of the score's variation"), tickformat: ".0%" } },
+    };
+  };
+}
+
+/** Predicted against actual for several runs, one color each. */
+export function overlayPredictedFigure(runs: { name: string; run: MlRun }[]): Figure {
+  return (tokens) => {
+    const all = runs.flatMap(({ run }) => [...(run.regression?.actual ?? []), ...(run.regression?.predicted ?? [])]);
+    const low = Math.min(...all);
+    const high = Math.max(...all);
+    return {
+      data: [
+        ...runs.map(
+          ({ name, run }, i) =>
+            ({
+              type: "scattergl",
+              mode: "markers",
+              name,
+              x: run.regression?.actual ?? [],
+              y: run.regression?.predicted ?? [],
+              marker: { color: tokens.palette[i % 8], size: 4, opacity: 0.5 },
+            }) as Data,
+        ),
+        { type: "scatter", mode: "lines", x: [low, high], y: [low, high], line: { color: tokens.ink3, dash: "dash", width: 1 }, hoverinfo: "skip", showlegend: false } as Data,
+      ],
+      layout: { showlegend: true, xaxis: title("Actual"), yaxis: title("Predicted") },
+    };
+  };
+}
+
+/** ROC curves of several binary runs. */
+export function overlayRocFigure(runs: { name: string; run: MlRun }[]): Figure {
+  return (tokens) => ({
+    data: [
+      ...runs.map(
+        ({ name, run }, i) =>
+          ({
+            type: "scatter",
+            mode: "lines",
+            name: `${name} (AUC ${run.classification?.roc_auc?.toFixed(3) ?? "—"})`,
+            x: run.classification?.roc?.x ?? [],
+            y: run.classification?.roc?.y ?? [],
+            line: { color: tokens.palette[i % 8], width: 2 },
+          }) as Data,
+      ),
+      { type: "scatter", mode: "lines", x: [0, 1], y: [0, 1], line: { color: tokens.ink3, dash: "dash", width: 1 }, hoverinfo: "skip", showlegend: false } as Data,
+    ],
+    layout: { showlegend: true, xaxis: title("False positive rate"), yaxis: title("True positive rate") },
+  });
+}

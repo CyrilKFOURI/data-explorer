@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { forwardRef } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -40,6 +40,7 @@ function catalogue(models: Model[], recommended: { key: string; why: string }[] 
       installed: true,
       unavailable: null,
       probabilities: true,
+      space: [],
       ...m,
       settings: (m.settings ?? []).map((s) => ({
         kind: "select",
@@ -59,6 +60,7 @@ function catalogue(models: Model[], recommended: { key: string; why: string }[] 
     recommended,
     metrics: ["r2", "mae"],
     default_metric: "r2",
+    compare: models.map((m) => m.key),
   };
 }
 
@@ -437,12 +439,146 @@ describe("Explanations", () => {
   });
 });
 
+describe("Comparing and tuning", () => {
+  const summary = (id: string, extra: Record<string, unknown> = {}) => ({
+    id,
+    target: "price",
+    task: "regression",
+    model: "linear_regression",
+    label: "Linear regression",
+    settings: {},
+    metric: "r2",
+    score: 0.8,
+    seconds: 0.2,
+    created_at: "2026-10-19T10:00:00Z",
+    classes: null,
+    greater_is_better: true,
+    validation: regressionRun.validation,
+    ...extra,
+  });
+  const routes = (extra: Record<string, unknown>) => ({
+    "GET /health": health,
+    "GET /datasets": [dataset()],
+    "GET /datasets/d1": dataset(),
+    "GET /datasets/d1/columns": [column({ name: "price" })],
+    "GET /column-roles": roles,
+    "GET /modules/ml/datasets/d1/targets": { candidates: [candidate("price", "regression")], rows: 100 },
+    "GET /modules/ml/catalog": catalogue([
+      {
+        key: "linear_regression",
+        label: "Linear regression",
+        tasks: ["regression"],
+        settings: [{ key: "alpha", label: "Strength", kind: "number", default: 1, minimum: 0.000001, maximum: 10000, level: "advanced" }],
+        space: [{ key: "alpha", kind: "float", low: 0.0001, high: 100, log: true, choices: [] }],
+      } as Model,
+      { key: "random_forest", label: "Random forest", family: "Bagging ensembles", tasks: ["regression"] },
+    ]),
+    "GET /modules/ml/datasets/d1/runs/r1": regressionRun,
+    ...extra,
+  });
+
+  it("compares models in one job and ranks them", async () => {
+    const calls = mockApi(
+      routes({
+        "GET /modules/ml/datasets/d1/runs": [summary("r1")],
+        "POST /modules/ml/datasets/d1/compare": { id: "c1", status: "running", metric: "r2", items: [] },
+        "GET /modules/ml/compare-jobs/c1": {
+          id: "c1",
+          status: "done",
+          metric: "r2",
+          items: [
+            { key: "linear_regression", label: "Linear regression", status: "done", run_id: "r2", score: 0.6, seconds: 0.1, error: null },
+            { key: "random_forest", label: "Random forest", status: "done", run_id: "r3", score: 0.9, seconds: 1.2, error: null },
+          ],
+        },
+      }),
+    );
+    renderAt("/d/d1/ml?target=price");
+
+    fireEvent.click(await screen.findByRole("button", { name: "Compare models" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Compare" }));
+    expect(await screen.findByText(/Done: best first/)).toBeInTheDocument();
+    const ranked = within(screen.getByRole("dialog")).getAllByRole("row").map((r) => r.textContent ?? "");
+    expect(ranked.join(" | ")).toMatch(/Random forest ★.*Linear regression/);
+    const posted = calls.find((c) => c.key === "POST /modules/ml/datasets/d1/compare");
+    expect(posted?.body).toMatchObject({ models: ["linear_regression", "random_forest"] });
+  });
+
+  it("only lets comparable runs be ticked", async () => {
+    mockApi(
+      routes({
+        "GET /modules/ml/datasets/d1/runs": [
+          summary("r1"),
+          summary("r2", { validation: { ...regressionRun.validation, method: "kfold" } }),
+          summary("r3", { model: "random_forest", label: "Random forest", score: 0.9 }),
+        ],
+        "GET /modules/ml/datasets/d1/runs/r3": { ...regressionRun, id: "r3", model: "random_forest", settings: { n_estimators: 300 } },
+      }),
+    );
+    renderAt("/d/d1/ml?target=price&run=r1");
+
+    fireEvent.click(await screen.findByRole("checkbox", { name: "Compare run #3" }));
+    expect(screen.getByRole("checkbox", { name: "Compare run #2" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Compare run #1" }));
+    expect(await screen.findByRole("region", { name: "Runs side by side" })).toBeInTheDocument();
+    expect(screen.getByText("n_estimators")).toBeInTheDocument();
+  });
+
+  it("tunes the model within a budget and uses the settings found", async () => {
+    const calls = mockApi(
+      routes({
+        "GET /modules/ml/datasets/d1/runs": [summary("r1")],
+        "POST /modules/ml/datasets/d1/tune": { id: "t1", status: "running", model: "linear_regression", label: "Linear regression", progress: null, error: null, space: [] },
+        "GET /modules/ml/tune-jobs/t1": {
+          id: "t1",
+          status: "done",
+          model: "linear_regression",
+          label: "Linear regression",
+          error: null,
+          space: [],
+          progress: {
+            metric: "r2",
+            greater_is_better: true,
+            trials: [
+              { number: 0, value: 0.7, state: "complete", params: { alpha: 3 }, seconds: 0.1 },
+              { number: 1, value: 0.85, state: "complete", params: { alpha: 0.2 }, seconds: 0.1 },
+            ],
+            best_value: 0.85,
+            best_params: { alpha: 0.2 },
+            default_value: 0.8,
+            importances: {},
+            stopped: false,
+            seconds: 2,
+          },
+        },
+        "POST /modules/ml/datasets/d1/runs": { id: "job9", status: "running", stage: "loading", run_id: null, error: null },
+        "GET /modules/ml/jobs/job9": { id: "job9", status: "running", stage: "loading", run_id: null, error: null },
+      }),
+    );
+    renderAt("/d/d1/ml?target=price");
+
+    fireEvent.click(await screen.findByRole("button", { name: "Tune" }));
+    fireEvent.click(await screen.findByRole("radio", { name: "5 min" }));
+    fireEvent.click(screen.getByRole("button", { name: "Start the search" }));
+    expect(await screen.findByText("+0.05 R² over the defaults")).toBeInTheDocument();
+    const tuned = calls.find((c) => c.key === "POST /modules/ml/datasets/d1/tune");
+    expect(tuned?.body).toMatchObject({ model: "linear_regression", budget_seconds: 300, sampler: "tpe" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Use these settings" }));
+    await waitFor(() => expect(calls.some((c) => c.key === "POST /modules/ml/datasets/d1/runs")).toBe(true));
+    const trained = calls.find((c) => c.key === "POST /modules/ml/datasets/d1/runs");
+    expect(JSON.parse(trained?.params.get("settings") ?? "{}")).toMatchObject({ alpha: 0.2 });
+  });
+});
+
 describe("ML verdicts", () => {
   const run = regressionRun as unknown as MlRun;
 
   it("says when a model is no better than the naive reference", () => {
     const flat = { ...run, regression: { ...run.regression!, skill: -0.2 } } as MlRun;
     expect(verdict(flat)).toContain("does no better than always predicting the average");
+    const negative = { ...run, regression: { ...run.regression!, r2: -0.01, skill: 0.004 } } as MlRun;
+    expect(verdict(negative)).toContain("does no better than always predicting the average");
 
     const classification = {
       ...run,

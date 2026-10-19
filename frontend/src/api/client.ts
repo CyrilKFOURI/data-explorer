@@ -82,6 +82,21 @@ export type MlCatalogue = Complete<Schemas["Catalogue"]>;
 export type MlValidation = Complete<Schemas["Validation"]>;
 export type MlExplanationState = Complete<Schemas["ExplanationState"]>;
 export type MlExplanation = MlExplanationState["explanation"];
+export type MlCompareJob = Complete<Schemas["CompareJob"]>;
+export type MlTuneJob = Complete<Schemas["TuneJob"]>;
+export type MlSearchParam = Complete<Schemas["SearchParam"]>;
+export type MlTuneRequest = {
+  model: string;
+  budget_seconds: number | null;
+  trials: number | null;
+  sampler: string;
+  pruner: string;
+  space: MlSearchParam[] | null;
+  settings: Record<string, unknown>;
+  preparation?: MlChoicesInput | null;
+};
+/** Metrics where lower is better (as the server's evaluate.LOWER_IS_BETTER). */
+export const LOWER_IS_BETTER = new Set(["mae", "rmse", "mape", "median_ae", "max_error", "log_loss", "brier"]);
 /** What the catalogue's recommendations and defaults depend on. */
 export type MlContext = { task: string; rows: number; minority: number | null; features: number; categoricalShare: number; missingShare: number };
 export type MlJob = Complete<Schemas["TrainingJob"]>;
@@ -426,6 +441,27 @@ export const api = {
   mlRun: (id: string, runId: string) => request<MlRun>("GET", `/modules/ml/datasets/${id}/runs/${runId}`),
   mlExplanation: (id: string, runId: string) =>
     request<MlExplanationState>("GET", `/modules/ml/datasets/${id}/runs/${runId}/explanation`),
+  mlCompare: (
+    id: string,
+    target: string,
+    models: string[],
+    choices: MlChoicesInput | null,
+    classes: MlClasses | null,
+    validation: MlValidation | null,
+    filters?: Condition[],
+  ) => {
+    const query = mlQuery(target, null, null, filters, classes);
+    if (validation) query.set("validation", JSON.stringify(validation));
+    return request<MlCompareJob>("POST", `/modules/ml/datasets/${id}/compare?${query}`, { models, preparation: choices });
+  },
+  mlComparison: (jobId: string) => request<MlCompareJob>("GET", `/modules/ml/compare-jobs/${jobId}`),
+  mlTune: (id: string, target: string, body: MlTuneRequest, classes: MlClasses | null, validation: MlValidation | null, filters?: Condition[]) => {
+    const query = mlQuery(target, null, null, filters, classes);
+    if (validation) query.set("validation", JSON.stringify(validation));
+    return request<MlTuneJob>("POST", `/modules/ml/datasets/${id}/tune?${query}`, body);
+  },
+  mlTuning: (jobId: string) => request<MlTuneJob>("GET", `/modules/ml/tune-jobs/${jobId}`),
+  mlStopTuning: (jobId: string) => request<MlTuneJob>("DELETE", `/modules/ml/tune-jobs/${jobId}`),
   mlPredictionsUrl: (id: string, runId: string) => `/api/v1/modules/ml/datasets/${id}/runs/${runId}/predictions.csv`,
   correlations: (
     id: string,

@@ -107,14 +107,18 @@ def test_strongly_linked_inputs_are_flagged() -> None:
     )
 
 
-def test_xgboost_native_shap_adds_up() -> None:
-    pytest.importorskip("xgboost")
-    result, found, x = run_and_explain("xgboost", settings={"n_estimators": 50})
+@pytest.mark.parametrize("library", ["xgboost", "lightgbm"])
+def test_boosting_native_shap_adds_up(library: str) -> None:
+    pytest.importorskip(library)
+    result, found, x = run_and_explain(library, settings={"n_estimators": 60})
     shap = found.shap
     assert shap is not None
     positions = [int(np.flatnonzero(FRAME["__row"].to_numpy() == r)[0]) for r in shap.rows]
     predicted = result.pipeline.predict(x.iloc[positions])
-    assert np.allclose(shap.base + np.array(shap.matrix).sum(axis=1), predicted, atol=1e-4)
+    # float32 inside the libraries: equal to 1e-5 relative
+    assert np.allclose(
+        shap.base + np.array(shap.matrix).sum(axis=1), predicted, rtol=1e-5, atol=1e-3
+    )
 
 
 def test_origins_map_prepared_inputs_to_columns() -> None:

@@ -197,3 +197,60 @@ def test_explanation_is_computed_in_the_background_then_cached(
     found = state["explanation"]
     assert found["permutation"]["items"] and found["shap"]["columns"]
     assert client.get(url).json()["status"] == "done"  # from the cache
+
+
+def _until(client: TestClient, url: str, done: tuple[str, ...]) -> dict:
+    state = client.get(url).json()
+    for _ in range(600):
+        if state["status"] in done:
+            break
+        time.sleep(0.1)
+        state = client.get(url).json()
+    return state
+
+
+def test_compare_models_trains_each_and_isolates_failures(client: TestClient, traps: str) -> None:
+    started = client.post(
+        f"{BASE}/datasets/{traps}/compare",
+        params={"target": "income"},
+        json={"models": ["linear_regression", "decision_tree", "catboost"]},
+    )
+    assert started.status_code == 202, started.text
+    job = _until(client, f"{BASE}/compare-jobs/{started.json()['id']}", ("done",))
+
+    items = {i["key"]: i for i in job["items"]}
+    assert items["linear_regression"]["status"] == "done" and items["decision_tree"]["run_id"]
+    assert items["catboost"]["status"] == "failed" and "not installed" in items["catboost"]["error"]
+    runs = client.get(f"{BASE}/datasets/{traps}/runs", params={"target": "income"}).json()
+    compared = [r for r in runs if r["id"] in {i["run_id"] for i in job["items"]}]
+    assert len(compared) == 2 and compared[0]["validation"] == compared[1]["validation"]
+
+
+def test_tune_a_model_in_the_background(client: TestClient, traps: str) -> None:
+    started = client.post(
+        f"{BASE}/datasets/{traps}/tune",
+        params={"target": "income"},
+        json={"model": "linear_regression", "trials": 5, "budget_seconds": 60},
+    )
+    assert started.status_code == 202, started.text
+    job = _until(client, f"{BASE}/tune-jobs/{started.json()['id']}", ("done", "stopped", "failed"))
+
+    assert job["status"] == "done", job
+    progress = job["progress"]
+    assert (
+        len(progress["trials"]) == 5
+        and progress["best_params"]
+        and progress["default_value"] is not None
+    )
+    assert {p["key"] for p in job["space"]} >= {"alpha"}
+
+    bad = client.post(
+        f"{BASE}/datasets/{traps}/tune",
+        params={"target": "income"},
+        json={
+            "model": "linear_regression",
+            "space": [{"key": "alpha", "kind": "float", "low": 5, "high": 1}],
+        },
+    )
+    failed = _until(client, f"{BASE}/tune-jobs/{bad.json()['id']}", ("done", "failed"))
+    assert failed["status"] == "failed" and "lower bound" in failed["error"]
