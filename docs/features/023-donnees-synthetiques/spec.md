@@ -161,6 +161,35 @@ Calculée avec les lignes réelles **tenues à l'écart** (jamais vues par le mo
 - **Annulation** : le job s'arrête entre deux étapes et n'enregistre rien.
 - **Accessibilité** : scores et verdicts en texte, graphiques avec légende, réel et synthétique différenciés autrement que par la couleur (gris plein / accent avec contour).
 
+## GPU (préparé pour la 023b)
+
+Les modèles profonds de la 023b (CTGAN, TVAE, TimeGAN) s'entraînent beaucoup plus vite sur une carte graphique. L'app **détecte** la carte et laisse l'utilisateur **choisir**.
+
+**Détection, au démarrage puis à la demande (« Check again ») :**
+- Sans PyTorch : présence de `nvidia-smi`, nom de la carte, mémoire, version du pilote.
+- Avec PyTorch : `torch.cuda.is_available()`, puis la version CUDA de PyTorch, compatible ou non avec le pilote. Apple Silicon : `torch.backends.mps.is_available()`.
+- Résultat, un état parmi :
+  - « NVIDIA GeForce RTX 4050 Laptop · 6 GB · ready » ;
+  - « GPU found but this build has no GPU support (CPU PyTorch) » ;
+  - « No GPU found ».
+- Dans Docker, l'image par défaut est sans GPU : l'état le dit et renvoie au guide pour l'image « full » avec `--gpus all`.
+
+**Choix de l'utilisateur :**
+- **Settings › Compute** :
+  - « Use the GPU when available » (On / Off, défaut : On si une carte prête est détectée) ;
+  - l'état détecté, avec la carte, la mémoire et « Check again ».
+  - Le réglage est enregistré dans la table `settings` et vaut pour toute l'app.
+- **Sur la page Synthetic data**, au lancement d'un modèle profond : une pastille « GPU · RTX 4050 » ou « CPU » à côté de Generate, avec un interrupteur pour ce run seulement. Désactivé avec sa raison si aucune carte n'est prête.
+- **Repli automatique sur le CPU** si la carte manque de mémoire en cours d'entraînement (CUDA out of memory). Le run continue sur le CPU et le dit (« GPU ran out of memory: finished on CPU »).
+- **Chaque run enregistre** l'appareil utilisé (CPU, ou nom de la carte) et la durée, pour comparer.
+
+**Au-delà du module :** le même réglage servira au module Machine learning pour XGBoost (`device="cuda"`) et LightGBM quand leur version GPU est installée.
+
+**En 023 (sans PyTorch) :**
+- L'état de détection est déjà affiché dans Settings › Compute, à partir de `nvidia-smi`.
+- Le réglage existe mais reste sans effet, avec la mention « Used by the deep models (CTGAN, TVAE, TimeGAN), coming next ».
+- Les méthodes de la 023 tournent sur le CPU : elles n'ont pas besoin d'un GPU.
+
 ## Hors scope (023)
 
 - CTGAN, TVAE, TimeGAN, modèles de diffusion (023b, avec PyTorch).
