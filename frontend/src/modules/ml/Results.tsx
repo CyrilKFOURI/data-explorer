@@ -17,6 +17,7 @@ import {
   residualHistogram,
   residualsFigure,
   importancesFigure,
+  learningCurveFigure,
 } from "./figures";
 
 type Tab = "performance" | "features" | "explain" | "predictions";
@@ -27,8 +28,8 @@ const pct = (value: number | null | undefined, digits = 0) =>
 export function verdict(run: MlRun): string {
   if (run.regression) {
     const r = run.regression;
-    // no real gain: under 1 % better than the average, or a negative R²
-    if (r.skill === null || r.skill < 0.01 || (r.r2 !== null && r.r2 <= 0)) {
+    // no real gain: under 1 % better than the average, or an R² under 1 %
+    if (r.skill === null || r.skill < 0.01 || (r.r2 !== null && r.r2 < 0.01)) {
       const overfit = run.settings.regularization === "none" && run.preparation.inputs * 10 > run.train_rows;
       const text = t("ml.verdict.noBetterAverage", { target: run.target });
       return overfit ? `${text} ${t("ml.verdict.overfit", { inputs: String(run.preparation.inputs), rows: String(run.train_rows) })}` : text;
@@ -72,7 +73,23 @@ export function Results({ run, datasetId }: { run: MlRun; datasetId: string }) {
         options={(["performance", "features", "explain", "predictions"] as const).map((value) => ({ value, label: t(`ml.tab.${value}`) }))}
         onChange={setTab}
       />
-      {tab === "performance" && (run.regression ? <RegressionPerformance run={run} /> : <ClassificationPerformance run={run} />)}
+      {tab === "performance" &&
+        (run.regression ? (
+          <RegressionPerformance run={run} />
+        ) : (
+          <div className="space-y-3">
+            {run.classification?.threshold != null && run.classification.threshold !== 0.5 && run.validation.threshold !== "default" && (
+              <p className="text-xs text-ink-2">
+                {t("ml.thresholdChosen", {
+                  threshold: run.classification.threshold.toFixed(2),
+                  rule: t(`ml.validation.threshold.${run.validation.threshold}` as MessageKey),
+                })}
+              </p>
+            )}
+            <LearningCurvePanel run={run} />
+            <ClassificationPerformance run={run} />
+          </div>
+        ))}
       {tab === "features" && <Features run={run} />}
       {tab === "explain" && <ExplainTab run={run} datasetId={datasetId} />}
       {tab === "predictions" && <Predictions run={run} datasetId={datasetId} />}
@@ -129,11 +146,22 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
+function LearningCurvePanel({ run }: { run: MlRun }) {
+  const curve = run.learning_curve;
+  if (!curve) return null;
+  return (
+    <Panel title={t("ml.learningCurve", { label: curve.label })}>
+      <Plot figure={learningCurveFigure(curve)} height={240} label={t("ml.learningCurve", { label: curve.label })} />
+    </Panel>
+  );
+}
+
 function RegressionPerformance({ run }: { run: MlRun }) {
   const r = run.regression;
   if (!r) return null;
   return (
     <div className="space-y-3">
+      <LearningCurvePanel run={run} />
       <div className="grid gap-4 xl:grid-cols-2">
         <Panel title={t("ml.predictedVsActual")}>
           <Plot figure={predictedFigure(r, run.target)} height={300} label={t("ml.predictedVsActual")} />
@@ -175,7 +203,7 @@ function atThreshold(truth: number[], probability: number[], threshold: number) 
 function ClassificationPerformance({ run }: { run: MlRun }) {
   const c = run.classification;
   const [percent, setPercent] = useState(false);
-  const [threshold, setThreshold] = useState(0.5);
+  const [threshold, setThreshold] = useState(c?.threshold ?? 0.5);
   const binary = c?.positive ? c : null;
   const scored = useMemo(
     () => (binary ? atThreshold(binary.truth, binary.probability, threshold) : null),

@@ -7,7 +7,9 @@ import type { MlCandidate, MlChoicesInput, MlClasses, MlContext, MlRun, MlValida
 import {
   useDataset,
   useMlCatalog,
+  useMlCancel,
   useMlDistribution,
+  useMlEstimate,
   useMlJob,
   useMlRun,
   useMlRuns,
@@ -195,6 +197,8 @@ function Workbench({
   const [selected, setSelected] = useState<string[]>([]);
   const [jobId, setJobId] = useState<string | null>(null);
   const train = useMlTrain(datasetId);
+  const cancel = useMlCancel();
+  const estimate = useMlEstimate(datasetId);
   const job = useMlJob(jobId);
   const started = useRef(false);
   const [editing, setEditing] = useState(false);
@@ -475,9 +479,32 @@ function Workbench({
           classes={classes}
         />
         {resolved.error && <ErrorNote>{resolved.error}</ErrorNote>}
-        <Button variant="primary" onClick={launch} disabled={training || !model || Boolean(resolved.error)}>
-          {training ? t(`ml.stage.${job.data?.stage ?? "loading"}` as MessageKey) : t("ml.train")}
-        </Button>
+        {model && (model.badges.some((b) => b.startsWith("Slow")) || context.rows > 50_000 || validation.method !== "split") && (
+          <p className="flex flex-wrap items-center gap-2 text-xs text-ink-2">
+            <Button
+              variant="ghost"
+              disabled={estimate.isPending || training}
+              onClick={() =>
+                estimate.mutate({ target: candidate.name, model: model.key, settings: changedSettings, choices, classes, validation })
+              }
+            >
+              {estimate.isPending ? t("ml.estimate.running") : t("ml.estimate.button")}
+            </Button>
+            {estimate.data && <span>{t("ml.estimate.result", { duration: duration(estimate.data.seconds), fits: `${estimate.data.fits} fit${estimate.data.fits > 1 ? "s" : ""}` })}</span>}
+            {estimate.isError && <span className="text-bad">{estimate.error.message}</span>}
+          </p>
+        )}
+        <span className="flex gap-2">
+          <Button variant="primary" onClick={launch} disabled={training || !model || Boolean(resolved.error)}>
+            {training ? t(`ml.stage.${job.data?.stage ?? "loading"}` as MessageKey) : t("ml.train")}
+          </Button>
+          {training && jobId && (
+            <Button onClick={() => cancel.mutate(jobId)} disabled={cancel.isPending}>
+              {t("ml.cancel")}
+            </Button>
+          )}
+        </span>
+        {job.data?.status === "cancelled" && <p className="text-xs text-ink-3">{job.data.error}</p>}
         {train.isError && <ErrorNote>{train.error.message}</ErrorNote>}
         {job.data?.status === "failed" && <ErrorNote>{job.data.error}</ErrorNote>}
       </aside>
@@ -506,6 +533,15 @@ function Workbench({
       </div>
     </div>
   );
+}
+
+/** 75 → "1 min 15 s". */
+function duration(seconds: number): string {
+  if (seconds < 1) return "< 1 s";
+  if (seconds < 60) return `${Math.round(seconds)} s`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min ${Math.round(seconds % 60)} s`;
+  return `${Math.floor(minutes / 60)} h ${minutes % 60} min`;
 }
 
 function validationSummary(validation: MlValidation): string {

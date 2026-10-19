@@ -20,6 +20,7 @@ export const DEFAULT_VALIDATION: MlValidation = {
   metric: null,
   seed: 42,
   max_rows: 200_000,
+  threshold: "default",
 };
 
 export const metricName = (metric: string) => t(`ml.metric.${metric}` as MessageKey);
@@ -337,6 +338,22 @@ function ValidationTab({
           ))}
         </Select>
       </Row>
+      {task === "binary" && (method === "split" || method === "time_split") && (
+        <Row label={t("ml.validation.threshold")} hint={t("ml.validation.thresholdHint")}>
+          <Select
+            aria-label={t("ml.validation.threshold")}
+            value={validation.threshold}
+            onChange={(e) => set({ threshold: e.target.value as MlValidation["threshold"] })}
+            className="h-7 max-w-44 text-xs"
+          >
+            {(["default", "f1", "balanced_accuracy"] as const).map((v) => (
+              <option key={v} value={v}>
+                {t(`ml.validation.threshold.${v}` as MessageKey)}
+              </option>
+            ))}
+          </Select>
+        </Row>
+      )}
       <Row label={t("ml.validation.seed")}>
         <NumberBox label={t("ml.validation.seed")} value={validation.seed} min={0} max={2 ** 31 - 1} onChange={(v) => set({ seed: Math.round(v) })} />
       </Row>

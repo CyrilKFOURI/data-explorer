@@ -530,6 +530,30 @@ export function useMlExplanation(id: string, runId: string | null, enabled: bool
   });
 }
 
+/** Stop a training at its next checkpoint. */
+export function useMlCancel() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (jobId: string) => api.mlCancel(jobId),
+    onSuccess: (job) => client.setQueryData(["ml", "jobs", job.id], job),
+  });
+}
+
+/** How long a training would take (fits on 500 and 2 000 rows, extrapolated). */
+export function useMlEstimate(id: string) {
+  const filters = useActiveFilters(id);
+  return useMutation({
+    mutationFn: (args: {
+      target: string;
+      model: string | null;
+      settings: Record<string, unknown> | null;
+      choices: MlChoicesInput | null;
+      classes: MlClasses | null;
+      validation: MlValidation | null;
+    }) => api.mlEstimate(id, args.target, args.model, args.settings, args.choices, args.classes, args.validation, filters),
+  });
+}
+
 /** Train several models one after the other on the same rows. */
 export function useMlCompare(id: string) {
   const filters = useActiveFilters(id);

@@ -115,6 +115,20 @@ def _none_if_zero(value: int) -> int | None:
     return value or None
 
 
+def _monotonic_setting(param: str) -> Setting:
+    return Setting(
+        "monotonic",
+        "Monotonic constraints",
+        "text",
+        "",
+        level="advanced",
+        why="Optional, e.g. “size:+1, age:-1”: the prediction may only rise with size and only "
+        "fall with age (business knowledge the model must respect).",
+        group="Structure",
+        param=param,
+    )
+
+
 # --- Single trees ---------------------------------------------------------------------------------
 
 
@@ -404,6 +418,7 @@ def _hist_settings(context: Context) -> list[Setting]:
             group="Optimizer",
             param="max_bins",
         ),
+        _monotonic_setting("monotonic_cst"),
         seed_setting(),
     ]
 
@@ -784,6 +799,7 @@ def _xgb_settings(context: Context) -> list[Setting]:
             group="Optimizer",
             param="max_bin",
         ),
+        _monotonic_setting("monotone_constraints"),
         seed_setting(),
     ]
 
@@ -919,6 +935,7 @@ def _lgbm_settings(context: Context) -> list[Setting]:
             group="Optimizer",
             param="boosting",
         ),
+        _monotonic_setting("monotone_constraints"),
         seed_setting(),
     ]
 

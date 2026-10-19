@@ -981,6 +981,30 @@ export interface paths {
         get: operations["job_api_v1_modules_ml_jobs__job_id__get"];
         put?: never;
         post?: never;
+        /**
+         * Cancel
+         * @description Stop a training at its next checkpoint; nothing is saved.
+         */
+        delete: operations["cancel_api_v1_modules_ml_jobs__job_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/modules/ml/datasets/{dataset_id}/estimate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Estimate
+         * @description How long training would take (fits on 500 and 2 000 rows, extrapolated).
+         */
+        post: operations["estimate_api_v1_modules_ml_datasets__dataset_id__estimate_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1464,6 +1488,8 @@ export interface components {
             roc?: components["schemas"]["app__domain__ml__train__Curve"] | null;
             pr?: components["schemas"]["app__domain__ml__train__Curve"] | null;
             calibration?: components["schemas"]["app__domain__ml__train__Curve"] | null;
+            /** Threshold */
+            threshold?: number | null;
             /** Truth */
             truth?: number[];
             /** Probability */
@@ -2092,6 +2118,15 @@ export interface components {
             /** Size */
             size?: number | null;
         };
+        /** Estimate */
+        Estimate: {
+            /** Seconds */
+            seconds: number;
+            /** Fits */
+            fits: number;
+            /** Rows */
+            rows: number;
+        };
         /** Excluded */
         Excluded: {
             /** Name */
@@ -2378,6 +2413,24 @@ export interface components {
             density: number[];
             /** Quantiles */
             quantiles: number[];
+        };
+        /**
+         * LearningCurve
+         * @description How the model improved iteration after iteration (iterative models only).
+         */
+        LearningCurve: {
+            /** Label */
+            label: string;
+            /** Iterations */
+            iterations: number[];
+            /** Train */
+            train: number[] | null;
+            /** Validation */
+            validation: number[] | null;
+            /** Best */
+            best: number | null;
+            /** Lower Is Better */
+            lower_is_better: boolean;
         };
         /** Listing */
         Listing: {
@@ -2962,6 +3015,7 @@ export interface components {
             validation?: components["schemas"]["Validation"];
             /** Evaluation Rows */
             evaluation_rows?: number[];
+            learning_curve?: components["schemas"]["LearningCurve"] | null;
         };
         /** RunSummary */
         RunSummary: {
@@ -3646,7 +3700,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "running" | "done" | "failed";
+            status: "running" | "done" | "failed" | "cancelled";
             /**
              * Stage
              * @enum {string}
@@ -3851,6 +3905,12 @@ export interface components {
              * @default 200000
              */
             max_rows: number | null;
+            /**
+             * Threshold
+             * @default default
+             * @enum {string}
+             */
+            threshold: "default" | "f1" | "balanced_accuracy";
         };
         /** ValidationError */
         ValidationError: {
@@ -6117,6 +6177,82 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TrainingJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_api_v1_modules_ml_jobs__job_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrainingJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    estimate_api_v1_modules_ml_datasets__dataset_id__estimate_post: {
+        parameters: {
+            query: {
+                target: string;
+                model?: string | null;
+                /** @description JSON object of settings. */
+                settings?: string | null;
+                /** @description JSON: a number cut into classes. */
+                classes?: string | null;
+                /** @description JSON: how the model is judged. */
+                validation?: string | null;
+                filters?: string | null;
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["Choices"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Estimate"];
                 };
             };
             /** @description Validation Error */

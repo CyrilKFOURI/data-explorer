@@ -1707,5 +1707,16 @@
   "ml.tune.importance": "What mattered most in the search",
   "ml.tune.useHint": "Using them trains a new run, judged on the test rows.",
   "ml.tune.use": "Use these settings",
-  "ml.option.elasticnet": "Elastic net"
+  "ml.option.elasticnet": "Elastic net",
+  "ml.cancel": "Cancel",
+  "ml.estimate.button": "How long will it take?",
+  "ml.estimate.running": "Timing on a sample…",
+  "ml.estimate.result": "About {duration} ({fits}), from fits on 500 and 2,000 rows.",
+  "ml.learningCurve": "Learning curve — {label}",
+  "ml.validation.threshold": "Decision threshold",
+  "ml.validation.thresholdHint": "Chosen on out-of-fold predictions of the training rows, then applied once to the test rows.",
+  "ml.validation.threshold.default": "0.5",
+  "ml.validation.threshold.f1": "Best F1",
+  "ml.validation.threshold.balanced_accuracy": "Best balanced accuracy",
+  "ml.thresholdChosen": "Decision threshold {threshold} ({rule}, chosen on the training rows): the predicted classes and the scores use it."
 }

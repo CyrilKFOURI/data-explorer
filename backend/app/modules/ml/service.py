@@ -141,6 +141,7 @@ class Run:
     importances: list[trainer.Importance] = field(default_factory=list)
     validation: evaluate.Validation = field(default_factory=evaluate.Validation)
     evaluation_rows: list[int] = field(default_factory=list)
+    learning_curve: trainer.LearningCurve | None = None
 
 
 @dataclass
@@ -202,7 +203,7 @@ class TuneStart(tuner.TuneRequest):
 @dataclass
 class TrainingJob:
     id: str
-    status: Literal["running", "done", "failed"]
+    status: Literal["running", "done", "failed", "cancelled"]
     stage: Stage
     run_id: str | None = None
     error: str | None = None
@@ -456,6 +457,45 @@ class MlService:
         except (trainer.TrainingError, catalogue.SettingsError) as error:
             raise MlError(str(error)) from None
 
+    def cancel(self, job_id: str) -> TrainingJob:
+        """Stop a training at its next checkpoint (a fit in progress finishes first)."""
+        job = self.job(job_id)
+        if job.status == "running":
+            self._stops.add(job_id)
+        return job
+
+    def estimate(
+        self,
+        dataset_id: str,
+        target: str,
+        model: str | None,
+        settings: dict[str, Any] | None,
+        conditions: list[Condition],
+        choices: prep.Choices | None,
+        classes: binning.Classes | None = None,
+        validation: evaluate.Validation | None = None,
+    ) -> trainer.Estimate:
+        """How long the training would take, from fits on 500 and 2 000 rows."""
+        fields, field_, source = self._request(dataset_id, target, model, conditions, classes)
+        validation = validation or evaluate.Validation()
+        frame, task = self._load(fields, field_, source, validation.max_rows)
+        if classes is not None:
+            task = "binary" if len(classes.names) == 2 else "multiclass"
+        try:
+            return trainer.estimate(
+                frame.data,
+                fields,
+                field_,
+                task,
+                model or catalogue.default_model(task),
+                settings,
+                choices,
+                classes,
+                validation,
+            )
+        except (trainer.TrainingError, catalogue.SettingsError) as error:
+            raise MlError(str(error)) from None
+
     def job(self, job_id: str) -> TrainingJob:
         job = self._jobs.get(job_id)
         if job is None:
@@ -496,10 +536,15 @@ class MlService:
                 choices=choices,
                 classes=classes,
                 validation=validation,
+                should_stop=lambda: job.id in self._stops,
             )
+            if job.id in self._stops:
+                raise trainer.TrainingCancelled
             job.stage = "saving"
             job.run_id = self._save(dataset_id, target.name, trained, conditions)
             job.status = "done"
+        except trainer.TrainingCancelled:
+            job.status, job.error = "cancelled", "Stopped: nothing was saved."
         except (MlError, trainer.TrainingError, catalogue.SettingsError, ValueError) as error:
             job.status, job.error = "failed", str(error)
         except Exception as error:

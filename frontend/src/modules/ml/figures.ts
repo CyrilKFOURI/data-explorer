@@ -454,3 +454,19 @@ export function overlayRocFigure(runs: { name: string; run: MlRun }[]): Figure {
     layout: { showlegend: true, xaxis: title("False positive rate"), yaxis: title("True positive rate") },
   });
 }
+
+/** Training and held-out scores iteration after iteration; the iteration kept is marked. */
+export function learningCurveFigure(curve: NonNullable<MlRun["learning_curve"]>): Figure {
+  return (tokens) => {
+    const data: Data[] = [];
+    if (curve.train)
+      data.push({ type: "scatter", mode: "lines", name: "training", x: curve.iterations, y: curve.train, line: { color: tokens.palette[0] ?? tokens.numeric, width: 2 } } as Data);
+    if (curve.validation)
+      data.push({ type: "scatter", mode: "lines", name: "held out", x: curve.iterations, y: curve.validation, line: { color: tokens.palette[1] ?? tokens.categorical, width: 2 } } as Data);
+    const shapes =
+      curve.best !== null
+        ? [{ type: "line" as const, x0: curve.best, x1: curve.best, yref: "paper" as const, y0: 0, y1: 1, line: { color: tokens.ink3, dash: "dot" as const, width: 1 } }]
+        : [];
+    return { data, layout: { showlegend: data.length > 1, shapes, xaxis: title("Iteration"), yaxis: title(curve.label) } };
+  };
+}

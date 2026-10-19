@@ -6,12 +6,21 @@
 import math
 from typing import Any
 
+import numpy as np
+from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.gaussian_process import GaussianProcessClassifier, GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel, WhiteKernel
 from sklearn.kernel_ridge import KernelRidge
-from sklearn.naive_bayes import BernoulliNB, ComplementNB, GaussianNB, MultinomialNB
-from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
+from sklearn.naive_bayes import BernoulliNB, CategoricalNB, ComplementNB, GaussianNB, MultinomialNB
+from sklearn.neighbors import (
+    KNeighborsClassifier,
+    KNeighborsRegressor,
+    RadiusNeighborsClassifier,
+    RadiusNeighborsRegressor,
+)
 from sklearn.neural_network import MLPClassifier, MLPRegressor
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import KBinsDiscretizer
 from sklearn.svm import SVC, SVR, LinearSVC, LinearSVR, NuSVC, NuSVR
 
 from app.domain.ml.catalog.base import (
@@ -739,6 +748,103 @@ def _limit(maximum: int, name: str):
     return limit
 
 
+# --- Radius neighbours and Categorical Naive Bayes (019b) -----------------------------------------
+
+
+def radius(context: Context) -> float:
+    """On standardised inputs, distances grow like the square root of the number of inputs."""
+    return round(math.sqrt(max(context.features, 1)), 1)
+
+
+def _radius_settings(context: Context) -> list[Setting]:
+    r = radius(context)
+    return [
+        Setting(
+            "radius",
+            "Radius",
+            "number",
+            r,
+            minimum=0.01,
+            maximum=1_000.0,
+            log=True,
+            why=f"√(inputs) on standardised inputs: {r}.",
+            group="Structure",
+            param="radius",
+        ),
+        Setting(
+            "weights",
+            "Weights",
+            "select",
+            "distance",
+            options=["uniform", "distance"],
+            option_labels={"uniform": "Equal", "distance": "Closer counts more"},
+            why="Closer neighbours are more alike.",
+            group="Structure",
+            param="weights",
+        ),
+    ]
+
+
+class RadiusRegressor(BaseEstimator, RegressorMixin):
+    """Radius neighbours that predict the training mean where a row has no neighbour."""
+
+    def __init__(self, radius: float = 1.0, weights: str = "distance") -> None:
+        self.radius = radius
+        self.weights = weights
+
+    def fit(self, X, y):
+        self.model_ = RadiusNeighborsRegressor(radius=self.radius, weights=self.weights).fit(X, y)
+        self.mean_ = float(np.mean(y))
+        return self
+
+    def predict(self, X):
+        import warnings
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            found = np.asarray(self.model_.predict(X), dtype=float)
+        return np.where(np.isfinite(found), found, self.mean_)
+
+
+def _radius_build(values: dict[str, Any], context: Context):
+    if _regression(context):
+        return RadiusRegressor(values["radius"], values["weights"])
+    return RadiusNeighborsClassifier(
+        radius=values["radius"], weights=values["weights"], outlier_label="most_frequent"
+    )
+
+
+def _categorical_nb_settings(context: Context) -> list[Setting]:
+    return [
+        *_alpha(context),
+        Setting(
+            "bins",
+            "Bins per number",
+            "int",
+            10,
+            level="advanced",
+            minimum=2,
+            maximum=50,
+            why="Numbers are cut into 10 quantile bins: the model only counts categories.",
+            group="Structure",
+            param="n_bins",
+        ),
+    ]
+
+
+def _categorical_nb_build(values: dict[str, Any], context: Context):
+    bins = int(values["bins"])
+    return make_pipeline(
+        KBinsDiscretizer(
+            n_bins=bins,
+            encode="ordinal",
+            strategy="quantile",
+            quantile_method="averaged_inverted_cdf",
+        ),
+        CategoricalNB(alpha=values["alpha"], min_categories=bins),
+    )
+
+
 MODELS = [
     ModelSpec(
         "knn",
@@ -788,6 +894,28 @@ MODELS = [
         _kernel_build(True),
         badges=_kernel_badges,
         limit=_kernel_limit,
+    ),
+    ModelSpec(
+        "radius_neighbours",
+        "Radius neighbours",
+        "Nearest neighbours",
+        "Predicts like every row within a given distance (not a fixed number of neighbours).",
+        EVERY,
+        DISTANCE,
+        _radius_settings,
+        _radius_build,
+        badges=lambda c: ["No training"],
+    ),
+    ModelSpec(
+        "categorical_nb",
+        "Categorical Naive Bayes",
+        "Naive Bayes",
+        "Counts how often each category (numbers cut into bins) appears in each class.",
+        CLASSES,
+        NONNEGATIVE,
+        _categorical_nb_settings,
+        _categorical_nb_build,
+        badges=lambda c: ["Fast"],
     ),
     ModelSpec(
         "gaussian_nb",

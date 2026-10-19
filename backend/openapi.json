@@ -5906,6 +5906,205 @@
             }
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "module:ml"
+        ],
+        "summary": "Cancel",
+        "description": "Stop a training at its next checkpoint; nothing is saved.",
+        "operationId": "cancel_api_v1_modules_ml_jobs__job_id__delete",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/ml/datasets/{dataset_id}/estimate": {
+      "post": {
+        "tags": [
+          "module:ml"
+        ],
+        "summary": "Estimate",
+        "description": "How long training would take (fits on 500 and 2 000 rows, extrapolated).",
+        "operationId": "estimate_api_v1_modules_ml_datasets__dataset_id__estimate_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "target",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Target"
+            }
+          },
+          {
+            "name": "model",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Model"
+            }
+          },
+          {
+            "name": "settings",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON object of settings.",
+              "title": "Settings"
+            },
+            "description": "JSON object of settings."
+          },
+          {
+            "name": "classes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON: a number cut into classes.",
+              "title": "Classes"
+            },
+            "description": "JSON: a number cut into classes."
+          },
+          {
+            "name": "validation",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON: how the model is judged.",
+              "title": "Validation"
+            },
+            "description": "JSON: how the model is judged."
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filters"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Choices"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Preparation choices.",
+                "title": "Choices"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Estimate"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/modules/ml/datasets/{dataset_id}/runs/{run_id}": {
@@ -7298,6 +7497,17 @@
                 "type": "null"
               }
             ]
+          },
+          "threshold": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Threshold"
           },
           "truth": {
             "items": {
@@ -9586,6 +9796,29 @@
         ],
         "title": "Entry"
       },
+      "Estimate": {
+        "properties": {
+          "seconds": {
+            "type": "number",
+            "title": "Seconds"
+          },
+          "fits": {
+            "type": "integer",
+            "title": "Fits"
+          },
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seconds",
+          "fits",
+          "rows"
+        ],
+        "title": "Estimate"
+      },
       "Excluded": {
         "properties": {
           "name": {
@@ -10564,6 +10797,75 @@
           "quantiles"
         ],
         "title": "Law"
+      },
+      "LearningCurve": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "iterations": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Iterations"
+          },
+          "train": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Train"
+          },
+          "validation": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validation"
+          },
+          "best": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best"
+          },
+          "lower_is_better": {
+            "type": "boolean",
+            "title": "Lower Is Better"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "iterations",
+          "train",
+          "validation",
+          "best",
+          "lower_is_better"
+        ],
+        "title": "LearningCurve",
+        "description": "How the model improved iteration after iteration (iterative models only)."
       },
       "Listing": {
         "properties": {
@@ -12406,6 +12708,16 @@
             },
             "type": "array",
             "title": "Evaluation Rows"
+          },
+          "learning_curve": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LearningCurve"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -14766,7 +15078,8 @@
             "enum": [
               "running",
               "done",
-              "failed"
+              "failed",
+              "cancelled"
             ],
             "title": "Status"
           },
@@ -15390,6 +15703,16 @@
             ],
             "title": "Max Rows",
             "default": 200000
+          },
+          "threshold": {
+            "type": "string",
+            "enum": [
+              "default",
+              "f1",
+              "balanced_accuracy"
+            ],
+            "title": "Threshold",
+            "default": "default"
           }
         },
         "type": "object",

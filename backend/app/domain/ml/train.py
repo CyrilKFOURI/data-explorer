@@ -3,6 +3,7 @@
 import math
 import time
 import warnings
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, cast
 
@@ -11,7 +12,7 @@ import pandas as pd
 import statsmodels.api as sm
 from sklearn import metrics as skm
 from sklearn.calibration import CalibratedClassifierCV, calibration_curve
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.pipeline import Pipeline
 from statsmodels.stats.diagnostic import het_breuschpagan
 from statsmodels.stats.outliers_influence import variance_inflation_factor
@@ -94,6 +95,7 @@ class ClassificationResult:
     roc: Curve | None = None
     pr: Curve | None = None
     calibration: Curve | None = None
+    threshold: float | None = None  # binary: the probability above which `positive` is said
     truth: list[int] = field(default_factory=list)  # binary: 1 = positive (sample)
     probability: list[float] = field(default_factory=list)
     within_one: float | None = None  # ordered classes: share right or off by one class
@@ -108,6 +110,18 @@ class PredictionRow:
     error: float | None = None  # regression
     probability: float | None = None  # classification: probability of the predicted class
     correct: bool | None = None
+
+
+@dataclass
+class LearningCurve:
+    """How the model improved iteration after iteration (iterative models only)."""
+
+    label: str  # what is measured
+    iterations: list[int]
+    train: list[float] | None
+    validation: list[float] | None  # on rows held out of the training rows
+    best: int | None  # the iteration kept by early stopping
+    lower_is_better: bool
 
 
 @dataclass
@@ -147,11 +161,16 @@ class Trained:
     importances: list[Importance] = field(default_factory=list)
     validation: evaluate.Validation = field(default_factory=evaluate.Validation)
     evaluation_rows: list[int] = field(default_factory=list)  # file rows the scores come from
+    learning_curve: LearningCurve | None = None
     pipeline: Any = field(default=None, repr=False)
 
 
 class TrainingError(ValueError):
     pass
+
+
+class TrainingCancelled(Exception):
+    """The user stopped the training (raised at the next checkpoint)."""
 
 
 def _quiet(compute):
@@ -445,8 +464,14 @@ def train(
     choices: prep.Choices | None = None,
     classes: binning.Classes | None = None,
     validation: evaluate.Validation | None = None,
+    should_stop: Callable[[], bool] | None = None,
 ) -> Trained:
     started = time.monotonic()
+
+    def checkpoint() -> None:
+        if should_stop is not None and should_stop():
+            raise TrainingCancelled
+
     setup = _setup(
         frame,
         fields,
@@ -467,6 +492,12 @@ def train(
     def make(n_rows: int) -> Pipeline:
         return model_pipeline(spec, values, context, preparation, task, n_rows, unregularized)
 
+    monotonic = _monotonic(values, preparation)
+
+    def fit(pipeline: Pipeline, x: pd.DataFrame, y: pd.Series) -> None:
+        checkpoint()
+        _quiet(lambda: fit_pipeline(pipeline, x, y, monotonic))
+
     cross_validation = None
     if validation.cross:
         x_all, y_all = setup.x_train, setup.y_train
@@ -486,7 +517,7 @@ def train(
                 record=False,
             )
             fold = make(len(x_fit))
-            _quiet(lambda fold=fold, x_fit=x_fit, y_fit=y_fit: fold.fit(x_fit, y_fit))
+            fit(fold, x_fit, y_fit)
             held = x_all.iloc[held_at]
             actual_held = y_all.iloc[held_at].to_numpy()
             if regression_task:
@@ -509,7 +540,7 @@ def train(
             x_all, y_all, preparation, setup.choices, minority, values, task, record=True
         )
         pipeline = make(len(x_train))
-        _quiet(lambda: pipeline.fit(x_train, y_train))
+        fit(pipeline, x_train, y_train)
         y_eval, rows_eval = y_all, cast(pd.Series, frame["__row"])
         mean, spread = evaluate.summarise(per_fold)
         cross_validation = CrossValidation(
@@ -522,7 +553,7 @@ def train(
     else:
         x_train, y_train = setup.x_train, setup.y_train
         pipeline = make(len(x_train))
-        _quiet(lambda: pipeline.fit(x_train, y_train))
+        fit(pipeline, x_train, y_train)
         y_eval, rows_eval = setup.y_test, setup.row_test
         class_names = [] if regression_task else [str(c) for c in pipeline.classes_]
         predicted = (
@@ -537,6 +568,12 @@ def train(
     names = [str(n) for n in pipeline[:-1].get_feature_names_out()]  # type: ignore[union-attr]
     preparation.inputs = len(names)
     preparation.selection = _selection(pipeline)
+    threshold, positive = None, None
+    if validation.threshold != "default" and task == "binary":
+        checkpoint()
+        positive = _positive(y_train)
+        threshold = _threshold(make, x_train, y_train, positive, validation, monotonic)
+    checkpoint()
 
     regression = classification = None
     coefficients: list[Coefficient] = []
@@ -565,7 +602,7 @@ def train(
     else:
         assert probabilities is not None
         classification, predicted_labels = _classification_scores(
-            probabilities, class_names, y_eval, target
+            probabilities, class_names, y_eval, target, threshold, positive
         )
         scores = evaluate.classification_metrics(
             y_eval.to_numpy().astype(str),
@@ -617,6 +654,7 @@ def train(
         _importances(pipeline, names),
         validation,
         _evaluation_rows(rows_eval, [p.row for p in predictions]),
+        _learning_curve(pipeline.named_steps["model"]),
         pipeline,
     )
 
@@ -633,6 +671,135 @@ def _evaluation_rows(rows: pd.Series, shown: list[int]) -> list[int]:
     rest = np.setdiff1d(every, shown)
     extra = np.random.default_rng(SEED).choice(rest, EVALUATION_ROWS - len(shown), replace=False)
     return [*shown, *(int(v) for v in extra)]
+
+
+def _monotonic(values: dict[str, Any], preparation: prep.Preparation) -> dict[str, int]:
+    """ "size:+1, mileage:-1" → {"size": 1, "mileage": -1} (numeric columns that are used)."""
+    text = str(values.get("monotonic") or "").strip()
+    if not text:
+        return {}
+    usable = {d.column for d in preparation.used if d.type in NUMERIC}
+    found: dict[str, int] = {}
+    for part in text.replace(";", ",").split(","):
+        if not part.strip():
+            continue
+        column, _, sign = part.rpartition(":")
+        column, sign = column.strip(), sign.strip()
+        if sign not in ("+1", "1", "-1", "+", "-") or not column:
+            raise TrainingError(
+                f"Monotonic constraints: “{part.strip()}” should read column:+1 or column:-1."
+            )
+        if column not in usable:
+            preparation.warnings.append(
+                f"Monotonic constraint on {column} ignored: not a number used by the model."
+            )
+            continue
+        found[column] = -1 if sign.startswith("-") else 1
+    return found
+
+
+def fit_pipeline(
+    pipeline: Pipeline, x: pd.DataFrame, y: pd.Series, monotonic: dict[str, int] | None = None
+) -> Pipeline:
+    """Fit the pipeline; with monotonic constraints, the preparation first, then the model
+    with one constraint per prepared input (0 = free)."""
+    if not monotonic:
+        return pipeline.fit(x, y)
+    prepared = pipeline[:-1].fit_transform(x, y)
+    names = [str(n) for n in pipeline[:-1].get_feature_names_out()]  # type: ignore[union-attr]
+    vector = [monotonic.get(n, 0) for n in names]
+    model = pipeline.named_steps["model"]
+    if hasattr(model, "monotonic_cst"):
+        model.set_params(monotonic_cst=vector)
+    elif getattr(model, "library", None) == "xgboost":
+        model.estimator.set_params(monotone_constraints="(" + ",".join(map(str, vector)) + ")")
+    elif getattr(model, "library", None) == "lightgbm":
+        model.estimator.set_params(monotone_constraints=vector)
+    model.fit(prepared, y)
+    return pipeline
+
+
+THRESHOLDS = np.round(np.linspace(0.02, 0.98, 49), 2)
+
+
+def _threshold(
+    make: Callable[[int], Pipeline],
+    x: pd.DataFrame,
+    y: pd.Series,
+    positive: str,
+    validation: evaluate.Validation,
+    monotonic: dict[str, int],
+) -> float:
+    """The probability threshold that maximises F1 or balanced accuracy on out-of-fold
+    predictions of the training rows (3 folds): the test rows never choose it."""
+    folds = StratifiedKFold(3, shuffle=True, random_state=validation.seed)
+    chance = np.zeros(len(y))
+    truth = (y.astype(str) == positive).to_numpy()
+    for fit_at, held_at in folds.split(x, y):
+        model = make(len(fit_at))
+        _quiet(
+            lambda model=model, fit_at=fit_at: fit_pipeline(
+                model, x.iloc[fit_at], y.iloc[fit_at], monotonic
+            )
+        )
+        found = np.asarray(model.predict_proba(x.iloc[held_at]), dtype=float)
+        chance[held_at] = found[:, [str(c) for c in model.classes_].index(positive)]
+    score = skm.f1_score if validation.threshold == "f1" else skm.balanced_accuracy_score
+    results = [float(score(truth, chance >= t)) for t in THRESHOLDS]
+    return float(THRESHOLDS[int(np.argmax(results))])
+
+
+def _learning_curve(model: Any) -> LearningCurve | None:
+    """The iteration history the fitted model kept, if any."""
+    name = model.__class__.__name__
+    if name.startswith("HistGradientBoosting") and len(getattr(model, "train_score_", [])) > 1:
+        train = np.asarray(model.train_score_, dtype=float)
+        valid = np.asarray(getattr(model, "validation_score_", []), dtype=float)
+        # scikit-learn keeps negative losses for numbers: shown as positive losses
+        loss = bool(train.max() <= 0)
+        if loss:
+            train, valid = -train, -valid
+        best = (int(np.argmin(valid)) if loss else int(np.argmax(valid))) if len(valid) else None
+        return LearningCurve(
+            "Loss (lower is better)" if loss else "Score (higher is better)",
+            list(range(len(train))),
+            [float(v) for v in train],
+            [float(v) for v in valid] if len(valid) else None,
+            best,
+            loss,
+        )
+    if name.startswith("GradientBoosting") and len(getattr(model, "train_score_", [])) > 1:
+        train = [float(v) for v in model.train_score_]
+        return LearningCurve(
+            "Training loss", list(range(1, len(train) + 1)), train, None, len(train), True
+        )
+    if name.startswith("MLP") and len(getattr(model, "loss_curve_", [])) > 1:
+        valid = getattr(model, "validation_scores_", None)
+        best = int(np.argmax(valid)) + 1 if valid else None
+        return LearningCurve(
+            "Loss (training) · score (held out)",
+            list(range(1, len(model.loss_curve_) + 1)),
+            [float(v) for v in model.loss_curve_],
+            [float(v) for v in valid] if valid else None,
+            best,
+            True,
+        )
+    library = getattr(model, "library", None)
+    inner = getattr(model, "model_", None)
+    if library in ("xgboost", "lightgbm") and inner is not None:
+        history = inner.evals_result() if library == "xgboost" else inner.evals_result_
+        if history:
+            metric, values = next(iter(next(iter(history.values())).items()))
+            lower = not any(k in metric for k in ("auc", "ndcg", "map"))
+            return LearningCurve(
+                f"{metric} on the held-out training rows",
+                list(range(1, len(values) + 1)),
+                None,
+                [float(v) for v in values],
+                getattr(model, "best_iteration_", None),
+                lower,
+            )
+    return None
 
 
 def model_pipeline(
@@ -765,9 +932,18 @@ def _unit_scales(pipeline: Pipeline, preparation: prep.Preparation) -> dict[str,
 
 
 def _classification_scores(
-    probabilities: np.ndarray, classes: list[str], y_test: pd.Series, target: Field
+    probabilities: np.ndarray,
+    classes: list[str],
+    y_test: pd.Series,
+    target: Field,
+    threshold: float | None = None,
+    chosen_positive: str | None = None,
 ) -> tuple["ClassificationResult", np.ndarray]:
     predicted = np.asarray(classes)[probabilities.argmax(axis=1)].astype(str)
+    if threshold is not None and chosen_positive in classes and len(classes) == 2:
+        other = next(c for c in classes if c != chosen_positive)
+        chance = probabilities[:, classes.index(chosen_positive)]
+        predicted = np.where(chance >= threshold, chosen_positive, other).astype(str)
     actual = y_test.to_numpy().astype(str)
     labels = classes
     if target.order:
@@ -802,7 +978,7 @@ def _classification_scores(
         ],
     )
     if len(classes) == 2:
-        positive = str(counts.index[-1])  # the rarer class
+        positive = chosen_positive or str(counts.index[-1])  # the rarer class
         column = classes.index(positive)
         truth = (actual == positive).astype(int)
         scores = probabilities[:, column]
@@ -816,6 +992,7 @@ def _classification_scores(
             observed, expected = calibration_curve(truth, scores, n_bins=bins, strategy="quantile")
             result.calibration = Curve([float(v) for v in expected], [float(v) for v in observed])
         result.positive = positive
+        result.threshold = threshold if threshold is not None else 0.5
         pick = np.random.default_rng(SEED).permutation(len(truth))[:PROBABILITIES]
         result.truth = [int(v) for v in truth[pick]]
         result.probability = [float(v) for v in scores[pick]]
@@ -902,3 +1079,58 @@ def preview(
         [int(v) for v in frame.loc[first.index, "__row"]],
         len(x_train),
     )
+
+
+@dataclass
+class Estimate:
+    seconds: float  # the whole training, every fit included
+    fits: int
+    rows: int  # training rows
+
+
+def estimate(
+    frame: pd.DataFrame,
+    fields: list[Field],
+    target: Field,
+    task: Task,
+    model_key: str,
+    given: dict[str, Any] | None,
+    choices: prep.Choices | None = None,
+    classes: binning.Classes | None = None,
+    validation: evaluate.Validation | None = None,
+) -> Estimate:
+    """Time the model on 500 then 2 000 training rows and extrapolate t = a·n^b (1 ≤ b ≤ 3) to
+    the real number of rows, times the number of fits the validation needs."""
+    setup = _setup(
+        frame, fields, target, task, model_key, given, None, choices, classes, validation
+    )
+    x, y = setup.x_train, setup.y_train
+    validation = setup.validation
+
+    def timed(n: int) -> float:
+        rows = np.sort(np.random.default_rng(SEED).choice(len(x), n, replace=False))
+        model = model_pipeline(
+            setup.spec,
+            setup.values,
+            setup.context,
+            setup.preparation,
+            setup.task,
+            n,
+            setup.unregularized,
+        )
+        begin = time.perf_counter()
+        _quiet(lambda: model.fit(x.iloc[rows], y.iloc[rows]))
+        return max(time.perf_counter() - begin, 1e-3)
+
+    n = len(x)
+    if n <= 2_000:
+        one = timed(n)
+    else:
+        small, large = timed(500), timed(2_000)
+        power = min(3.0, max(1.0, math.log(large / small) / math.log(4)))
+        one = large * (n / 2_000) ** power
+    folds = validation.folds * (validation.repeats if validation.method == "repeated_kfold" else 1)
+    fits = (n if validation.method == "loo" else folds) + 1 if validation.cross else 1
+    if validation.threshold != "default":
+        fits += 3
+    return Estimate(one * fits, fits, n)

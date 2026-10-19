@@ -25,7 +25,7 @@ Spec : [spec.md](spec.md).
 - [x] T6 — UI : sélecteur de modèle (recherche, Recommended, familles, badges, raisons, « Not installed »), essentiels, tiroir Settings (Expert, onglets, groupes, nom technique, point + Reset, règles), validation et lignes, scores ± écart-type, importances.
 - [x] T7 — Docs (page 11, guide, PLAN), vérifications, navigateur, commit.
 
-## Reporté (019b)
+## Reporté (019b) — livré, voir [tasks-019b.md](tasks-019b.md)
 
 Durée estimée sur un petit échantillon et annulation en cours d'entraînement, courbe d'apprentissage, contraintes monotones, choix du seuil de décision sur la validation, Radius neighbours et Categorical NB (encodage dédié), Voting / Stacking (021).
 

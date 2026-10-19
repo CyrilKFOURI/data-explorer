@@ -85,6 +85,7 @@ export type MlExplanation = MlExplanationState["explanation"];
 export type MlCompareJob = Complete<Schemas["CompareJob"]>;
 export type MlTuneJob = Complete<Schemas["TuneJob"]>;
 export type MlSearchParam = Complete<Schemas["SearchParam"]>;
+export type MlEstimate = Complete<Schemas["Estimate"]>;
 export type MlTuneRequest = {
   model: string;
   budget_seconds: number | null;
@@ -436,6 +437,21 @@ export const api = {
       `/modules/ml/datasets/${id}/targets/${encodeURIComponent(column)}/distribution?${new URLSearchParams(filtersParam(filters))}`,
     ),
   mlJob: (jobId: string) => request<MlJob>("GET", `/modules/ml/jobs/${jobId}`),
+  mlCancel: (jobId: string) => request<MlJob>("DELETE", `/modules/ml/jobs/${jobId}`),
+  mlEstimate: (
+    id: string,
+    target: string,
+    model: string | null,
+    settings: Record<string, unknown> | null,
+    choices: MlChoicesInput | null,
+    classes: MlClasses | null,
+    validation: MlValidation | null,
+    filters?: Condition[],
+  ) => {
+    const query = mlQuery(target, model, settings, filters, classes);
+    if (validation) query.set("validation", JSON.stringify(validation));
+    return request<MlEstimate>("POST", `/modules/ml/datasets/${id}/estimate?${query}`, choices ?? undefined);
+  },
   mlRuns: (id: string, target: string) =>
     request<MlRunSummary[]>("GET", `/modules/ml/datasets/${id}/runs?${new URLSearchParams({ target })}`),
   mlRun: (id: string, runId: string) => request<MlRun>("GET", `/modules/ml/datasets/${id}/runs/${runId}`),

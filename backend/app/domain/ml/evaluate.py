@@ -56,6 +56,8 @@ class Validation(BaseModel):
     metric: str | None = Field(default=None, max_length=40)  # None: the default for the problem
     seed: int = Field(default=42, ge=0, le=2**31 - 1)
     max_rows: int | None = Field(default=200_000, ge=100, le=100_000_000)  # None: every row
+    # two classes: the probability above which the positive class is predicted
+    threshold: Literal["default", "f1", "balanced_accuracy"] = "default"
 
     @property
     def cross(self) -> bool:
@@ -87,6 +89,13 @@ def check(validation: Validation, task: Task, rows: int, columns: set[str]) -> N
         raise ValidationError("Group k-fold needs a group column.")
     if validation.method == "time_split" and validation.time_column not in columns:
         raise ValidationError("A time-based split needs a date column.")
+    if validation.threshold != "default" and task != "binary":
+        raise ValidationError("A decision threshold is chosen for two classes only.")
+    if validation.threshold != "default" and validation.cross:
+        raise ValidationError(
+            "With cross-validation the threshold would be chosen on the rows that judge it: "
+            "use a train / test split."
+        )
 
 
 def time_split(when: pd.Series, test_size: float) -> tuple[np.ndarray, np.ndarray]:

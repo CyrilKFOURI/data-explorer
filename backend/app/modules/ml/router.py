@@ -11,7 +11,7 @@ from app.domain.ml.classes import Classes, TargetDistribution
 from app.domain.ml.evaluate import Validation
 from app.domain.ml.preparation import Choices
 from app.domain.ml.target import Task
-from app.domain.ml.train import PreparationPreview
+from app.domain.ml.train import Estimate, PreparationPreview
 from app.modules.ml.service import (
     Catalogue,
     CompareJob,
@@ -201,6 +201,37 @@ def stop_tuning(job_id: str, service: Service) -> TuneJob:
 @router.get("/jobs/{job_id}")
 def job(job_id: str, service: Service) -> TrainingJob:
     return service.job(job_id)
+
+
+@router.delete("/jobs/{job_id}")
+def cancel(job_id: str, service: Service) -> TrainingJob:
+    """Stop a training at its next checkpoint; nothing is saved."""
+    return service.cancel(job_id)
+
+
+@router.post("/datasets/{dataset_id}/estimate")
+def estimate(
+    dataset_id: str,
+    service: Service,
+    filters: Filters,
+    target: Annotated[str, Query(min_length=1)],
+    model: str | None = None,
+    settings: Annotated[str | None, Query(description="JSON object of settings.")] = None,
+    choices: Annotated[Choices | None, Body(description="Preparation choices.")] = None,
+    classes: Annotated[str | None, Query(description="JSON: a number cut into classes.")] = None,
+    validation: Annotated[str | None, Query(description="JSON: how the model is judged.")] = None,
+) -> Estimate:
+    """How long training would take (fits on 500 and 2 000 rows, extrapolated)."""
+    return service.estimate(
+        dataset_id,
+        target,
+        model,
+        _settings(settings),
+        filters,
+        choices,
+        _classes(classes),
+        _validation(validation),
+    )
 
 
 @router.get("/datasets/{dataset_id}/runs")

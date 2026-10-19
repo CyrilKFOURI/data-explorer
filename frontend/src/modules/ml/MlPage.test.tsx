@@ -26,7 +26,7 @@ const candidate = (name: string, task: string | null, overrides: Record<string, 
   ...overrides,
 });
 
-type Model = { key: string; label: string; tasks: string[]; settings?: Record<string, unknown>[]; family?: string; rules?: unknown[]; installed?: boolean };
+type Model = { key: string; label: string; tasks: string[]; settings?: Record<string, unknown>[]; family?: string; rules?: unknown[]; installed?: boolean; badges?: string[] };
 
 /** The catalogue as the API serves it. */
 function catalogue(models: Model[], recommended: { key: string; why: string }[] = []) {
@@ -568,6 +568,40 @@ describe("Comparing and tuning", () => {
     await waitFor(() => expect(calls.some((c) => c.key === "POST /modules/ml/datasets/d1/runs")).toBe(true));
     const trained = calls.find((c) => c.key === "POST /modules/ml/datasets/d1/runs");
     expect(JSON.parse(trained?.params.get("settings") ?? "{}")).toMatchObject({ alpha: 0.2 });
+  });
+});
+
+describe("Long trainings", () => {
+  it("estimates the duration of a slow model and cancels a training", async () => {
+    const calls = mockApi({
+      "GET /health": health,
+      "GET /datasets": [dataset()],
+      "GET /datasets/d1": dataset(),
+      "GET /datasets/d1/columns": [column({ name: "price" })],
+      "GET /column-roles": roles,
+      "GET /modules/ml/datasets/d1/targets": { candidates: [candidate("price", "regression")], rows: 100 },
+      "GET /modules/ml/catalog": catalogue([
+        { key: "linear_regression", label: "Linear regression", tasks: ["regression"] },
+        { key: "kernel_svm", label: "Kernel SVM", family: "Support vector machines", tasks: ["regression"], badges: ["Slow on 20,000 rows"] } as Model,
+      ]),
+      "GET /modules/ml/datasets/d1/runs": [
+        { id: "r1", target: "price", task: "regression", model: "kernel_svm", label: "Kernel SVM", settings: {}, metric: "r2", score: 0.8, seconds: 40, created_at: "2026-10-19T10:00:00Z", classes: null, greater_is_better: true, validation: regressionRun.validation },
+      ],
+      "GET /modules/ml/datasets/d1/runs/r1": { ...regressionRun, model: "kernel_svm" },
+      "POST /modules/ml/datasets/d1/estimate": { seconds: 75, fits: 1, rows: 16000 },
+      "POST /modules/ml/datasets/d1/runs": { id: "job5", status: "running", stage: "training", run_id: null, error: null },
+      "GET /modules/ml/jobs/job5": { id: "job5", status: "running", stage: "training", run_id: null, error: null },
+      "DELETE /modules/ml/jobs/job5": { id: "job5", status: "cancelled", stage: "training", run_id: null, error: "Stopped: nothing was saved." },
+    });
+    renderAt("/d/d1/ml?target=price");
+
+    fireEvent.click(await screen.findByRole("button", { name: "How long will it take?" }));
+    expect(await screen.findByText(/About 1 min 15 s \(1 fit\)/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Train" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    expect(await screen.findByText("Stopped: nothing was saved.")).toBeInTheDocument();
+    expect(calls.some((c) => c.key === "DELETE /modules/ml/jobs/job5")).toBe(true);
   });
 });
 

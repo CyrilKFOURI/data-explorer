@@ -254,3 +254,21 @@ def test_tune_a_model_in_the_background(client: TestClient, traps: str) -> None:
     )
     failed = _until(client, f"{BASE}/tune-jobs/{bad.json()['id']}", ("done", "failed"))
     assert failed["status"] == "failed" and "lower bound" in failed["error"]
+
+
+def test_estimate_and_cancel(client: TestClient, traps: str) -> None:
+    found = client.post(
+        f"{BASE}/datasets/{traps}/estimate", params={"target": "income", "model": "random_forest"}
+    )
+    assert found.status_code == 200, found.text
+    assert found.json()["seconds"] > 0 and found.json()["fits"] == 1
+
+    job = client.post(
+        f"{BASE}/datasets/{traps}/runs",
+        params={"target": "income", "validation": json.dumps({"method": "kfold", "folds": 10})},
+    ).json()
+    client.delete(f"{BASE}/jobs/{job['id']}")
+    final = wait(client, job)
+    assert final["status"] in ("cancelled", "done")  # a very fast training may finish first
+    if final["status"] == "cancelled":
+        assert final["run_id"] is None
