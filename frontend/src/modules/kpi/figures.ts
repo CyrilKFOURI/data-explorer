@@ -1,0 +1,292 @@
+import type { Data, Layout } from "plotly.js-dist-min";
+
+import type { KpiNumberFormat, KpiResult } from "../../api/client";
+import type { ChartTokens } from "../../charts/theme";
+import { withAlpha } from "../../charts/figures";
+import type { Format, ShowAs } from "./definition";
+import { formatShown, PERCENT_MODES } from "./format";
+import { DIVERGING_MODES, seriesIndex, shownOverall, shownValues } from "./pivot";
+
+const OTHER = "Other";
+const MARKERS_MAX = 60; // R-VIS-34
+const BAR_LABELS_MAX = 12; // R-VIS-35
+const DIRECT_LABELS_MAX = 4;
+const STACKED = new Set(["stacked_bars", "stacked_area", "hbar_stacked"]);
+
+export type ChartInput = {
+  result: KpiResult;
+  measure: string;
+  chart: string; // the type drawn (resolved by the server or chosen in Customize)
+  mode: ShowAs;
+  format: KpiNumberFormat;
+  custom: Format;
+  labels: "auto" | "on" | "off";
+  hideOther: boolean;
+  panel?: string | null; // small multiples: the first split's label shown in this panel
+};
+
+type Built = { data: Data[]; layout?: Partial<Layout> };
+
+/** The colour of a split's label: fixed categorical order by position in the split, so a label
+ *  keeps its colour across views; "Other" grey; an ordinal split one hue light → dark (R-VIS-33). */
+export function levelColor(levels: string[], label: string, ordinal: boolean, tokens: ChartTokens): string {
+  if (label === OTHER) return tokens.ink3;
+  const real = levels.filter((l) => l !== OTHER);
+  const index = Math.max(0, real.indexOf(label));
+  if (ordinal) {
+    const step = real.length > 1 ? index / (real.length - 1) : 1;
+    return withAlpha(tokens.palette[0] ?? tokens.ink2, 0.3 + 0.7 * step);
+  }
+  return tokens.palette[index % tokens.palette.length] ?? tokens.ink2;
+}
+
+/** The plotted number: percentages are drawn × 100 with a "%" suffix on the axis. */
+function scaleOf(input: ChartInput): { factor: number; prefix: string; suffix: string } {
+  if (PERCENT_MODES.has(input.mode)) return { factor: 100, prefix: "", suffix: " %" };
+  return {
+    factor: input.format.scale,
+    prefix: input.custom.prefix || input.format.prefix,
+    suffix: input.custom.suffix || input.format.suffix,
+  };
+}
+
+function axis(input: ChartInput, values: (number | null)[], percent = false) {
+  const { prefix, suffix } = scaleOf(input);
+  const largest = Math.max(0, ...values.map((v) => Math.abs(v ?? 0)));
+  const decimals = typeof input.custom.decimals === "number" ? input.custom.decimals : input.format.decimals;
+  return {
+    tickprefix: prefix,
+    ticksuffix: suffix,
+    tickformat: largest >= 10_000 && input.custom.compact !== "off" ? "~s" : `,.${percent ? 0 : Math.min(decimals, 2)}f`,
+  };
+}
+
+const text = (input: ChartInput, values: (number | null)[]) =>
+  values.map((v) => formatShown(v, input.mode, input.format, input.custom, "compact"));
+
+const scaled = (input: ChartInput, values: (number | null)[]) => {
+  const { factor } = scaleOf(input);
+  return values.map((v) => (v === null ? null : v * factor));
+};
+
+function legend(tokens: ChartTokens, count: number): Partial<Layout> {
+  return count >= 2
+    ? { showlegend: true, legend: { orientation: "h", x: 0, y: 1.12, font: { size: 11, color: tokens.ink2 } } }
+    : { showlegend: false };
+}
+
+/** One measure's chart (one panel of small multiples when `panel` is set). */
+export function kpiFigure(input: ChartInput): (tokens: ChartTokens) => Built {
+  return (tokens) => {
+    const { result, measure, chart, mode } = input;
+    const find = seriesIndex(result);
+    const periods = result.periods;
+    const x = periods.map((p) => p.label);
+    const splits = result.splits;
+    const visible = (levels: string[]) => (input.hideOther ? levels.filter((l) => l !== OTHER) : levels);
+
+    if (chart === "hbar" || chart === "hbar_stacked" || (chart === "heatmap" && !result.resolved.time)) {
+      const first = splits[0];
+      const rows = visible(first?.levels ?? []);
+      if (chart === "hbar" || splits.length < 2) {
+        const values = rows.map((g) => {
+          const s = find(measure, g);
+          return s ? shownOverall(result, s, mode) : null;
+        });
+        const show = input.labels !== "off" && (input.labels === "on" || rows.length <= BAR_LABELS_MAX);
+        return {
+          data: [
+            {
+              type: "bar",
+              orientation: "h",
+              y: rows,
+              x: scaled(input, values),
+              marker: { color: rows.map((g) => (g === OTHER ? tokens.ink3 : (tokens.palette[0] ?? tokens.ink2))), cornerradius: 4 },
+              text: show ? text(input, values) : undefined,
+              textposition: "outside",
+              cliponaxis: false,
+              hovertemplate: `%{y}: %{customdata}<extra></extra>`,
+              customdata: text(input, values),
+            } as Data,
+          ],
+          layout: {
+            yaxis: { autorange: "reversed", automargin: true },
+            xaxis: { ...axis(input, values), showgrid: true, rangemode: "tozero" },
+            margin: { l: 8, r: 40, t: 4, b: 8 },
+          },
+        };
+      }
+      const second = splits[1];
+      if (!second) return { data: [] };
+      const columns = visible(second.levels);
+      if (chart === "heatmap") return heatmap(input, tokens, columns, rows, (g2, g1) => find(measure, g1, g2));
+      return {
+        data: columns.map((g2) => {
+          const values = rows.map((g1) => {
+            const s = find(measure, g1, g2);
+            return s ? shownOverall(result, s, mode) : null;
+          });
+          return {
+            type: "bar",
+            orientation: "h",
+            name: g2,
+            y: rows,
+            x: scaled(input, values),
+            marker: { color: levelColor(second.levels, g2, second.ordinal, tokens), line: { color: tokens.surface, width: 2 } },
+            customdata: text(input, values),
+            hovertemplate: `${g2}: %{customdata}<extra>%{y}</extra>`,
+          } as Data;
+        }),
+        layout: {
+          barmode: "stack",
+          yaxis: { autorange: "reversed", automargin: true },
+          xaxis: { ...axis(input, []), showgrid: true },
+          ...legend(tokens, columns.length),
+        },
+      };
+    }
+
+    // Over time: one trace per label of the split drawn (the second one inside a panel).
+    const drawn = input.panel !== undefined && input.panel !== null ? splits[1] : splits[0];
+    const traces: { name: string; color: string; values: (number | null)[] }[] = drawn
+      ? visible(drawn.levels).map((label) => {
+          const s = input.panel ? find(measure, input.panel, label) : find(measure, label);
+          return {
+            name: label,
+            color: levelColor(drawn.levels, label, drawn.ordinal, tokens),
+            values: s ? shownValues(result, s, mode) : [],
+          };
+        })
+      : [{ name: "", color: tokens.palette[0] ?? tokens.ink2, values: (() => {
+          const s = find(measure, input.panel ?? null);
+          return s ? shownValues(result, s, mode) : [];
+        })() }];
+
+    if (chart === "heatmap") {
+      const rows = traces.map((t) => t.name);
+      const z = traces.map((t) => t.values);
+      return heatmapGrid(input, tokens, x, rows, z);
+    }
+
+    const all = traces.flatMap((t) => t.values);
+    const partial = periods.map((p) => p.partial);
+    const many = traces.length > 1;
+    const barLabels =
+      input.labels === "on" || (input.labels === "auto" && !many && periods.length <= BAR_LABELS_MAX);
+    const data: Data[] = traces.map((trace, i) => {
+      const common = {
+        name: trace.name || undefined,
+        x,
+        y: scaled(input, trace.values),
+        customdata: text(input, trace.values),
+        hovertemplate: many ? `${trace.name}: %{customdata}<extra></extra>` : `%{customdata}<extra></extra>`,
+      };
+      if (chart === "bars" || chart === "stacked_bars" || chart === "grouped_bars") {
+        return {
+          ...common,
+          type: "bar",
+          marker: {
+            color: trace.color,
+            cornerradius: chart === "stacked_bars" ? 0 : 4,
+            line: { color: tokens.surface, width: chart === "stacked_bars" ? 1 : 0 },
+            // incomplete periods hatched (R-TIME-05)
+            pattern: { shape: partial.map((p) => (p ? "/" : "")), fgcolor: tokens.surface, solidity: 0.4 },
+          },
+          text: barLabels ? common.customdata : undefined,
+          textposition: chart === "stacked_bars" ? "inside" : "outside",
+          cliponaxis: false,
+        } as Data;
+      }
+      const area = chart === "area" || chart === "stacked_area";
+      const last = trace.values.findLastIndex((v) => v !== null);
+      const direct = input.labels !== "off" && traces.length <= DIRECT_LABELS_MAX && last >= 0;
+      return {
+        ...common,
+        type: "scatter",
+        mode: periods.length <= MARKERS_MAX ? "lines+markers" : "lines",
+        line: { color: trace.color, width: 2 },
+        marker: {
+          size: 6,
+          color: trace.color,
+          symbol: partial.map((p) => (p ? "circle-open" : "circle")),
+        },
+        fill: chart === "stacked_area" ? (i === 0 ? "tozeroy" : "tonexty") : area ? "tozeroy" : "none",
+        fillcolor: area ? withAlpha(trace.color, chart === "stacked_area" ? 0.55 : 0.18) : undefined,
+        stackgroup: chart === "stacked_area" ? "one" : undefined,
+        text: direct ? trace.values.map((_, j) => (j === last ? (common.customdata[j] ?? "") : "")) : undefined,
+        textposition: "middle right",
+        textfont: { color: tokens.ink2, size: 11 },
+      } as Data;
+    });
+    const zero = chart !== "line"; // R-VIS-31: bars and areas start at 0, lines fit the data
+    return {
+      data,
+      layout: {
+        barmode: chart === "stacked_bars" ? "stack" : chart === "grouped_bars" ? "group" : undefined,
+        hovermode: "x unified",
+        xaxis: { type: "category", showgrid: false, automargin: true },
+        yaxis: {
+          ...axis(input, all, PERCENT_MODES.has(mode)),
+          rangemode: zero && !DIVERGING_MODES.has(mode) ? "tozero" : "normal",
+          zeroline: DIVERGING_MODES.has(mode),
+        },
+        margin: { l: 8, r: traces.length <= DIRECT_LABELS_MAX ? 56 : 8, t: 4, b: 8 },
+        ...legend(tokens, traces.filter((t) => t.name).length),
+      },
+    };
+  };
+}
+
+function heatmap(
+  input: ChartInput,
+  tokens: ChartTokens,
+  columns: string[],
+  rows: string[],
+  find: (column: string, row: string) => ReturnType<ReturnType<typeof seriesIndex>>,
+): Built {
+  const z = rows.map((row) =>
+    columns.map((column) => {
+      const s = find(column, row);
+      return s ? shownOverall(input.result, s, input.mode) : null;
+    }),
+  );
+  return heatmapGrid(input, tokens, columns, rows, z);
+}
+
+/** Sequential one hue, or two hues around a grey 0 for changes (R-TAB-09). */
+function heatmapGrid(input: ChartInput, tokens: ChartTokens, x: string[], y: string[], z: (number | null)[][]): Built {
+  const diverging = DIVERGING_MODES.has(input.mode);
+  const [blue = tokens.ink2, orange = tokens.ink3] = tokens.palette;
+  const colorscale: [number, string][] = diverging
+    ? [[0, orange], [0.5, tokens.line], [1, blue]]
+    : [[0, withAlpha(blue, 0.06)], [1, blue]];
+  const extent = Math.max(0, ...z.flat().map((v) => Math.abs(v ?? 0)));
+  return {
+    data: [
+      {
+        type: "heatmap",
+        x,
+        y,
+        z: z.map((row) => scaled(input, row)),
+        customdata: z.map((row) => text(input, row)) as unknown as string[],
+        hovertemplate: `%{y} · %{x}: %{customdata}<extra></extra>`,
+        colorscale,
+        zmid: diverging ? 0 : undefined,
+        zmin: diverging ? -extent * scaleOf(input).factor : undefined,
+        zmax: diverging ? extent * scaleOf(input).factor : undefined,
+        showscale: false,
+        xgap: 2,
+        ygap: 2,
+      } as Data,
+    ],
+    layout: { yaxis: { autorange: "reversed", automargin: true, showgrid: false }, xaxis: { type: "category", showgrid: false } },
+  };
+}
+
+/** The "% of total" chart drawn under the main one, same x axis (R-VIS-22: never a 2nd y axis). */
+export function shareFigure(input: ChartInput): (tokens: ChartTokens) => Built {
+  return kpiFigure({ ...input, mode: "share_total", chart: input.result.periods.length > 24 ? "stacked_area" : "stacked_bars" });
+}
+
+/** Charts the measure can switch to, and whether the result is stacked. */
+export const isStacked = (chart: string) => STACKED.has(chart);

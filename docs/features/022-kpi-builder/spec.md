@@ -73,7 +73,7 @@ Les 3 premières sont proposées. Les identifiants et le texte libre ne le sont 
 | Sum | numériques | oui | rôles `amount`, `quantity` |
 | Mean | numériques | non | autres numériques (prix unitaire, note, âge, %) |
 | Median | numériques | non | — |
-| Min, Max | numériques, dates | non | — |
+| Min, Max | numériques | non | — |
 | Distinct count | toutes | **non** ² | identifiants, catégories |
 | % true | booléennes | non | booléennes |
 | Ratio A ÷ B | deux mesures du KPI | non | — |
@@ -115,7 +115,7 @@ Règles de calcul :
 
 ## 4. Choix automatique du graphique
 
-Le type est déduit de trois faits : présence d'une date, nombre de regroupements, additivité de la mesure.
+Le type est déduit de trois faits : présence d'une date, nombre de regroupements, additivité de la mesure. Les lignes du tableau ci-dessous sont, dans l'ordre, les règles R-VIS-01 à R-VIS-10. Les règles qui passent avant elles (valeurs négatives, groupe dominant, données creuses…) sont dans la section 9 bis.
 
 | Date | Regroupements | Mesure | Graphique Auto |
 |---|---|---|---|
@@ -228,6 +228,89 @@ Une tuile par mesure (et par ratio), dans l'ordre des mesures.
 
 - Les réglages **Groups** sont des changements de données : ils activent Calculate. Tous les autres sont des réglages d'affichage, appliqués immédiatement.
 - Hors scope assumé : glisser-déposer des champs comme un pivot de tableur, formules libres, mise en forme conditionnelle par règles.
+
+## 9 bis. Catalogue des règles automatiques
+
+Chaque choix automatique est le résultat d'une règle identifiée. La réponse `resolved` donne, pour chaque choix :
+- la valeur retenue ;
+- la règle appliquée (identifiant) ;
+- sa raison en une phrase (« Why this view ») ;
+- pour les choix modifiables, la liste des **alternatives** possibles ou interdites, avec leur raison.
+
+Il y a deux natures de règle :
+
+- **Modifiable** : c'est le meilleur choix par défaut, et on peut le changer dans Customize.
+- **Contrainte** : un choix qui produirait un graphique ou un chiffre faux. L'option est grisée et sa raison est affichée ; on ne peut pas la forcer.
+
+Les règles sont évaluées dans l'ordre. Pour un même choix, la **première règle qui s'applique** l'emporte.
+
+Les règles de graphique lisent des faits calculés sur le résultat lui-même :
+- présence d'une date et nombre de périodes ;
+- nombre de regroupements et de modalités ;
+- additivité de la mesure ;
+- valeurs négatives ;
+- part du groupe dominant ;
+- taux de cellules vides ;
+- regroupement ordinal ou non.
+
+**Suggestions et mesures**
+
+| Id | Règle | Nature |
+|---|---|---|
+| R-SUG-01…07 | Suggestions de KPI, voir la section 1 | — |
+| R-SUG-08 | Regroupements candidats, voir la section 1 | — |
+| R-MES-01 | Agrégat par défaut d'une colonne selon son type et son rôle (section 2) | Modifiable |
+| R-MES-02 | Médiane approchée au-delà de 200 000 lignes, signalée « ≈ » | Contrainte |
+
+**Temps**
+
+| Id | Règle | Nature |
+|---|---|---|
+| R-TIME-01 | Grain : le plus fin donnant ≤ 60 périodes | Modifiable |
+| R-TIME-02 | Grain jamais plus fin que l'écart habituel des dates (des données mensuelles ne se lisent pas par jour) | Contrainte : grains plus fins grisés |
+| R-TIME-03 | Grain forcé plafonné à 2 000 périodes, grossi au-delà avec un avertissement | Contrainte |
+| R-TIME-04 | Une seule période dans la plage : traitée comme « sans date » (tuiles, barres par groupe) | Contrainte |
+| R-TIME-05 | Périodes incomplètes marquées, exclues des tuiles et des variations | Contrainte |
+
+**Graphique** : évalué dans cet ordre, puis les règles R-VIS-01…10 du tableau de la section 4.
+
+| Id | Règle | Nature |
+|---|---|---|
+| R-VIS-20 | Empiler (barres, aires, part en %) exige une mesure additive | Contrainte |
+| R-VIS-21 | Empiler exige des valeurs toutes ≥ 0 : avec des négatifs (marge, solde), les empilements sont interdits et l'Auto passe en **barres groupées** (≤ 6 groupes et ≤ 24 périodes) ou en **lignes** | Contrainte |
+| R-VIS-22 | Plusieurs mesures : un graphique par mesure, axe x partagé, jamais de double axe | Contrainte |
+| R-VIS-11 | Avec groupes et ≤ 3 périodes : **barres groupées** (comparer côte à côte plutôt qu'empiler dans le temps) | Modifiable |
+| R-VIS-12 | Mesure additive et un groupe dominant (> 70 % du total) : **lignes** plutôt qu'empilé (les petits groupes seraient écrasés), avec « % of total » proposé en un clic | Modifiable |
+| R-VIS-13 | Plus de 40 % de cellules vides : **barres**, jamais ligne ni aire (une ligne relierait des trous) | Modifiable |
+| R-VIS-14 | Pas de date, 2 regroupements de plus de 8 modalités chacun : **carte de chaleur** même pour une mesure additive | Modifiable |
+| R-VIS-01…10 | Tableau de la section 4 | Modifiable |
+| R-VIS-30 | Plus de 8 lignes : les plus petites passent en « Other » | Contrainte |
+| R-VIS-31 | Barres et aires partent de 0 ; les lignes d'une mesure non additive s'ajustent aux données | Contrainte |
+| R-VIS-32 | Mesure en % (% true, ratio as %, rôle `percent`) : axe en %, borné à 0–100 % si les valeurs y sont toutes | Contrainte |
+| R-VIS-33 | Regroupement ordinal (ou booléen) : modalités dans leur ordre naturel, palette **séquentielle** à une teinte au lieu de catégorielle | Ordre modifiable |
+| R-VIS-34 | Marqueurs sur les lignes jusqu'à 60 points, au-delà ligne seule | Contrainte |
+| R-VIS-35 | Libellés de valeurs : sur les barres ≤ 12, sinon seulement la dernière valeur de chaque série (≤ 4 séries) | Modifiable |
+
+**Tableau**
+
+| Id | Règle | Nature |
+|---|---|---|
+| R-TAB-01…06 | Disposition, voir la section 5 | Modifiable |
+| R-TAB-07 | Totaux d'une mesure non additive recalculés sur l'ensemble des lignes | Contrainte |
+| R-TAB-08 | Ombrage séquentiel quand le tableau croise deux dimensions | Modifiable |
+| R-TAB-09 | Variations (Δ, Δ %) ombrées en **divergent** : deux teintes, gris à 0 | Contrainte |
+| R-TAB-10 | Groupes triés par valeur décroissante, « Other » en dernier ; ordinal dans son ordre naturel | Modifiable |
+| R-TAB-11 | Parts, cumul et sous-totaux additifs seulement pour les mesures additives | Contrainte |
+
+**Format et tuiles**
+
+| Id | Règle | Nature |
+|---|---|---|
+| R-FMT-01…05 | Décimales, compact, %, voir la section 7 | Modifiable |
+| R-TILE-01 | Tuile = dernière période complète | Contrainte |
+| R-TILE-02 | Variations en encre neutre avec flèche (une hausse n'est pas toujours bonne) | Contrainte |
+
+Chaque règle a son test unitaire, qui pose un cas où elle s'applique et un cas où elle ne s'applique pas.
 
 ## 10. Disposition de la page
 

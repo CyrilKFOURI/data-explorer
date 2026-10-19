@@ -134,6 +134,20 @@ Pick an **X** and a **Y**: the chart and the statistical tests follow their type
   - *Features*: coefficients with 95 % interval, p-value and VIF (linear regression without penalty), the effect per unit of the original column, odds ratios for logistic regression.
   - *Predictions*: test rows with actual, predicted and error or probability; *Export CSV*.
 
+### KPI
+
+A business indicator in one click — revenue per month, distinct customers per week, average basket per quarter — as key figures, a chart and a table.
+
+- **Suggested** KPIs open the page, read from your columns: *Rows*, *Total revenue* (amounts and quantities are summed), *Distinct customer_id* (identifiers that repeat), *Revenue per customer_id*, *% churned* (yes/no columns), *Average rating*. The first one is already computed; click another to see it.
+- **Split by** chips under the chart add the best columns to split by (countries, regions, statuses first, then the columns with 3 to 12 values).
+- **The builder** asks four questions: *Measure* (rows, or the sum, average, median, min, max, distinct count or % true of a column — up to 4 measures, plus a **ratio** of two, e.g. revenue ÷ distinct customers), *Over time* (date column, grain and period: all dates, the last N periods, year to date or a custom range; *Use the page filters* adds the filters to that period), *Split by* (one or two columns; beyond the 8 largest groups, the rest becomes *Other*). Changes take effect with **Calculate**.
+- **Everything is chosen for you, with the reason**: the grain (the finest giving at most 60 periods), the chart (bars or areas for volumes that add up, lines for averages and shares, stacked bars per group, side-by-side bars for negative values or 3 periods or fewer, lines when one group makes over 70 % of the total, small multiples for two splits, horizontal bars or a heatmap without dates), the table layout (periods across up to 13 periods, in rows beyond), the number format. *Why this view* lists the choices.
+- **Key figures**: the last complete period of each measure, its change against the previous period and the same period last year (arrows in neutral ink: a rise is not always good news), and a mini line of the last 24 periods. An incomplete period (the current month) is marked † and left out.
+- **Totals are recomputed**: the total of an average, a median or a distinct count is computed on all the rows, never added up (a customer who bought in two countries counts once). *Other* is computed from its rows too.
+- **Customize** changes any automatic choice — chart type, a *% of total* chart below, value labels, *Show as* (value, % of total / row / column, change vs previous, % change vs previous or last year, running total), table layout, totals, shading, compare columns, Top N, hiding *Other*, the order of the groups, and for each measure its name, decimals, compact numbers, prefix and suffix (€, km). Each setting says what Auto chose; options that would mislead are greyed out with the reason (stacking an average, a running total of a mean). A changed setting has a dot and *Reset to auto*. Display changes are instant: only the data changes recompute.
+- **Table**: *Swap* rows and columns, sort by clicking a column, *Copy* (paste into a spreadsheet) or *Download CSV*.
+- **Save** a KPI by name; saved KPIs are listed on the left (rename, duplicate, delete). The page's address keeps the KPI shown.
+
 ### Correlations
 
 Every pair of variables measured at once, whatever their types.

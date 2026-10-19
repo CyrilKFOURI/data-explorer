@@ -43,7 +43,8 @@ Roadmap en **sprints**, chacun composé de **tranches verticales** : chaque case
 - [x] 021-ml-comparaison-optimisation — comparer les modèles et les runs, optimisation Optuna (TPE, CMA-ES…) avec budget — Compare models, runs côte à côte, Tune (Optuna : TPE, aléatoire, grille, CMA-ES, NSGA-II ; élagage ; budget ; arrêt) ; xgboost, lightgbm, optuna, cmaes ajoutés
 
 ### Après
-- [ ] Sprint 6 — Module Builder KPI
+- [x] Sprint 6 — Module Builder KPI
+  - [x] 022-kpi-builder — KPI suggérés depuis les colonnes, builder (mesures, ratio, temps, regroupements), choix automatiques par règles identifiées (grain, graphique, tableau, format) avec leur raison, Customize (Auto / reset, options interdites grisées), tableau croisé (totaux recalculés, Show as, export), KPI enregistrés
 - [ ] Sprint 7 — Module données synthétiques (CTGAN, TVAE/VAE, TimeGAN, évaluation de fidélité)
 - [ ] À planifier — Module Assistant IA (LLM local optionnel)
 - [ ] À planifier — Rapport HTML exportable du dataset

@@ -1069,6 +1069,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/modules/kpi/datasets/{dataset_id}/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Suggestions */
+        get: operations["suggestions_api_v1_modules_kpi_datasets__dataset_id__suggestions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/modules/kpi/datasets/{dataset_id}/compute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Compute */
+        post: operations["compute_api_v1_modules_kpi_datasets__dataset_id__compute_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/modules/kpi/datasets/{dataset_id}/definitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Kpis */
+        get: operations["list_kpis_api_v1_modules_kpi_datasets__dataset_id__definitions_get"];
+        put?: never;
+        /** Create */
+        post: operations["create_api_v1_modules_kpi_datasets__dataset_id__definitions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/modules/kpi/datasets/{dataset_id}/definitions/{kpi_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Kpi */
+        get: operations["get_kpi_api_v1_modules_kpi_datasets__dataset_id__definitions__kpi_id__get"];
+        /** Update */
+        put: operations["update_api_v1_modules_kpi_datasets__dataset_id__definitions__kpi_id__put"];
+        post?: never;
+        /** Delete */
+        delete: operations["delete_api_v1_modules_kpi_datasets__dataset_id__definitions__kpi_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/modules/kpi/datasets/{dataset_id}/definitions/{kpi_id}/duplicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Duplicate */
+        post: operations["duplicate_api_v1_modules_kpi_datasets__dataset_id__definitions__kpi_id__duplicate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1708,7 +1796,7 @@ export interface components {
             regression?: components["schemas"]["Regression"] | null;
             density?: components["schemas"]["Density"] | null;
             /** Groups */
-            groups?: components["schemas"]["Group"][];
+            groups?: components["schemas"]["app__domain__compare__analyze__Group"][];
             contingency?: components["schemas"]["Contingency"] | null;
             /** Series */
             series?: components["schemas"]["Series"][];
@@ -1892,59 +1980,6 @@ export interface components {
             /** Bytes */
             bytes: number;
         };
-        /** Decision */
-        Decision: {
-            /** Column */
-            column: string;
-            /** Type */
-            type: string;
-            /** Use */
-            use: boolean;
-            /** Rules */
-            rules?: string[];
-            /** Why */
-            why?: string[];
-            /** Impute */
-            impute?: string | null;
-            /**
-             * Indicator
-             * @default false
-             */
-            indicator: boolean;
-            /** Transform */
-            transform?: string | null;
-            /** Encoding */
-            encoding?: string | null;
-            /** Scaling */
-            scaling?: string | null;
-            /** Order */
-            order?: string[] | null;
-            /** Auto */
-            auto?: {
-                [key: string]: string;
-            };
-            /** Manual */
-            manual?: string[];
-            /** Options */
-            options?: {
-                [key: string]: components["schemas"]["Option"][];
-            };
-            /**
-             * Reactivable
-             * @default true
-             */
-            reactivable: boolean;
-            /**
-             * Leak
-             * @default false
-             */
-            leak: boolean;
-            /**
-             * Missing
-             * @default 0
-             */
-            missing: number;
-        };
         /** Decomposition */
         Decomposition: {
             /**
@@ -1966,6 +2001,60 @@ export interface components {
             strength_seasonal: number | null;
             /** Notes */
             notes?: string[];
+        };
+        /** Definition */
+        "Definition-Input": {
+            /** Measures */
+            measures: components["schemas"]["Measure"][];
+            ratio?: components["schemas"]["Ratio"] | null;
+            time?: components["schemas"]["Time"] | null;
+            /** Groups */
+            groups?: components["schemas"]["Group-Input"][];
+            /**
+             * Top
+             * @default 8
+             */
+            top: number;
+            /**
+             * Other
+             * @default show
+             * @enum {string}
+             */
+            other: "show" | "hide";
+            /**
+             * Group Order
+             * @default value
+             * @enum {string}
+             */
+            group_order: "value" | "alpha";
+            view?: components["schemas"]["View"];
+        };
+        /** Definition */
+        "Definition-Output": {
+            /** Measures */
+            measures: components["schemas"]["Measure"][];
+            ratio?: components["schemas"]["Ratio"] | null;
+            time?: components["schemas"]["Time"] | null;
+            /** Groups */
+            groups?: components["schemas"]["app__domain__kpi__definition__Group"][];
+            /**
+             * Top
+             * @default 8
+             */
+            top: number;
+            /**
+             * Other
+             * @default show
+             * @enum {string}
+             */
+            other: "show" | "hide";
+            /**
+             * Group Order
+             * @default value
+             * @enum {string}
+             */
+            group_order: "value" | "alpha";
+            view?: components["schemas"]["View"];
         };
         /** Density */
         Density: {
@@ -2206,32 +2295,34 @@ export interface components {
             /** Error */
             error?: string | null;
         };
+        /** Format */
+        Format: {
+            /**
+             * Decimals
+             * @default auto
+             */
+            decimals: number | "auto";
+            /**
+             * Compact
+             * @default auto
+             * @enum {string}
+             */
+            compact: "auto" | "on" | "off";
+            /**
+             * Prefix
+             * @default
+             */
+            prefix: string;
+            /**
+             * Suffix
+             * @default
+             */
+            suffix: string;
+        };
         /** Group */
-        Group: {
-            /** Label */
-            label: string;
-            /** N */
-            n: number;
-            /** Mean */
-            mean: number | null;
-            /** Std */
-            std: number | null;
-            /** Q1 */
-            q1: number | null;
-            /** Median */
-            median: number | null;
-            /** Q3 */
-            q3: number | null;
-            /** Low */
-            low: number | null;
-            /** High */
-            high: number | null;
-            /** Ci Low */
-            ci_low: number | null;
-            /** Ci High */
-            ci_high: number | null;
-            /** Sample */
-            sample?: number[];
+        "Group-Input": {
+            /** Column */
+            column: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -2389,6 +2480,26 @@ export interface components {
             /** Finished At */
             finished_at: string | null;
         };
+        /** KpiResult */
+        KpiResult: {
+            /** Name */
+            name: string;
+            /** Rows */
+            rows: number;
+            /** Periods */
+            periods: components["schemas"]["PeriodOut"][];
+            /** Splits */
+            splits: components["schemas"]["SplitOut"][];
+            /** Measures */
+            measures: components["schemas"]["MeasureOut"][];
+            /** Series */
+            series: components["schemas"]["SeriesOut"][];
+            /** Tiles */
+            tiles: components["schemas"]["Tile"][];
+            resolved: components["schemas"]["Resolved"];
+            /** Warnings */
+            warnings: string[];
+        };
         /** Law */
         Law: {
             /** Key */
@@ -2488,6 +2599,39 @@ export interface components {
              */
             role: "num" | "cat";
         };
+        /** Measure */
+        Measure: {
+            /** Id */
+            id: string;
+            /**
+             * Agg
+             * @enum {string}
+             */
+            agg: "count" | "sum" | "mean" | "median" | "min" | "max" | "distinct" | "true_share";
+            /** Column */
+            column?: string | null;
+            /** Label */
+            label?: string | null;
+            format?: components["schemas"]["Format"];
+        };
+        /** MeasureOut */
+        MeasureOut: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+            /** Agg */
+            agg: string;
+            /** Column */
+            column: string | null;
+            /** Additive */
+            additive: boolean;
+            /** Approximate */
+            approximate: boolean;
+            format: components["schemas"]["NumberFormat"];
+            chart: components["schemas"]["app__domain__kpi__rules__Decision"];
+            share: components["schemas"]["app__domain__kpi__rules__Option"];
+        };
         /** MethodResult */
         MethodResult: {
             /** Key */
@@ -2575,6 +2719,41 @@ export interface components {
             /** Reason */
             reason?: string | null;
         };
+        /** NumberFormat */
+        NumberFormat: {
+            /** Decimals */
+            decimals: number;
+            /**
+             * Scale
+             * @default 1
+             */
+            scale: number;
+            /**
+             * Prefix
+             * @default
+             */
+            prefix: string;
+            /**
+             * Suffix
+             * @default
+             */
+            suffix: string;
+            /**
+             * Percent
+             * @default false
+             */
+            percent: boolean;
+            /**
+             * Rule
+             * @default R-FMT-01
+             */
+            rule: string;
+            /**
+             * Reason
+             * @default
+             */
+            reason: string;
+        };
         /** NumericProfile */
         NumericProfile: {
             describe: components["schemas"]["Describe"];
@@ -2584,13 +2763,6 @@ export interface components {
             qq: components["schemas"]["QQ"] | null;
             /** Sample */
             sample: number[];
-        };
-        /** Option */
-        Option: {
-            /** Value */
-            value: string;
-            /** Reason */
-            reason?: string | null;
         };
         /** Others */
         Others: {
@@ -2723,6 +2895,33 @@ export interface components {
              */
             false_values: string[];
         };
+        /** Period */
+        Period: {
+            /**
+             * Kind
+             * @default all
+             * @enum {string}
+             */
+            kind: "all" | "last" | "ytd" | "range";
+            /**
+             * N
+             * @default 12
+             */
+            n: number;
+            /** From */
+            from?: string | null;
+            /** To */
+            to?: string | null;
+        };
+        /** PeriodOut */
+        PeriodOut: {
+            /** Start */
+            start: string;
+            /** Label */
+            label: string;
+            /** Partial */
+            partial: boolean;
+        };
         /** Permutation */
         Permutation: {
             /** Metric */
@@ -2772,7 +2971,7 @@ export interface components {
         /** Preparation */
         Preparation: {
             /** Decisions */
-            decisions: components["schemas"]["Decision"][];
+            decisions: components["schemas"]["app__domain__ml__preparation__Decision"][];
             /**
              * Inputs
              * @default 0
@@ -2868,6 +3067,21 @@ export interface components {
             /** Intercept */
             intercept: number;
         };
+        /** Ratio */
+        Ratio: {
+            /** Numerator */
+            numerator: string;
+            /** Denominator */
+            denominator: string;
+            /** Label */
+            label?: string | null;
+            /**
+             * Percent
+             * @default false
+             */
+            percent: boolean;
+            format?: components["schemas"]["Format"];
+        };
         /** Recommendation */
         Recommendation: {
             /** Key */
@@ -2915,6 +3129,16 @@ export interface components {
         RenameRequest: {
             /** Name */
             name: string;
+        };
+        /** Resolved */
+        Resolved: {
+            grain: components["schemas"]["app__domain__kpi__rules__Decision"] | null;
+            layout: components["schemas"]["app__domain__kpi__rules__Decision"];
+            shading: components["schemas"]["app__domain__kpi__rules__Decision"];
+            /** Time */
+            time: boolean;
+            /** Why */
+            why?: string[];
         };
         /** RoleOut */
         RoleOut: {
@@ -3070,6 +3294,12 @@ export interface components {
             /** Conditions */
             conditions: components["schemas"]["Condition"][];
         };
+        /** SaveKpi */
+        SaveKpi: {
+            /** Name */
+            name: string;
+            definition: components["schemas"]["Definition-Input"];
+        };
         /** SavedFilter */
         SavedFilter: {
             /** Id */
@@ -3080,6 +3310,18 @@ export interface components {
             conditions: components["schemas"]["Condition"][];
             /** Created At */
             created_at: string;
+        };
+        /** SavedKpi */
+        SavedKpi: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            definition: components["schemas"]["Definition-Output"];
+            /** Created At */
+            created_at: string;
+            /** Updated At */
+            updated_at: string;
         };
         /** Scores */
         Scores: {
@@ -3308,6 +3550,25 @@ export interface components {
             rolling_mean?: (number | null)[];
             /** Rolling Std */
             rolling_std?: (number | null)[];
+        };
+        /** SeriesOut */
+        SeriesOut: {
+            /** Measure */
+            measure: string;
+            /** G1 */
+            g1: string | null;
+            /** G2 */
+            g2: string | null;
+            /** Values */
+            values: (number | null)[];
+            /** Previous */
+            previous: (number | null)[];
+            /** Last Year */
+            last_year: (number | null)[];
+            /** Rows */
+            rows: number[];
+            /** Overall */
+            overall: number | null;
         };
         /** SeriesOverview */
         SeriesOverview: {
@@ -3545,6 +3806,17 @@ export interface components {
              */
             folder_mode: "union" | "intersection";
         };
+        /** SplitOut */
+        SplitOut: {
+            /** Column */
+            column: string;
+            /** Levels */
+            levels: string[];
+            /** Others */
+            others: number;
+            /** Ordinal */
+            ordinal: boolean;
+        };
         /** StorageInfo */
         StorageInfo: {
             /** Workspace */
@@ -3553,6 +3825,14 @@ export interface components {
             total_bytes: number;
             /** Datasets */
             datasets: components["schemas"]["DatasetUsage"][];
+        };
+        /** SuggestedKpi */
+        SuggestedKpi: {
+            /** Rule */
+            rule: string;
+            /** Name */
+            name: string;
+            definition: components["schemas"]["Definition-Output"];
         };
         /** Suggestion */
         Suggestion: {
@@ -3567,6 +3847,13 @@ export interface components {
              */
             verdict: "stationary" | "unit_root" | "trend_or_difference" | "inconclusive";
         };
+        /** Suggestions */
+        Suggestions: {
+            /** Kpis */
+            kpis: components["schemas"]["SuggestedKpi"][];
+            /** Splits */
+            splits: string[];
+        };
         /** Synthesis */
         Synthesis: {
             /**
@@ -3578,6 +3865,33 @@ export interface components {
             adf_rejects: boolean;
             /** Kpss Rejects */
             kpss_rejects: boolean;
+        };
+        /** TableView */
+        TableView: {
+            /**
+             * Layout
+             * @default auto
+             */
+            layout: ("periods_rows" | "periods_columns" | "groups_rows" | "crosstab" | "single") | "auto";
+            /**
+             * Totals
+             * @default auto
+             * @enum {string}
+             */
+            totals: "auto" | "on" | "off";
+            /**
+             * Shading
+             * @default auto
+             * @enum {string}
+             */
+            shading: "auto" | "on" | "off";
+            /**
+             * Compare
+             * @default []
+             */
+            compare: ("previous" | "last_year")[];
+            /** Sort */
+            sort?: string | null;
         };
         /**
          * TargetDistribution
@@ -3651,6 +3965,46 @@ export interface components {
             /** Words */
             words?: components["schemas"]["Bar"][];
         };
+        /** Tile */
+        Tile: {
+            /** Measure */
+            measure: string;
+            /** Label */
+            label: string;
+            /** Period */
+            period: string | null;
+            /** Value */
+            value: number | null;
+            /** Previous */
+            previous: number | null;
+            /** Change */
+            change: number | null;
+            /** Last Year */
+            last_year: number | null;
+            /** Change Yoy */
+            change_yoy: number | null;
+            /** Spark */
+            spark: (number | null)[];
+            /** Spark Index */
+            spark_index: number | null;
+            top?: components["schemas"]["TopGroup"] | null;
+        };
+        /** Time */
+        Time: {
+            /** Column */
+            column: string;
+            /**
+             * Grain
+             * @default auto
+             */
+            grain: ("day" | "week" | "month" | "quarter" | "year") | "auto";
+            period?: components["schemas"]["Period"];
+            /**
+             * Page Filters
+             * @default true
+             */
+            page_filters: boolean;
+        };
         /**
          * TimeView
          * @description How a date and a number was turned into a series (each setting chosen or defaulted).
@@ -3691,6 +4045,13 @@ export interface components {
              * @default false
              */
             last_partial: boolean;
+        };
+        /** TopGroup */
+        TopGroup: {
+            /** Label */
+            label: string;
+            /** Share */
+            share: number;
         };
         /** TrainingJob */
         TrainingJob: {
@@ -3856,6 +4217,12 @@ export interface components {
             };
             preparation?: components["schemas"]["Choices"] | null;
         };
+        /** UpdateKpi */
+        UpdateKpi: {
+            /** Name */
+            name?: string | null;
+            definition?: components["schemas"]["Definition-Input"] | null;
+        };
         /** UploadOut */
         UploadOut: {
             /** Path */
@@ -3944,6 +4311,32 @@ export interface components {
             text?: components["schemas"]["TextProfile"] | null;
             identifier?: components["schemas"]["IdentifierProfile"] | null;
         };
+        /** View */
+        View: {
+            /**
+             * Chart
+             * @default auto
+             */
+            chart: ("bars" | "grouped_bars" | "stacked_bars" | "line" | "area" | "stacked_area" | "hbar" | "hbar_stacked" | "heatmap" | "none") | "auto";
+            /**
+             * Share
+             * @default false
+             */
+            share: boolean;
+            /**
+             * Labels
+             * @default auto
+             * @enum {string}
+             */
+            labels: "auto" | "on" | "off";
+            table?: components["schemas"]["TableView"];
+            /**
+             * Show As
+             * @default value
+             * @enum {string}
+             */
+            show_as: "value" | "share_total" | "share_row" | "share_column" | "change" | "change_pct" | "change_yoy" | "running";
+        };
         /** YearLine */
         YearLine: {
             /** Year */
@@ -3959,6 +4352,33 @@ export interface components {
             unit: string;
             /** Years */
             years?: components["schemas"]["YearLine"][];
+        };
+        /** Group */
+        app__domain__compare__analyze__Group: {
+            /** Label */
+            label: string;
+            /** N */
+            n: number;
+            /** Mean */
+            mean: number | null;
+            /** Std */
+            std: number | null;
+            /** Q1 */
+            q1: number | null;
+            /** Median */
+            median: number | null;
+            /** Q3 */
+            q3: number | null;
+            /** Low */
+            low: number | null;
+            /** High */
+            high: number | null;
+            /** Ci Low */
+            ci_low: number | null;
+            /** Ci High */
+            ci_high: number | null;
+            /** Sample */
+            sample?: number[];
         };
         /** Pair */
         app__domain__correlations__matrix__Pair: {
@@ -3986,6 +4406,39 @@ export interface components {
              */
             evidence: "strong" | "moderate" | "weak" | "none";
         };
+        /** Group */
+        app__domain__kpi__definition__Group: {
+            /** Column */
+            column: string;
+        };
+        /** Decision */
+        app__domain__kpi__rules__Decision: {
+            /** Value */
+            value: string;
+            /** Rule */
+            rule: string;
+            /** Reason */
+            reason: string;
+            /**
+             * Overridable
+             * @default true
+             */
+            overridable: boolean;
+            /** Options */
+            options?: components["schemas"]["app__domain__kpi__rules__Option"][];
+        };
+        /** Option */
+        app__domain__kpi__rules__Option: {
+            /** Value */
+            value: string;
+            /**
+             * Allowed
+             * @default true
+             */
+            allowed: boolean;
+            /** Reason */
+            reason?: string | null;
+        };
         /** Pair */
         app__domain__ml__explain__Pair: {
             /** First */
@@ -3996,6 +4449,66 @@ export interface components {
             strength: number;
             /** Measure */
             measure: string;
+        };
+        /** Decision */
+        app__domain__ml__preparation__Decision: {
+            /** Column */
+            column: string;
+            /** Type */
+            type: string;
+            /** Use */
+            use: boolean;
+            /** Rules */
+            rules?: string[];
+            /** Why */
+            why?: string[];
+            /** Impute */
+            impute?: string | null;
+            /**
+             * Indicator
+             * @default false
+             */
+            indicator: boolean;
+            /** Transform */
+            transform?: string | null;
+            /** Encoding */
+            encoding?: string | null;
+            /** Scaling */
+            scaling?: string | null;
+            /** Order */
+            order?: string[] | null;
+            /** Auto */
+            auto?: {
+                [key: string]: string;
+            };
+            /** Manual */
+            manual?: string[];
+            /** Options */
+            options?: {
+                [key: string]: components["schemas"]["app__domain__ml__preparation__Option"][];
+            };
+            /**
+             * Reactivable
+             * @default true
+             */
+            reactivable: boolean;
+            /**
+             * Leak
+             * @default false
+             */
+            leak: boolean;
+            /**
+             * Missing
+             * @default 0
+             */
+            missing: number;
+        };
+        /** Option */
+        app__domain__ml__preparation__Option: {
+            /** Value */
+            value: string;
+            /** Reason */
+            reason?: string | null;
         };
         /** Curve */
         app__domain__ml__train__Curve: {
@@ -6349,6 +6862,270 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    suggestions_api_v1_modules_kpi_datasets__dataset_id__suggestions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Suggestions"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    compute_api_v1_modules_kpi_datasets__dataset_id__compute_post: {
+        parameters: {
+            query?: {
+                filters?: string | null;
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Definition-Input"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KpiResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_kpis_api_v1_modules_kpi_datasets__dataset_id__definitions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedKpi"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_api_v1_modules_kpi_datasets__dataset_id__definitions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveKpi"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedKpi"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_kpi_api_v1_modules_kpi_datasets__dataset_id__definitions__kpi_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+                kpi_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedKpi"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_api_v1_modules_kpi_datasets__dataset_id__definitions__kpi_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+                kpi_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateKpi"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedKpi"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_api_v1_modules_kpi_datasets__dataset_id__definitions__kpi_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+                kpi_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    duplicate_api_v1_modules_kpi_datasets__dataset_id__definitions__kpi_id__duplicate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+                kpi_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedKpi"];
                 };
             };
             /** @description Validation Error */

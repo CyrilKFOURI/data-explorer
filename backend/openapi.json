@@ -6259,6 +6259,416 @@
           }
         }
       }
+    },
+    "/api/v1/modules/kpi/datasets/{dataset_id}/suggestions": {
+      "get": {
+        "tags": [
+          "module:kpi"
+        ],
+        "summary": "Suggestions",
+        "operationId": "suggestions_api_v1_modules_kpi_datasets__dataset_id__suggestions_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Suggestions"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/kpi/datasets/{dataset_id}/compute": {
+      "post": {
+        "tags": [
+          "module:kpi"
+        ],
+        "summary": "Compute",
+        "operationId": "compute_api_v1_modules_kpi_datasets__dataset_id__compute_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filters"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Definition-Input"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KpiResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/kpi/datasets/{dataset_id}/definitions": {
+      "get": {
+        "tags": [
+          "module:kpi"
+        ],
+        "summary": "List Kpis",
+        "operationId": "list_kpis_api_v1_modules_kpi_datasets__dataset_id__definitions_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SavedKpi"
+                  },
+                  "title": "Response List Kpis Api V1 Modules Kpi Datasets  Dataset Id  Definitions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "module:kpi"
+        ],
+        "summary": "Create",
+        "operationId": "create_api_v1_modules_kpi_datasets__dataset_id__definitions_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveKpi"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedKpi"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/kpi/datasets/{dataset_id}/definitions/{kpi_id}": {
+      "get": {
+        "tags": [
+          "module:kpi"
+        ],
+        "summary": "Get Kpi",
+        "operationId": "get_kpi_api_v1_modules_kpi_datasets__dataset_id__definitions__kpi_id__get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "kpi_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Kpi Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedKpi"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "module:kpi"
+        ],
+        "summary": "Update",
+        "operationId": "update_api_v1_modules_kpi_datasets__dataset_id__definitions__kpi_id__put",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "kpi_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Kpi Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateKpi"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedKpi"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "module:kpi"
+        ],
+        "summary": "Delete",
+        "operationId": "delete_api_v1_modules_kpi_datasets__dataset_id__definitions__kpi_id__delete",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "kpi_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Kpi Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/kpi/datasets/{dataset_id}/definitions/{kpi_id}/duplicate": {
+      "post": {
+        "tags": [
+          "module:kpi"
+        ],
+        "summary": "Duplicate",
+        "operationId": "duplicate_api_v1_modules_kpi_datasets__dataset_id__definitions__kpi_id__duplicate_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "kpi_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Kpi Id"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedKpi"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -8341,7 +8751,7 @@
           },
           "groups": {
             "items": {
-              "$ref": "#/components/schemas/Group"
+              "$ref": "#/components/schemas/app__domain__compare__analyze__Group"
             },
             "type": "array",
             "title": "Groups"
@@ -8979,145 +9389,6 @@
         ],
         "title": "DatasetUsage"
       },
-      "Decision": {
-        "properties": {
-          "column": {
-            "type": "string",
-            "title": "Column"
-          },
-          "type": {
-            "type": "string",
-            "title": "Type"
-          },
-          "use": {
-            "type": "boolean",
-            "title": "Use"
-          },
-          "rules": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Rules"
-          },
-          "why": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Why"
-          },
-          "impute": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Impute"
-          },
-          "indicator": {
-            "type": "boolean",
-            "title": "Indicator",
-            "default": false
-          },
-          "transform": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Transform"
-          },
-          "encoding": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Encoding"
-          },
-          "scaling": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Scaling"
-          },
-          "order": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Order"
-          },
-          "auto": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object",
-            "title": "Auto"
-          },
-          "manual": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Manual"
-          },
-          "options": {
-            "additionalProperties": {
-              "items": {
-                "$ref": "#/components/schemas/Option"
-              },
-              "type": "array"
-            },
-            "type": "object",
-            "title": "Options"
-          },
-          "reactivable": {
-            "type": "boolean",
-            "title": "Reactivable",
-            "default": true
-          },
-          "leak": {
-            "type": "boolean",
-            "title": "Leak",
-            "default": false
-          },
-          "missing": {
-            "type": "number",
-            "title": "Missing",
-            "default": 0.0
-          }
-        },
-        "type": "object",
-        "required": [
-          "column",
-          "type",
-          "use"
-        ],
-        "title": "Decision"
-      },
       "Decomposition": {
         "properties": {
           "method": {
@@ -9223,6 +9494,156 @@
           "strength_seasonal"
         ],
         "title": "Decomposition"
+      },
+      "Definition-Input": {
+        "properties": {
+          "measures": {
+            "items": {
+              "$ref": "#/components/schemas/Measure"
+            },
+            "type": "array",
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Measures"
+          },
+          "ratio": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Ratio"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "time": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/Group-Input"
+            },
+            "type": "array",
+            "maxItems": 2,
+            "title": "Groups"
+          },
+          "top": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Top",
+            "default": 8
+          },
+          "other": {
+            "type": "string",
+            "enum": [
+              "show",
+              "hide"
+            ],
+            "title": "Other",
+            "default": "show"
+          },
+          "group_order": {
+            "type": "string",
+            "enum": [
+              "value",
+              "alpha"
+            ],
+            "title": "Group Order",
+            "default": "value"
+          },
+          "view": {
+            "$ref": "#/components/schemas/View"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "measures"
+        ],
+        "title": "Definition"
+      },
+      "Definition-Output": {
+        "properties": {
+          "measures": {
+            "items": {
+              "$ref": "#/components/schemas/Measure"
+            },
+            "type": "array",
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Measures"
+          },
+          "ratio": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Ratio"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "time": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/app__domain__kpi__definition__Group"
+            },
+            "type": "array",
+            "maxItems": 2,
+            "title": "Groups"
+          },
+          "top": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Top",
+            "default": 8
+          },
+          "other": {
+            "type": "string",
+            "enum": [
+              "show",
+              "hide"
+            ],
+            "title": "Other",
+            "default": "show"
+          },
+          "group_order": {
+            "type": "string",
+            "enum": [
+              "value",
+              "alpha"
+            ],
+            "title": "Group Order",
+            "default": "value"
+          },
+          "view": {
+            "$ref": "#/components/schemas/View"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "measures"
+        ],
+        "title": "Definition"
       },
       "Density": {
         "properties": {
@@ -10104,136 +10525,59 @@
         ],
         "title": "ForecastJob"
       },
-      "Group": {
+      "Format": {
         "properties": {
-          "label": {
+          "decimals": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string",
+                "const": "auto"
+              }
+            ],
+            "title": "Decimals",
+            "default": "auto"
+          },
+          "compact": {
             "type": "string",
-            "title": "Label"
-          },
-          "n": {
-            "type": "integer",
-            "title": "N"
-          },
-          "mean": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
+            "enum": [
+              "auto",
+              "on",
+              "off"
             ],
-            "title": "Mean"
+            "title": "Compact",
+            "default": "auto"
           },
-          "std": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Std"
+          "prefix": {
+            "type": "string",
+            "maxLength": 8,
+            "title": "Prefix",
+            "default": ""
           },
-          "q1": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Q1"
-          },
-          "median": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Median"
-          },
-          "q3": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Q3"
-          },
-          "low": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Low"
-          },
-          "high": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "High"
-          },
-          "ci_low": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Ci Low"
-          },
-          "ci_high": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Ci High"
-          },
-          "sample": {
-            "items": {
-              "type": "number"
-            },
-            "type": "array",
-            "title": "Sample"
+          "suffix": {
+            "type": "string",
+            "maxLength": 8,
+            "title": "Suffix",
+            "default": ""
           }
         },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Format"
+      },
+      "Group-Input": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "Column"
+          }
+        },
+        "additionalProperties": false,
         "type": "object",
         "required": [
-          "label",
-          "n",
-          "mean",
-          "std",
-          "q1",
-          "median",
-          "q3",
-          "low",
-          "high",
-          "ci_low",
-          "ci_high"
+          "column"
         ],
         "title": "Group"
       },
@@ -10731,6 +11075,76 @@
         ],
         "title": "JobOut"
       },
+      "KpiResult": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "periods": {
+            "items": {
+              "$ref": "#/components/schemas/PeriodOut"
+            },
+            "type": "array",
+            "title": "Periods"
+          },
+          "splits": {
+            "items": {
+              "$ref": "#/components/schemas/SplitOut"
+            },
+            "type": "array",
+            "title": "Splits"
+          },
+          "measures": {
+            "items": {
+              "$ref": "#/components/schemas/MeasureOut"
+            },
+            "type": "array",
+            "title": "Measures"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/SeriesOut"
+            },
+            "type": "array",
+            "title": "Series"
+          },
+          "tiles": {
+            "items": {
+              "$ref": "#/components/schemas/Tile"
+            },
+            "type": "array",
+            "title": "Tiles"
+          },
+          "resolved": {
+            "$ref": "#/components/schemas/Resolved"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "rows",
+          "periods",
+          "splits",
+          "measures",
+          "series",
+          "tiles",
+          "resolved",
+          "warnings"
+        ],
+        "title": "KpiResult"
+      },
       "Law": {
         "properties": {
           "key": {
@@ -11054,6 +11468,119 @@
           "role"
         ],
         "title": "MatrixMember"
+      },
+      "Measure": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^m[0-9]{1,2}$",
+            "title": "Id"
+          },
+          "agg": {
+            "type": "string",
+            "enum": [
+              "count",
+              "sum",
+              "mean",
+              "median",
+              "min",
+              "max",
+              "distinct",
+              "true_share"
+            ],
+            "title": "Agg"
+          },
+          "column": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Column"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "format": {
+            "$ref": "#/components/schemas/Format"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "agg"
+        ],
+        "title": "Measure"
+      },
+      "MeasureOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "agg": {
+            "type": "string",
+            "title": "Agg"
+          },
+          "column": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Column"
+          },
+          "additive": {
+            "type": "boolean",
+            "title": "Additive"
+          },
+          "approximate": {
+            "type": "boolean",
+            "title": "Approximate"
+          },
+          "format": {
+            "$ref": "#/components/schemas/NumberFormat"
+          },
+          "chart": {
+            "$ref": "#/components/schemas/app__domain__kpi__rules__Decision"
+          },
+          "share": {
+            "$ref": "#/components/schemas/app__domain__kpi__rules__Option"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "agg",
+          "column",
+          "additive",
+          "approximate",
+          "format",
+          "chart",
+          "share"
+        ],
+        "title": "MeasureOut"
       },
       "MethodResult": {
         "properties": {
@@ -11388,6 +11915,49 @@
         ],
         "title": "Normality"
       },
+      "NumberFormat": {
+        "properties": {
+          "decimals": {
+            "type": "integer",
+            "title": "Decimals"
+          },
+          "scale": {
+            "type": "number",
+            "title": "Scale",
+            "default": 1.0
+          },
+          "prefix": {
+            "type": "string",
+            "title": "Prefix",
+            "default": ""
+          },
+          "suffix": {
+            "type": "string",
+            "title": "Suffix",
+            "default": ""
+          },
+          "percent": {
+            "type": "boolean",
+            "title": "Percent",
+            "default": false
+          },
+          "rule": {
+            "type": "string",
+            "title": "Rule",
+            "default": "R-FMT-01"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "decimals"
+        ],
+        "title": "NumberFormat"
+      },
       "NumericProfile": {
         "properties": {
           "describe": {
@@ -11444,30 +12014,6 @@
           "sample"
         ],
         "title": "NumericProfile"
-      },
-      "Option": {
-        "properties": {
-          "value": {
-            "type": "string",
-            "title": "Value"
-          },
-          "reason": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reason"
-          }
-        },
-        "type": "object",
-        "required": [
-          "value"
-        ],
-        "title": "Option"
       },
       "Others": {
         "properties": {
@@ -11787,6 +12333,78 @@
         "title": "Parser",
         "description": "How to read a stored value in its analysis type, applied at query time.\n\n- raw: the stored value as is\n- number: text with a given decimal separator (thousands separators, %, currency stripped)\n- date: text with a strptime format\n- boolean: text mapped with true/false vocabularies (empty lists: cast the value)\n- year: integer year \u2192 date (January 1st)\n- text: the value as text, null tokens removed"
       },
+      "Period": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "all",
+              "last",
+              "ytd",
+              "range"
+            ],
+            "title": "Kind",
+            "default": "all"
+          },
+          "n": {
+            "type": "integer",
+            "maximum": 2000.0,
+            "minimum": 1.0,
+            "title": "N",
+            "default": 12
+          },
+          "from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From"
+          },
+          "to": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Period"
+      },
+      "PeriodOut": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "title": "Start"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "partial": {
+            "type": "boolean",
+            "title": "Partial"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "label",
+          "partial"
+        ],
+        "title": "PeriodOut"
+      },
       "Permutation": {
         "properties": {
           "metric": {
@@ -11953,7 +12571,7 @@
         "properties": {
           "decisions": {
             "items": {
-              "$ref": "#/components/schemas/Decision"
+              "$ref": "#/components/schemas/app__domain__ml__preparation__Decision"
             },
             "type": "array",
             "title": "Decisions"
@@ -12237,6 +12855,45 @@
         "title": "QQ",
         "description": "Sample quantiles against the standard normal's, with the line through Q1 and Q3."
       },
+      "Ratio": {
+        "properties": {
+          "numerator": {
+            "type": "string",
+            "title": "Numerator"
+          },
+          "denominator": {
+            "type": "string",
+            "title": "Denominator"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "percent": {
+            "type": "boolean",
+            "title": "Percent",
+            "default": false
+          },
+          "format": {
+            "$ref": "#/components/schemas/Format"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "numerator",
+          "denominator"
+        ],
+        "title": "Ratio"
+      },
       "Recommendation": {
         "properties": {
           "key": {
@@ -12429,6 +13086,45 @@
           "name"
         ],
         "title": "RenameRequest"
+      },
+      "Resolved": {
+        "properties": {
+          "grain": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/app__domain__kpi__rules__Decision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "layout": {
+            "$ref": "#/components/schemas/app__domain__kpi__rules__Decision"
+          },
+          "shading": {
+            "$ref": "#/components/schemas/app__domain__kpi__rules__Decision"
+          },
+          "time": {
+            "type": "boolean",
+            "title": "Time"
+          },
+          "why": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Why"
+          }
+        },
+        "type": "object",
+        "required": [
+          "grain",
+          "layout",
+          "shading",
+          "time"
+        ],
+        "title": "Resolved"
       },
       "RoleOut": {
         "properties": {
@@ -12882,6 +13578,25 @@
         ],
         "title": "SaveFilterRequest"
       },
+      "SaveKpi": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "definition": {
+            "$ref": "#/components/schemas/Definition-Input"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "definition"
+        ],
+        "title": "SaveKpi"
+      },
       "SavedFilter": {
         "properties": {
           "id": {
@@ -12912,6 +13627,38 @@
           "created_at"
         ],
         "title": "SavedFilter"
+      },
+      "SavedKpi": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "definition": {
+            "$ref": "#/components/schemas/Definition-Output"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "definition",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "SavedKpi"
       },
       "Scores": {
         "properties": {
@@ -13781,6 +14528,108 @@
         ],
         "title": "SeriesLine"
       },
+      "SeriesOut": {
+        "properties": {
+          "measure": {
+            "type": "string",
+            "title": "Measure"
+          },
+          "g1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "G1"
+          },
+          "g2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "G2"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values"
+          },
+          "previous": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Previous"
+          },
+          "last_year": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Last Year"
+          },
+          "rows": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "overall": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall"
+          }
+        },
+        "type": "object",
+        "required": [
+          "measure",
+          "g1",
+          "g2",
+          "values",
+          "previous",
+          "last_year",
+          "rows",
+          "overall"
+        ],
+        "title": "SeriesOut"
+      },
       "SeriesOverview": {
         "properties": {
           "setup": {
@@ -14607,6 +15456,37 @@
         "title": "SourceOptions",
         "description": "How to read a source. `None` fields mean \"detect\" or \"everything\"."
       },
+      "SplitOut": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "levels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Levels"
+          },
+          "others": {
+            "type": "integer",
+            "title": "Others"
+          },
+          "ordinal": {
+            "type": "boolean",
+            "title": "Ordinal"
+          }
+        },
+        "type": "object",
+        "required": [
+          "column",
+          "levels",
+          "others",
+          "ordinal"
+        ],
+        "title": "SplitOut"
+      },
       "StorageInfo": {
         "properties": {
           "workspace": {
@@ -14632,6 +15512,28 @@
           "datasets"
         ],
         "title": "StorageInfo"
+      },
+      "SuggestedKpi": {
+        "properties": {
+          "rule": {
+            "type": "string",
+            "title": "Rule"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "definition": {
+            "$ref": "#/components/schemas/Definition-Output"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rule",
+          "name",
+          "definition"
+        ],
+        "title": "SuggestedKpi"
       },
       "Suggestion": {
         "properties": {
@@ -14666,6 +15568,30 @@
         ],
         "title": "Suggestion"
       },
+      "Suggestions": {
+        "properties": {
+          "kpis": {
+            "items": {
+              "$ref": "#/components/schemas/SuggestedKpi"
+            },
+            "type": "array",
+            "title": "Kpis"
+          },
+          "splits": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Splits"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kpis",
+          "splits"
+        ],
+        "title": "Suggestions"
+      },
       "Synthesis": {
         "properties": {
           "verdict": {
@@ -14694,6 +15620,76 @@
           "kpss_rejects"
         ],
         "title": "Synthesis"
+      },
+      "TableView": {
+        "properties": {
+          "layout": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "periods_rows",
+                  "periods_columns",
+                  "groups_rows",
+                  "crosstab",
+                  "single"
+                ]
+              },
+              {
+                "type": "string",
+                "const": "auto"
+              }
+            ],
+            "title": "Layout",
+            "default": "auto"
+          },
+          "totals": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "on",
+              "off"
+            ],
+            "title": "Totals",
+            "default": "auto"
+          },
+          "shading": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "on",
+              "off"
+            ],
+            "title": "Shading",
+            "default": "auto"
+          },
+          "compare": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "previous",
+                "last_year"
+              ]
+            },
+            "type": "array",
+            "title": "Compare",
+            "default": []
+          },
+          "sort": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "TableView"
       },
       "TargetDistribution": {
         "properties": {
@@ -14981,6 +15977,175 @@
         ],
         "title": "TextProfile"
       },
+      "Tile": {
+        "properties": {
+          "measure": {
+            "type": "string",
+            "title": "Measure"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "previous": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous"
+          },
+          "change": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change"
+          },
+          "last_year": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Year"
+          },
+          "change_yoy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Yoy"
+          },
+          "spark": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Spark"
+          },
+          "spark_index": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spark Index"
+          },
+          "top": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TopGroup"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "measure",
+          "label",
+          "period",
+          "value",
+          "previous",
+          "change",
+          "last_year",
+          "change_yoy",
+          "spark",
+          "spark_index"
+        ],
+        "title": "Tile"
+      },
+      "Time": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "grain": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "day",
+                  "week",
+                  "month",
+                  "quarter",
+                  "year"
+                ]
+              },
+              {
+                "type": "string",
+                "const": "auto"
+              }
+            ],
+            "title": "Grain",
+            "default": "auto"
+          },
+          "period": {
+            "$ref": "#/components/schemas/Period"
+          },
+          "page_filters": {
+            "type": "boolean",
+            "title": "Page Filters",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "column"
+        ],
+        "title": "Time"
+      },
       "TimeView": {
         "properties": {
           "period": {
@@ -15066,6 +16231,24 @@
         ],
         "title": "TimeView",
         "description": "How a date and a number was turned into a series (each setting chosen or defaulted)."
+      },
+      "TopGroup": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "share": {
+            "type": "number",
+            "title": "Share"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "share"
+        ],
+        "title": "TopGroup"
       },
       "TrainingJob": {
         "properties": {
@@ -15593,6 +16776,35 @@
         ],
         "title": "TuneStart"
       },
+      "UpdateKpi": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Definition-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "UpdateKpi"
+      },
       "UploadOut": {
         "properties": {
           "path": {
@@ -15845,6 +17057,71 @@
         ],
         "title": "VariableProfile"
       },
+      "View": {
+        "properties": {
+          "chart": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "bars",
+                  "grouped_bars",
+                  "stacked_bars",
+                  "line",
+                  "area",
+                  "stacked_area",
+                  "hbar",
+                  "hbar_stacked",
+                  "heatmap",
+                  "none"
+                ]
+              },
+              {
+                "type": "string",
+                "const": "auto"
+              }
+            ],
+            "title": "Chart",
+            "default": "auto"
+          },
+          "share": {
+            "type": "boolean",
+            "title": "Share",
+            "default": false
+          },
+          "labels": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "on",
+              "off"
+            ],
+            "title": "Labels",
+            "default": "auto"
+          },
+          "table": {
+            "$ref": "#/components/schemas/TableView"
+          },
+          "show_as": {
+            "type": "string",
+            "enum": [
+              "value",
+              "share_total",
+              "share_row",
+              "share_column",
+              "change",
+              "change_pct",
+              "change_yoy",
+              "running"
+            ],
+            "title": "Show As",
+            "default": "value"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "View"
+      },
       "YearLine": {
         "properties": {
           "year": {
@@ -15900,6 +17177,139 @@
           "unit"
         ],
         "title": "YearOverlay"
+      },
+      "app__domain__compare__analyze__Group": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean"
+          },
+          "std": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Std"
+          },
+          "q1": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q1"
+          },
+          "median": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median"
+          },
+          "q3": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q3"
+          },
+          "low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Low"
+          },
+          "high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High"
+          },
+          "ci_low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ci Low"
+          },
+          "ci_high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ci High"
+          },
+          "sample": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Sample"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "n",
+          "mean",
+          "std",
+          "q1",
+          "median",
+          "q3",
+          "low",
+          "high",
+          "ci_low",
+          "ci_high"
+        ],
+        "title": "Group"
       },
       "app__domain__correlations__matrix__Pair": {
         "properties": {
@@ -15974,6 +17384,84 @@
         ],
         "title": "Pair"
       },
+      "app__domain__kpi__definition__Group": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "Column"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "column"
+        ],
+        "title": "Group"
+      },
+      "app__domain__kpi__rules__Decision": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "rule": {
+            "type": "string",
+            "title": "Rule"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "overridable": {
+            "type": "boolean",
+            "title": "Overridable",
+            "default": true
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/app__domain__kpi__rules__Option"
+            },
+            "type": "array",
+            "title": "Options"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "rule",
+          "reason"
+        ],
+        "title": "Decision"
+      },
+      "app__domain__kpi__rules__Option": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "allowed": {
+            "type": "boolean",
+            "title": "Allowed",
+            "default": true
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "title": "Option"
+      },
       "app__domain__ml__explain__Pair": {
         "properties": {
           "first": {
@@ -16001,6 +17489,169 @@
           "measure"
         ],
         "title": "Pair"
+      },
+      "app__domain__ml__preparation__Decision": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "use": {
+            "type": "boolean",
+            "title": "Use"
+          },
+          "rules": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Rules"
+          },
+          "why": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Why"
+          },
+          "impute": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Impute"
+          },
+          "indicator": {
+            "type": "boolean",
+            "title": "Indicator",
+            "default": false
+          },
+          "transform": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transform"
+          },
+          "encoding": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Encoding"
+          },
+          "scaling": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scaling"
+          },
+          "order": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order"
+          },
+          "auto": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Auto"
+          },
+          "manual": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Manual"
+          },
+          "options": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/app__domain__ml__preparation__Option"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Options"
+          },
+          "reactivable": {
+            "type": "boolean",
+            "title": "Reactivable",
+            "default": true
+          },
+          "leak": {
+            "type": "boolean",
+            "title": "Leak",
+            "default": false
+          },
+          "missing": {
+            "type": "number",
+            "title": "Missing",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "column",
+          "type",
+          "use"
+        ],
+        "title": "Decision"
+      },
+      "app__domain__ml__preparation__Option": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "title": "Option"
       },
       "app__domain__ml__train__Curve": {
         "properties": {

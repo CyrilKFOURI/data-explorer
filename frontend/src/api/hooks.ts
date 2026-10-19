@@ -17,6 +17,7 @@ import {
   type ColumnChange,
   type Dataset,
   type ImportOptions,
+  type KpiDefinition,
   type MlChoicesInput,
   type MlClasses,
   type MlContext,
@@ -359,6 +360,60 @@ export function useColumnSummaries(id: string, enabled: boolean) {
     enabled: enabled && filters.length > 0,
     placeholderData: (previous) => previous,
   });
+}
+
+export function useKpiSuggestions(id: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ["datasets", id, "kpi", "suggestions"],
+    queryFn: () => api.kpiSuggestions(id),
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
+/** A KPI's numbers. The display settings (`view`) are left out of the key: changing them only
+ *  redraws, it never recomputes. With "Use the page filters" off, the filters are not sent. */
+export function useKpiCompute(id: string, definition: KpiDefinition | null) {
+  const active = useActiveFilters(id);
+  const filters = definition?.time && definition.time.page_filters === false ? [] : active;
+  const data = definition ? { ...definition, view: undefined } : null;
+  return useQuery({
+    queryKey: ["datasets", id, "kpi", "compute", data, filters],
+    queryFn: () => api.kpiCompute(id, { ...(definition as KpiDefinition), view: undefined }, filters),
+    enabled: Boolean(definition),
+    staleTime: 60_000,
+    placeholderData: (previous) => previous,
+    retry: false,
+  });
+}
+
+const kpisKey = (id: string) => ["datasets", id, "kpi", "definitions"];
+
+export function useKpis(id: string, enabled: boolean) {
+  return useQuery({ queryKey: kpisKey(id), queryFn: () => api.kpis(id), enabled });
+}
+
+/** Create, update, duplicate or delete a saved KPI; the list refreshes afterwards. */
+export function useKpiActions(id: string) {
+  const client = useQueryClient();
+  const onSuccess = () => client.invalidateQueries({ queryKey: kpisKey(id) });
+  return {
+    create: useMutation({
+      mutationFn: (input: { name: string; definition: KpiDefinition }) =>
+        api.createKpi(id, input.name, input.definition),
+      onSuccess,
+    }),
+    update: useMutation({
+      mutationFn: (input: { kpiId: string; name?: string; definition?: KpiDefinition }) =>
+        api.updateKpi(id, input.kpiId, { name: input.name, definition: input.definition }),
+      onSuccess,
+    }),
+    duplicate: useMutation({
+      mutationFn: (kpiId: string) => api.duplicateKpi(id, kpiId),
+      onSuccess,
+    }),
+    remove: useMutation({ mutationFn: (kpiId: string) => api.deleteKpi(id, kpiId), onSuccess }),
+  };
 }
 
 export function useSavedFilters(id: string) {

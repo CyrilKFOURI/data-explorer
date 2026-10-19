@@ -114,6 +114,28 @@ export type MlChoicesInput = Partial<Omit<MlChoices, "columns">> & { columns?: R
 export type MlPreparationPreview = Complete<Schemas["PreparationPreview"]>;
 export type MlDistribution = Complete<Schemas["TargetDistribution"]>;
 export type MlClasses = { method: string; edges: number[]; names: string[] };
+/** A KPI as sent and saved: "auto" (or a missing field) lets the app choose. Fields with a
+ *  server default are optional, nested ones included. */
+type KpiFormat = Partial<Schemas["Format"]>;
+type KpiTableView = Partial<Schemas["TableView"]>;
+export type KpiDefinition = Omit<
+  Partial<Schemas["Definition-Input"]>,
+  "measures" | "ratio" | "time" | "view" | "groups"
+> & {
+  measures: (Omit<Schemas["Measure"], "format"> & { format?: KpiFormat })[];
+  ratio?: (Omit<Partial<Schemas["Ratio"]>, "format"> & { numerator: string; denominator: string; format?: KpiFormat }) | null;
+  time?: (Omit<Partial<Schemas["Time"]>, "period"> & { column: string; period?: Partial<Schemas["Period"]> }) | null;
+  groups?: { column: string }[];
+  view?: Omit<Partial<Schemas["View"]>, "table"> & { table?: KpiTableView };
+};
+export type KpiResult = Complete<Schemas["KpiResult"]>;
+export type KpiSuggestions = Complete<Schemas["Suggestions"]>;
+export type SavedKpi = Complete<Schemas["SavedKpi"]>;
+export type KpiDecision = KpiResult["resolved"]["layout"];
+export type KpiMeasure = KpiResult["measures"][number];
+export type KpiSeries = KpiResult["series"][number];
+export type KpiTile = KpiResult["tiles"][number];
+export type KpiNumberFormat = KpiMeasure["format"];
 export type SeriesSetup = SeriesOverview["setup"];
 export type SeriesLine = SeriesOverview["analyzed"];
 export type MethodResult = SeriesOverview["methods"][number];
@@ -214,24 +236,27 @@ function chartQuery(
 
 export class ApiError extends Error {
   readonly status: number;
+  /** The error body's code and extra fields (e.g. `field` to fix, `suggestion`). */
+  readonly details: Record<string, unknown>;
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, details: Record<string, unknown> = {}) {
     super(message);
     this.status = status;
+    this.details = details;
   }
 }
 
-async function errorMessage(response: Response): Promise<string> {
+async function apiError(response: Response): Promise<ApiError> {
   try {
     const body = (await response.json()) as {
-      error?: { message?: string };
+      error?: { message?: string } & Record<string, unknown>;
       detail?: unknown;
     };
-    if (body.error?.message) return body.error.message;
+    if (body.error?.message) return new ApiError(response.status, body.error.message, body.error);
   } catch {
     // Not JSON: fall back to the status text.
   }
-  return `Request failed (${response.status})`;
+  return new ApiError(response.status, `Request failed (${response.status})`);
 }
 
 function mlQuery(
@@ -261,8 +286,7 @@ async function request<T>(
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-  if (!response.ok)
-    throw new ApiError(response.status, await errorMessage(response));
+  if (!response.ok) throw await apiError(response);
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
 }
@@ -504,6 +528,23 @@ export const api = {
     query.set("limit", String(limit));
     return request<RowsPage>("GET", `/datasets/${id}/rows?${query}`);
   },
+  kpiSuggestions: (id: string) =>
+    request<KpiSuggestions>("GET", `/modules/kpi/datasets/${id}/suggestions`),
+  kpiCompute: (id: string, definition: KpiDefinition, filters?: Condition[]) =>
+    request<KpiResult>(
+      "POST",
+      `/modules/kpi/datasets/${id}/compute?${new URLSearchParams(filtersParam(filters))}`,
+      definition,
+    ),
+  kpis: (id: string) => request<SavedKpi[]>("GET", `/modules/kpi/datasets/${id}/definitions`),
+  createKpi: (id: string, name: string, definition: KpiDefinition) =>
+    request<SavedKpi>("POST", `/modules/kpi/datasets/${id}/definitions`, { name, definition }),
+  updateKpi: (id: string, kpiId: string, change: { name?: string; definition?: KpiDefinition }) =>
+    request<SavedKpi>("PUT", `/modules/kpi/datasets/${id}/definitions/${kpiId}`, change),
+  duplicateKpi: (id: string, kpiId: string) =>
+    request<SavedKpi>("POST", `/modules/kpi/datasets/${id}/definitions/${kpiId}/duplicate`),
+  deleteKpi: (id: string, kpiId: string) =>
+    request<void>("DELETE", `/modules/kpi/datasets/${id}/definitions/${kpiId}`),
   savedFilters: (id: string) =>
     request<SavedFilter[]>("GET", `/datasets/${id}/saved-filters`),
   saveFilter: (id: string, name: string, conditions: Condition[]) =>
@@ -541,8 +582,7 @@ export const api = {
         body: file,
       },
     );
-    if (!response.ok)
-      throw new ApiError(response.status, await errorMessage(response));
+    if (!response.ok) throw await apiError(response);
     return (await response.json()) as Upload;
   },
 };
