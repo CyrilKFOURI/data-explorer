@@ -15,7 +15,7 @@ def demo_router() -> APIRouter:
 
 
 def test_modules_are_registered() -> None:
-    assert [module.id for module in MODULES] == ["timeseries", "ml", "kpi"]
+    assert [module.id for module in MODULES] == ["timeseries", "ml", "kpi", "synthetic"]
 
 
 def test_module_ids_are_unique() -> None:

@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { readDefaults } from "../../lib/defaults";
@@ -11,7 +11,8 @@ function setup() {
   return mockApi({
     "GET /health": health,
     "GET /datasets": [],
-    "GET /settings": { detection },
+    "GET /settings": { detection, compute: { use_gpu: null } },
+    "GET /settings/gpu": { state: "ready", name: "NVIDIA GeForce RTX 4050 Laptop", memory_mb: 6141, driver: "560.94", torch: false, message: "NVIDIA GeForce RTX 4050 Laptop · 6 GB · ready" },
     "PUT /settings": (body: unknown) => body,
     "GET /storage": { workspace: "C:\\Users\\me\\DataExplorer", total_bytes: 3_145_728, datasets: [{ id: "d1", name: "sales", bytes: 2_097_152 }] },
     "POST /storage/clear-caches": null,
@@ -21,6 +22,20 @@ function setup() {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Settings page", () => {
+  it("shows the GPU found and saves the choice to use it", async () => {
+    const calls = setup();
+    renderAt("/settings");
+
+    expect(await screen.findByText("NVIDIA GeForce RTX 4050 Laptop · 6 GB · ready")).toBeInTheDocument();
+    const choice = screen.getByRole("radiogroup", { name: "Use the GPU when available" });
+    expect(within(choice).getByRole("radio", { name: "On" })).toHaveAttribute("aria-checked", "true");
+    fireEvent.click(within(choice).getByRole("radio", { name: "Off" }));
+    await waitFor(() => {
+      const put = calls.find((c) => c.key === "PUT /settings");
+      expect(put?.body).toEqual({ detection, compute: { use_gpu: false } });
+    });
+  });
+
   it("saves detection thresholds as a whole", async () => {
     const calls = setup();
     renderAt("/settings");
@@ -34,7 +49,7 @@ describe("Settings page", () => {
 
     await waitFor(() => {
       const put = calls.find((c) => c.key === "PUT /settings");
-      expect(put?.body).toEqual({ detection: { ...detection, discrete_max: 8, identifier_unique: 0.9 } });
+      expect(put?.body).toEqual({ detection: { ...detection, discrete_max: 8, identifier_unique: 0.9 }, compute: { use_gpu: null } });
     });
   });
 

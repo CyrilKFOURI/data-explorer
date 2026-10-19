@@ -18,6 +18,8 @@ import {
   type Dataset,
   type ImportOptions,
   type KpiDefinition,
+  type ComputeSettings,
+  type SyntheticRequest,
   type MlChoicesInput,
   type MlClasses,
   type MlContext,
@@ -738,10 +740,146 @@ export function useSettings() {
 export function useUpdateSettings() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (detection: DetectionSettings) => api.updateSettings(detection),
+    mutationFn: (change: { detection?: DetectionSettings; compute?: ComputeSettings }) => {
+      const current = client.getQueryData<{ detection: DetectionSettings; compute: ComputeSettings }>(queryKeys.settings);
+      if (!current) throw new Error("Settings not loaded yet.");
+      return api.updateSettings({ ...current, ...change });
+    },
     onSuccess: (saved) => client.setQueryData(queryKeys.settings, saved),
   });
 }
+
+/** The graphics card the deep models could use; refreshing looks again ("Check again"). */
+export function useGpu() {
+  return useQuery({ queryKey: ["settings", "gpu"], queryFn: () => api.gpu(), staleTime: Infinity });
+}
+
+export function useRefreshGpu() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.gpu(true),
+    onSuccess: (status) => client.setQueryData(["settings", "gpu"], status),
+  });
+}
+
+// --- Synthetic data ---------------------------------------------------------------------------
+
+const syntheticKey = (id: string) => ["datasets", id, "synthetic"];
+
+export function useSyntheticPlan(id: string, enabled: boolean) {
+  return useQuery({ queryKey: [...syntheticKey(id), "plan"], queryFn: () => api.syntheticPlan(id), enabled });
+}
+
+export function useSyntheticRuns(id: string, enabled: boolean) {
+  return useQuery({ queryKey: [...syntheticKey(id), "runs"], queryFn: () => api.syntheticRuns(id), enabled });
+}
+
+export function useSyntheticRun(id: string, runId: string | undefined) {
+  return useQuery({
+    queryKey: [...syntheticKey(id), "run", runId],
+    queryFn: () => api.syntheticRun(id, runId ?? ""),
+    enabled: Boolean(runId),
+    retry: false,
+  });
+}
+
+export function useSyntheticGenerate(id: string) {
+  return useMutation({ mutationFn: (body: SyntheticRequest) => api.syntheticGenerate(id, body) });
+}
+
+/** Follows a generation until it ends (also while the tab is hidden). */
+export function useSyntheticJob(jobId: string | null) {
+  return useQuery({
+    queryKey: ["synthetic-jobs", jobId],
+    queryFn: () => api.syntheticJob(jobId ?? ""),
+    enabled: Boolean(jobId),
+    refetchInterval: (query) => (query.state.data?.status === "running" || !query.state.data ? 500 : false),
+    refetchIntervalInBackground: true,
+    retry: false,
+  });
+}
+
+export function useSyntheticCancel() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (jobId: string) => api.syntheticCancel(jobId),
+    onSuccess: (job) => client.setQueryData(["synthetic-jobs", job.id], job),
+  });
+}
+
+export function useSyntheticCompare(id: string, runIds: string[]) {
+  return useQuery({
+    queryKey: [...syntheticKey(id), "compare", runIds],
+    queryFn: () => api.syntheticCompare(id, runIds),
+    enabled: runIds.length >= 2,
+  });
+}
+
+export function useSyntheticPreview(id: string, runId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: [...syntheticKey(id), "preview", runId],
+    queryFn: () => api.syntheticPreview(id, runId),
+    enabled,
+  });
+}
+
+export function useSyntheticColumn(
+  id: string,
+  runId: string,
+  column: string | null,
+  bins: number | null,
+  target: string | null,
+) {
+  return useQuery({
+    queryKey: [...syntheticKey(id), "column", runId, column, bins, target],
+    queryFn: () => api.syntheticColumn(id, runId, column ?? "", bins, target),
+    enabled: Boolean(column),
+    placeholderData: (previous) => (previous?.column === column ? previous : undefined),
+  });
+}
+
+export function useSyntheticPair(id: string, runId: string, pair: [string, string] | null) {
+  return useQuery({
+    queryKey: [...syntheticKey(id), "pair", runId, pair],
+    queryFn: () => api.syntheticPair(id, runId, pair?.[0] ?? "", pair?.[1] ?? ""),
+    enabled: Boolean(pair),
+  });
+}
+
+/** Run actions; each refreshes the run list and the run (its stored report changes). */
+export function useSyntheticActions(id: string) {
+  const client = useQueryClient();
+  const refresh = () => client.invalidateQueries({ queryKey: syntheticKey(id) });
+  return {
+    remove: useMutation({ mutationFn: (runId: string) => api.syntheticDelete(id, runId), onSuccess: refresh }),
+    save: useMutation({
+      mutationFn: (runId: string) => api.syntheticSave(id, runId),
+      onSuccess: () => {
+        void refresh();
+        void client.invalidateQueries({ queryKey: queryKeys.datasets });
+      },
+    }),
+    utility: useMutation({
+      mutationFn: (input: { runId: string; target: string }) => api.syntheticUtility(id, input.runId, input.target),
+      onSuccess: refresh,
+    }),
+    disclosure: useMutation({
+      mutationFn: (input: { runId: string; known: string[]; sensitive: string }) =>
+        api.syntheticDisclosure(id, input.runId, input.known, input.sensitive),
+      onSuccess: refresh,
+    }),
+  };
+}
+
+export function useSyntheticOrigin(id: string | undefined) {
+  return useQuery({
+    queryKey: ["datasets", id, "synthetic-origin"],
+    queryFn: () => api.syntheticOrigin(id ?? ""),
+    enabled: Boolean(id),
+    staleTime: Infinity,
+  });
+}
+
 
 export function useStorage() {
   return useQuery({ queryKey: queryKeys.storage, queryFn: api.storage });

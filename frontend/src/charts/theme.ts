@@ -7,6 +7,7 @@ export type ChartTokens = {
   ink3: string;
   line: string;
   surface: string;
+  accent: string;
   numeric: string;
   categorical: string;
   date: string;
@@ -24,6 +25,7 @@ const TOKEN_NAMES: Record<Exclude<keyof ChartTokens, "palette">, string> = {
   ink3: "--ink-3",
   line: "--line",
   surface: "--surface-1",
+  accent: "--accent",
   numeric: "--type-numeric",
   categorical: "--type-categorical",
   date: "--type-date",

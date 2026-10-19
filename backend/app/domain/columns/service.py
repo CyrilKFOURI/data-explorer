@@ -186,6 +186,12 @@ class ColumnService:
 
     def update(self, dataset_id: str, changes: list[ColumnChange]) -> list[ColumnView]:
         dataset = self.ready(dataset_id)
+        return self.apply(dataset_id, dataset.storage_path, changes)
+
+    def apply(
+        self, dataset_id: str, storage_path: str, changes: list[ColumnChange]
+    ) -> list[ColumnView]:
+        """Save corrections; also usable during an import, before the dataset is ready."""
         valid_roles = {role.id for role in load().roles}
         types_changed = False
         with self._db() as connection:
@@ -199,7 +205,7 @@ class ColumnService:
                 if before[0] != after[0] or before[2] != after[2]:
                     types_changed = True
                 if before != after:
-                    record.summary = self._summarize(dataset.storage_path, record)
+                    record.summary = self._summarize(storage_path, record)
                 repo.update_column(
                     connection,
                     dataset_id,

@@ -2,7 +2,15 @@ import { RotateCcw } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 import type { DetectionSettings } from "../../api/client";
-import { useClearCaches, useHealth, useSettings, useStorage, useUpdateSettings } from "../../api/hooks";
+import {
+  useClearCaches,
+  useGpu,
+  useHealth,
+  useRefreshGpu,
+  useSettings,
+  useStorage,
+  useUpdateSettings,
+} from "../../api/hooks";
 import { ThemeSwitcher } from "../../features/theme/ThemeSwitcher";
 import { ALPHAS, FACTORY_DEFAULTS, PAGE_SIZES, TOP_NS, useAnalysisDefaults } from "../../lib/defaults";
 import { formatBytes } from "../../lib/format";
@@ -108,6 +116,7 @@ export function SettingsPage() {
       </Section>
 
       <DetectionSection />
+      <ComputeSection />
       <StorageSection />
       <AboutSection />
     </div>
@@ -170,12 +179,44 @@ function DetectionSection() {
                 {t("settings.factory")}
               </Button>
             )}
-            <Button variant="primary" disabled={!changed || save.isPending} onClick={() => save.mutate(values)}>
+            <Button variant="primary" disabled={!changed || save.isPending} onClick={() => save.mutate({ detection: values })}>
               {save.isSuccess && !changed ? t("settings.saved") : t("settings.save")}
             </Button>
           </div>
         </>
       )}
+    </Section>
+  );
+}
+
+/** The graphics card found and the user's choice; used by the deep models (023b). */
+function ComputeSection() {
+  const settings = useSettings();
+  const save = useUpdateSettings();
+  const gpu = useGpu();
+  const refresh = useRefreshGpu();
+  const status = gpu.data;
+  const ready = status?.state === "ready";
+  const stored = settings.data?.compute?.use_gpu;
+  const useGpuNow = stored ?? ready;
+  return (
+    <Section title={t("settings.compute")} intro={t("settings.computeIntro")}>
+      <SettingRow label={t("settings.gpuFound")} hint={status?.message ?? "…"}>
+        <Button onClick={() => refresh.mutate()} disabled={refresh.isPending}>
+          {t("settings.checkAgain")}
+        </Button>
+      </SettingRow>
+      <SettingRow label={t("settings.useGpu")} hint={ready ? t("settings.useGpuHint") : t("settings.useGpuNone")}>
+        <SegmentedControl
+          label={t("settings.useGpu")}
+          value={useGpuNow ? "on" : "off"}
+          onChange={(value) => settings.data && save.mutate({ compute: { use_gpu: value === "on" } })}
+          options={[
+            { value: "on", label: t("settings.on") },
+            { value: "off", label: t("settings.off") },
+          ]}
+        />
+      </SettingRow>
     </Section>
   );
 }

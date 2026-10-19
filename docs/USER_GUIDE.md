@@ -148,6 +148,22 @@ A business indicator in one click — revenue per month, distinct customers per 
 - **Table**: *Swap* rows and columns, sort by clicking a column, *Copy* (paste into a spreadsheet) or *Download CSV*.
 - **Save** a KPI by name; saved KPIs are listed on the left (rename, duplicate, delete). The page's address keeps the KPI shown.
 
+### Synthetic data
+
+An artificial copy of the data — same distributions, same links between columns, none of its rows — to share, demo or test without exposing real rows. The page says how faithful the copy is and how well it protects the real rows.
+
+- **Ready to generate**: each column gets a treatment with its rule and reason — numbers, categories and dates are *modelled* (real bounds, decimals and levels kept), identifiers get *new values in the same format* (never a real one), free text, e-mails and phones are *left out* (e-mails and phones can be replaced by *fake values* of the same shape), categories with over 200 levels have their rare levels grouped into *Other*. Change any treatment, set bounds on numbers, then **Generate**.
+- **Methods**: *Sequential CART* ★ (columns generated one after the other, each from a decision tree on the previous ones, taking real values of the same leaf of at least 5 rows), *Gaussian copula* (fast, keeps monotonic links), *Bayesian network* (a Chow-Liu tree of the strongest links, shown with the run), *Independent columns* (reference: every link is lost). *Smooth numbers* (on) and *Drop copies of real rows* (on) keep synthetic rows away from real ones. The same seed and settings give the same data. 20 % of the real rows are held out from the generator to check privacy and utility.
+- **Four figures**, each with a verdict: *Diagnostic* (valid values: bounds, levels, unique identifiers, whole numbers — expected 100 %), *Quality* (computed as SDMetrics: mean of *Column shapes* and *Column pair trends*, only pairs strongly linked in the real data counting), *Detection* (can a classifier tell real from synthetic rows? 100 % = no), *Privacy* (no copied rows, no memorisation).
+- **Columns**: from the most damaged to the least, with the largest difference in words; open one to see real and synthetic side by side — counts and shares of each set, histograms on the same intervals or cumulative curves, paired statistics with their gap, most frequent, smallest and largest values with their frequency in the other set; aligned levels for categories. *Overlay a target* shows whether its link with each column is kept.
+- **Links**: the association matrices of the real and synthetic data and their gap, the pairs that changed most; click one to compare the pair.
+- **Checks**: every diagnostic check, the details of the quality score, and coverage (range, levels, empty rate, outliers).
+- **Privacy**: exact and near copies, protection against memorisation (synthetic rows should be no closer to the training rows than new real rows), distances to the closest real row, rare values reproduced, and the *disclosure risk* (knowing some columns of a person, can the synthetic rows reveal a sensitive one?). Synthetic data is not a differential-privacy guarantee.
+- **Utility**: pick a column; one model trained on real rows and one on synthetic rows are tested on the same held-out real rows — "keeps 92 % of the real data's predictive power".
+- **Overview**: means and spreads of every number, real against synthetic; principal components of both sets; the columns left out.
+- **Data**: the first 100 synthetic rows, **Save as dataset** (a new dataset with the same column types, marked *Synthetic, from …*), or download CSV / Parquet.
+- **Runs**: every generation is kept; reopen one, tick 2 to 5 to compare their scores, delete.
+
 ### Correlations
 
 Every pair of variables measured at once, whatever their types.
@@ -174,6 +190,7 @@ The rows behind every chart, after your filters.
 - **Appearance**: theme (system, light, dark), density (compact, comfortable), animations (system, reduce, full).
 - **Analysis defaults**: starting values of *Top categories per chart*, *Cards per page* and the normality tests' *α*, for datasets you haven't customised yet (each page can still change them). Remembered in this browser.
 - **Type detection**: the thresholds used by the next detections (imports and *Re-run detection*): how many distinct whole numbers still count as *discrete* (20), the share of values that must read as numbers or dates to convert a text column (95 %), the share of distinct values that makes an *identifier* (95 %), the share of empty values that makes a column *ignored* (95 %). Validated types and manual corrections are kept. *Back to defaults* restores them.
+- **Compute**: the graphics card found (*Check again* looks again) and *Use the GPU when available*, for the deep synthetic-data models coming next (no effect yet).
 - **Storage**: where the app keeps its copies (the workspace), the disk used in total and per dataset, and *Clear caches* to drop computed results kept in memory (rebuilt on demand).
 - **About**: version and licence.
 - The ↺ button next to a setting resets it to its default.

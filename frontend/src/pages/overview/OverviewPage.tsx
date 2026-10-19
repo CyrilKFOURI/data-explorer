@@ -8,6 +8,7 @@ import { useColumns, useDataset, useOpenDataset, useOverview, useUpdateColumns }
 import { ANALYSIS_TYPES, TYPE_META } from "../../features/columns/columnTypes";
 import { NoRows } from "../../features/filters/NoRows";
 import { SummaryStrip } from "../../features/summary-strip/SummaryStrip";
+import { SyntheticOrigin } from "../../features/synthetic-origin/SyntheticOrigin";
 import { VariableCard } from "../../features/variable-grid/VariableCard";
 import { t } from "../../lib/i18n";
 import { useStoredState } from "../../lib/useStoredState";
@@ -104,6 +105,7 @@ export function OverviewPage() {
           <p className="mt-0.5 truncate font-mono text-[11px] text-ink-3" title={data.source_path}>
             {data.source_path}
           </p>
+          <SyntheticOrigin datasetId={datasetId} />
         </div>
         <Link
           to="/d/$datasetId/columns"

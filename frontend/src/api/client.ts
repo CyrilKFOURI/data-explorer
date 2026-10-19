@@ -175,6 +175,32 @@ export type CompareParams = {
 export type OutlierMethod = Outliers["method"];
 export type AppSettings = Schemas["AppSettings"];
 export type DetectionSettings = Required<Schemas["DetectionSettings"]>;
+export type ComputeSettings = Schemas["ComputeSettings"];
+export type GpuStatus = Complete<Schemas["GpuStatus"]>;
+export type SyntheticPlan = Complete<Schemas["Plan"]>;
+export type SyntheticColumnPlan = SyntheticPlan["columns"][number];
+export type SyntheticMethod = SyntheticPlan["method"];
+export type SyntheticTreatment = SyntheticColumnPlan["treatment"];
+export type SyntheticJob = Complete<Schemas["SyntheticJob"]>;
+export type SyntheticRun = Complete<Schemas["SyntheticRun"]>;
+export type SyntheticReport = SyntheticRun["report"];
+export type SyntheticRunSummary = Complete<Schemas["SyntheticRunSummary"]>;
+export type SyntheticPreview = Complete<Schemas["SyntheticPreview"]>;
+export type SyntheticColumnDetail = Complete<Schemas["ColumnDetail"]>;
+export type SyntheticPair = Complete<Schemas["PairDetail"]>;
+export type SyntheticUtility = Complete<Schemas["Utility"]>;
+export type SyntheticDisclosure = Complete<Schemas["Disclosure"]>;
+export type SyntheticOrigin = Complete<Schemas["Origin"]>;
+/** What the user changed from the plan; everything else stays automatic. */
+export type SyntheticRequest = {
+  method?: SyntheticMethod;
+  rows?: number;
+  seed?: number;
+  smooth?: boolean;
+  drop_copies?: boolean;
+  treatments?: Record<string, SyntheticTreatment>;
+  bounds?: Record<string, { minimum?: number | null; maximum?: number | null }>;
+};
 export type StorageInfo = Schemas["StorageInfo"];
 export type RowsColumn = Schemas["RowsColumn"];
 /** A cell: the typed value, or the stored text when the column's type cannot read it. */
@@ -555,11 +581,50 @@ export const api = {
   deleteSavedFilter: (id: string, filterId: string) =>
     request<void>("DELETE", `/datasets/${id}/saved-filters/${filterId}`),
 
-  settings: () => request<{ detection: DetectionSettings }>("GET", "/settings"),
-  updateSettings: (detection: DetectionSettings) =>
-    request<{ detection: DetectionSettings }>("PUT", "/settings", {
-      detection,
+  settings: () => request<{ detection: DetectionSettings; compute: ComputeSettings }>("GET", "/settings"),
+  updateSettings: (settings: { detection: DetectionSettings; compute: ComputeSettings }) =>
+    request<{ detection: DetectionSettings; compute: ComputeSettings }>("PUT", "/settings", settings),
+  gpu: (refresh = false) => request<GpuStatus>("GET", `/settings/gpu${refresh ? "?refresh=true" : ""}`),
+  syntheticPlan: (id: string) => request<SyntheticPlan>("GET", `/modules/synthetic/datasets/${id}/plan`),
+  syntheticGenerate: (id: string, body: SyntheticRequest) =>
+    request<SyntheticJob>("POST", `/modules/synthetic/datasets/${id}/runs`, body),
+  syntheticJob: (jobId: string) => request<SyntheticJob>("GET", `/modules/synthetic/jobs/${jobId}`),
+  syntheticCancel: (jobId: string) => request<SyntheticJob>("DELETE", `/modules/synthetic/jobs/${jobId}`),
+  syntheticRuns: (id: string) => request<SyntheticRunSummary[]>("GET", `/modules/synthetic/datasets/${id}/runs`),
+  syntheticRun: (id: string, runId: string) =>
+    request<SyntheticRun>("GET", `/modules/synthetic/datasets/${id}/runs/${runId}`),
+  syntheticCompare: (id: string, runIds: string[]) =>
+    request<SyntheticRunSummary[]>(
+      "GET",
+      `/modules/synthetic/datasets/${id}/runs/compare?runs=${runIds.map(encodeURIComponent).join(",")}`,
+    ),
+  syntheticDelete: (id: string, runId: string) =>
+    request<void>("DELETE", `/modules/synthetic/datasets/${id}/runs/${runId}`),
+  syntheticPreview: (id: string, runId: string) =>
+    request<SyntheticPreview>("GET", `/modules/synthetic/datasets/${id}/runs/${runId}/preview`),
+  syntheticDownloadUrl: (id: string, runId: string, format: "csv" | "parquet") =>
+    `/api/v1/modules/synthetic/datasets/${id}/runs/${runId}/download?format=${format}`,
+  syntheticSave: (id: string, runId: string) =>
+    request<{ dataset_id: string }>("POST", `/modules/synthetic/datasets/${id}/runs/${runId}/dataset`),
+  syntheticUtility: (id: string, runId: string, target: string) =>
+    request<SyntheticUtility>("POST", `/modules/synthetic/datasets/${id}/runs/${runId}/utility`, { target }),
+  syntheticDisclosure: (id: string, runId: string, known: string[], sensitive: string) =>
+    request<SyntheticDisclosure>("POST", `/modules/synthetic/datasets/${id}/runs/${runId}/disclosure`, {
+      known,
+      sensitive,
     }),
+  syntheticColumn: (id: string, runId: string, column: string, bins: number | null, target: string | null) => {
+    const query = new URLSearchParams();
+    if (bins) query.set("bins", String(bins));
+    if (target) query.set("target", target);
+    return request<SyntheticColumnDetail>(
+      "GET",
+      `/modules/synthetic/datasets/${id}/runs/${runId}/columns/${encodeURIComponent(column)}?${query}`,
+    );
+  },
+  syntheticPair: (id: string, runId: string, a: string, b: string) =>
+    request<SyntheticPair>("GET", `/modules/synthetic/datasets/${id}/runs/${runId}/pairs?${new URLSearchParams({ a, b })}`),
+  syntheticOrigin: (id: string) => request<SyntheticOrigin | null>("GET", `/modules/synthetic/origin/${id}`),
   storage: () => request<StorageInfo>("GET", "/storage"),
   clearCaches: () => request<void>("POST", "/storage/clear-caches"),
 

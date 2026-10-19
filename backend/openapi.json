@@ -2211,6 +2211,50 @@
         }
       }
     },
+    "/api/v1/settings/gpu": {
+      "get": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Gpu",
+        "description": "The graphics card the deep models could use (`refresh`: look again).",
+        "operationId": "gpu_api_v1_settings_gpu_get",
+        "parameters": [
+          {
+            "name": "refresh",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Refresh"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GpuStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/storage": {
       "get": {
         "tags": [
@@ -6669,6 +6713,893 @@
           }
         }
       }
+    },
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/plan": {
+      "get": {
+        "tags": [
+          "module:synthetic"
+        ],
+        "summary": "Plan",
+        "description": "What happens to each column (rule and reason) and the recommended method.",
+        "operationId": "plan_api_v1_modules_synthetic_datasets__dataset_id__plan_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Plan"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/runs": {
+      "post": {
+        "tags": [
+          "module:synthetic"
+        ],
+        "summary": "Generate",
+        "description": "Generate in the background: learning, generating, evaluating, saving.",
+        "operationId": "generate_api_v1_modules_synthetic_datasets__dataset_id__runs_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/RunRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyntheticJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "module:synthetic"
+        ],
+        "summary": "Runs",
+        "operationId": "runs_api_v1_modules_synthetic_datasets__dataset_id__runs_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SyntheticRunSummary"
+                  },
+                  "title": "Response Runs Api V1 Modules Synthetic Datasets  Dataset Id  Runs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/synthetic/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "module:synthetic"
+        ],
+        "summary": "Job",
+        "operationId": "job_api_v1_modules_synthetic_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyntheticJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "module:synthetic"
+        ],
+        "summary": "Cancel",
+        "description": "Stop at the next step; nothing is saved.",
+        "operationId": "cancel_api_v1_modules_synthetic_jobs__job_id__delete",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyntheticJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/runs/compare": {
+      "get": {
+        "tags": [
+          "module:synthetic"
+        ],
+        "summary": "Compare",
+        "operationId": "compare_api_v1_modules_synthetic_datasets__dataset_id__runs_compare_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "runs",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "2 to 5 run ids, comma-separated.",
+              "title": "Runs"
+            },
+            "description": "2 to 5 run ids, comma-separated."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SyntheticRunSummary"
+                  },
+                  "title": "Response Compare Api V1 Modules Synthetic Datasets  Dataset Id  Runs Compare Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/runs/{run_id}": {
+      "get": {
+        "tags": [
+          "module:synthetic"
+        ],
+        "summary": "Run",
+        "operationId": "run_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyntheticRun"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "module:synthetic"
+        ],
+        "summary": "Delete",
+        "operationId": "delete_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__delete",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/runs/{run_id}/preview": {
+      "get": {
+        "tags": [
+          "module:synthetic"
+        ],
+        "summary": "Preview",
+        "operationId": "preview_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__preview_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyntheticPreview"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/runs/{run_id}/download": {
+      "get": {
+        "tags": [
+          "module:synthetic"
+        ],
+        "summary": "Download",
+        "operationId": "download_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__download_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "csv",
+                "parquet"
+              ],
+              "type": "string",
+              "default": "csv",
+              "title": "Format"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/runs/{run_id}/dataset": {
+      "post": {
+        "tags": [
+          "module:synthetic"
+        ],
+        "summary": "Create Dataset",
+        "description": "Save the synthetic rows as a new dataset with the source's column types.",
+        "operationId": "create_dataset_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__dataset_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedDataset"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/runs/{run_id}/utility": {
+      "post": {
+        "tags": [
+          "module:synthetic"
+        ],
+        "summary": "Utility",
+        "description": "Trained on synthetic vs on real, both tested on the same held-out real rows.",
+        "operationId": "utility_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__utility_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UtilityRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Utility"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/runs/{run_id}/disclosure": {
+      "post": {
+        "tags": [
+          "module:synthetic"
+        ],
+        "summary": "Disclosure",
+        "description": "How well known columns let an attacker guess a sensitive one (CAP).",
+        "operationId": "disclosure_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__disclosure_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisclosureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Disclosure"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/runs/{run_id}/columns/{column}": {
+      "get": {
+        "tags": [
+          "module:synthetic"
+        ],
+        "summary": "Column",
+        "description": "Real and synthetic side by side for one column (target overlay optional).",
+        "operationId": "column_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__columns__column__get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "column",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Column"
+            }
+          },
+          {
+            "name": "bins",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 100,
+                  "minimum": 2
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bins"
+            }
+          },
+          {
+            "name": "target",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Target"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ColumnDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/runs/{run_id}/pairs": {
+      "get": {
+        "tags": [
+          "module:synthetic"
+        ],
+        "summary": "Pair",
+        "operationId": "pair_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__pairs_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "a",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "A"
+            }
+          },
+          {
+            "name": "b",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "B"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PairDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/modules/synthetic/origin/{dataset_id}": {
+      "get": {
+        "tags": [
+          "module:synthetic"
+        ],
+        "summary": "Origin",
+        "description": "The source and run of a dataset created from synthetic data (null otherwise).",
+        "operationId": "origin_api_v1_modules_synthetic_origin__dataset_id__get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/Origin"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Origin Api V1 Modules Synthetic Origin  Dataset Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -6754,6 +7685,9 @@
         "properties": {
           "detection": {
             "$ref": "#/components/schemas/DetectionSettings"
+          },
+          "compute": {
+            "$ref": "#/components/schemas/ComputeSettings"
           }
         },
         "type": "object",
@@ -7060,6 +7994,34 @@
         ],
         "title": "BivariateTest"
       },
+      "Bound": {
+        "properties": {
+          "minimum": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimum"
+          },
+          "maximum": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maximum"
+          }
+        },
+        "type": "object",
+        "title": "Bound"
+      },
       "Box": {
         "properties": {
           "q1": {
@@ -7271,6 +8233,34 @@
           "missing_share"
         ],
         "title": "Candidate"
+      },
+      "CapVariant": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": [
+              "CAP",
+              "Zero CAP",
+              "Generalized CAP"
+            ],
+            "title": "Name"
+          },
+          "attack": {
+            "type": "number",
+            "title": "Attack"
+          },
+          "protection": {
+            "type": "number",
+            "title": "Protection"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "attack",
+          "protection"
+        ],
+        "title": "CapVariant"
       },
       "Catalogue": {
         "properties": {
@@ -7595,6 +8585,41 @@
           "views"
         ],
         "title": "Chart"
+      },
+      "Check": {
+        "properties": {
+          "check": {
+            "type": "string",
+            "title": "Check"
+          },
+          "column": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Column"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "check",
+          "column",
+          "score",
+          "detail"
+        ],
+        "title": "Check"
       },
       "Choices": {
         "properties": {
@@ -8294,6 +9319,120 @@
         "title": "ColumnChoice",
         "description": "What the user set for one column; None = automatic."
       },
+      "ColumnDetail": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "counts": {
+            "items": {
+              "$ref": "#/components/schemas/Count"
+            },
+            "type": "array",
+            "title": "Counts"
+          },
+          "histogram": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SharedHistogram"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ecdf": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Ecdf"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stats": {
+            "items": {
+              "$ref": "#/components/schemas/Stat"
+            },
+            "type": "array",
+            "title": "Stats"
+          },
+          "frequent_real": {
+            "items": {
+              "$ref": "#/components/schemas/ValueRow"
+            },
+            "type": "array",
+            "title": "Frequent Real"
+          },
+          "frequent_synthetic": {
+            "items": {
+              "$ref": "#/components/schemas/ValueRow"
+            },
+            "type": "array",
+            "title": "Frequent Synthetic"
+          },
+          "smallest": {
+            "items": {
+              "$ref": "#/components/schemas/ValueRow"
+            },
+            "type": "array",
+            "title": "Smallest"
+          },
+          "largest": {
+            "items": {
+              "$ref": "#/components/schemas/ValueRow"
+            },
+            "type": "array",
+            "title": "Largest"
+          },
+          "levels": {
+            "items": {
+              "$ref": "#/components/schemas/ValueRow"
+            },
+            "type": "array",
+            "title": "Levels"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TargetOverlay"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "column",
+          "type",
+          "kind",
+          "score"
+        ],
+        "title": "ColumnDetail"
+      },
       "ColumnInfo": {
         "properties": {
           "name": {
@@ -8311,6 +9450,67 @@
           "dtype"
         ],
         "title": "ColumnInfo"
+      },
+      "ColumnLine": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "real": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Real"
+          },
+          "synthetic": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Synthetic"
+          },
+          "biggest": {
+            "type": "string",
+            "title": "Biggest"
+          }
+        },
+        "type": "object",
+        "required": [
+          "column",
+          "type",
+          "kind",
+          "metric",
+          "score",
+          "real",
+          "synthetic",
+          "biggest"
+        ],
+        "title": "ColumnLine"
       },
       "ColumnOut": {
         "properties": {
@@ -8460,6 +9660,74 @@
           "summary"
         ],
         "title": "ColumnOut"
+      },
+      "ColumnPlan": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "numeric_continuous",
+              "numeric_discrete",
+              "categorical_nominal",
+              "categorical_ordinal",
+              "boolean",
+              "datetime",
+              "text",
+              "identifier",
+              "ignored"
+            ],
+            "title": "Type"
+          },
+          "treatment": {
+            "type": "string",
+            "enum": [
+              "model",
+              "unique",
+              "fake",
+              "leave"
+            ],
+            "title": "Treatment"
+          },
+          "rule": {
+            "type": "string",
+            "title": "Rule"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "options": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "model",
+                "unique",
+                "fake",
+                "leave"
+              ]
+            },
+            "type": "array",
+            "title": "Options"
+          },
+          "grouped": {
+            "type": "boolean",
+            "title": "Grouped",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "type",
+          "treatment",
+          "rule",
+          "reason"
+        ],
+        "title": "ColumnPlan"
       },
       "ColumnStats": {
         "properties": {
@@ -8893,6 +10161,24 @@
         ],
         "title": "Comparison"
       },
+      "ComputeSettings": {
+        "properties": {
+          "use_gpu": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Use Gpu"
+          }
+        },
+        "type": "object",
+        "title": "ComputeSettings",
+        "description": "None = automatic: on when a ready GPU is found. Used by the deep models (023b)."
+      },
       "Condition": {
         "properties": {
           "column": {
@@ -9172,6 +10458,106 @@
         ],
         "title": "Correlogram"
       },
+      "Count": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "real": {
+            "type": "integer",
+            "title": "Real"
+          },
+          "real_share": {
+            "type": "number",
+            "title": "Real Share"
+          },
+          "synthetic": {
+            "type": "integer",
+            "title": "Synthetic"
+          },
+          "synthetic_share": {
+            "type": "number",
+            "title": "Synthetic Share"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "real",
+          "real_share",
+          "synthetic",
+          "synthetic_share"
+        ],
+        "title": "Count"
+      },
+      "Coverage": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "range": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Range"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "missing": {
+            "type": "number",
+            "title": "Missing"
+          },
+          "outliers": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outliers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "column",
+          "range",
+          "category",
+          "missing",
+          "outliers"
+        ],
+        "title": "Coverage"
+      },
+      "CreatedDataset": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset_id"
+        ],
+        "title": "CreatedDataset"
+      },
       "CrossValidation": {
         "properties": {
           "method": {
@@ -9445,6 +10831,38 @@
           "bytes"
         ],
         "title": "DatasetUsage"
+      },
+      "DcrHistogram": {
+        "properties": {
+          "edges": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Edges"
+          },
+          "synthetic": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Synthetic"
+          },
+          "holdout": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Holdout"
+          }
+        },
+        "type": "object",
+        "required": [
+          "edges",
+          "synthetic",
+          "holdout"
+        ],
+        "title": "DcrHistogram"
       },
       "Decomposition": {
         "properties": {
@@ -10070,6 +11488,38 @@
         ],
         "title": "Describe"
       },
+      "Detection": {
+        "properties": {
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "detectors": {
+            "items": {
+              "$ref": "#/components/schemas/Detector"
+            },
+            "type": "array",
+            "title": "Detectors"
+          },
+          "giveaways": {
+            "items": {
+              "$ref": "#/components/schemas/Giveaway"
+            },
+            "type": "array",
+            "title": "Giveaways"
+          },
+          "rows": {
+            "type": "integer",
+            "title": "Rows",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "score"
+        ],
+        "title": "Detection"
+      },
       "DetectionSettings": {
         "properties": {
           "parse_rate": {
@@ -10104,6 +11554,133 @@
         "type": "object",
         "title": "DetectionSettings",
         "description": "Bounds keep detection sensible: below half, \"mostly numbers\" would mean nothing."
+      },
+      "Detector": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "auc": {
+            "type": "number",
+            "title": "Auc"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "auc",
+          "score"
+        ],
+        "title": "Detector"
+      },
+      "Diagnostic": {
+        "properties": {
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "validity": {
+            "type": "number",
+            "title": "Validity"
+          },
+          "structure": {
+            "type": "number",
+            "title": "Structure"
+          },
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/Check"
+            },
+            "type": "array",
+            "title": "Checks"
+          },
+          "failures": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Failures"
+          }
+        },
+        "type": "object",
+        "required": [
+          "score",
+          "validity",
+          "structure"
+        ],
+        "title": "Diagnostic"
+      },
+      "Disclosure": {
+        "properties": {
+          "known": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Known"
+          },
+          "sensitive": {
+            "type": "string",
+            "title": "Sensitive"
+          },
+          "baseline": {
+            "type": "number",
+            "title": "Baseline"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/CapVariant"
+            },
+            "type": "array",
+            "title": "Variants"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score",
+            "default": 0.0
+          },
+          "rows": {
+            "type": "integer",
+            "title": "Rows",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "known",
+          "sensitive",
+          "baseline"
+        ],
+        "title": "Disclosure"
+      },
+      "DisclosureRequest": {
+        "properties": {
+          "known": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Known"
+          },
+          "sensitive": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Sensitive"
+          }
+        },
+        "type": "object",
+        "required": [
+          "known",
+          "sensitive"
+        ],
+        "title": "DisclosureRequest"
       },
       "Distribution": {
         "properties": {
@@ -10176,6 +11753,61 @@
           "fit"
         ],
         "title": "Distribution"
+      },
+      "Ecdf": {
+        "properties": {
+          "real_x": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Real X"
+          },
+          "synthetic_x": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Synthetic X"
+          },
+          "levels": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Levels"
+          }
+        },
+        "type": "object",
+        "required": [
+          "real_x",
+          "synthetic_x",
+          "levels"
+        ],
+        "title": "Ecdf"
+      },
+      "Edge": {
+        "properties": {
+          "parent": {
+            "type": "string",
+            "title": "Parent"
+          },
+          "child": {
+            "type": "string",
+            "title": "Child"
+          },
+          "strength": {
+            "type": "number",
+            "title": "Strength"
+          }
+        },
+        "type": "object",
+        "required": [
+          "parent",
+          "child",
+          "strength"
+        ],
+        "title": "Edge"
       },
       "Effect": {
         "properties": {
@@ -10516,6 +12148,52 @@
         ],
         "title": "Fit"
       },
+      "Fitted": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "cart",
+              "copula",
+              "bayes",
+              "independent"
+            ],
+            "title": "Method"
+          },
+          "order": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Order"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/Edge"
+            },
+            "type": "array",
+            "title": "Edges"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notes"
+          },
+          "dropped": {
+            "type": "integer",
+            "title": "Dropped",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "method"
+        ],
+        "title": "Fitted",
+        "description": "What the method found, shown with the run."
+      },
       "ForecastJob": {
         "properties": {
           "id": {
@@ -10624,6 +12302,85 @@
         "type": "object",
         "title": "Format"
       },
+      "Giveaway": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "importance": {
+            "type": "number",
+            "title": "Importance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "column",
+          "importance"
+        ],
+        "title": "Giveaway"
+      },
+      "GpuStatus": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "no_support",
+              "not_found"
+            ],
+            "title": "State"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "memory_mb": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory Mb"
+          },
+          "driver": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Driver"
+          },
+          "torch": {
+            "type": "boolean",
+            "title": "Torch",
+            "default": false
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "state"
+        ],
+        "title": "GpuStatus"
+      },
       "Group-Input": {
         "properties": {
           "column": {
@@ -10684,6 +12441,53 @@
           "rows"
         ],
         "title": "HeadOut"
+      },
+      "Header": {
+        "properties": {
+          "real_rows": {
+            "type": "integer",
+            "title": "Real Rows"
+          },
+          "holdout_rows": {
+            "type": "integer",
+            "title": "Holdout Rows"
+          },
+          "synthetic_rows": {
+            "type": "integer",
+            "title": "Synthetic Rows"
+          },
+          "real_duplicates": {
+            "type": "integer",
+            "title": "Real Duplicates"
+          },
+          "synthetic_duplicates": {
+            "type": "integer",
+            "title": "Synthetic Duplicates"
+          },
+          "types": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Types"
+          },
+          "left_out": {
+            "items": {
+              "$ref": "#/components/schemas/LeftOut"
+            },
+            "type": "array",
+            "title": "Left Out"
+          }
+        },
+        "type": "object",
+        "required": [
+          "real_rows",
+          "holdout_rows",
+          "synthetic_rows",
+          "real_duplicates",
+          "synthetic_duplicates"
+        ],
+        "title": "Header"
       },
       "HealthOut": {
         "properties": {
@@ -11269,6 +13073,95 @@
         ],
         "title": "Law"
       },
+      "Learned": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "numeric_continuous",
+              "numeric_discrete",
+              "categorical_nominal",
+              "categorical_ordinal",
+              "boolean",
+              "datetime",
+              "text",
+              "identifier",
+              "ignored"
+            ],
+            "title": "Type"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "number",
+              "integer",
+              "date",
+              "category"
+            ],
+            "title": "Kind"
+          },
+          "missing": {
+            "type": "number",
+            "title": "Missing"
+          },
+          "minimum": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimum"
+          },
+          "maximum": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maximum"
+          },
+          "decimals": {
+            "type": "integer",
+            "title": "Decimals",
+            "default": 0
+          },
+          "day_only": {
+            "type": "boolean",
+            "title": "Day Only",
+            "default": false
+          },
+          "levels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Levels"
+          },
+          "grouped": {
+            "type": "boolean",
+            "title": "Grouped",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "type",
+          "kind",
+          "missing"
+        ],
+        "title": "Learned"
+      },
       "LearningCurve": {
         "properties": {
           "label": {
@@ -11337,6 +13230,177 @@
         ],
         "title": "LearningCurve",
         "description": "How the model improved iteration after iteration (iterative models only)."
+      },
+      "LeftOut": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "column",
+          "reason"
+        ],
+        "title": "LeftOut"
+      },
+      "LinkPair": {
+        "properties": {
+          "a": {
+            "type": "string",
+            "title": "A"
+          },
+          "b": {
+            "type": "string",
+            "title": "B"
+          },
+          "measure": {
+            "type": "string",
+            "enum": [
+              "pearson",
+              "spearman",
+              "cramers_v",
+              "eta"
+            ],
+            "title": "Measure"
+          },
+          "real": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Real"
+          },
+          "synthetic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synthetic"
+          },
+          "gap": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gap"
+          }
+        },
+        "type": "object",
+        "required": [
+          "a",
+          "b",
+          "measure",
+          "real",
+          "synthetic",
+          "gap"
+        ],
+        "title": "LinkPair"
+      },
+      "Links": {
+        "properties": {
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "real": {
+            "items": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Real"
+          },
+          "synthetic": {
+            "items": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Synthetic"
+          },
+          "gap": {
+            "items": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Gap"
+          },
+          "measures": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Measures"
+          },
+          "worst": {
+            "items": {
+              "$ref": "#/components/schemas/LinkPair"
+            },
+            "type": "array",
+            "title": "Worst"
+          }
+        },
+        "type": "object",
+        "required": [
+          "columns",
+          "real",
+          "synthetic",
+          "gap",
+          "measures"
+        ],
+        "title": "Links"
       },
       "Listing": {
         "properties": {
@@ -11526,6 +13590,39 @@
         ],
         "title": "MatrixMember"
       },
+      "MeanSpread": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "real_mean": {
+            "type": "number",
+            "title": "Real Mean"
+          },
+          "real_std": {
+            "type": "number",
+            "title": "Real Std"
+          },
+          "synthetic_mean": {
+            "type": "number",
+            "title": "Synthetic Mean"
+          },
+          "synthetic_std": {
+            "type": "number",
+            "title": "Synthetic Std"
+          }
+        },
+        "type": "object",
+        "required": [
+          "column",
+          "real_mean",
+          "real_std",
+          "synthetic_mean",
+          "synthetic_std"
+        ],
+        "title": "MeanSpread"
+      },
       "Measure": {
         "properties": {
           "id": {
@@ -11639,6 +13736,35 @@
         ],
         "title": "MeasureOut"
       },
+      "MethodOption": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "cart",
+              "copula",
+              "bayes",
+              "independent"
+            ],
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "why": {
+            "type": "string",
+            "title": "Why"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "why"
+        ],
+        "title": "MethodOption"
+      },
       "MethodResult": {
         "properties": {
           "key": {
@@ -11736,6 +13862,43 @@
           "significant"
         ],
         "title": "MethodResult"
+      },
+      "Metric": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "real": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Real"
+          },
+          "synthetic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synthetic"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "real",
+          "synthetic"
+        ],
+        "title": "Metric"
       },
       "ModelResult": {
         "properties": {
@@ -12072,6 +14235,30 @@
         ],
         "title": "NumericProfile"
       },
+      "Origin": {
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "source_name": {
+            "type": "string",
+            "title": "Source Name"
+          },
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_id",
+          "source_name",
+          "run_id"
+        ],
+        "title": "Origin",
+        "description": "A dataset created from a synthetic run."
+      },
       "Others": {
         "properties": {
           "count": {
@@ -12276,6 +14463,206 @@
           "column_stats"
         ],
         "title": "Overview"
+      },
+      "PairBox": {
+        "properties": {
+          "group": {
+            "type": "string",
+            "title": "Group"
+          },
+          "real": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Real"
+          },
+          "synthetic": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Synthetic"
+          }
+        },
+        "type": "object",
+        "required": [
+          "group",
+          "real",
+          "synthetic"
+        ],
+        "title": "PairBox"
+      },
+      "PairDetail": {
+        "properties": {
+          "a": {
+            "type": "string",
+            "title": "A"
+          },
+          "b": {
+            "type": "string",
+            "title": "B"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "numbers",
+              "mixed",
+              "categories"
+            ],
+            "title": "Kind"
+          },
+          "real_points": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Real Points"
+          },
+          "synthetic_points": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Synthetic Points"
+          },
+          "boxes": {
+            "items": {
+              "$ref": "#/components/schemas/PairBox"
+            },
+            "type": "array",
+            "title": "Boxes"
+          },
+          "rows": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "real_table": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Real Table"
+          },
+          "synthetic_table": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Synthetic Table"
+          }
+        },
+        "type": "object",
+        "required": [
+          "a",
+          "b",
+          "kind"
+        ],
+        "title": "PairDetail"
+      },
+      "PairScore": {
+        "properties": {
+          "a": {
+            "type": "string",
+            "title": "A"
+          },
+          "b": {
+            "type": "string",
+            "title": "B"
+          },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "CorrelationSimilarity",
+              "ContingencySimilarity"
+            ],
+            "title": "Metric"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "real": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Real"
+          },
+          "synthetic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synthetic"
+          },
+          "meets": {
+            "type": "boolean",
+            "title": "Meets"
+          }
+        },
+        "type": "object",
+        "required": [
+          "a",
+          "b",
+          "metric",
+          "score",
+          "real",
+          "synthetic",
+          "meets"
+        ],
+        "title": "PairScore"
       },
       "Param": {
         "properties": {
@@ -12515,6 +14902,87 @@
           "std"
         ],
         "title": "PermutationItem"
+      },
+      "Plan": {
+        "properties": {
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/ColumnPlan"
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "cart",
+              "copula",
+              "bayes",
+              "independent"
+            ],
+            "title": "Method"
+          },
+          "method_reason": {
+            "type": "string",
+            "title": "Method Reason"
+          },
+          "methods": {
+            "items": {
+              "$ref": "#/components/schemas/MethodOption"
+            },
+            "type": "array",
+            "title": "Methods"
+          },
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "default_rows": {
+            "type": "integer",
+            "title": "Default Rows"
+          },
+          "train_rows": {
+            "type": "integer",
+            "title": "Train Rows"
+          },
+          "modelled": {
+            "type": "integer",
+            "title": "Modelled"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "smooth": {
+            "type": "boolean",
+            "title": "Smooth",
+            "default": true
+          },
+          "smooth_reason": {
+            "type": "string",
+            "title": "Smooth Reason",
+            "default": "On: continuous numbers stay off the real values, so far fewer rows copy a real one."
+          }
+        },
+        "type": "object",
+        "required": [
+          "columns",
+          "method",
+          "method_reason",
+          "methods",
+          "rows",
+          "default_rows",
+          "train_rows",
+          "modelled"
+        ],
+        "title": "Plan"
       },
       "Points": {
         "properties": {
@@ -12877,6 +15345,154 @@
         ],
         "title": "PreviewRequest"
       },
+      "Privacy": {
+        "properties": {
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "copies": {
+            "type": "integer",
+            "title": "Copies"
+          },
+          "copy_share": {
+            "type": "number",
+            "title": "Copy Share"
+          },
+          "near_copies": {
+            "type": "integer",
+            "title": "Near Copies"
+          },
+          "new_rows": {
+            "type": "number",
+            "title": "New Rows"
+          },
+          "overfitting": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overfitting"
+          },
+          "closer_to_train": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closer To Train"
+          },
+          "baseline": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline"
+          },
+          "median_dcr": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Dcr"
+          },
+          "rare": {
+            "items": {
+              "$ref": "#/components/schemas/RareValue"
+            },
+            "type": "array",
+            "title": "Rare"
+          },
+          "histogram": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DcrHistogram"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "verdict": {
+            "type": "string",
+            "title": "Verdict",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "score",
+          "copies",
+          "copy_share",
+          "near_copies",
+          "new_rows",
+          "overfitting",
+          "closer_to_train",
+          "baseline",
+          "median_dcr"
+        ],
+        "title": "Privacy"
+      },
+      "Projection": {
+        "properties": {
+          "real": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Real"
+          },
+          "synthetic": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Synthetic"
+          },
+          "explained": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Explained"
+          }
+        },
+        "type": "object",
+        "required": [
+          "real",
+          "synthetic",
+          "explained"
+        ],
+        "title": "Projection"
+      },
       "QQ": {
         "properties": {
           "theoretical": {
@@ -12911,6 +15527,85 @@
         ],
         "title": "QQ",
         "description": "Sample quantiles against the standard normal's, with the line through Q1 and Q3."
+      },
+      "Quality": {
+        "properties": {
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "shapes": {
+            "type": "number",
+            "title": "Shapes"
+          },
+          "trends": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trends"
+          },
+          "shape_scores": {
+            "items": {
+              "$ref": "#/components/schemas/ShapeScore"
+            },
+            "type": "array",
+            "title": "Shape Scores"
+          },
+          "pair_scores": {
+            "items": {
+              "$ref": "#/components/schemas/PairScore"
+            },
+            "type": "array",
+            "title": "Pair Scores"
+          },
+          "coverage": {
+            "items": {
+              "$ref": "#/components/schemas/Coverage"
+            },
+            "type": "array",
+            "title": "Coverage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "score",
+          "shapes",
+          "trends"
+        ],
+        "title": "Quality"
+      },
+      "RareValue": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "real": {
+            "type": "integer",
+            "title": "Real"
+          },
+          "synthetic": {
+            "type": "integer",
+            "title": "Synthetic"
+          }
+        },
+        "type": "object",
+        "required": [
+          "column",
+          "value",
+          "real",
+          "synthetic"
+        ],
+        "title": "RareValue"
       },
       "Ratio": {
         "properties": {
@@ -13143,6 +15838,90 @@
           "name"
         ],
         "title": "RenameRequest"
+      },
+      "Report": {
+        "properties": {
+          "scores": {
+            "$ref": "#/components/schemas/SyntheticScores"
+          },
+          "verdicts": {
+            "$ref": "#/components/schemas/Verdicts"
+          },
+          "header": {
+            "$ref": "#/components/schemas/Header"
+          },
+          "diagnostic": {
+            "$ref": "#/components/schemas/Diagnostic"
+          },
+          "quality": {
+            "$ref": "#/components/schemas/Quality"
+          },
+          "detection": {
+            "$ref": "#/components/schemas/Detection"
+          },
+          "privacy": {
+            "$ref": "#/components/schemas/Privacy"
+          },
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/ColumnLine"
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "links": {
+            "$ref": "#/components/schemas/Links"
+          },
+          "overview": {
+            "$ref": "#/components/schemas/SyntheticOverview"
+          },
+          "fitted": {
+            "$ref": "#/components/schemas/Fitted"
+          },
+          "learned": {
+            "items": {
+              "$ref": "#/components/schemas/Learned"
+            },
+            "type": "array",
+            "title": "Learned"
+          },
+          "utility": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Utility"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "disclosure": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Disclosure"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "scores",
+          "verdicts",
+          "header",
+          "diagnostic",
+          "quality",
+          "detection",
+          "privacy",
+          "columns",
+          "links",
+          "overview",
+          "fitted",
+          "learned"
+        ],
+        "title": "Report"
       },
       "Resolved": {
         "properties": {
@@ -13497,6 +16276,103 @@
         ],
         "title": "Run",
         "description": "A trained model as the page shows it (stored as JSON next to the fitted pipeline)."
+      },
+      "RunColumn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "treatment": {
+            "type": "string",
+            "enum": [
+              "model",
+              "unique",
+              "fake",
+              "leave"
+            ],
+            "title": "Treatment"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "type",
+          "treatment"
+        ],
+        "title": "RunColumn"
+      },
+      "RunRequest": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "cart",
+              "copula",
+              "bayes",
+              "independent"
+            ],
+            "title": "Method",
+            "default": "cart"
+          },
+          "rows": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000000.0,
+                "minimum": 100.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rows"
+          },
+          "seed": {
+            "type": "integer",
+            "maximum": 2147483647.0,
+            "minimum": 0.0,
+            "title": "Seed",
+            "default": 42
+          },
+          "smooth": {
+            "type": "boolean",
+            "title": "Smooth",
+            "default": true
+          },
+          "drop_copies": {
+            "type": "boolean",
+            "title": "Drop Copies",
+            "default": true
+          },
+          "treatments": {
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "model",
+                "unique",
+                "fake",
+                "leave"
+              ]
+            },
+            "type": "object",
+            "title": "Treatments"
+          },
+          "bounds": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Bound"
+            },
+            "type": "object",
+            "title": "Bounds"
+          }
+        },
+        "type": "object",
+        "title": "RunRequest",
+        "description": "Everything not given takes the plan's automatic choice."
       },
       "RunSummary": {
         "properties": {
@@ -15459,6 +18335,72 @@
         ],
         "title": "ShapFeature"
       },
+      "ShapeScore": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "KSComplement",
+              "TVComplement"
+            ],
+            "title": "Metric"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "column",
+          "metric",
+          "score"
+        ],
+        "title": "ShapeScore"
+      },
+      "SharedHistogram": {
+        "properties": {
+          "edges": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Edges"
+          },
+          "real": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Real"
+          },
+          "synthetic": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Synthetic"
+          }
+        },
+        "type": "object",
+        "required": [
+          "edges",
+          "real",
+          "synthetic"
+        ],
+        "title": "SharedHistogram"
+      },
       "SourceOptions": {
         "properties": {
           "csv": {
@@ -15543,6 +18485,67 @@
           "ordinal"
         ],
         "title": "SplitOut"
+      },
+      "Stat": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "real": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Real"
+          },
+          "synthetic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synthetic"
+          },
+          "delta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delta"
+          },
+          "delta_share": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delta Share"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "real",
+          "synthetic",
+          "delta",
+          "delta_share"
+        ],
+        "title": "Stat"
       },
       "StorageInfo": {
         "properties": {
@@ -15677,6 +18680,342 @@
           "kpss_rejects"
         ],
         "title": "Synthesis"
+      },
+      "SyntheticJob": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "done",
+              "failed",
+              "cancelled"
+            ],
+            "title": "Status"
+          },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "loading",
+              "generating",
+              "evaluating",
+              "saving"
+            ],
+            "title": "Stage"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "stage"
+        ],
+        "title": "SyntheticJob"
+      },
+      "SyntheticOverview": {
+        "properties": {
+          "mean_spread": {
+            "items": {
+              "$ref": "#/components/schemas/MeanSpread"
+            },
+            "type": "array",
+            "title": "Mean Spread"
+          },
+          "pca": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Projection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "SyntheticOverview"
+      },
+      "SyntheticPreview": {
+        "properties": {
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "rows": {
+            "items": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "columns",
+          "rows",
+          "total"
+        ],
+        "title": "SyntheticPreview"
+      },
+      "SyntheticRun": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "cart",
+              "copula",
+              "bayes",
+              "independent"
+            ],
+            "title": "Method"
+          },
+          "method_label": {
+            "type": "string",
+            "title": "Method Label"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/RunRequest"
+          },
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "seconds": {
+            "type": "number",
+            "title": "Seconds"
+          },
+          "train_rows": {
+            "type": "integer",
+            "title": "Train Rows"
+          },
+          "holdout_rows": {
+            "type": "integer",
+            "title": "Holdout Rows"
+          },
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/RunColumn"
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "report": {
+            "$ref": "#/components/schemas/Report"
+          },
+          "created_dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Dataset Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "dataset_id",
+          "created_at",
+          "method",
+          "method_label",
+          "settings",
+          "rows",
+          "seconds",
+          "train_rows",
+          "holdout_rows",
+          "columns",
+          "report"
+        ],
+        "title": "SyntheticRun"
+      },
+      "SyntheticRunSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "cart",
+              "copula",
+              "bayes",
+              "independent"
+            ],
+            "title": "Method"
+          },
+          "method_label": {
+            "type": "string",
+            "title": "Method Label"
+          },
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "seconds": {
+            "type": "number",
+            "title": "Seconds"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "scores": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Scores"
+          },
+          "created_dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Dataset Id"
+          },
+          "settings": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Settings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "method",
+          "method_label",
+          "rows",
+          "seconds",
+          "created_at",
+          "scores"
+        ],
+        "title": "SyntheticRunSummary"
+      },
+      "SyntheticScores": {
+        "properties": {
+          "diagnostic": {
+            "type": "number",
+            "title": "Diagnostic"
+          },
+          "quality": {
+            "type": "number",
+            "title": "Quality"
+          },
+          "shapes": {
+            "type": "number",
+            "title": "Shapes"
+          },
+          "trends": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trends"
+          },
+          "detection": {
+            "type": "number",
+            "title": "Detection"
+          },
+          "privacy": {
+            "type": "number",
+            "title": "Privacy"
+          },
+          "utility": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Utility"
+          }
+        },
+        "type": "object",
+        "required": [
+          "diagnostic",
+          "quality",
+          "shapes",
+          "trends",
+          "detection",
+          "privacy"
+        ],
+        "title": "SyntheticScores"
       },
       "TableView": {
         "properties": {
@@ -15893,6 +19232,62 @@
         ],
         "title": "TargetDistribution",
         "description": "What the browser needs to cut the target: exact quantiles, a fine histogram, a sorted\nsample (natural breaks) and, for few distinct values, each value with its count."
+      },
+      "TargetOverlay": {
+        "properties": {
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "measure": {
+            "type": "string",
+            "title": "Measure"
+          },
+          "groups": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Groups"
+          },
+          "real": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Real"
+          },
+          "synthetic": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Synthetic"
+          }
+        },
+        "type": "object",
+        "required": [
+          "target",
+          "measure",
+          "groups",
+          "real",
+          "synthetic"
+        ],
+        "title": "TargetOverlay"
       },
       "Targets": {
         "properties": {
@@ -16880,6 +20275,85 @@
         ],
         "title": "UploadOut"
       },
+      "Utility": {
+        "properties": {
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "task": {
+            "type": "string",
+            "enum": [
+              "regression",
+              "classification"
+            ],
+            "title": "Task"
+          },
+          "primary": {
+            "type": "string",
+            "title": "Primary"
+          },
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/Metric"
+            },
+            "type": "array",
+            "title": "Metrics"
+          },
+          "ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ratio"
+          },
+          "train_rows": {
+            "type": "integer",
+            "title": "Train Rows",
+            "default": 0
+          },
+          "synthetic_rows": {
+            "type": "integer",
+            "title": "Synthetic Rows",
+            "default": 0
+          },
+          "test_rows": {
+            "type": "integer",
+            "title": "Test Rows",
+            "default": 0
+          },
+          "sentence": {
+            "type": "string",
+            "title": "Sentence",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "target",
+          "task",
+          "primary"
+        ],
+        "title": "Utility"
+      },
+      "UtilityRequest": {
+        "properties": {
+          "target": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Target"
+          }
+        },
+        "type": "object",
+        "required": [
+          "target"
+        ],
+        "title": "UtilityRequest"
+      },
       "Validation": {
         "properties": {
           "method": {
@@ -17046,6 +20520,59 @@
         ],
         "title": "ValueCount"
       },
+      "ValueRow": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "real": {
+            "type": "integer",
+            "title": "Real"
+          },
+          "real_share": {
+            "type": "number",
+            "title": "Real Share"
+          },
+          "synthetic": {
+            "type": "integer",
+            "title": "Synthetic"
+          },
+          "synthetic_share": {
+            "type": "number",
+            "title": "Synthetic Share"
+          },
+          "delta": {
+            "type": "number",
+            "title": "Delta"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "missing in synthetic",
+                  "invented"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "real",
+          "real_share",
+          "synthetic",
+          "synthetic_share",
+          "delta"
+        ],
+        "title": "ValueRow"
+      },
       "VariableProfile": {
         "properties": {
           "name": {
@@ -17113,6 +20640,34 @@
           "type"
         ],
         "title": "VariableProfile"
+      },
+      "Verdicts": {
+        "properties": {
+          "diagnostic": {
+            "type": "string",
+            "title": "Diagnostic"
+          },
+          "quality": {
+            "type": "string",
+            "title": "Quality"
+          },
+          "detection": {
+            "type": "string",
+            "title": "Detection"
+          },
+          "privacy": {
+            "type": "string",
+            "title": "Privacy"
+          }
+        },
+        "type": "object",
+        "required": [
+          "diagnostic",
+          "quality",
+          "detection",
+          "privacy"
+        ],
+        "title": "Verdicts"
       },
       "View": {
         "properties": {

@@ -45,7 +45,9 @@ Roadmap en **sprints**, chacun composé de **tranches verticales** : chaque case
 ### Après
 - [x] Sprint 6 — Module Builder KPI
   - [x] 022-kpi-builder — KPI suggérés depuis les colonnes, builder (mesures, ratio, temps, regroupements), choix automatiques par règles identifiées (grain, graphique, tableau, format) avec leur raison, Customize (Auto / reset, options interdites grisées), tableau croisé (totaux recalculés, Show as, export), KPI enregistrés
-- [ ] Sprint 7 — Module données synthétiques (CTGAN, TVAE/VAE, TimeGAN, évaluation de fidélité)
+- [x] Sprint 7 — Module données synthétiques (page : `docs/pages/13-donnees-synthetiques.md`)
+  - [x] 023-donnees-synthetiques — sans nouvelle dépendance : plan automatique par colonne (règles R-SYN), CART séquentiel / copule gaussienne / réseau bayésien Chow-Liu / colonnes indépendantes, rapport à la SDMetrics (Diagnostic, Quality, Detection, Privacy), comparaison colonne par colonne à la Sweetviz, liens, utilité TSTR / TRTR, confidentialité (copies, DCR, CAP), runs comparés, Save as dataset ; détection du GPU dans Paramètres
+  - [ ] 023b — CTGAN, TVAE, TimeGAN (PyTorch, sur accord), GPU utilisé
 - [ ] À planifier — Module Assistant IA (LLM local optionnel)
 - [ ] Dernière étape — Bibliothèque Python : tout le moteur utilisable en `pip install` (notebooks, scripts), l'app en extra `[app]` — [bibliotheque-python.md](docs/modules-futurs/bibliotheque-python.md)
 - [ ] À planifier — Rapport HTML exportable du dataset

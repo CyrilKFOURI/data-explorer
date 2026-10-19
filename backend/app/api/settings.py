@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response
 
+from app.domain.settings.gpu import GpuStatus
 from app.domain.settings.service import AppSettings, SettingsService, StorageInfo
 
 router = APIRouter(tags=["settings"])
@@ -23,6 +24,12 @@ def read_settings(service: Service) -> AppSettings:
 def write_settings(settings: AppSettings, service: Service) -> AppSettings:
     """Detection thresholds apply to the next detections (imports, "Re-run detection")."""
     return service.update(settings)
+
+
+@router.get("/settings/gpu")
+def gpu(service: Service, refresh: bool = False) -> GpuStatus:
+    """The graphics card the deep models could use (`refresh`: look again)."""
+    return service.gpu(refresh)
 
 
 @router.get("/storage")

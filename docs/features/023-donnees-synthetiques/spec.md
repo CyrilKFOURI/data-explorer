@@ -64,7 +64,8 @@ Chaque colonne reçoit un **traitement**, choisi par une règle identifiée (rai
 
 **Règles :**
 - **Ordre des colonnes pour CART (Auto)** : d'abord la colonne la plus liée aux autres (somme des associations du module Correlations), puis par lien décroissant avec les colonnes déjà placées. La première colonne est tirée selon sa distribution réelle.
-- **Arbres CART** : au moins 5 lignes réelles par feuille (une feuille ne désigne jamais une seule ligne réelle, contrainte de confidentialité). Option « Smooth numbers » : un bruit gaussien proportionnel à la dispersion de la feuille est ajouté aux nombres.
+- **Arbres CART** : au moins 5 lignes réelles par feuille (une feuille ne désigne jamais une seule ligne réelle, contrainte de confidentialité). « Smooth numbers » (**activé par défaut**) : un bruit gaussien proportionnel à la dispersion de la feuille est ajouté aux nombres continus ayant au moins 20 valeurs distinctes (ni entiers, ni dates : leurs valeurs nouvelles trahiraient le synthétique).
+- **« Drop copies of real rows »** (activé par défaut, toutes méthodes) : les lignes synthétiques identiques à une ligne d'apprentissage sont remplacées par des lignes générées en plus (règle « replicated uniques » de synthpop) ; leur nombre est affiché avec le run.
 - **Lignes d'apprentissage** : 80 % des lignes réelles, au plus 50 000 (échantillon reproductible, graine affichée). Les 20 % restants sont **tenus à l'écart** pour l'évaluation de confidentialité.
 - **Nombre de lignes générées** : par défaut autant que l'original, de 100 à 1 000 000.
 - **Graine** : fixe par défaut (42), modifiable. La même graine avec les mêmes réglages redonne le même jeu.
@@ -156,7 +157,8 @@ Calculée avec les lignes réelles **tenues à l'écart** (jamais vues par le g�
 
 | Mesure | Calcul | Lecture |
 |---|---|---|
-| **Exact copies** (New row synthesis) | part des lignes synthétiques égales à une ligne d'apprentissage (nombres mis à l'échelle min-max, tolérance 0,01) | attendu 0 % ; sinon avertissement avec le nombre de lignes |
+| **Exact copies** | part des lignes synthétiques strictement égales à une ligne d'apprentissage | attendu 0 % ; sinon avertissement avec le nombre de lignes |
+| **Near copies** (New row synthesis de SDMetrics) | part des lignes égales à une ligne d'apprentissage, nombres à 1 % de l'étendue près | informatif : naturellement plus élevé avec peu de colonnes |
 | **Overfitting protection** | min(1, 2 × (1 − part des lignes synthétiques plus proches de l'apprentissage que des lignes tenues à l'écart)) | 100 % = le générateur n'a pas mémorisé ; sous 80 %, avertissement « memorisation » |
 | **Baseline protection** | min(1, médiane DCR(synthétique → apprentissage) / médiane DCR(données aléatoires uniformes dans les étendues → apprentissage)) | proche de 100 % = les lignes synthétiques ne sont pas plus proches du réel que du hasard. Un score bas n'est pas un défaut en soi (des données fidèles sont proches du réel) ; il se lit avec l'Overfitting protection |
 | **Rare values** | modalités rares (< 5 lignes réelles) reproduites dans le synthétique | liste ; une valeur rare peut identifier une personne |
@@ -229,7 +231,7 @@ Inspirée de Sweetviz, mais avec des mesures d'écart, ce qui manque à Sweetviz
 ## Données et API
 
 - **Table `synthetic_runs`** (migration 0009) : id, dataset source, méthode, réglages (JSON), lignes générées, scores (JSON), statut, erreur, durée, dataset créé (nullable), créé le.
-- **Fichiers** : `datasets/<id>/synthetic/<run>.parquet` (données) et `<run>.json` (rapport) ; supprimés avec le dataset source. Le dataset créé reste indépendant.
+- **Fichiers** : `datasets/<id>/synthetic/<run>/` : `data.parquet` (données), `train.parquet` et `holdout.parquet` (lignes réelles typées, pour les évaluations à la demande), `report.json` (rapport) ; supprimés avec le dataset source. Le dataset créé reste indépendant.
 - **Endpoints** :
   - `GET /modules/synthetic/datasets/{id}/plan` : traitement automatique de chaque colonne, avec règle et raison, et méthode recommandée ;
   - `POST /modules/synthetic/datasets/{id}/runs` : lance la génération (job) ;
@@ -242,7 +244,10 @@ Inspirée de Sweetviz, mais avec des mesures d'écart, ce qui manque à Sweetviz
   - `POST …/runs/{run}/utility` : évaluation d'utilité (TSTR / TRTR), avec la cible en paramètre ;
   - `POST …/runs/{run}/disclosure` : risque de divulgation (CAP), avec les colonnes connues et la colonne sensible ;
   - `GET …/runs/{run}/columns/{column}` : comparaison détaillée d'une colonne (section 7), avec la cible en option ;
+  - `GET …/runs/{run}/pairs?a=&b=` : une paire réelle et synthétique côte à côte (section 7, liens) ;
   - `GET …/runs/compare?runs=a,b,c` : scores côte à côte de plusieurs runs ;
+  - `GET /modules/synthetic/origin/{dataset}` : source et run d'un dataset créé depuis des données synthétiques ;
+  - `GET /settings/gpu?refresh=` : carte graphique détectée ;
   - `DELETE …/runs/{run}`.
 - **Code** (forme compatible avec la future bibliothèque Python : calculs purs, entrées simples, dataclasses en sortie) :
   - `backend/app/domain/synthetic/` : `plan.py` (règles R-SYN), `encode.py` (aller-retour colonnes ↔ matrice), `methods/` (cart, copula, bayes, independent), `diagnostic.py`, `quality.py` (formes, paires, couverture), `detection.py`, `utility.py`, `privacy.py` (copies, DCR, CAP), `compare.py` (vue colonne par colonne) ;

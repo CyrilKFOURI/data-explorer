@@ -12,9 +12,12 @@ from pydantic import BaseModel, Field
 from app.core import db
 from app.core.storage import Workspace
 from app.domain.datasets.service import DatasetService
+from app.domain.settings import gpu
+from app.domain.settings.gpu import GpuStatus
 from app.domain.typing.engine import DEFAULT_THRESHOLDS, Thresholds
 
 DETECTION_KEY = "detection"
+COMPUTE_KEY = "compute"
 
 
 class DetectionSettings(BaseModel):
@@ -26,8 +29,15 @@ class DetectionSettings(BaseModel):
     identifier_unique: float = Field(default=DEFAULT_THRESHOLDS.identifier_unique, ge=0.5, le=1)
 
 
+class ComputeSettings(BaseModel):
+    """None = automatic: on when a ready GPU is found. Used by the deep models (023b)."""
+
+    use_gpu: bool | None = None
+
+
 class AppSettings(BaseModel):
     detection: DetectionSettings = Field(default_factory=DetectionSettings)
+    compute: ComputeSettings = Field(default_factory=ComputeSettings)
 
 
 @dataclass
@@ -57,6 +67,7 @@ class SettingsService:
         self.workspace = workspace
         self.datasets = datasets
         self.cache_clearers: list[Callable[[], None]] = []
+        self._gpu: GpuStatus | None = None
 
     @contextmanager
     def _db(self) -> Iterator[sqlite3.Connection]:
@@ -68,21 +79,34 @@ class SettingsService:
 
     def get(self) -> AppSettings:
         with self._db() as connection:
-            row = connection.execute(
-                "SELECT value FROM settings WHERE key = ?", (DETECTION_KEY,)
-            ).fetchone()
-        detection = DetectionSettings.model_validate(json.loads(row["value"])) if row else None
-        return AppSettings(detection=detection or DetectionSettings())
+            rows = connection.execute(
+                "SELECT key, value FROM settings WHERE key IN (?, ?)", (DETECTION_KEY, COMPUTE_KEY)
+            ).fetchall()
+        stored = {row["key"]: json.loads(row["value"]) for row in rows}
+        return AppSettings(
+            detection=DetectionSettings.model_validate(stored.get(DETECTION_KEY, {})),
+            compute=ComputeSettings.model_validate(stored.get(COMPUTE_KEY, {})),
+        )
 
     def update(self, settings: AppSettings) -> AppSettings:
         with self._db() as connection:
-            connection.execute(
-                "INSERT INTO settings (key, value) VALUES (?, ?) "
-                "ON CONFLICT (key) DO UPDATE SET value = excluded.value",
+            for key, value in (
                 (DETECTION_KEY, settings.detection.model_dump_json()),
-            )
+                (COMPUTE_KEY, settings.compute.model_dump_json()),
+            ):
+                connection.execute(
+                    "INSERT INTO settings (key, value) VALUES (?, ?) "
+                    "ON CONFLICT (key) DO UPDATE SET value = excluded.value",
+                    (key, value),
+                )
             connection.commit()
         return settings
+
+    def gpu(self, refresh: bool = False) -> GpuStatus:
+        """The card found at start-up (or again on demand: "Check again")."""
+        if refresh or self._gpu is None:
+            self._gpu = gpu.detect()
+        return self._gpu
 
     def thresholds(self) -> Thresholds:
         return Thresholds(**self.get().detection.model_dump())

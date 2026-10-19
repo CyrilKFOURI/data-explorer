@@ -549,6 +549,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/settings/gpu": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Gpu
+         * @description The graphics card the deep models could use (`refresh`: look again).
+         */
+        get: operations["gpu_api_v1_settings_gpu_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/storage": {
         parameters: {
             query?: never;
@@ -1157,6 +1177,254 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Plan
+         * @description What happens to each column (rule and reason) and the recommended method.
+         */
+        get: operations["plan_api_v1_modules_synthetic_datasets__dataset_id__plan_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Runs */
+        get: operations["runs_api_v1_modules_synthetic_datasets__dataset_id__runs_get"];
+        put?: never;
+        /**
+         * Generate
+         * @description Generate in the background: learning, generating, evaluating, saving.
+         */
+        post: operations["generate_api_v1_modules_synthetic_datasets__dataset_id__runs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/modules/synthetic/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Job */
+        get: operations["job_api_v1_modules_synthetic_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Cancel
+         * @description Stop at the next step; nothing is saved.
+         */
+        delete: operations["cancel_api_v1_modules_synthetic_jobs__job_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/runs/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Compare */
+        get: operations["compare_api_v1_modules_synthetic_datasets__dataset_id__runs_compare_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/runs/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Run */
+        get: operations["run_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete */
+        delete: operations["delete_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/runs/{run_id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Preview */
+        get: operations["preview_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__preview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/runs/{run_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download */
+        get: operations["download_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/runs/{run_id}/dataset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Dataset
+         * @description Save the synthetic rows as a new dataset with the source's column types.
+         */
+        post: operations["create_dataset_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__dataset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/runs/{run_id}/utility": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Utility
+         * @description Trained on synthetic vs on real, both tested on the same held-out real rows.
+         */
+        post: operations["utility_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__utility_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/runs/{run_id}/disclosure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Disclosure
+         * @description How well known columns let an attacker guess a sensitive one (CAP).
+         */
+        post: operations["disclosure_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__disclosure_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/runs/{run_id}/columns/{column}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Column
+         * @description Real and synthetic side by side for one column (target overlay optional).
+         */
+        get: operations["column_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__columns__column__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/modules/synthetic/datasets/{dataset_id}/runs/{run_id}/pairs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pair */
+        get: operations["pair_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__pairs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/modules/synthetic/origin/{dataset_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Origin
+         * @description The source and run of a dataset created from synthetic data (null otherwise).
+         */
+        get: operations["origin_api_v1_modules_synthetic_origin__dataset_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1195,6 +1463,7 @@ export interface components {
         /** AppSettings */
         AppSettings: {
             detection?: components["schemas"]["DetectionSettings"];
+            compute?: components["schemas"]["ComputeSettings"];
         };
         /** ArCoefficient */
         ArCoefficient: {
@@ -1286,6 +1555,13 @@ export interface components {
             /** Note */
             note?: string | null;
         };
+        /** Bound */
+        Bound: {
+            /** Minimum */
+            minimum?: number | null;
+            /** Maximum */
+            maximum?: number | null;
+        };
         /** Box */
         Box: {
             /** Q1 */
@@ -1364,6 +1640,18 @@ export interface components {
             classes: number | null;
             /** Missing Share */
             missing_share: number;
+        };
+        /** CapVariant */
+        CapVariant: {
+            /**
+             * Name
+             * @enum {string}
+             */
+            name: "CAP" | "Zero CAP" | "Generalized CAP";
+            /** Attack */
+            attack: number;
+            /** Protection */
+            protection: number;
         };
         /** Catalogue */
         Catalogue: {
@@ -1462,6 +1750,17 @@ export interface components {
             duplicates: number;
             /** Message */
             message?: string | null;
+        };
+        /** Check */
+        Check: {
+            /** Check */
+            check: string;
+            /** Column */
+            column: string | null;
+            /** Score */
+            score: number;
+            /** Detail */
+            detail: string;
         };
         /**
          * Choices
@@ -1669,12 +1968,59 @@ export interface components {
             /** Scaling */
             scaling?: string | null;
         };
+        /** ColumnDetail */
+        ColumnDetail: {
+            /** Column */
+            column: string;
+            /** Type */
+            type: string;
+            /** Kind */
+            kind: string;
+            /** Score */
+            score: number | null;
+            /** Counts */
+            counts?: components["schemas"]["Count"][];
+            histogram?: components["schemas"]["SharedHistogram"] | null;
+            ecdf?: components["schemas"]["Ecdf"] | null;
+            /** Stats */
+            stats?: components["schemas"]["Stat"][];
+            /** Frequent Real */
+            frequent_real?: components["schemas"]["ValueRow"][];
+            /** Frequent Synthetic */
+            frequent_synthetic?: components["schemas"]["ValueRow"][];
+            /** Smallest */
+            smallest?: components["schemas"]["ValueRow"][];
+            /** Largest */
+            largest?: components["schemas"]["ValueRow"][];
+            /** Levels */
+            levels?: components["schemas"]["ValueRow"][];
+            target?: components["schemas"]["TargetOverlay"] | null;
+        };
         /** ColumnInfo */
         ColumnInfo: {
             /** Name */
             name: string;
             /** Dtype */
             dtype: string;
+        };
+        /** ColumnLine */
+        ColumnLine: {
+            /** Column */
+            column: string;
+            /** Type */
+            type: string;
+            /** Kind */
+            kind: string;
+            /** Metric */
+            metric: string;
+            /** Score */
+            score: number | null;
+            /** Real */
+            real: number[];
+            /** Synthetic */
+            synthetic: number[];
+            /** Biggest */
+            biggest: string;
         };
         /** ColumnOut */
         ColumnOut: {
@@ -1715,6 +2061,32 @@ export interface components {
             /** Excluded */
             excluded: boolean;
             summary: components["schemas"]["ColumnSummary"] | null;
+        };
+        /** ColumnPlan */
+        ColumnPlan: {
+            /** Name */
+            name: string;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "numeric_continuous" | "numeric_discrete" | "categorical_nominal" | "categorical_ordinal" | "boolean" | "datetime" | "text" | "identifier" | "ignored";
+            /**
+             * Treatment
+             * @enum {string}
+             */
+            treatment: "model" | "unique" | "fake" | "leave";
+            /** Rule */
+            rule: string;
+            /** Reason */
+            reason: string;
+            /** Options */
+            options?: ("model" | "unique" | "fake" | "leave")[];
+            /**
+             * Grouped
+             * @default false
+             */
+            grouped: boolean;
         };
         /** ColumnStats */
         ColumnStats: {
@@ -1826,6 +2198,14 @@ export interface components {
             /** Message */
             message?: string | null;
         };
+        /**
+         * ComputeSettings
+         * @description None = automatic: on when a ready GPU is found. Used by the deep models (023b).
+         */
+        ComputeSettings: {
+            /** Use Gpu */
+            use_gpu?: boolean | null;
+        };
         /** Condition */
         Condition: {
             /** Column */
@@ -1900,6 +2280,37 @@ export interface components {
             readings?: string[];
             /** Ar Order */
             ar_order?: number | null;
+        };
+        /** Count */
+        Count: {
+            /** Label */
+            label: string;
+            /** Real */
+            real: number;
+            /** Real Share */
+            real_share: number;
+            /** Synthetic */
+            synthetic: number;
+            /** Synthetic Share */
+            synthetic_share: number;
+        };
+        /** Coverage */
+        Coverage: {
+            /** Column */
+            column: string;
+            /** Range */
+            range: number | null;
+            /** Category */
+            category: number | null;
+            /** Missing */
+            missing: number;
+            /** Outliers */
+            outliers: number | null;
+        };
+        /** CreatedDataset */
+        CreatedDataset: {
+            /** Dataset Id */
+            dataset_id: string;
         };
         /** CrossValidation */
         CrossValidation: {
@@ -1996,6 +2407,15 @@ export interface components {
             name: string;
             /** Bytes */
             bytes: number;
+        };
+        /** DcrHistogram */
+        DcrHistogram: {
+            /** Edges */
+            edges: number[];
+            /** Synthetic */
+            synthetic: number[];
+            /** Holdout */
+            holdout: number[];
         };
         /** Decomposition */
         Decomposition: {
@@ -2156,6 +2576,20 @@ export interface components {
             /** Sum */
             sum: number | null;
         };
+        /** Detection */
+        Detection: {
+            /** Score */
+            score: number;
+            /** Detectors */
+            detectors?: components["schemas"]["Detector"][];
+            /** Giveaways */
+            giveaways?: components["schemas"]["Giveaway"][];
+            /**
+             * Rows
+             * @default 0
+             */
+            rows: number;
+        };
         /**
          * DetectionSettings
          * @description Bounds keep detection sensible: below half, "mostly numbers" would mean nothing.
@@ -2182,6 +2616,56 @@ export interface components {
              */
             identifier_unique: number;
         };
+        /** Detector */
+        Detector: {
+            /** Name */
+            name: string;
+            /** Auc */
+            auc: number;
+            /** Score */
+            score: number;
+        };
+        /** Diagnostic */
+        Diagnostic: {
+            /** Score */
+            score: number;
+            /** Validity */
+            validity: number;
+            /** Structure */
+            structure: number;
+            /** Checks */
+            checks?: components["schemas"]["Check"][];
+            /** Failures */
+            failures?: string[];
+        };
+        /** Disclosure */
+        Disclosure: {
+            /** Known */
+            known: string[];
+            /** Sensitive */
+            sensitive: string;
+            /** Baseline */
+            baseline: number;
+            /** Variants */
+            variants?: components["schemas"]["CapVariant"][];
+            /**
+             * Score
+             * @default 0
+             */
+            score: number;
+            /**
+             * Rows
+             * @default 0
+             */
+            rows: number;
+        };
+        /** DisclosureRequest */
+        DisclosureRequest: {
+            /** Known */
+            known: string[];
+            /** Sensitive */
+            sensitive: string;
+        };
         /** Distribution */
         Distribution: {
             /**
@@ -2198,6 +2682,24 @@ export interface components {
             /** Bins */
             bins: components["schemas"]["Bin"][];
             fit: components["schemas"]["Fit"];
+        };
+        /** Ecdf */
+        Ecdf: {
+            /** Real X */
+            real_x: number[];
+            /** Synthetic X */
+            synthetic_x: number[];
+            /** Levels */
+            levels: number[];
+        };
+        /** Edge */
+        Edge: {
+            /** Parent */
+            parent: string;
+            /** Child */
+            child: string;
+            /** Strength */
+            strength: number;
         };
         /** Effect */
         Effect: {
@@ -2293,6 +2795,28 @@ export interface components {
             /** Reason */
             reason?: string | null;
         };
+        /**
+         * Fitted
+         * @description What the method found, shown with the run.
+         */
+        Fitted: {
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "cart" | "copula" | "bayes" | "independent";
+            /** Order */
+            order?: string[];
+            /** Edges */
+            edges?: components["schemas"]["Edge"][];
+            /** Notes */
+            notes?: string[];
+            /**
+             * Dropped
+             * @default 0
+             */
+            dropped: number;
+        };
         /** ForecastJob */
         ForecastJob: {
             /** Id */
@@ -2336,6 +2860,37 @@ export interface components {
              */
             suffix: string;
         };
+        /** Giveaway */
+        Giveaway: {
+            /** Column */
+            column: string;
+            /** Importance */
+            importance: number;
+        };
+        /** GpuStatus */
+        GpuStatus: {
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "ready" | "no_support" | "not_found";
+            /** Name */
+            name?: string | null;
+            /** Memory Mb */
+            memory_mb?: number | null;
+            /** Driver */
+            driver?: string | null;
+            /**
+             * Torch
+             * @default false
+             */
+            torch: boolean;
+            /**
+             * Message
+             * @default
+             */
+            message: string;
+        };
         /** Group */
         "Group-Input": {
             /** Column */
@@ -2352,6 +2907,25 @@ export interface components {
             columns: string[];
             /** Rows */
             rows: (string | null)[][];
+        };
+        /** Header */
+        Header: {
+            /** Real Rows */
+            real_rows: number;
+            /** Holdout Rows */
+            holdout_rows: number;
+            /** Synthetic Rows */
+            synthetic_rows: number;
+            /** Real Duplicates */
+            real_duplicates: number;
+            /** Synthetic Duplicates */
+            synthetic_duplicates: number;
+            /** Types */
+            types?: {
+                [key: string]: number;
+            };
+            /** Left Out */
+            left_out?: components["schemas"]["LeftOut"][];
         };
         /** HealthOut */
         HealthOut: {
@@ -2542,6 +3116,44 @@ export interface components {
             /** Quantiles */
             quantiles: number[];
         };
+        /** Learned */
+        Learned: {
+            /** Name */
+            name: string;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "numeric_continuous" | "numeric_discrete" | "categorical_nominal" | "categorical_ordinal" | "boolean" | "datetime" | "text" | "identifier" | "ignored";
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "number" | "integer" | "date" | "category";
+            /** Missing */
+            missing: number;
+            /** Minimum */
+            minimum?: number | null;
+            /** Maximum */
+            maximum?: number | null;
+            /**
+             * Decimals
+             * @default 0
+             */
+            decimals: number;
+            /**
+             * Day Only
+             * @default false
+             */
+            day_only: boolean;
+            /** Levels */
+            levels?: string[];
+            /**
+             * Grouped
+             * @default false
+             */
+            grouped: boolean;
+        };
         /**
          * LearningCurve
          * @description How the model improved iteration after iteration (iterative models only).
@@ -2559,6 +3171,46 @@ export interface components {
             best: number | null;
             /** Lower Is Better */
             lower_is_better: boolean;
+        };
+        /** LeftOut */
+        LeftOut: {
+            /** Column */
+            column: string;
+            /** Reason */
+            reason: string;
+        };
+        /** LinkPair */
+        LinkPair: {
+            /** A */
+            a: string;
+            /** B */
+            b: string;
+            /**
+             * Measure
+             * @enum {string}
+             */
+            measure: "pearson" | "spearman" | "cramers_v" | "eta";
+            /** Real */
+            real: number | null;
+            /** Synthetic */
+            synthetic: number | null;
+            /** Gap */
+            gap: number | null;
+        };
+        /** Links */
+        Links: {
+            /** Columns */
+            columns: string[];
+            /** Real */
+            real: (number | null)[][];
+            /** Synthetic */
+            synthetic: (number | null)[][];
+            /** Gap */
+            gap: (number | null)[][];
+            /** Measures */
+            measures: string[][];
+            /** Worst */
+            worst?: components["schemas"]["LinkPair"][];
         };
         /** Listing */
         Listing: {
@@ -2616,6 +3268,19 @@ export interface components {
              */
             role: "num" | "cat";
         };
+        /** MeanSpread */
+        MeanSpread: {
+            /** Column */
+            column: string;
+            /** Real Mean */
+            real_mean: number;
+            /** Real Std */
+            real_std: number;
+            /** Synthetic Mean */
+            synthetic_mean: number;
+            /** Synthetic Std */
+            synthetic_std: number;
+        };
         /** Measure */
         Measure: {
             /** Id */
@@ -2649,6 +3314,18 @@ export interface components {
             chart: components["schemas"]["app__domain__kpi__rules__Decision"];
             share: components["schemas"]["app__domain__kpi__rules__Option"];
         };
+        /** MethodOption */
+        MethodOption: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "cart" | "copula" | "bayes" | "independent";
+            /** Label */
+            label: string;
+            /** Why */
+            why: string;
+        };
         /** MethodResult */
         MethodResult: {
             /** Key */
@@ -2669,6 +3346,15 @@ export interface components {
             high?: number | null;
             /** Note */
             note?: string | null;
+        };
+        /** Metric */
+        Metric: {
+            /** Name */
+            name: string;
+            /** Real */
+            real: number | null;
+            /** Synthetic */
+            synthetic: number | null;
         };
         /** ModelResult */
         ModelResult: {
@@ -2781,6 +3467,18 @@ export interface components {
             /** Sample */
             sample: number[];
         };
+        /**
+         * Origin
+         * @description A dataset created from a synthetic run.
+         */
+        Origin: {
+            /** Source Id */
+            source_id: string;
+            /** Source Name */
+            source_name: string;
+            /** Run Id */
+            run_id: string;
+        };
         /** Others */
         Others: {
             /** Count */
@@ -2853,6 +3551,61 @@ export interface components {
             column_stats: {
                 [key: string]: components["schemas"]["ColumnStats"];
             };
+        };
+        /** PairBox */
+        PairBox: {
+            /** Group */
+            group: string;
+            /** Real */
+            real: (number | null)[];
+            /** Synthetic */
+            synthetic: (number | null)[];
+        };
+        /** PairDetail */
+        PairDetail: {
+            /** A */
+            a: string;
+            /** B */
+            b: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "numbers" | "mixed" | "categories";
+            /** Real Points */
+            real_points?: number[][];
+            /** Synthetic Points */
+            synthetic_points?: number[][];
+            /** Boxes */
+            boxes?: components["schemas"]["PairBox"][];
+            /** Rows */
+            rows?: string[];
+            /** Columns */
+            columns?: string[];
+            /** Real Table */
+            real_table?: number[][];
+            /** Synthetic Table */
+            synthetic_table?: number[][];
+        };
+        /** PairScore */
+        PairScore: {
+            /** A */
+            a: string;
+            /** B */
+            b: string;
+            /**
+             * Metric
+             * @enum {string}
+             */
+            metric: "CorrelationSimilarity" | "ContingencySimilarity";
+            /** Score */
+            score: number | null;
+            /** Real */
+            real: number | null;
+            /** Synthetic */
+            synthetic: number | null;
+            /** Meets */
+            meets: boolean;
         };
         /** Param */
         Param: {
@@ -2958,6 +3711,40 @@ export interface components {
             mean: number;
             /** Std */
             std: number;
+        };
+        /** Plan */
+        Plan: {
+            /** Columns */
+            columns: components["schemas"]["ColumnPlan"][];
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "cart" | "copula" | "bayes" | "independent";
+            /** Method Reason */
+            method_reason: string;
+            /** Methods */
+            methods: components["schemas"]["MethodOption"][];
+            /** Rows */
+            rows: number;
+            /** Default Rows */
+            default_rows: number;
+            /** Train Rows */
+            train_rows: number;
+            /** Modelled */
+            modelled: number;
+            /** Error */
+            error?: string | null;
+            /**
+             * Smooth
+             * @default true
+             */
+            smooth: boolean;
+            /**
+             * Smooth Reason
+             * @default On: continuous numbers stay off the real values, so far fewer rows copy a real one.
+             */
+            smooth_reason: string;
         };
         /** Points */
         Points: {
@@ -3070,6 +3857,46 @@ export interface components {
             path: string;
             options?: components["schemas"]["SourceOptions"];
         };
+        /** Privacy */
+        Privacy: {
+            /** Score */
+            score: number;
+            /** Copies */
+            copies: number;
+            /** Copy Share */
+            copy_share: number;
+            /** Near Copies */
+            near_copies: number;
+            /** New Rows */
+            new_rows: number;
+            /** Overfitting */
+            overfitting: number | null;
+            /** Closer To Train */
+            closer_to_train: number | null;
+            /** Baseline */
+            baseline: number | null;
+            /** Median Dcr */
+            median_dcr: number | null;
+            /** Rare */
+            rare?: components["schemas"]["RareValue"][];
+            histogram?: components["schemas"]["DcrHistogram"] | null;
+            /** Warnings */
+            warnings?: string[];
+            /**
+             * Verdict
+             * @default
+             */
+            verdict: string;
+        };
+        /** Projection */
+        Projection: {
+            /** Real */
+            real: number[][];
+            /** Synthetic */
+            synthetic: number[][];
+            /** Explained */
+            explained: number[];
+        };
         /**
          * QQ
          * @description Sample quantiles against the standard normal's, with the line through Q1 and Q3.
@@ -3083,6 +3910,32 @@ export interface components {
             slope: number;
             /** Intercept */
             intercept: number;
+        };
+        /** Quality */
+        Quality: {
+            /** Score */
+            score: number;
+            /** Shapes */
+            shapes: number;
+            /** Trends */
+            trends: number | null;
+            /** Shape Scores */
+            shape_scores?: components["schemas"]["ShapeScore"][];
+            /** Pair Scores */
+            pair_scores?: components["schemas"]["PairScore"][];
+            /** Coverage */
+            coverage?: components["schemas"]["Coverage"][];
+        };
+        /** RareValue */
+        RareValue: {
+            /** Column */
+            column: string;
+            /** Value */
+            value: string;
+            /** Real */
+            real: number;
+            /** Synthetic */
+            synthetic: number;
         };
         /** Ratio */
         Ratio: {
@@ -3146,6 +3999,25 @@ export interface components {
         RenameRequest: {
             /** Name */
             name: string;
+        };
+        /** Report */
+        Report: {
+            scores: components["schemas"]["SyntheticScores"];
+            verdicts: components["schemas"]["Verdicts"];
+            header: components["schemas"]["Header"];
+            diagnostic: components["schemas"]["Diagnostic"];
+            quality: components["schemas"]["Quality"];
+            detection: components["schemas"]["Detection"];
+            privacy: components["schemas"]["Privacy"];
+            /** Columns */
+            columns: components["schemas"]["ColumnLine"][];
+            links: components["schemas"]["Links"];
+            overview: components["schemas"]["SyntheticOverview"];
+            fitted: components["schemas"]["Fitted"];
+            /** Learned */
+            learned: components["schemas"]["Learned"][];
+            utility?: components["schemas"]["Utility"] | null;
+            disclosure?: components["schemas"]["Disclosure"] | null;
         };
         /** Resolved */
         Resolved: {
@@ -3257,6 +4129,55 @@ export interface components {
             /** Evaluation Rows */
             evaluation_rows?: number[];
             learning_curve?: components["schemas"]["LearningCurve"] | null;
+        };
+        /** RunColumn */
+        RunColumn: {
+            /** Name */
+            name: string;
+            /** Type */
+            type: string;
+            /**
+             * Treatment
+             * @enum {string}
+             */
+            treatment: "model" | "unique" | "fake" | "leave";
+        };
+        /**
+         * RunRequest
+         * @description Everything not given takes the plan's automatic choice.
+         */
+        RunRequest: {
+            /**
+             * Method
+             * @default cart
+             * @enum {string}
+             */
+            method: "cart" | "copula" | "bayes" | "independent";
+            /** Rows */
+            rows?: number | null;
+            /**
+             * Seed
+             * @default 42
+             */
+            seed: number;
+            /**
+             * Smooth
+             * @default true
+             */
+            smooth: boolean;
+            /**
+             * Drop Copies
+             * @default true
+             */
+            drop_copies: boolean;
+            /** Treatments */
+            treatments?: {
+                [key: string]: "model" | "unique" | "fake" | "leave";
+            };
+            /** Bounds */
+            bounds?: {
+                [key: string]: components["schemas"]["Bound"];
+            };
         };
         /** RunSummary */
         RunSummary: {
@@ -3806,6 +4727,27 @@ export interface components {
             /** Reading */
             reading: string | null;
         };
+        /** ShapeScore */
+        ShapeScore: {
+            /** Column */
+            column: string;
+            /**
+             * Metric
+             * @enum {string}
+             */
+            metric: "KSComplement" | "TVComplement";
+            /** Score */
+            score: number | null;
+        };
+        /** SharedHistogram */
+        SharedHistogram: {
+            /** Edges */
+            edges: number[];
+            /** Real */
+            real: number[];
+            /** Synthetic */
+            synthetic: number[];
+        };
         /**
          * SourceOptions
          * @description How to read a source. `None` fields mean "detect" or "everything".
@@ -3833,6 +4775,19 @@ export interface components {
             others: number;
             /** Ordinal */
             ordinal: boolean;
+        };
+        /** Stat */
+        Stat: {
+            /** Label */
+            label: string;
+            /** Real */
+            real: number | null;
+            /** Synthetic */
+            synthetic: number | null;
+            /** Delta */
+            delta: number | null;
+            /** Delta Share */
+            delta_share: number | null;
         };
         /** StorageInfo */
         StorageInfo: {
@@ -3882,6 +4837,115 @@ export interface components {
             adf_rejects: boolean;
             /** Kpss Rejects */
             kpss_rejects: boolean;
+        };
+        /** SyntheticJob */
+        SyntheticJob: {
+            /** Id */
+            id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "running" | "done" | "failed" | "cancelled";
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "loading" | "generating" | "evaluating" | "saving";
+            /** Run Id */
+            run_id?: string | null;
+            /** Error */
+            error?: string | null;
+        };
+        /** SyntheticOverview */
+        SyntheticOverview: {
+            /** Mean Spread */
+            mean_spread?: components["schemas"]["MeanSpread"][];
+            pca?: components["schemas"]["Projection"] | null;
+        };
+        /** SyntheticPreview */
+        SyntheticPreview: {
+            /** Columns */
+            columns: string[];
+            /** Rows */
+            rows: (string | null)[][];
+            /** Total */
+            total: number;
+        };
+        /** SyntheticRun */
+        SyntheticRun: {
+            /** Id */
+            id: string;
+            /** Dataset Id */
+            dataset_id: string;
+            /** Created At */
+            created_at: string;
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "cart" | "copula" | "bayes" | "independent";
+            /** Method Label */
+            method_label: string;
+            settings: components["schemas"]["RunRequest"];
+            /** Rows */
+            rows: number;
+            /** Seconds */
+            seconds: number;
+            /** Train Rows */
+            train_rows: number;
+            /** Holdout Rows */
+            holdout_rows: number;
+            /** Columns */
+            columns: components["schemas"]["RunColumn"][];
+            report: components["schemas"]["Report"];
+            /** Created Dataset Id */
+            created_dataset_id?: string | null;
+        };
+        /** SyntheticRunSummary */
+        SyntheticRunSummary: {
+            /** Id */
+            id: string;
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "cart" | "copula" | "bayes" | "independent";
+            /** Method Label */
+            method_label: string;
+            /** Rows */
+            rows: number;
+            /** Seconds */
+            seconds: number;
+            /** Created At */
+            created_at: string;
+            /** Scores */
+            scores: {
+                [key: string]: number | null;
+            };
+            /** Created Dataset Id */
+            created_dataset_id?: string | null;
+            /** Settings */
+            settings?: {
+                [key: string]: unknown;
+            };
+        };
+        /** SyntheticScores */
+        SyntheticScores: {
+            /** Diagnostic */
+            diagnostic: number;
+            /** Quality */
+            quality: number;
+            /** Shapes */
+            shapes: number;
+            /** Trends */
+            trends: number | null;
+            /** Detection */
+            detection: number;
+            /** Privacy */
+            privacy: number;
+            /** Utility */
+            utility?: number | null;
         };
         /** TableView */
         TableView: {
@@ -3944,6 +5008,19 @@ export interface components {
             sample: number[];
             /** Values */
             values: components["schemas"]["ValueCount"][] | null;
+        };
+        /** TargetOverlay */
+        TargetOverlay: {
+            /** Target */
+            target: string;
+            /** Measure */
+            measure: string;
+            /** Groups */
+            groups: string[];
+            /** Real */
+            real: (number | null)[];
+            /** Synthetic */
+            synthetic: (number | null)[];
         };
         /** Targets */
         Targets: {
@@ -4247,6 +5324,47 @@ export interface components {
             /** Size */
             size: number;
         };
+        /** Utility */
+        Utility: {
+            /** Target */
+            target: string;
+            /**
+             * Task
+             * @enum {string}
+             */
+            task: "regression" | "classification";
+            /** Primary */
+            primary: string;
+            /** Metrics */
+            metrics?: components["schemas"]["Metric"][];
+            /** Ratio */
+            ratio?: number | null;
+            /**
+             * Train Rows
+             * @default 0
+             */
+            train_rows: number;
+            /**
+             * Synthetic Rows
+             * @default 0
+             */
+            synthetic_rows: number;
+            /**
+             * Test Rows
+             * @default 0
+             */
+            test_rows: number;
+            /**
+             * Sentence
+             * @default
+             */
+            sentence: string;
+        };
+        /** UtilityRequest */
+        UtilityRequest: {
+            /** Target */
+            target: string;
+        };
         /**
          * Validation
          * @description How the model is judged, and on how many rows it is trained.
@@ -4316,6 +5434,23 @@ export interface components {
             /** Count */
             count: number;
         };
+        /** ValueRow */
+        ValueRow: {
+            /** Value */
+            value: string;
+            /** Real */
+            real: number;
+            /** Real Share */
+            real_share: number;
+            /** Synthetic */
+            synthetic: number;
+            /** Synthetic Share */
+            synthetic_share: number;
+            /** Delta */
+            delta: number;
+            /** Status */
+            status?: ("missing in synthetic" | "invented") | null;
+        };
         /** VariableProfile */
         VariableProfile: {
             /** Name */
@@ -4327,6 +5462,17 @@ export interface components {
             date?: components["schemas"]["app__domain__variable__profiles__DateProfile"] | null;
             text?: components["schemas"]["TextProfile"] | null;
             identifier?: components["schemas"]["IdentifierProfile"] | null;
+        };
+        /** Verdicts */
+        Verdicts: {
+            /** Diagnostic */
+            diagnostic: string;
+            /** Quality */
+            quality: string;
+            /** Detection */
+            detection: string;
+            /** Privacy */
+            privacy: string;
         };
         /** View */
         View: {
@@ -5769,6 +6915,37 @@ export interface operations {
             };
         };
     };
+    gpu_api_v1_settings_gpu_get: {
+        parameters: {
+            query?: {
+                refresh?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GpuStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     storage_api_v1_storage_get: {
         parameters: {
             query?: never;
@@ -7143,6 +8320,533 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SavedKpi"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    plan_api_v1_modules_synthetic_datasets__dataset_id__plan_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Plan"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    runs_api_v1_modules_synthetic_datasets__dataset_id__runs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyntheticRunSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generate_api_v1_modules_synthetic_datasets__dataset_id__runs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RunRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyntheticJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    job_api_v1_modules_synthetic_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyntheticJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_api_v1_modules_synthetic_jobs__job_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyntheticJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    compare_api_v1_modules_synthetic_datasets__dataset_id__runs_compare_get: {
+        parameters: {
+            query: {
+                /** @description 2 to 5 run ids, comma-separated. */
+                runs: string;
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyntheticRunSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyntheticRun"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__preview_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyntheticPreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__download_get: {
+        parameters: {
+            query?: {
+                format?: "csv" | "parquet";
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_dataset_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__dataset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedDataset"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    utility_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__utility_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UtilityRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Utility"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    disclosure_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__disclosure_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DisclosureRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Disclosure"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    column_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__columns__column__get: {
+        parameters: {
+            query?: {
+                bins?: number | null;
+                target?: string | null;
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+                run_id: string;
+                column: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ColumnDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pair_api_v1_modules_synthetic_datasets__dataset_id__runs__run_id__pairs_get: {
+        parameters: {
+            query: {
+                a: string;
+                b: string;
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PairDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    origin_api_v1_modules_synthetic_origin__dataset_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Origin"] | null;
                 };
             };
             /** @description Validation Error */

@@ -20,6 +20,7 @@ def test_migrations_create_tables(tmp_path: Path) -> None:
         "0006_ml_classes",
         "0007_ml_tuning",
         "0008_kpi_definitions",
+        "0009_synthetic_runs",
     ]
     expected = {
         "schema_migrations",
@@ -33,6 +34,7 @@ def test_migrations_create_tables(tmp_path: Path) -> None:
         "ml_tunings",
         "ml_trials",
         "kpi_definitions",
+        "synthetic_runs",
     }
     assert expected <= tables
 
