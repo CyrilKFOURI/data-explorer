@@ -10,7 +10,7 @@ from collections import OrderedDict
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
-from dataclasses import asdict, dataclass, fields
+from dataclasses import asdict, dataclass, field, fields
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
@@ -27,6 +27,7 @@ from app.domain.filters.model import Condition
 from app.domain.filters.scope import scoped_source, where_for
 from app.domain.ml import classes as binning
 from app.domain.ml import data as ml_data
+from app.domain.ml import evaluate
 from app.domain.ml import models as catalogue
 from app.domain.ml import preparation as prep
 from app.domain.ml import train as trainer
@@ -53,7 +54,18 @@ class SettingView:
     maximum: float | None
     log: bool
     why: str
-    shown_when: dict[str, list[str]] | None
+    shown_when: dict[str, list[Any]] | None
+    group: str
+    param: str
+    option_labels: dict[str, str]
+
+
+@dataclass
+class RuleView:
+    when: dict[str, list[Any]]
+    setting: str
+    allowed: list[Any]
+    reason: str
 
 
 @dataclass
@@ -64,6 +76,26 @@ class ModelView:
     description: str
     tasks: list[str]
     settings: list[SettingView]
+    rules: list[RuleView]
+    badges: list[str]
+    installed: bool
+    unavailable: str | None  # why it cannot run on this data
+    probabilities: bool
+
+
+@dataclass
+class Recommendation:
+    key: str
+    why: str
+
+
+@dataclass
+class Catalogue:
+    families: list[str]
+    models: list[ModelView]
+    recommended: list[Recommendation]
+    metrics: list[str]  # every metric of the problem, the default first
+    default_metric: str
 
 
 @dataclass
@@ -96,6 +128,10 @@ class Run:
     primary: str
     score: float | None
     classes: binning.Classes | None = None
+    scores: dict[str, float | None] = field(default_factory=dict)
+    cross_validation: trainer.CrossValidation | None = None
+    importances: list[trainer.Importance] = field(default_factory=list)
+    validation: evaluate.Validation = field(default_factory=evaluate.Validation)
 
 
 @dataclass
@@ -110,6 +146,8 @@ class RunSummary:
     seconds: float
     created_at: str
     classes: binning.Classes | None = None
+    greater_is_better: bool = True
+    label: str = ""  # the model's name in the catalogue
 
 
 @dataclass
@@ -163,20 +201,40 @@ class MlService:
 
     # --- Catalogue and targets -----------------------------------------------------------------
 
-    def catalogue(self, task: Task, rows: int, minority: float | None) -> list[ModelView]:
-        context = catalogue.Context(rows, task, minority)
-        return [
-            ModelView(
-                spec.key,
-                spec.label,
-                spec.family,
-                spec.description,
-                list(spec.tasks),
-                [SettingView(**asdict(setting)) for setting in spec.settings(context)],
+    def catalogue(self, context: catalogue.Context) -> Catalogue:
+        """The models that handle a task, their settings with data-dependent defaults, the rules
+        between settings, and two or three recommendations for this data."""
+        task = context.task
+        models = []
+        for spec in catalogue.CATALOGUE.values():
+            if task not in spec.tasks:
+                continue
+            settings = spec.settings(context)
+            defaults = {s.key: s.default for s in settings}
+            models.append(
+                ModelView(
+                    spec.key,
+                    spec.label,
+                    spec.family,
+                    spec.description,
+                    list(spec.tasks),
+                    [SettingView(**asdict(setting)) for setting in settings],
+                    [RuleView(**asdict(rule)) for rule in spec.rules],
+                    spec.badges(context),
+                    spec.installed,
+                    spec.limit(context),
+                    task == "regression" or spec.has_probabilities(defaults),
+                )
             )
-            for spec in catalogue.CATALOGUE.values()
-            if task in spec.tasks
-        ]
+        default = evaluate.default_metric(task, context.minority_share)
+        metrics = evaluate.metrics_for(task)
+        return Catalogue(
+            [f for f in catalogue.FAMILIES if any(m.family == f for m in models)],
+            models,
+            [Recommendation(key, why) for key, why in catalogue.recommend(context)],
+            [default, *(m for m in metrics if m != default)],
+            default,
+        )
 
     def _fields(self, dataset_id: str) -> tuple[list[Field], Any]:
         dataset = self.columns.ready(dataset_id)
@@ -218,6 +276,7 @@ class MlService:
         conditions: list[Condition],
         choices: prep.Choices | None = None,
         classes: binning.Classes | None = None,
+        validation: evaluate.Validation | None = None,
     ) -> TrainingJob:
         fields, field_, source = self._request(dataset_id, target, model, conditions, classes)
         job = TrainingJob(uuid.uuid4().hex[:12], "running", "loading")
@@ -237,6 +296,7 @@ class MlService:
             conditions,
             choices,
             classes,
+            validation or evaluate.Validation(),
         )
         return job
 
@@ -264,10 +324,16 @@ class MlService:
         source = scoped_source(dataset.storage_path, where_for(views, conditions), numbered=True)
         return fields, field_, source
 
-    def _load(self, fields: list[Field], target: Field, source: str) -> tuple[ml_data.Frame, Task]:
+    def _load(
+        self,
+        fields: list[Field],
+        target: Field,
+        source: str,
+        limit: int | None = ml_data.MAX_ROWS,
+    ) -> tuple[ml_data.Frame, Task]:
         connection = duckdb.connect()
         try:
-            frame = ml_data.load(connection, source, fields, target.name)
+            frame = ml_data.load(connection, source, fields, target.name, limit)
         finally:
             connection.close()
         if frame.rows < 15:
@@ -325,9 +391,11 @@ class MlService:
         conditions: list[Condition],
         choices: prep.Choices | None = None,
         classes: binning.Classes | None = None,
+        validation: evaluate.Validation | None = None,
     ) -> None:
+        validation = validation or evaluate.Validation()
         try:
-            frame, task = self._load(fields, target, source)
+            frame, task = self._load(fields, target, source, validation.max_rows)
             if classes is not None:
                 task = "binary" if len(classes.names) == 2 else "multiclass"
             job.stage = "preparing"
@@ -344,6 +412,7 @@ class MlService:
                 frame.sampled,
                 choices=choices,
                 classes=classes,
+                validation=validation,
             )
             job.stage = "saving"
             job.run_id = self._save(dataset_id, target.name, trained, conditions)
@@ -408,6 +477,8 @@ class MlService:
                 r["seconds"],
                 r["created_at"],
                 binning.Classes.model_validate_json(r["classes"]) if r["classes"] else None,
+                r["metric"] not in evaluate.LOWER_IS_BETTER,
+                spec.label if (spec := catalogue.CATALOGUE.get(r["model"])) else r["model"],
             )
             for r in rows
         ]

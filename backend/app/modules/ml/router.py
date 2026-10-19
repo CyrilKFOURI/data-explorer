@@ -6,14 +6,16 @@ from fastapi.responses import Response
 from pydantic import TypeAdapter, ValidationError
 
 from app.domain.filters.model import Condition, parse_filters
+from app.domain.ml import catalog
 from app.domain.ml.classes import Classes, TargetDistribution
+from app.domain.ml.evaluate import Validation
 from app.domain.ml.preparation import Choices
 from app.domain.ml.target import Task
 from app.domain.ml.train import PreparationPreview
 from app.modules.ml.service import (
+    Catalogue,
     MlError,
     MlService,
-    ModelView,
     Run,
     RunSummary,
     Targets,
@@ -44,14 +46,19 @@ def targets(dataset_id: str, service: Service, filters: Filters) -> Targets:
 
 
 @router.get("/catalog")
-def catalog(
+def models(
     service: Service,
     task: Task,
-    rows: Annotated[int, Query(ge=0)] = 1_000,
+    rows: Annotated[int, Query(ge=0, description="Training rows.")] = 1_000,
     minority: Annotated[float | None, Query(ge=0, le=1)] = None,
-) -> list[ModelView]:
-    """The models that handle a task, with their settings and data-dependent defaults."""
-    return service.catalogue(task, rows, minority)
+    features: Annotated[int, Query(ge=0)] = 10,
+    categorical_share: Annotated[float, Query(ge=0, le=1)] = 0.0,
+    missing_share: Annotated[float, Query(ge=0, le=1)] = 0.0,
+) -> Catalogue:
+    """The models that handle a task: settings with data-dependent defaults, rules between
+    settings, badges, limits, and two or three recommendations for this data."""
+    context = catalog.Context(rows, task, minority, features, categorical_share, missing_share)
+    return service.catalogue(context)
 
 
 @router.post("/datasets/{dataset_id}/runs", status_code=202)
@@ -64,10 +71,18 @@ def train(
     settings: Annotated[str | None, Query(description="JSON object of settings.")] = None,
     choices: Annotated[Choices | None, Body(description="Preparation choices.")] = None,
     classes: Annotated[str | None, Query(description="JSON: a number cut into classes.")] = None,
+    validation: Annotated[str | None, Query(description="JSON: how the model is judged.")] = None,
 ) -> TrainingJob:
     """Train a model in the background (defaults for everything not given)."""
     return service.start(
-        dataset_id, target, model, _settings(settings), filters, choices, _classes(classes)
+        dataset_id,
+        target,
+        model,
+        _settings(settings),
+        filters,
+        choices,
+        _classes(classes),
+        _validation(validation),
     )
 
 
@@ -97,6 +112,17 @@ def distribution(
 
 
 CLASSES = TypeAdapter(Classes)
+VALIDATION = TypeAdapter(Validation)
+
+
+def _validation(validation: str | None) -> Validation | None:
+    if not validation:
+        return None
+    try:
+        return VALIDATION.validate_json(validation)
+    except ValidationError as error:
+        message = error.errors()[0].get("msg", "Invalid validation.")
+        raise MlError(f"Validation: {message}", "bad_validation") from None
 
 
 def _classes(classes: str | None) -> Classes | None:

@@ -4972,9 +4972,9 @@
         "tags": [
           "module:ml"
         ],
-        "summary": "Catalog",
-        "description": "The models that handle a task, with their settings and data-dependent defaults.",
-        "operationId": "catalog_api_v1_modules_ml_catalog_get",
+        "summary": "Models",
+        "description": "The models that handle a task: settings with data-dependent defaults, rules between\nsettings, badges, limits, and two or three recommendations for this data.",
+        "operationId": "models_api_v1_modules_ml_catalog_get",
         "parameters": [
           {
             "name": "task",
@@ -4997,9 +4997,11 @@
             "schema": {
               "type": "integer",
               "minimum": 0,
+              "description": "Training rows.",
               "default": 1000,
               "title": "Rows"
-            }
+            },
+            "description": "Training rows."
           },
           {
             "name": "minority",
@@ -5018,6 +5020,41 @@
               ],
               "title": "Minority"
             }
+          },
+          {
+            "name": "features",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 10,
+              "title": "Features"
+            }
+          },
+          {
+            "name": "categorical_share",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1,
+              "minimum": 0,
+              "default": 0.0,
+              "title": "Categorical Share"
+            }
+          },
+          {
+            "name": "missing_share",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1,
+              "minimum": 0,
+              "default": 0.0,
+              "title": "Missing Share"
+            }
           }
         ],
         "responses": {
@@ -5026,11 +5063,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ModelView"
-                  },
-                  "title": "Response Catalog Api V1 Modules Ml Catalog Get"
+                  "$ref": "#/components/schemas/Catalogue"
                 }
               }
             }
@@ -5127,6 +5160,24 @@
               "title": "Classes"
             },
             "description": "JSON: a number cut into classes."
+          },
+          {
+            "name": "validation",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "JSON: how the model is judged.",
+              "title": "Validation"
+            },
+            "description": "JSON: how the model is judged."
           },
           {
             "name": "filters",
@@ -6202,6 +6253,51 @@
           "missing_share"
         ],
         "title": "Candidate"
+      },
+      "Catalogue": {
+        "properties": {
+          "families": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Families"
+          },
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/ModelView"
+            },
+            "type": "array",
+            "title": "Models"
+          },
+          "recommended": {
+            "items": {
+              "$ref": "#/components/schemas/Recommendation"
+            },
+            "type": "array",
+            "title": "Recommended"
+          },
+          "metrics": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Metrics"
+          },
+          "default_metric": {
+            "type": "string",
+            "title": "Default Metric"
+          }
+        },
+        "type": "object",
+        "required": [
+          "families",
+          "models",
+          "recommended",
+          "metrics",
+          "default_metric"
+        ],
+        "title": "Catalogue"
       },
       "CategoricalProfile": {
         "properties": {
@@ -7839,6 +7935,54 @@
         ],
         "title": "Correlogram"
       },
+      "CrossValidation": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "folds": {
+            "type": "integer",
+            "title": "Folds"
+          },
+          "mean": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Mean"
+          },
+          "std": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Std"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method",
+          "folds",
+          "mean",
+          "std"
+        ],
+        "title": "CrossValidation"
+      },
       "CsvOptions": {
         "properties": {
           "delimiter": {
@@ -9418,6 +9562,24 @@
         ],
         "title": "ImportResponse"
       },
+      "Importance": {
+        "properties": {
+          "feature": {
+            "type": "string",
+            "title": "Feature"
+          },
+          "importance": {
+            "type": "number",
+            "title": "Importance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "feature",
+          "importance"
+        ],
+        "title": "Importance"
+      },
       "Insight": {
         "properties": {
           "id": {
@@ -10093,6 +10255,39 @@
             },
             "type": "array",
             "title": "Settings"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/RuleView"
+            },
+            "type": "array",
+            "title": "Rules"
+          },
+          "badges": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Badges"
+          },
+          "installed": {
+            "type": "boolean",
+            "title": "Installed"
+          },
+          "unavailable": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailable"
+          },
+          "probabilities": {
+            "type": "boolean",
+            "title": "Probabilities"
           }
         },
         "type": "object",
@@ -10102,7 +10297,12 @@
           "family",
           "description",
           "tasks",
-          "settings"
+          "settings",
+          "rules",
+          "badges",
+          "installed",
+          "unavailable",
+          "probabilities"
         ],
         "title": "ModelView"
       },
@@ -10953,6 +11153,24 @@
         "title": "QQ",
         "description": "Sample quantiles against the standard normal's, with the line through Q1 and Q3."
       },
+      "Recommendation": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "why": {
+            "type": "string",
+            "title": "Why"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "why"
+        ],
+        "title": "Recommendation"
+      },
       "Regression": {
         "properties": {
           "slope": {
@@ -11215,6 +11433,39 @@
         ],
         "title": "RowsPage"
       },
+      "RuleView": {
+        "properties": {
+          "when": {
+            "additionalProperties": {
+              "items": {},
+              "type": "array"
+            },
+            "type": "object",
+            "title": "When"
+          },
+          "setting": {
+            "type": "string",
+            "title": "Setting"
+          },
+          "allowed": {
+            "items": {},
+            "type": "array",
+            "title": "Allowed"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "when",
+          "setting",
+          "allowed",
+          "reason"
+        ],
+        "title": "RuleView"
+      },
       "Run": {
         "properties": {
           "id": {
@@ -11332,6 +11583,40 @@
                 "type": "null"
               }
             ]
+          },
+          "scores": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Scores"
+          },
+          "cross_validation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CrossValidation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "importances": {
+            "items": {
+              "$ref": "#/components/schemas/Importance"
+            },
+            "type": "array",
+            "title": "Importances"
+          },
+          "validation": {
+            "$ref": "#/components/schemas/Validation"
           }
         },
         "type": "object",
@@ -11414,6 +11699,16 @@
                 "type": "null"
               }
             ]
+          },
+          "greater_is_better": {
+            "type": "boolean",
+            "title": "Greater Is Better",
+            "default": true
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "default": ""
           }
         },
         "type": "object",
@@ -12911,9 +13206,7 @@
             "anyOf": [
               {
                 "additionalProperties": {
-                  "items": {
-                    "type": "string"
-                  },
+                  "items": {},
                   "type": "array"
                 },
                 "type": "object"
@@ -12923,6 +13216,21 @@
               }
             ],
             "title": "Shown When"
+          },
+          "group": {
+            "type": "string",
+            "title": "Group"
+          },
+          "param": {
+            "type": "string",
+            "title": "Param"
+          },
+          "option_labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Option Labels"
           }
         },
         "type": "object",
@@ -12937,7 +13245,10 @@
           "maximum",
           "log",
           "why",
-          "shown_when"
+          "shown_when",
+          "group",
+          "param",
+          "option_labels"
         ],
         "title": "SettingView"
       },
@@ -13656,6 +13967,104 @@
           "size"
         ],
         "title": "UploadOut"
+      },
+      "Validation": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "split",
+              "kfold",
+              "repeated_kfold",
+              "group_kfold",
+              "time_split",
+              "loo"
+            ],
+            "title": "Method",
+            "default": "split"
+          },
+          "test_size": {
+            "type": "number",
+            "maximum": 0.4,
+            "minimum": 0.1,
+            "title": "Test Size",
+            "default": 0.2
+          },
+          "folds": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 3.0,
+            "title": "Folds",
+            "default": 5
+          },
+          "repeats": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 2.0,
+            "title": "Repeats",
+            "default": 3
+          },
+          "group": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group"
+          },
+          "time_column": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Column"
+          },
+          "metric": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metric"
+          },
+          "seed": {
+            "type": "integer",
+            "maximum": 2147483647.0,
+            "minimum": 0.0,
+            "title": "Seed",
+            "default": 42
+          },
+          "max_rows": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000000.0,
+                "minimum": 100.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Rows",
+            "default": 200000
+          }
+        },
+        "type": "object",
+        "title": "Validation",
+        "description": "How the model is judged, and on how many rows it is trained."
       },
       "ValidationError": {
         "properties": {

@@ -15,6 +15,7 @@ import {
   predictedFigure,
   residualHistogram,
   residualsFigure,
+  importancesFigure,
 } from "./figures";
 
 type Tab = "performance" | "features" | "predictions";
@@ -54,6 +55,7 @@ export function Results({ run, datasetId }: { run: MlRun; datasetId: string }) {
     <div className="space-y-4">
       <p className="text-base font-medium text-ink-1">{verdict(run)}</p>
       <ScoreTiles run={run} />
+      <AllMetrics run={run} />
       <p className="text-xs text-ink-3">
         {t("ml.rowsUsed", {
           train: run.train_rows.toLocaleString("en-US"),
@@ -254,8 +256,80 @@ function ClassificationPerformance({ run }: { run: MlRun }) {
   );
 }
 
+function AllMetrics({ run }: { run: MlRun }) {
+  const cv = run.cross_validation;
+  const folds = cv && Object.keys(cv.mean).length > 0 ? cv : null;
+  const keys = Object.keys(run.scores).filter((k) => run.scores[k] !== null || folds?.mean[k] != null);
+  if (!keys.length) return null;
+  const show = (value: number | null | undefined) => (value === null || value === undefined ? "—" : formatNumber(value));
+  return (
+    <details className="text-[13px]">
+      <summary className="cursor-pointer text-xs text-ink-2">
+        {t("ml.allMetrics")}
+        {cv ? ` · ${t("ml.crossValidated", { method: t(`ml.validation.method.${cv.method}` as MessageKey) })}` : ""}
+      </summary>
+      <table className="mt-2 w-full max-w-xl border-collapse tabular-nums">
+        <thead className="text-left text-xs text-ink-3">
+          <tr>
+            <th className="py-1 font-normal">{t("ml.metricName")}</th>
+            <th className="py-1 text-right font-normal">{t("ml.metricValue")}</th>
+            {folds && <th className="py-1 text-right font-normal">{t("ml.foldMean")}</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {keys.map((key) => (
+            <tr key={key} className={`border-t border-line ${key === run.primary ? "font-medium text-ink-1" : "text-ink-2"}`}>
+              <td className="py-1">
+                {t(`ml.metric.${key}` as MessageKey)}
+                {key === run.primary ? " ★" : ""}
+              </td>
+              <td className="py-1 text-right">{show(run.scores[key])}</td>
+              {folds && (
+                <td className="py-1 text-right">
+                  {show(folds.mean[key])}
+                  {folds.std[key] != null ? ` ± ${formatNumber(folds.std[key] as number)}` : ""}
+                </td>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </details>
+  );
+}
+
+function Importances({ run }: { run: MlRun }) {
+  return (
+    <div className="space-y-3">
+      <p className="text-[13px] text-ink-2">{t("ml.importancesHint")}</p>
+      <Panel title={t("ml.importances")}>
+        <Plot figure={importancesFigure(run.importances)} height={Math.max(220, 24 * Math.min(15, run.importances.length) + 60)} label={t("ml.importances")} />
+      </Panel>
+      <div className="max-h-96 overflow-auto rounded-md border border-line">
+        <table className="w-full border-collapse text-[13px] tabular-nums">
+          <thead className="sticky top-0 bg-surface-2 text-left text-xs text-ink-3">
+            <tr>
+              <th className="px-3 py-1.5 font-normal">{t("ml.feature")}</th>
+              <th className="px-3 py-1.5 text-right font-normal">{t("ml.importance")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {run.importances.map((i) => (
+              <tr key={i.feature} className="border-t border-line">
+                <td className="px-3 py-1.5 font-mono text-xs text-ink-1">{i.feature}</td>
+                <td className="px-3 py-1.5 text-right">{(i.importance * 100).toFixed(1)} %</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 function Features({ run }: { run: MlRun }) {
   const coefficients = run.coefficients;
+  if (!coefficients.length && run.importances.length) return <Importances run={run} />;
   if (!coefficients.length) return <p className="text-ink-2">{t("ml.noCoefficients")}</p>;
   const withStats = coefficients.some((c) => c.p_value !== null);
   const odds = coefficients.some((c) => c.odds_ratio !== null);

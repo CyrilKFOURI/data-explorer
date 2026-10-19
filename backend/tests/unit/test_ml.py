@@ -180,7 +180,7 @@ def test_ridge_settings_and_validation() -> None:
         False,
     )
 
-    assert result.settings == {"regularization": "ridge", "alpha": 10.0}
+    assert result.settings["regularization"] == "ridge" and result.settings["alpha"] == 10.0
     assert result.coefficients[0].p_value is None  # no p-values for a penalised fit
     with pytest.raises(catalogue.SettingsError, match="between"):
         train(

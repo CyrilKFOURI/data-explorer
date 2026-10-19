@@ -78,6 +78,10 @@ export type MlTargets = Complete<Schemas["Targets"]>;
 export type MlCandidate = MlTargets["candidates"][number];
 export type MlModel = Complete<Schemas["ModelView"]>;
 export type MlSetting = MlModel["settings"][number];
+export type MlCatalogue = Complete<Schemas["Catalogue"]>;
+export type MlValidation = Complete<Schemas["Validation"]>;
+/** What the catalogue's recommendations and defaults depend on. */
+export type MlContext = { task: string; rows: number; minority: number | null; features: number; categoricalShare: number; missingShare: number };
 export type MlJob = Complete<Schemas["TrainingJob"]>;
 export type MlRun = Complete<Schemas["Run"]>;
 export type MlRunSummary = Complete<Schemas["RunSummary"]>;
@@ -370,10 +374,16 @@ export const api = {
     ),
   mlTargets: (id: string, filters?: Condition[]) =>
     request<MlTargets>("GET", `/modules/ml/datasets/${id}/targets?${new URLSearchParams(filtersParam(filters))}`),
-  mlCatalog: (task: string, rows: number, minority: number | null) => {
-    const query = new URLSearchParams({ task, rows: String(rows) });
-    if (minority !== null) query.set("minority", String(minority));
-    return request<MlModel[]>("GET", `/modules/ml/catalog?${query}`);
+  mlCatalog: (context: MlContext) => {
+    const query = new URLSearchParams({
+      task: context.task,
+      rows: String(Math.round(context.rows)),
+      features: String(context.features),
+      categorical_share: context.categoricalShare.toFixed(3),
+      missing_share: context.missingShare.toFixed(3),
+    });
+    if (context.minority !== null) query.set("minority", String(context.minority));
+    return request<MlCatalogue>("GET", `/modules/ml/catalog?${query}`);
   },
   mlTrain: (
     id: string,
@@ -383,7 +393,12 @@ export const api = {
     filters?: Condition[],
     choices?: MlChoicesInput | null,
     classes?: MlClasses | null,
-  ) => request<MlJob>("POST", `/modules/ml/datasets/${id}/runs?${mlQuery(target, model, settings, filters, classes)}`, choices ?? undefined),
+    validation?: MlValidation | null,
+  ) => {
+    const query = mlQuery(target, model, settings, filters, classes);
+    if (validation) query.set("validation", JSON.stringify(validation));
+    return request<MlJob>("POST", `/modules/ml/datasets/${id}/runs?${query}`, choices ?? undefined);
+  },
   mlPreparation: (
     id: string,
     target: string,

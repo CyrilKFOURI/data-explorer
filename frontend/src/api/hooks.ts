@@ -19,6 +19,8 @@ import {
   type ImportOptions,
   type MlChoicesInput,
   type MlClasses,
+  type MlContext,
+  type MlValidation,
   type OutlierMethod,
   type DetectionSettings,
   type RowsView,
@@ -462,12 +464,13 @@ export function useMlTargets(id: string, enabled: boolean) {
   });
 }
 
-export function useMlCatalog(task: string | null, rows: number, minority: number | null) {
+export function useMlCatalog(context: MlContext | null) {
   return useQuery({
-    queryKey: ["ml", "catalog", task, rows, minority],
-    queryFn: () => api.mlCatalog(task ?? "regression", rows, minority),
-    enabled: Boolean(task),
+    queryKey: ["ml", "catalog", context],
+    queryFn: () => api.mlCatalog(context as MlContext),
+    enabled: Boolean(context),
     staleTime: Infinity,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -480,13 +483,15 @@ export function useMlTrain(id: string) {
       settings,
       choices,
       classes,
+      validation,
     }: {
       target: string;
       model: string | null;
       settings: Record<string, unknown> | null;
       choices?: MlChoicesInput | null;
       classes?: MlClasses | null;
-    }) => api.mlTrain(id, target, model, settings, filters, choices, classes),
+      validation?: MlValidation | null;
+    }) => api.mlTrain(id, target, model, settings, filters, choices, classes, validation),
   });
 }
 

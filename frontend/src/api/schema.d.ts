@@ -815,10 +815,11 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Catalog
-         * @description The models that handle a task, with their settings and data-dependent defaults.
+         * Models
+         * @description The models that handle a task: settings with data-dependent defaults, rules between
+         *     settings, badges, limits, and two or three recommendations for this data.
          */
-        get: operations["catalog_api_v1_modules_ml_catalog_get"];
+        get: operations["models_api_v1_modules_ml_catalog_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1152,6 +1153,19 @@ export interface components {
             classes: number | null;
             /** Missing Share */
             missing_share: number;
+        };
+        /** Catalogue */
+        Catalogue: {
+            /** Families */
+            families: string[];
+            /** Models */
+            models: components["schemas"]["ModelView"][];
+            /** Recommended */
+            recommended: components["schemas"]["Recommendation"][];
+            /** Metrics */
+            metrics: string[];
+            /** Default Metric */
+            default_metric: string;
         };
         /** CategoricalProfile */
         CategoricalProfile: {
@@ -1614,6 +1628,21 @@ export interface components {
             /** Ar Order */
             ar_order?: number | null;
         };
+        /** CrossValidation */
+        CrossValidation: {
+            /** Method */
+            method: string;
+            /** Folds */
+            folds: number;
+            /** Mean */
+            mean: {
+                [key: string]: number | null;
+            };
+            /** Std */
+            std: {
+                [key: string]: number | null;
+            };
+        };
         /** CsvOptions */
         CsvOptions: {
             /**
@@ -2075,6 +2104,13 @@ export interface components {
             /** Reused */
             reused: boolean;
         };
+        /** Importance */
+        Importance: {
+            /** Feature */
+            feature: string;
+            /** Importance */
+            importance: number;
+        };
         /** Insight */
         Insight: {
             /** Id */
@@ -2277,6 +2313,16 @@ export interface components {
             tasks: string[];
             /** Settings */
             settings: components["schemas"]["SettingView"][];
+            /** Rules */
+            rules: components["schemas"]["RuleView"][];
+            /** Badges */
+            badges: string[];
+            /** Installed */
+            installed: boolean;
+            /** Unavailable */
+            unavailable: string | null;
+            /** Probabilities */
+            probabilities: boolean;
         };
         /** Normality */
         Normality: {
@@ -2567,6 +2613,13 @@ export interface components {
             /** Intercept */
             intercept: number;
         };
+        /** Recommendation */
+        Recommendation: {
+            /** Key */
+            key: string;
+            /** Why */
+            why: string;
+        };
         /** Regression */
         Regression: {
             /** Slope */
@@ -2638,6 +2691,19 @@ export interface components {
             /** Offset */
             offset: number;
         };
+        /** RuleView */
+        RuleView: {
+            /** When */
+            when: {
+                [key: string]: unknown[];
+            };
+            /** Setting */
+            setting: string;
+            /** Allowed */
+            allowed: unknown[];
+            /** Reason */
+            reason: string;
+        };
         /**
          * Run
          * @description A trained model as the page shows it (stored as JSON next to the fitted pipeline).
@@ -2684,6 +2750,14 @@ export interface components {
             /** Score */
             score: number | null;
             classes?: components["schemas"]["Classes"] | null;
+            /** Scores */
+            scores?: {
+                [key: string]: number | null;
+            };
+            cross_validation?: components["schemas"]["CrossValidation"] | null;
+            /** Importances */
+            importances?: components["schemas"]["Importance"][];
+            validation?: components["schemas"]["Validation"];
         };
         /** RunSummary */
         RunSummary: {
@@ -2708,6 +2782,16 @@ export interface components {
             /** Created At */
             created_at: string;
             classes?: components["schemas"]["Classes"] | null;
+            /**
+             * Greater Is Better
+             * @default true
+             */
+            greater_is_better: boolean;
+            /**
+             * Label
+             * @default
+             */
+            label: string;
         };
         /** SampleOut */
         SampleOut: {
@@ -3114,8 +3198,16 @@ export interface components {
             why: string;
             /** Shown When */
             shown_when: {
-                [key: string]: string[];
+                [key: string]: unknown[];
             } | null;
+            /** Group */
+            group: string;
+            /** Param */
+            param: string;
+            /** Option Labels */
+            option_labels: {
+                [key: string]: string;
+            };
         };
         /**
          * SourceOptions
@@ -3336,6 +3428,49 @@ export interface components {
             path: string;
             /** Size */
             size: number;
+        };
+        /**
+         * Validation
+         * @description How the model is judged, and on how many rows it is trained.
+         */
+        Validation: {
+            /**
+             * Method
+             * @default split
+             * @enum {string}
+             */
+            method: "split" | "kfold" | "repeated_kfold" | "group_kfold" | "time_split" | "loo";
+            /**
+             * Test Size
+             * @default 0.2
+             */
+            test_size: number;
+            /**
+             * Folds
+             * @default 5
+             */
+            folds: number;
+            /**
+             * Repeats
+             * @default 3
+             */
+            repeats: number;
+            /** Group */
+            group?: string | null;
+            /** Time Column */
+            time_column?: string | null;
+            /** Metric */
+            metric?: string | null;
+            /**
+             * Seed
+             * @default 42
+             */
+            seed: number;
+            /**
+             * Max Rows
+             * @default 200000
+             */
+            max_rows: number | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -5178,12 +5313,16 @@ export interface operations {
             };
         };
     };
-    catalog_api_v1_modules_ml_catalog_get: {
+    models_api_v1_modules_ml_catalog_get: {
         parameters: {
             query: {
                 task: "regression" | "binary" | "multiclass";
+                /** @description Training rows. */
                 rows?: number;
                 minority?: number | null;
+                features?: number;
+                categorical_share?: number;
+                missing_share?: number;
             };
             header?: never;
             path?: never;
@@ -5197,7 +5336,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ModelView"][];
+                    "application/json": components["schemas"]["Catalogue"];
                 };
             };
             /** @description Validation Error */
@@ -5253,6 +5392,8 @@ export interface operations {
                 settings?: string | null;
                 /** @description JSON: a number cut into classes. */
                 classes?: string | null;
+                /** @description JSON: how the model is judged. */
+                validation?: string | null;
                 filters?: string | null;
             };
             header?: never;

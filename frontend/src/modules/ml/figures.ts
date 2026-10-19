@@ -181,3 +181,22 @@ export function coefficientsFigure(coefficients: Coefficient[]): Figure {
 }
 
 export type { Classification };
+
+export function importancesFigure(importances: { feature: string; importance: number }[]): Figure {
+  return (tokens) => {
+    const top = importances.slice(0, 15).reverse();
+    return {
+      data: [
+        {
+          type: "bar",
+          orientation: "h",
+          y: top.map((i) => i.feature),
+          x: top.map((i) => i.importance),
+          marker: { color: tokens.palette[0] ?? tokens.numeric },
+          hovertemplate: "%{y}: %{x:.1%}<extra></extra>",
+        } as Data,
+      ],
+      layout: { showlegend: false, margin: { l: 160 }, xaxis: { ...title("Share of importance"), tickformat: ".0%" } },
+    };
+  };
+}

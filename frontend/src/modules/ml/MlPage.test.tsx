@@ -26,6 +26,42 @@ const candidate = (name: string, task: string | null, overrides: Record<string, 
   ...overrides,
 });
 
+type Model = { key: string; label: string; tasks: string[]; settings?: Record<string, unknown>[]; family?: string; rules?: unknown[]; installed?: boolean };
+
+/** The catalogue as the API serves it. */
+function catalogue(models: Model[], recommended: { key: string; why: string }[] = []) {
+  return {
+    families: [...new Set(models.map((m) => m.family ?? "Linear models"))],
+    models: models.map((m) => ({
+      family: "Linear models",
+      description: `${m.label} description.`,
+      rules: [],
+      badges: [],
+      installed: true,
+      unavailable: null,
+      probabilities: true,
+      ...m,
+      settings: (m.settings ?? []).map((s) => ({
+        kind: "select",
+        level: "essential",
+        options: [],
+        minimum: null,
+        maximum: null,
+        log: false,
+        why: "",
+        shown_when: null,
+        group: "Main",
+        param: "",
+        option_labels: {},
+        ...s,
+      })),
+    })),
+    recommended,
+    metrics: ["r2", "mae"],
+    default_metric: "r2",
+  };
+}
+
 const regressionRun = {
   id: "r1",
   dataset_id: "d1",
@@ -65,6 +101,11 @@ const regressionRun = {
   predictions: [{ row: 4, actual: "10", predicted: "11", error: 1, probability: null, correct: null }],
   primary: "r2",
   score: 0.82,
+  classes: null,
+  scores: { r2: 0.82, mae: 10 },
+  cross_validation: null,
+  importances: [],
+  validation: { method: "split", test_size: 0.2, folds: 5, repeats: 3, group: null, time_column: null, metric: null, seed: 42, max_rows: 200000 },
 };
 
 function setup() {
@@ -78,18 +119,14 @@ function setup() {
       candidates: [candidate("price", "regression", { suggested: true }), candidate("vin", null)],
       rows: 100,
     },
-    "GET /modules/ml/catalog": [
+    "GET /modules/ml/catalog": catalogue([
       {
         key: "linear_regression",
         label: "Linear regression",
-        family: "Linear models",
-        description: "A weighted sum of the features.",
         tasks: ["regression"],
-        settings: [
-          { key: "regularization", label: "Regularization", kind: "select", default: "none", level: "essential", options: ["none", "ridge", "lasso"], minimum: null, maximum: null, log: false, why: "", shown_when: null },
-        ],
+        settings: [{ key: "regularization", label: "Regularization", default: "none", options: ["none", "ridge", "lasso"] }],
       },
-    ],
+    ]),
     "GET /modules/ml/datasets/d1/runs": [],
     "POST /modules/ml/datasets/d1/runs": { id: "job1", status: "running", stage: "loading", run_id: null, error: null },
     "GET /modules/ml/jobs/job1": { id: "job1", status: "done", stage: "saving", run_id: "r1", error: null },
@@ -176,9 +213,7 @@ describe("Preparation editor", () => {
       "GET /datasets/d1/columns": [column({ name: "price" })],
       "GET /column-roles": roles,
       "GET /modules/ml/datasets/d1/targets": { candidates: [candidate("price", "regression")], rows: 100 },
-      "GET /modules/ml/catalog": [
-        { key: "linear_regression", label: "Linear regression", family: "Linear models", description: "", tasks: ["regression"], settings: [] },
-      ],
+      "GET /modules/ml/catalog": catalogue([{ key: "linear_regression", label: "Linear regression", tasks: ["regression"] }]),
       "GET /modules/ml/datasets/d1/runs": [
         { id: "r1", target: "price", task: "regression", model: "linear_regression", settings: {}, metric: "r2", score: 0.82, seconds: 0.3, created_at: "2026-10-18T10:00:00Z" },
       ],
@@ -233,9 +268,10 @@ describe("Predict a number as classes", () => {
       "GET /datasets/d1/columns": [column({ name: "price" })],
       "GET /column-roles": roles,
       "GET /modules/ml/datasets/d1/targets": { candidates: [candidate("price", "regression")], rows: 300 },
-      "GET /modules/ml/catalog": [
-        { key: "logistic_regression", label: "Logistic regression", family: "Linear models", description: "", tasks: ["binary", "multiclass"], settings: [] },
-      ],
+      "GET /modules/ml/catalog": catalogue([
+        { key: "linear_regression", label: "Linear regression", tasks: ["regression"] },
+        { key: "logistic_regression", label: "Logistic regression", tasks: ["binary", "multiclass"] },
+      ]),
       "GET /modules/ml/datasets/d1/runs": [
         { id: "r1", target: "price", task: "regression", model: "linear_regression", settings: {}, metric: "r2", score: 0.82, seconds: 0.3, created_at: "2026-10-18T10:00:00Z", classes: null },
       ],
@@ -275,6 +311,73 @@ describe("Predict a number as classes", () => {
       edges: [75, 150, 230],
       names: ["Low", "Medium-low", "Medium-high", "High"],
     });
+  });
+});
+
+describe("Model catalogue", () => {
+  it("picks a model by family, shows its essentials, and opens every setting in the drawer", async () => {
+    const calls = mockApi({
+      "GET /health": health,
+      "GET /datasets": [dataset()],
+      "GET /datasets/d1": dataset(),
+      "GET /datasets/d1/columns": [column({ name: "price" })],
+      "GET /column-roles": roles,
+      "GET /modules/ml/datasets/d1/targets": { candidates: [candidate("price", "regression")], rows: 100 },
+      "GET /modules/ml/catalog": catalogue(
+        [
+          { key: "linear_regression", label: "Linear regression", tasks: ["regression"] },
+          {
+            key: "random_forest",
+            label: "Random forest",
+            family: "Bagging ensembles",
+            tasks: ["regression"],
+            settings: [
+              { key: "n_estimators", label: "Number of trees", kind: "int", default: 300, minimum: 10, maximum: 5000, param: "n_estimators", group: "Structure" },
+              { key: "max_features", label: "Features tried per split", default: "1.0", options: ["sqrt", "1.0"], level: "advanced", group: "Sampling", param: "max_features" },
+              { key: "criterion", label: "Split quality", default: "squared_error", options: ["squared_error", "absolute_error"], level: "expert", group: "Optimizer", param: "criterion" },
+            ],
+          },
+          { key: "xgboost", label: "XGBoost", family: "Boosting ensembles", tasks: ["regression"], installed: false },
+        ],
+        [{ key: "random_forest", why: "Robust without tuning." }],
+      ),
+      "GET /modules/ml/datasets/d1/runs": [
+        { id: "r1", target: "price", task: "regression", model: "linear_regression", settings: {}, metric: "r2", score: 0.82, seconds: 0.3, created_at: "2026-10-18T10:00:00Z", classes: null, greater_is_better: true },
+      ],
+      "GET /modules/ml/datasets/d1/runs/r1": regressionRun,
+      "POST /modules/ml/datasets/d1/runs": { id: "job1", status: "running", stage: "loading", run_id: null, error: null },
+      "GET /modules/ml/jobs/job1": { id: "job1", status: "running", stage: "loading", run_id: null, error: null },
+    });
+    renderAt("/d/d1/ml?target=price");
+
+    fireEvent.click(await screen.findByRole("button", { name: /Linear regression.*Linear models/ }));
+    expect(await screen.findByText("Recommended for this data")).toBeInTheDocument();
+    expect(screen.getByText("Robust without tuning.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Boosting ensembles/ }));
+    expect(screen.getByRole("button", { name: /XGBoost/ })).toBeDisabled();
+    expect(screen.getByText("Not installed in this build.")).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: /Random forest/ })[0] as HTMLElement);
+
+    const trees = await screen.findByRole("spinbutton", { name: "Number of trees" });
+    expect(trees).toHaveValue(300);
+    expect(screen.queryByRole("combobox", { name: "Features tried per split" })).not.toBeInTheDocument(); // advanced
+
+    fireEvent.click(screen.getByRole("button", { name: "All settings" }));
+    expect(await screen.findByRole("combobox", { name: "Features tried per split" })).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Optimizer" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Expert" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Optimizer" }));
+    expect(screen.getByRole("combobox", { name: "Split quality" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Validation" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "Method" }), { target: { value: "kfold" } });
+    const train = screen.getAllByRole("button", { name: "Train" });
+    fireEvent.click(train[train.length - 1] as HTMLElement);
+
+    await waitFor(() => expect(calls.some((c) => c.key === "POST /modules/ml/datasets/d1/runs")).toBe(true));
+    const posted = calls.find((c) => c.key === "POST /modules/ml/datasets/d1/runs");
+    expect(posted?.params.get("model")).toBe("random_forest");
+    expect(JSON.parse(posted?.params.get("validation") ?? "{}")).toMatchObject({ method: "kfold", folds: 5 });
   });
 });
 

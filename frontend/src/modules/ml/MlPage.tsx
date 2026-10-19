@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import type { MlCandidate, MlChoicesInput, MlClasses, MlRun, MlSetting } from "../../api/client";
+import type { MlCandidate, MlChoicesInput, MlClasses, MlContext, MlRun, MlValidation } from "../../api/client";
 import {
   useDataset,
   useMlCatalog,
@@ -18,11 +18,13 @@ import { formatNumber } from "../../charts/figures";
 import { t, type MessageKey } from "../../lib/i18n";
 import { Button } from "../../ui/Button";
 import { ErrorNote, Select, TextInput } from "../../ui/fields";
-import { InfoTip } from "../../ui/InfoTip";
 import { SegmentedControl } from "../../ui/SegmentedControl";
 import { classCounts, DEFAULT_SETUP, edgesFor, namesFor, type Setup } from "./bins";
 import { ClassesPanel, setupFromRun, type Cut } from "./ClassesPanel";
+import { ModelPicker } from "./ModelPicker";
 import { PreparationEditor, preparationSummary } from "./PreparationEditor";
+import { disabledOptions, isVisible, resolveValues, type Values } from "./rules";
+import { DEFAULT_VALIDATION, metricName, SettingField, SettingsDrawer } from "./SettingsDrawer";
 import { Results } from "./Results";
 
 export type MlSearch = { target?: string; run?: string };
@@ -112,44 +114,6 @@ function TargetPicker({ candidates, onPick }: { candidates: MlCandidate[]; onPic
   );
 }
 
-function SettingField({ setting, value, onChange }: { setting: MlSetting; value: unknown; onChange: (value: unknown) => void }) {
-  const label = (
-    <span className="flex items-center gap-1 text-xs text-ink-2">
-      {setting.label}
-      {setting.why && <InfoTip label={setting.label} text={setting.why} />}
-    </span>
-  );
-  if (setting.kind === "select") {
-    return (
-      <label className="flex items-center justify-between gap-3">
-        {label}
-        <Select aria-label={setting.label} value={String(value)} onChange={(event) => onChange(event.target.value)} className="h-7 text-xs">
-          {setting.options.map((option) => (
-            <option key={option} value={option}>
-              {t(`ml.option.${option}` as MessageKey)}
-            </option>
-          ))}
-        </Select>
-      </label>
-    );
-  }
-  return (
-    <label className="flex items-center justify-between gap-3">
-      {label}
-      <TextInput
-        aria-label={setting.label}
-        type="number"
-        value={String(value)}
-        min={setting.minimum ?? undefined}
-        max={setting.maximum ?? undefined}
-        step="any"
-        onChange={(event) => onChange(event.target.value === "" ? setting.default : Number(event.target.value))}
-        className="h-7 w-24 text-xs"
-      />
-    </label>
-  );
-}
-
 function Workbench({
   datasetId,
   candidate,
@@ -198,9 +162,31 @@ function Workbench({
   );
   const effectiveTask = mode === "classes" ? (cut?.names.length === 2 ? "binary" : "multiclass") : task;
 
-  const catalog = useMlCatalog(effectiveTask, rows, null);
-  const model = catalog.data?.[0];
-  const [values, setValues] = useState<Record<string, unknown>>({});
+  // Validation: what the user changed, else what the shown run used.
+  const [validationEdited, setValidationEdited] = useState<MlValidation | null>(null);
+  const validation = validationEdited ?? run.data?.validation ?? DEFAULT_VALIDATION;
+  const context = useMemo<MlContext>(() => {
+    const others = candidates.filter((c) => c.name !== candidate.name);
+    const categorical = others.filter((c) => ["categorical_nominal", "categorical_ordinal", "boolean"].includes(c.type)).length;
+    const used = Math.min(rows, validation.max_rows ?? rows);
+    const cross = ["kfold", "repeated_kfold", "group_kfold", "loo"].includes(validation.method);
+    return {
+      task: effectiveTask,
+      rows: cross ? used : used * (1 - validation.test_size),
+      minority: null,
+      features: others.length,
+      categoricalShare: others.length ? categorical / others.length : 0,
+      missingShare: others.length ? others.reduce((sum, c) => sum + c.missing_share, 0) / others.length : 0,
+    };
+  }, [candidates, candidate.name, rows, validation.max_rows, validation.method, validation.test_size, effectiveTask]);
+  const catalog = useMlCatalog(context);
+  const reference = effectiveTask === "regression" ? "linear_regression" : "logistic_regression";
+  const [modelEdited, setModelEdited] = useState<string | null>(null);
+  const runModel = run.data && run.data.task === effectiveTask ? run.data.model : null;
+  const models = catalog.data?.models;
+  const model = models?.find((m) => m.key === (modelEdited ?? runModel ?? reference)) ?? models?.find((m) => m.key === reference);
+  const [values, setValues] = useState<Values>({});
+  const [drawer, setDrawer] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
   const train = useMlTrain(datasetId);
   const job = useMlJob(jobId);
@@ -211,29 +197,40 @@ function Workbench({
   const runChoices = run.data?.preparation.choices;
   const choices = useMemo<MlChoicesInput>(() => edited ?? runChoices ?? {}, [edited, runChoices]);
 
-  const settings = useMemo(() => {
-    const merged: Record<string, unknown> = {};
-    // Shown: what the user changed, else what the last run used (defaults resolved on the data).
-    const used = run.data?.model === model?.key ? run.data?.settings : undefined;
-    for (const s of model?.settings ?? []) merged[s.key] = values[s.key] ?? used?.[s.key] ?? s.default;
-    return merged;
-  }, [model, values, run.data]);
+  const runSettings = run.data?.model === model?.key ? run.data?.settings : undefined;
+  // Shown: what the user changed, else what the shown run used, else the data-dependent defaults;
+  // then the catalogue's rules, as the server applies them.
+  const resolved = useMemo(
+    () => (model ? resolveValues(model, runSettings ?? {}, values) : { values: {} as Values, error: null }),
+    [model, runSettings, values],
+  );
+  const settings = resolved.values;
+  const resetSetting = (key?: string) => {
+    if (key === undefined) return setValues({});
+    const rest = { ...values };
+    delete rest[key];
+    setValues(rest);
+  };
 
   // Only the settings the user changed (for this model): the server resolves the other defaults.
   const changed = Object.fromEntries(Object.entries(values).filter(([key]) => model?.settings.some((s) => s.key === key)));
   const changedSettings = Object.keys(changed).length ? changed : null;
   const launch = () =>
     train.mutate(
-      { target: candidate.name, model: model?.key ?? null, settings: changedSettings, choices, classes },
+      { target: candidate.name, model: model?.key ?? null, settings: changedSettings, choices, classes, validation },
       {
         onSuccess: (created) => {
           setJobId(created.id);
           setEdited(null);
+          setDrawer(false);
         },
       },
     );
   const pickRun = (id: string) => {
     setEdited(null);
+    setModelEdited(null);
+    setValues({});
+    setValidationEdited(null);
     setModeEdited(null);
     setSetupEdited(null);
     onRun(id);
@@ -256,12 +253,12 @@ function Workbench({
     const timer = window.setTimeout(() => {
       sent.current = payload;
       train.mutate(
-        { target: candidate.name, model: model?.key ?? null, settings: null, choices, classes },
+        { target: candidate.name, model: model?.key ?? null, settings: changedSettings, choices, classes, validation },
         { onSuccess: (created) => setJobId(created.id) },
       );
     }, 600);
     return () => window.clearTimeout(timer);
-  }, [payload, shownPayload, modelReady, classes, candidate.name, model, choices, train]);
+  }, [payload, shownPayload, modelReady, classes, candidate.name, model, choices, train, changedSettings, validation]);
 
   // The reference model trains on its own the first time a target is chosen.
   useEffect(() => {
@@ -282,8 +279,6 @@ function Workbench({
 
   const training = train.isPending || job.data?.status === "running";
   const preparation = run.data?.preparation;
-  const visible = (s: MlSetting) =>
-    !s.shown_when || Object.entries(s.shown_when).every(([key, allowed]) => allowed.includes(String(settings[key])));
 
   return (
     <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
@@ -341,16 +336,34 @@ function Workbench({
               <div className="h-40 animate-pulse rounded-md bg-surface-1" aria-busy="true" />
             ))}
         </section>
-        {model && (
+        {catalog.data && model && (
           <section className="space-y-2">
-            <div>
-              <span className="text-xs text-ink-3">{t("ml.model")}</span>
-              <p className="font-medium text-ink-1">{model.label}</p>
-              <p className="text-xs text-ink-3">{model.description}</p>
-            </div>
-            {model.settings.filter(visible).map((s) => (
-              <SettingField key={s.key} setting={s} value={settings[s.key]} onChange={(value) => setValues({ ...values, [s.key]: value })} />
-            ))}
+            <span className="text-xs text-ink-3">{t("ml.model")}</span>
+            <ModelPicker
+              catalogue={catalog.data}
+              current={model}
+              onPick={(key) => {
+                setModelEdited(key);
+                setValues({});
+              }}
+            />
+            <p className="text-xs text-ink-3">{model.description}</p>
+            {model.settings
+              .filter((s) => s.level === "essential" && isVisible(s, settings))
+              .map((s) => (
+                <SettingField
+                  key={s.key}
+                  setting={s}
+                  value={settings[s.key]}
+                  changed={s.key in values}
+                  disabled={disabledOptions(model, settings)[s.key]}
+                  onChange={(value) => setValues({ ...values, [s.key]: value })}
+                  onReset={() => resetSetting(s.key)}
+                />
+              ))}
+            <Button variant="ghost" onClick={() => setDrawer(true)}>
+              {t("ml.settings.all")}
+            </Button>
           </section>
         )}
         <section className="space-y-1 text-xs">
@@ -364,8 +377,36 @@ function Workbench({
           </div>
           <p className="text-ink-1">{preparation ? preparationSummary(preparation) : t("ml.preparationAuto")}</p>
           {edited && <p className="text-warn">{t("ml.prep.pending")}</p>}
-          <p className="pt-1 text-ink-3">{t("ml.validation")}</p>
+          <p className="flex items-center justify-between gap-2 pt-1 text-ink-3">
+            <span>{validationSummary(validation)}</span>
+            <Button variant="ghost" aria-label={t("ml.validation.edit")} onClick={() => setDrawer(true)}>
+              {t("ml.prep.edit")}
+            </Button>
+          </p>
         </section>
+        {model && (
+          <SettingsDrawer
+            open={drawer}
+            onOpenChange={setDrawer}
+            model={model}
+            values={settings}
+            chosen={values}
+            onChange={(key, value) => setValues({ ...values, [key]: value })}
+            onReset={resetSetting}
+            validation={validation}
+            onValidation={setValidationEdited}
+            metrics={catalog.data?.metrics ?? []}
+            candidates={candidates}
+            task={effectiveTask}
+            onPreparation={() => {
+              setDrawer(false);
+              setEditing(true);
+            }}
+            onTrain={launch}
+            training={training}
+            error={resolved.error}
+          />
+        )}
         <PreparationEditor
           open={editing}
           onOpenChange={setEditing}
@@ -378,7 +419,8 @@ function Workbench({
           onChoices={setEdited}
           classes={classes}
         />
-        <Button variant="primary" onClick={launch} disabled={training || !model}>
+        {resolved.error && <ErrorNote>{resolved.error}</ErrorNote>}
+        <Button variant="primary" onClick={launch} disabled={training || !model || Boolean(resolved.error)}>
           {training ? t(`ml.stage.${job.data?.stage ?? "loading"}` as MessageKey) : t("ml.train")}
         </Button>
         {train.isError && <ErrorNote>{train.error.message}</ErrorNote>}
@@ -393,17 +435,44 @@ function Workbench({
             {training ? t("ml.trainingFirst") : t("ml.noRunYet")}
           </div>
         )}
-        {runs.data && runs.data.length > 0 && <RunStrip runs={runs.data} shown={run.data} onPick={pickRun} />}
+        {runs.data && runs.data.length > 0 && (
+          <RunStrip runs={runs.data} shown={run.data} onPick={pickRun} labels={Object.fromEntries((models ?? []).map((m) => [m.key, m.label]))} />
+        )}
       </div>
     </div>
   );
 }
 
-function RunStrip({ runs, shown, onPick }: { runs: NonNullable<ReturnType<typeof useMlRuns>["data"]>; shown: MlRun | undefined; onPick: (id: string) => void }) {
+function validationSummary(validation: MlValidation): string {
+  const method = t(`ml.validation.method.${validation.method}` as MessageKey);
+  const detail =
+    validation.method === "split" || validation.method === "time_split"
+      ? ` · ${Math.round(validation.test_size * 100)} % test`
+      : validation.method === "loo"
+        ? ""
+        : ` · ${validation.folds} folds`;
+  const rows = validation.max_rows === null ? t("ml.rows.all") : t("ml.rows.atMost", { rows: validation.max_rows.toLocaleString("en-US") });
+  return `${t("ml.validationLabel")}: ${method}${detail} · ${rows}${validation.metric ? ` · ${metricName(validation.metric)}` : ""}`;
+}
+
+function RunStrip({
+  runs,
+  shown,
+  onPick,
+  labels,
+}: {
+  runs: NonNullable<ReturnType<typeof useMlRuns>["data"]>;
+  shown: MlRun | undefined;
+  onPick: (id: string) => void;
+  labels: Record<string, string>;
+}) {
   // Only runs scored the same way compare (R² and accuracy do not).
   const metric = shown?.primary ?? runs[0]?.metric;
   const comparable = runs.filter((r) => r.score !== null && r.metric === metric);
-  const best = comparable.length > 1 ? [...comparable].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0] : undefined;
+  const best =
+    comparable.length > 1
+      ? [...comparable].sort((a, b) => (a.greater_is_better ? (b.score ?? 0) - (a.score ?? 0) : (a.score ?? 0) - (b.score ?? 0)))[0]
+      : undefined;
   return (
     <section aria-label={t("ml.runs")} className="space-y-1.5">
       <h3 className="text-xs text-ink-3">{t("ml.runs")}</h3>
@@ -417,7 +486,7 @@ function RunStrip({ runs, shown, onPick }: { runs: NonNullable<ReturnType<typeof
             className={`rounded-md border px-2.5 py-1.5 text-left text-xs ${shown?.id === r.id ? "border-accent bg-accent-soft" : "border-line hover:bg-surface-1"}`}
           >
             <span className="text-ink-1">
-              #{runs.length - index} {t(`ml.modelName.${r.model}` as MessageKey)}
+              #{runs.length - index} {r.label || labels[r.model] || r.model}
               {typeof r.settings.regularization === "string" && r.settings.regularization !== "none"
                 ? ` · ${t(`ml.option.${r.settings.regularization}` as MessageKey)}`
                 : ""}

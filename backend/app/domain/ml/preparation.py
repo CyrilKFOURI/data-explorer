@@ -517,7 +517,10 @@ def _ordinal(
         + " < ".join(fld.order[:6])
         + ("…" if len(fld.order) > 6 else ""),
     )
-    if model.needs_scaling:
+    if model.nonnegative_inputs:
+        decision.scaling = "minmax"
+        decision.apply("R-NUM-09", "Codes scaled to [0, 1]: this model needs inputs ≥ 0.")
+    elif model.needs_scaling:
         decision.scaling = "standard"
         decision.apply("R-NUM-08", "Standardised like a number.")
 
@@ -574,7 +577,10 @@ def _date(decision: Decision, model: ModelProfile) -> None:
         decision.apply(
             "R-DATE-03", "Month, weekday and hour as sine / cosine (December is next to January)."
         )
-        if model.needs_scaling:
+        if model.nonnegative_inputs:
+            decision.scaling = "minmax"
+            decision.apply("R-NUM-09", "Parts scaled to [0, 1]: this model needs inputs ≥ 0.")
+        elif model.needs_scaling:
             decision.scaling = "standard"
     else:
         decision.apply("R-DATE-02", "Parts as integers for trees.")
@@ -799,9 +805,11 @@ class DateParts(BaseEstimator, TransformerMixin):
 
 
 def _scaler(kind: str | None):
-    return {"standard": StandardScaler(), "robust": RobustScaler(), "minmax": MinMaxScaler()}.get(
-        kind or "", "passthrough"
-    )
+    return {
+        "standard": StandardScaler(),
+        "robust": RobustScaler(),
+        "minmax": MinMaxScaler(clip=True),
+    }.get(kind or "", "passthrough")
 
 
 def _rare(n: int, choices: Choices) -> int:

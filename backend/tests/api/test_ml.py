@@ -70,10 +70,14 @@ def test_train_a_classification_with_settings(client: TestClient, traps: str) ->
 
 
 def test_catalog_and_errors(client: TestClient, traps: str) -> None:
-    models = client.get(f"{BASE}/catalog", params={"task": "binary", "minority": 0.1}).json()
-    assert [m["key"] for m in models] == ["logistic_regression"]
-    weight = next(s for s in models[0]["settings"] if s["key"] == "class_weight")
+    found = client.get(f"{BASE}/catalog", params={"task": "binary", "minority": 0.1}).json()
+    keys = [m["key"] for m in found["models"]]
+    assert "logistic_regression" in keys and "linear_regression" not in keys
+    logistic = found["models"][keys.index("logistic_regression")]
+    weight = next(s for s in logistic["settings"] if s["key"] == "class_weight")
     assert weight["default"] == "balanced" and weight["why"]
+    assert found["default_metric"] == "roc_auc" and found["recommended"]
+    assert any(r["setting"] == "solver" for r in logistic["rules"])
 
     assert (
         client.post(f"{BASE}/datasets/{traps}/runs", params={"target": "signup_date"}).status_code

@@ -10,16 +10,16 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 from sklearn import metrics as skm
-from sklearn.calibration import calibration_curve
+from sklearn.calibration import CalibratedClassifierCV, calibration_curve
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from statsmodels.stats.diagnostic import het_breuschpagan
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 from app.domain.ml import classes as binning
+from app.domain.ml import evaluate, steps
 from app.domain.ml import models as catalogue
 from app.domain.ml import preparation as prep
-from app.domain.ml import steps
 from app.domain.ml.data import NUMERIC, Field
 from app.domain.ml.target import MAX_CLASSES, Task
 from app.domain.variable.source import clean
@@ -111,6 +111,20 @@ class PredictionRow:
 
 
 @dataclass
+class Importance:
+    feature: str
+    importance: float  # share of the total (impurity or gain)
+
+
+@dataclass
+class CrossValidation:
+    method: str
+    folds: int
+    mean: dict[str, float | None]
+    std: dict[str, float | None]
+
+
+@dataclass
 class Trained:
     task: Task
     model: str
@@ -128,6 +142,10 @@ class Trained:
     primary: str  # name of the main score
     score: float | None
     classes: binning.Classes | None = None  # a number predicted as classes (018)
+    scores: dict[str, float | None] = field(default_factory=dict)  # every metric of the problem
+    cross_validation: CrossValidation | None = None
+    importances: list[Importance] = field(default_factory=list)
+    validation: evaluate.Validation = field(default_factory=evaluate.Validation)
     pipeline: Any = field(default=None, repr=False)
 
 
@@ -188,6 +206,9 @@ class _Setup:
     task: Task
     target: Field  # with the class order when the classes are ordered
     classes: binning.Classes | None
+    validation: evaluate.Validation
+    choices: prep.Choices
+    groups: pd.Series | None  # group k-fold
 
 
 def _counts(y: pd.Series) -> dict[str, int]:
@@ -246,9 +267,13 @@ def _setup(
     excluded_columns: set[str] | None,
     choices: prep.Choices | None,
     classes: binning.Classes | None = None,
+    validation: evaluate.Validation | None = None,
 ) -> _Setup:
     choices = choices or prep.Choices()
+    validation = validation or evaluate.Validation()
     spec = catalogue.CATALOGUE[model_key]
+    if not spec.installed:
+        raise TrainingError(f"{spec.label} is not installed in this build.")
     if classes is not None:
         y, target, classes = _as_classes(cast(pd.Series, frame[target.name]), target, classes)
         task = "binary" if y.nunique() == 2 else "multiclass"
@@ -266,8 +291,18 @@ def _setup(
                 f"row{'s' if int(counts.min()) != 1 else ''} "
                 f"(at least {MIN_CLASS_ROWS} needed): use fewer classes or move the limits."
             )
+    try:
+        evaluate.check(validation, task, len(frame), set(frame.columns))
+    except evaluate.ValidationError as error:
+        raise TrainingError(str(error)) from None
     minority = float(y.value_counts(normalize=True).min()) if task != "regression" else None
-    context = catalogue.Context(len(frame), task, minority)
+    training_rows = (
+        len(frame) if validation.cross else round(len(frame) * (1 - validation.test_size))
+    )
+    context = catalogue.Context(training_rows, task, minority, features=len(fields) - 1)
+    reason = spec.limit(context)
+    if reason:
+        raise TrainingError(reason)
     values = catalogue.resolve(spec, context, given)
     model_profile = catalogue.profile_for(spec, values)
     preparation = prep.decide(
@@ -283,34 +318,36 @@ def _setup(
     if not preparation.used:
         raise TrainingError("No usable feature: every column was left out (see Preparation).")
     features = [d.column for d in preparation.used]
-    stratify = y if task != "regression" and y.value_counts().min() >= 2 else None
-    x_train, x_test, y_train, y_test, _, row_test = train_test_split(
-        frame[features],
-        y,
-        frame["__row"],
-        test_size=TEST_SHARE,
-        random_state=SEED,
-        stratify=stratify,
-    )
-    x_train, x_test = cast(pd.DataFrame, x_train), cast(pd.DataFrame, x_test)
-    y_train, y_test = cast(pd.Series, y_train), cast(pd.Series, y_test)
-    if len(x_train) < 10 or len(x_test) < 3:
+    positions = np.arange(len(frame))
+    if validation.cross:
+        train_at, test_at = positions, positions[:0]
+    elif validation.method == "time_split":
+        train_at, test_at = evaluate.time_split(
+            cast(pd.Series, frame[validation.time_column]), validation.test_size
+        )
+    else:
+        stratify = y if task != "regression" and y.value_counts().min() >= 2 else None
+        train_at, test_at = train_test_split(
+            positions,
+            test_size=validation.test_size,
+            random_state=validation.seed,
+            stratify=stratify,
+        )
+    x = cast(pd.DataFrame, frame[features])
+    x_train, x_test = x.iloc[train_at], x.iloc[test_at]
+    y_train, y_test = y.iloc[train_at], y.iloc[test_at]
+    row_test = cast(pd.Series, frame["__row"]).iloc[test_at]
+    if len(x_train) < 10 or (not validation.cross and len(x_test) < 3):
         raise TrainingError("Too few rows to train and test (at least 15 needed).")
-    if choices.outliers == "drop_rows":
-        numbers = [d.column for d in preparation.used if d.type in NUMERIC]
-        extreme = steps.extreme_rows(x_train, numbers)
-        if (~extreme).sum() < 10:
-            preparation.warnings.append("Dropping extreme rows would leave too few: none dropped.")
-        elif extreme.any():
-            x_train = cast(pd.DataFrame, x_train[~extreme])
-            y_train = cast(pd.Series, y_train[~extreme])
-            preparation.dropped_rows = int(extreme.sum())
-    if task != "regression":
-        before = _counts(y_train)
-        strategy, rule, why = _imbalance(choices, minority, values, preparation.warnings)
-        if strategy in ("oversample", "undersample"):
-            x_train, y_train = steps.rebalance(x_train, y_train, strategy)
-        preparation.balance = prep.Balance(strategy, rule, why, before, _counts(y_train))
+    if not validation.cross:
+        x_train, y_train = _fit_rows(
+            x_train, y_train, preparation, choices, minority, values, task, record=True
+        )
+    groups = (
+        cast(pd.Series, frame[validation.group])
+        if validation.method == "group_kfold" and validation.group
+        else None
+    )
     return _Setup(
         spec,
         context,
@@ -320,13 +357,52 @@ def _setup(
         x_test,
         y_train,
         y_test,
-        cast(pd.Series, row_test),
+        row_test,
         minority,
         model_key == "linear_regression" and values.get("regularization") == "none",
         task,
         target,
         classes,
+        validation,
+        choices,
+        groups,
     )
+
+
+def _fit_rows(
+    x: pd.DataFrame,
+    y: pd.Series,
+    preparation: prep.Preparation,
+    choices: prep.Choices,
+    minority: float | None,
+    values: dict[str, Any],
+    task: Task,
+    record: bool,
+) -> tuple[pd.DataFrame, pd.Series]:
+    """The training rows of one fit: extreme rows dropped, classes rebalanced (017), never the
+    held-out rows. `record` writes what was done into the preparation (final fit only)."""
+    if choices.outliers == "drop_rows":
+        numbers = [d.column for d in preparation.used if d.type in NUMERIC]
+        extreme = steps.extreme_rows(x, numbers)
+        if (~extreme).sum() < 10:
+            if record:
+                preparation.warnings.append(
+                    "Dropping extreme rows would leave too few: none dropped."
+                )
+        elif extreme.any():
+            x, y = cast(pd.DataFrame, x[~extreme]), cast(pd.Series, y[~extreme])
+            if record:
+                preparation.dropped_rows = int(extreme.sum())
+    if task != "regression":
+        before = _counts(y)
+        warnings: list[str] = []
+        strategy, rule, why = _imbalance(choices, minority, values, warnings)
+        if strategy in ("oversample", "undersample"):
+            x, y = steps.rebalance(x, y, strategy)
+        if record:
+            preparation.warnings += warnings
+            preparation.balance = prep.Balance(strategy, rule, why, before, _counts(y))
+    return x, y
 
 
 def _as_classes(
@@ -367,22 +443,104 @@ def train(
     excluded_columns: set[str] | None = None,
     choices: prep.Choices | None = None,
     classes: binning.Classes | None = None,
+    validation: evaluate.Validation | None = None,
 ) -> Trained:
     started = time.monotonic()
     setup = _setup(
-        frame, fields, target, task, model_key, given, excluded_columns, choices, classes
+        frame,
+        fields,
+        target,
+        task,
+        model_key,
+        given,
+        excluded_columns,
+        choices,
+        classes,
+        validation,
     )
-    task, target = setup.task, setup.target
+    task, target, validation = setup.task, setup.target, setup.validation
     spec, context, values, preparation = setup.spec, setup.context, setup.values, setup.preparation
-    x_train, x_test, y_train, y_test = setup.x_train, setup.x_test, setup.y_train, setup.y_test
-    row_test, minority, unregularized = setup.row_test, setup.minority, setup.unregularized
-    pipeline = Pipeline(
-        [
-            *prep.steps(preparation, len(x_train), task, drop_first=unregularized),
-            ("model", spec.build(values, context)),
-        ]
-    )
-    _quiet(lambda: pipeline.fit(x_train, y_train))
+    minority, unregularized = setup.minority, setup.unregularized
+    regression_task = task == "regression"
+
+    def make(n_rows: int) -> Pipeline:
+        estimator = spec.build(values, context)
+        if not regression_task and not spec.has_probabilities(values):
+            estimator = CalibratedClassifierCV(estimator, cv=3)
+        return Pipeline(
+            [
+                *prep.steps(preparation, n_rows, task, drop_first=unregularized),
+                ("model", estimator),
+            ]
+        )
+
+    cross_validation = None
+    if validation.cross:
+        x_all, y_all = setup.x_train, setup.y_train
+        labels = sorted(str(v) for v in y_all.unique()) if not regression_task else []
+        totals = np.zeros((len(y_all), max(1, len(labels))))
+        seen = np.zeros(len(y_all))
+        per_fold: list[dict[str, float | None]] = []
+        for fit_at, held_at in evaluate.folds(validation, y_all, setup.groups, not regression_task):
+            x_fit, y_fit = _fit_rows(
+                x_all.iloc[fit_at],
+                y_all.iloc[fit_at],
+                preparation,
+                setup.choices,
+                minority,
+                values,
+                task,
+                record=False,
+            )
+            fold = make(len(x_fit))
+            _quiet(lambda fold=fold, x_fit=x_fit, y_fit=y_fit: fold.fit(x_fit, y_fit))
+            held = x_all.iloc[held_at]
+            actual_held = y_all.iloc[held_at].to_numpy()
+            if regression_task:
+                guess = np.asarray(fold.predict(held), dtype=float)
+                totals[held_at, 0] += guess
+                fold_scores = evaluate.regression_metrics(actual_held.astype(float), guess)
+            else:
+                chances = _aligned(fold, held, labels)
+                totals[held_at] += chances
+                guess_labels = np.asarray(labels)[chances.argmax(axis=1)]
+                positive = _positive(y_all) if len(labels) == 2 else None
+                fold_scores = evaluate.classification_metrics(
+                    actual_held.astype(str), guess_labels, chances, labels, positive
+                )
+            seen[held_at] += 1
+            if validation.method != "loo":
+                per_fold.append(fold_scores)
+        out_of_fold = totals / np.maximum(seen, 1)[:, None]
+        x_train, y_train = _fit_rows(
+            x_all, y_all, preparation, setup.choices, minority, values, task, record=True
+        )
+        pipeline = make(len(x_train))
+        _quiet(lambda: pipeline.fit(x_train, y_train))
+        y_eval, rows_eval = y_all, cast(pd.Series, frame["__row"])
+        mean, spread = evaluate.summarise(per_fold)
+        cross_validation = CrossValidation(
+            validation.method, len(per_fold) or len(y_all), mean, spread
+        )
+        predicted = out_of_fold[:, 0] if regression_task else None
+        probabilities = None if regression_task else out_of_fold
+        class_names = labels
+        test_rows = len(y_all)
+    else:
+        x_train, y_train = setup.x_train, setup.y_train
+        pipeline = make(len(x_train))
+        _quiet(lambda: pipeline.fit(x_train, y_train))
+        y_eval, rows_eval = setup.y_test, setup.row_test
+        class_names = [] if regression_task else [str(c) for c in pipeline.classes_]
+        predicted = (
+            np.asarray(pipeline.predict(setup.x_test), dtype=float) if regression_task else None
+        )
+        probabilities = (
+            None
+            if regression_task
+            else np.asarray(pipeline.predict_proba(setup.x_test), dtype=float)
+        )
+        test_rows = len(setup.x_test)
     names = [str(n) for n in pipeline[:-1].get_feature_names_out()]  # type: ignore[union-attr]
     preparation.inputs = len(names)
     preparation.selection = _selection(pipeline)
@@ -391,57 +549,66 @@ def train(
     coefficients: list[Coefficient] = []
     predictions: list[PredictionRow] = []
     rng = np.random.default_rng(SEED)
-    if task == "regression":
-        predicted = np.asarray(pipeline.predict(x_test), dtype=float)
-        actual = y_test.to_numpy(dtype=float)
+    if predicted is not None:
+        actual = y_eval.to_numpy(dtype=float)
         regression = _regression_scores(actual, predicted, y_train.to_numpy(dtype=float))
+        scores = evaluate.regression_metrics(actual, predicted)
         if model_key == "linear_regression":
             coefficients, regression.heteroscedasticity_p = _linear_coefficients(
                 pipeline, x_train, y_train.to_numpy(dtype=float), names, preparation, unregularized
             )
+        elif spec.linear:
+            coefficients = _model_coefficients(pipeline, names)
         pick = rng.permutation(len(actual))[:PREDICTION_ROWS]
         predictions = [
             PredictionRow(
-                int(row_test.iloc[i]),
+                int(rows_eval.iloc[i]),
                 _fmt(float(actual[i])),
                 _fmt(float(predicted[i])),
                 clean(predicted[i] - actual[i]),
             )
             for i in pick
         ]
-        primary, score = "r2", regression.r2
     else:
-        classification, predicted_labels, probabilities, class_names = _classification_scores(
-            pipeline, x_test, y_test, target
+        assert probabilities is not None
+        classification, predicted_labels = _classification_scores(
+            probabilities, class_names, y_eval, target
         )
-        coefficients = (
-            _logistic_coefficients(pipeline, names) if model_key == "logistic_regression" else []
+        scores = evaluate.classification_metrics(
+            y_eval.to_numpy().astype(str),
+            predicted_labels,
+            probabilities,
+            class_names,
+            classification.positive,
         )
-        actual_labels = y_test.to_numpy()
+        if spec.linear:
+            coefficients = _model_coefficients(pipeline, names)
+        actual_labels = y_eval.to_numpy()
         pick = rng.permutation(len(actual_labels))[:PREDICTION_ROWS]
         column = {label: i for i, label in enumerate(class_names)}
         predictions = [
             PredictionRow(
-                int(row_test.iloc[i]),
+                int(rows_eval.iloc[i]),
                 str(actual_labels[i]),
                 str(predicted_labels[i]),
                 probability=clean(probabilities[i, column[str(predicted_labels[i])]]),
-                correct=bool(actual_labels[i] == predicted_labels[i]),
+                correct=bool(str(actual_labels[i]) == str(predicted_labels[i])),
             )
             for i in pick
         ]
-        imbalanced = minority is not None and minority < 0.2
-        primary = (
-            "roc_auc" if task == "binary" else ("balanced_accuracy" if imbalanced else "accuracy")
-        )
-        score = getattr(classification, primary)
+    primary = validation.metric or evaluate.default_metric(task, minority)
+    score = (
+        cross_validation.mean.get(primary)
+        if cross_validation is not None and cross_validation.mean
+        else scores.get(primary)
+    )
     return Trained(
         task,
         model_key,
         values,
         preparation,
         len(x_train),
-        len(x_test),
+        test_rows,
         rows,
         sampled,
         time.monotonic() - started,
@@ -452,8 +619,39 @@ def train(
         primary,
         score,
         setup.classes,
+        scores,
+        cross_validation,
+        _importances(pipeline, names),
+        validation,
         pipeline,
     )
+
+
+def _positive(y: pd.Series) -> str:
+    """The rarer class of two: the one whose probability is shown."""
+    return str(y.value_counts().index[-1])
+
+
+def _aligned(pipeline: Pipeline, x: pd.DataFrame, labels: list[str]) -> np.ndarray:
+    """Probabilities in the order of `labels` (a fold may miss a rare class)."""
+    found = np.asarray(pipeline.predict_proba(x), dtype=float)
+    out = np.zeros((len(x), len(labels)))
+    for j, label in enumerate(str(c) for c in pipeline.classes_):
+        out[:, labels.index(label)] = found[:, j]
+    return out
+
+
+def _importances(pipeline: Pipeline, names: list[str]) -> list[Importance]:
+    model = pipeline.named_steps["model"]
+    raw = getattr(model, "feature_importances_", None)
+    if raw is None:
+        return []
+    values = np.asarray(raw, dtype=float)
+    if len(values) != len(names) or not np.isfinite(values).all() or values.sum() <= 0:
+        return []
+    values = values / values.sum()
+    order = np.argsort(-values)[:50]
+    return [Importance(names[i], float(values[i])) for i in order]
 
 
 def _fmt(value: float) -> str:
@@ -541,12 +739,9 @@ def _unit_scales(pipeline: Pipeline, preparation: prep.Preparation) -> dict[str,
 
 
 def _classification_scores(
-    pipeline: Pipeline, x_test: pd.DataFrame, y_test: pd.Series, target: Field
-):
-    model = pipeline.named_steps["model"]
-    classes = [str(c) for c in model.classes_]
-    probabilities = np.asarray(pipeline.predict_proba(x_test), dtype=float)
-    predicted = np.asarray(model.classes_)[probabilities.argmax(axis=1)].astype(str)
+    probabilities: np.ndarray, classes: list[str], y_test: pd.Series, target: Field
+) -> tuple["ClassificationResult", np.ndarray]:
+    predicted = np.asarray(classes)[probabilities.argmax(axis=1)].astype(str)
     actual = y_test.to_numpy().astype(str)
     labels = classes
     if target.order:
@@ -611,14 +806,22 @@ def _classification_scores(
         )
         result.within_one = clean(float(np.mean(distance <= 1)))
         result.mean_class_error = clean(float(np.mean(distance)))
-    return result, predicted, probabilities, classes
+    return result, predicted
 
 
-def _logistic_coefficients(pipeline: Pipeline, names: list[str]) -> list[Coefficient]:
-    coef = np.atleast_2d(pipeline.named_steps["model"].coef_)
+def _model_coefficients(pipeline: Pipeline, names: list[str]) -> list[Coefficient]:
+    """The weights of a linear model on the prepared inputs (odds ratios for a logistic one)."""
+    model = pipeline.named_steps["model"]
+    raw = getattr(model, "coef_", None)
+    if raw is None:
+        return []
+    coef = np.atleast_2d(np.asarray(raw, dtype=float))
+    if coef.shape[1] != len(names):
+        return []
+    logistic = model.__class__.__name__ == "LogisticRegression"
     if coef.shape[0] == 1:
         found = [
-            Coefficient(n, float(v), odds_ratio=clean(math.exp(min(v, 50))))
+            Coefficient(n, float(v), odds_ratio=clean(math.exp(min(v, 50))) if logistic else None)
             for n, v in zip(names, coef[0], strict=True)
         ]
     else:  # multiclass: the largest weight across classes
