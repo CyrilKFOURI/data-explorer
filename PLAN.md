@@ -51,6 +51,7 @@ Roadmap en **sprints**, chacun composé de **tranches verticales** : chaque case
   - [x] 023c-timegan — TimeGAN codé d'après l'article : plan automatique des séquences (temps, entité, pas, longueur), fenêtres, historiques réels tenus à l'écart, entités et dates régénérées, onglet Sequences (autocorrélation, scores discriminant et prédictif)
 - [x] 024-comparer-categories-couleur — nombres discrets (≤ 12 valeurs) lus comme catégories dans Compare (« As numbers » pour revenir), couleur sur les boîtes / violons / moyennes (au plus 15 boîtes et 5 couleurs, la catégorie la plus fournie passe sur l'axe)
 - [x] Machine learning, mise en page des résultats (2026-10-20) — colonne de réglages collante avec la liste des runs, bande de métriques, graphiques Performance en grille de même hauteur (1 à 3 colonnes selon la largeur), Features en deux colonnes
+- [x] Rapidité (2026-10-20) — `scripts/serve.ps1` (app compilée servie par le backend), plotly préchargé pendant les temps morts, graphiques dessinés un par un (ceux à l'écran d'abord, aucun n'attend le défilement)
 - [ ] À planifier — Module Assistant IA (LLM local optionnel)
 - [ ] Dernière étape — Bibliothèque Python : tout le moteur utilisable en `pip install` (notebooks, scripts), l'app en extra `[app]` — [bibliotheque-python.md](docs/modules-futurs/bibliotheque-python.md)
 - [ ] À planifier — Rapport HTML exportable du dataset

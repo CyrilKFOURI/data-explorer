@@ -30,7 +30,7 @@ Open <http://localhost:8000> and pick a demo dataset. Put your own files in `./d
 
 ## Develop
 
-Requires [uv](https://docs.astral.sh/uv/) and Node 22: `./scripts/dev.ps1` starts the backend (FastAPI, DuckDB) and the frontend (React, Vite). Tests: `uv run pytest` in `backend/`, `npm test` in `frontend/`.
+Requires [uv](https://docs.astral.sh/uv/) and Node 22: `./scripts/serve.ps1` builds the frontend and serves the whole app at http://127.0.0.1:8000 (`-Port 8001` if 8000 is taken), as fast as the Docker image. `./scripts/dev.ps1` starts the backend (FastAPI, DuckDB) and the frontend (React, Vite) with hot reload, to work on the code: much slower to use. Tests: `uv run pytest` in `backend/`, `npm test` in `frontend/`.
 
 ## Docs
 

@@ -6,12 +6,57 @@ import { baseLayout, plotConfig, readTokens, type ChartTokens } from "./theme";
 type PlotlyModule = typeof import("plotly.js-dist-min");
 let plotlyPromise: Promise<PlotlyModule> | null = null;
 
-/** plotly.js is large: load it once, on first use, never in the initial bundle. */
-function loadPlotly(): Promise<PlotlyModule> {
+/** plotly.js is large: load it once, never in the initial bundle (main.tsx preloads it when idle). */
+export function loadPlotly(): Promise<PlotlyModule> {
   plotlyPromise ??= import("plotly.js-dist-min").then(
     (module) => (module as unknown as { default?: PlotlyModule }).default ?? module,
   );
   return plotlyPromise;
+}
+
+/* Charts are drawn one at a time, those on screen first, with a pause between two so the page
+   stays responsive. None waits for a scroll: the ones further down follow right after. */
+type Draw = { element: Element; run: () => Promise<unknown> };
+const draws: Draw[] = [];
+const onScreen = new WeakSet<Element>();
+let drawing = false;
+let watcher: IntersectionObserver | null = null;
+
+function watch(element: Element): () => void {
+  if (typeof IntersectionObserver === "undefined") return () => {};
+  watcher ??= new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) onScreen.add(entry.target);
+        else onScreen.delete(entry.target);
+      }
+    },
+    { rootMargin: "100px" },
+  );
+  watcher.observe(element);
+  return () => {
+    watcher?.unobserve(element);
+    onScreen.delete(element);
+  };
+}
+
+function schedule(draw: Draw) {
+  const queued = draws.findIndex((d) => d.element === draw.element);
+  if (queued >= 0) draws.splice(queued, 1);
+  draws.push(draw);
+  void drain();
+}
+
+async function drain() {
+  if (drawing) return;
+  drawing = true;
+  while (draws.length > 0) {
+    const visible = draws.findIndex((d) => onScreen.has(d.element));
+    const [draw] = draws.splice(Math.max(visible, 0), 1);
+    await draw?.run().catch(() => undefined);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+  drawing = false;
 }
 
 /** Bumps when the theme changes (data-theme attribute or system preference). */
@@ -77,12 +122,13 @@ export const Plot = forwardRef<PlotHandle, PlotProps>(function Plot({ figure, he
     let cancelled = false;
     const element = container.current;
     if (!element) return;
-    void loadPlotly().then((Plotly) => {
+    const draw = async () => {
+      const Plotly = await loadPlotly();
       if (cancelled) return;
       const tokens = readTokens();
       const { data, layout } = figure(tokens);
       const base = baseLayout(tokens);
-      void Plotly.react(
+      await Plotly.react(
         element,
         data,
         {
@@ -110,7 +156,8 @@ export const Plot = forwardRef<PlotHandle, PlotProps>(function Plot({ figure, he
           });
         });
       });
-    });
+    };
+    schedule({ element, run: draw });
     return () => {
       cancelled = true;
     };
@@ -118,8 +165,11 @@ export const Plot = forwardRef<PlotHandle, PlotProps>(function Plot({ figure, he
 
   useEffect(() => {
     const element = container.current;
+    if (!element) return;
+    const unwatch = watch(element);
     return () => {
-      if (element) void loadPlotly().then((Plotly) => Plotly.purge(element));
+      unwatch();
+      void loadPlotly().then((Plotly) => Plotly.purge(element));
     };
   }, []);
 
