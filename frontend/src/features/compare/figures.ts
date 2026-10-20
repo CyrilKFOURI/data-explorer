@@ -263,7 +263,8 @@ export function groupsFigure(result: Comparison, view: GroupView): Figure {
   return (tokens) => {
     const vertical = result.group_axis === "x";
     const numeric = vertical ? result.y : result.x;
-    const category = vertical ? result.x : result.y;
+    // the server may put the colour's category on the axis (R-CMP-04)
+    const category = result.layout?.axis ?? (vertical ? result.x : result.y);
     const colors = colorOf(
       result.groups.map((g) => g.label),
       tokens,
@@ -353,7 +354,7 @@ export function groupsFigure(result: Comparison, view: GroupView): Figure {
       data,
       layout: {
         showlegend: result.color_levels.length > 0,
-        legend: { title: { text: result.color ?? "" }, orientation: "h", y: 1.08 },
+        legend: { title: { text: result.layout?.color ?? result.color ?? "" }, orientation: "h", y: 1.08 },
         boxmode: "group",
         violinmode: "group",
         scattermode: "group",

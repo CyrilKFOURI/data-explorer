@@ -72,7 +72,6 @@ const ROLE: Partial<Record<AnalysisType, Role>> = {
 };
 const HEIGHT = 460;
 const MAX_DISCRETE_CATEGORIES = 12; // R-CMP-01
-const MAX_COLOR_GROUPS = 6; // R-CMP-04
 
 const distinctOf = (column: Column) => {
   const value = (column.summary as { distinct_count?: unknown } | null)?.distinct_count;
@@ -115,10 +114,8 @@ export function ComparePage() {
   const colorAllowed = Boolean(
     x && y && (bothNumeric || grouped || role(x) === "date" || role(y) === "date"),
   );
-  const colorFits = (column: Column) =>
-    !grouped || (distinctOf(column) ?? Infinity) <= MAX_COLOR_GROUPS;
-  const colorChoice = search.color ? byName.get(search.color) : undefined;
-  const color = colorChoice && colorFits(colorChoice) ? colorChoice : undefined;
+  // with a number and two categories, the server lays them out (R-CMP-04/05): any colour works
+  const color = search.color ? byName.get(search.color) : undefined;
   const toggleNumbers = (name: string) => {
     const next = numbers.includes(name) ? numbers.filter((n) => n !== name) : [...numbers, name];
     set({ numbers: next.length ? next.join(",") : undefined });
@@ -202,11 +199,6 @@ export function ComparePage() {
           optional
           disabled={!colorAllowed}
           hint={colorAllowed ? undefined : t("compare.colorHint")}
-          unavailable={(c) =>
-            colorFits(c)
-              ? null
-              : t("compare.colorTooMany", { count: String(distinctOf(c)), max: String(MAX_COLOR_GROUPS) })
-          }
           onChange={(name) => set({ color: name || undefined })}
         />
       </div>

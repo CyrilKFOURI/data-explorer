@@ -27,7 +27,7 @@ Chaque test est présenté avec un `TestResult` et ses conditions d'application 
 ## Nombres discrets et couleur sur les groupes — [024](../features/024-comparer-categories-couleur/spec.md)
 
 - Un nombre discret d'au plus 12 valeurs (Survived, Pclass) est lu comme une catégorie par défaut ; mention « 2 values, read as categories » et bouton « As numbers » à côté du sélecteur (URL : `numbers=`).
-- La couleur marche aussi pour nombre × catégorie : boîtes, violons ou moyennes côte à côte, une par modalité de couleur, avec une légende. Au plus 6 modalités de couleur (au-delà, la colonne est grisée avec sa raison) et 8 groupes sur l'axe (le reste en « Others »).
+- La couleur marche aussi pour nombre × catégorie : boîtes, violons ou moyennes côte à côte, une par modalité de couleur, avec une légende. La catégorie qui a le plus de valeurs va sur l'axe, l'autre en couleur (échange automatique si la couleur a plus de 5 valeurs et plus que l'autre) ; au plus 5 couleurs et 15 boîtes au total, le reste en « Others » ; une ligne dit la disposition choisie.
 - Les tests comparent les groupes de l'axe, toutes couleurs confondues, ce qu'une note rappelle.
 
 ## Vue temporelle (date × num) — [011](../features/011-vue-temporelle/spec.md)

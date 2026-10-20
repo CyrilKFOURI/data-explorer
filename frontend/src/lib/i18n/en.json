@@ -2143,6 +2143,5 @@
   "compare.readAsLevels": "{count} values, read as categories ·",
   "compare.readAsNumbers": "Read as numbers ·",
   "compare.asNumbers": "As numbers",
-  "compare.asCategories": "As categories",
-  "compare.colorTooMany": "{count} values: at most {max}"
+  "compare.asCategories": "As categories"
 }

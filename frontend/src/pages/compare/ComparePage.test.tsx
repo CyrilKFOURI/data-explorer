@@ -172,7 +172,8 @@ describe("Compare page", () => {
     expect(await screen.findByText(/3 values, read as categories/)).toBeInTheDocument();
     const colorPicker = screen.getByRole("combobox", { name: "Color" });
     expect(colorPicker).toBeEnabled();
-    expect(within(colorPicker).getByRole("option", { name: /city \(9 values: at most 6\)/ })).toBeDisabled();
+    // any colour works: the server lays the categories out within 15 boxes
+    expect(within(colorPicker).getByRole("option", { name: "city" })).toBeEnabled();
     await waitFor(() => {
       const request = calls.find((c) => c.key === "GET /datasets/d1/compare");
       expect(request?.params.get("color")).toBe("segment");

@@ -7,7 +7,13 @@ import pyarrow as pa
 import pytest
 from scipy import stats
 
-from app.domain.compare.analyze import CompareColumn, NotComparableError, compare
+from app.domain.compare.analyze import (
+    CompareColumn,
+    NotComparableError,
+    compare,
+    keep_slots,
+    plan_layout,
+)
 from app.domain.compare.stats import GroupStats, anovas
 from app.domain.typing.types import Parser
 
@@ -230,14 +236,41 @@ def test_a_colour_splits_each_group_into_boxes(connection) -> None:
         [t.p_value for t in plain.tests], rel=1e-6, abs=1e-12
     )
     assert result.message and "all h values together" in result.message
+    assert result.layout is not None and not result.layout.swapped
     numeric_colour = compare(
         connection, "data", col("g", CAT), col("v", NUM), color=levels("level")
     )
     assert numeric_colour.color_levels == ["1", "2", "3"]
 
 
-def test_a_colour_with_too_many_values_is_refused_on_groups(connection) -> None:
-    with pytest.raises(NotComparableError, match="Color has 7 values: pick one with at most 6"):
-        compare(connection, "data", col("g", CAT), col("v", NUM), color=col("seven", CAT))
+def test_the_layout_puts_the_category_with_more_values_on_the_axis_within_15_boxes() -> None:
+    assert plan_layout(2, 3) == (False, 2, 3)  # Survived x Embarked: 6 boxes, no swap
+    assert plan_layout(2, 7) == (True, 7, 2)  # a colour of 7 goes on the axis: 14 boxes
+    assert plan_layout(7, 10) == (True, 3, 5)  # 10 on the axis, 5 colours: 3 x 5 = 15 boxes
+    assert plan_layout(20, 0) == (False, 15, 1)  # no colour: 15 groups
+    assert keep_slots(["a", "b", "c"], 3) == ["a", "b", "c"]
+    assert keep_slots(["a", "b", "c", "d"], 3) == ["a", "b"]  # + "Others"
+
+
+def test_a_colour_with_many_values_goes_on_the_axis_whatever_the_places(connection) -> None:
+    result = compare(connection, "data", col("h", CAT), col("v", NUM), color=col("seven", CAT))
+    assert result.layout is not None and result.layout.swapped
+    assert (result.layout.axis, result.layout.color) == ("seven", "h")
+    assert len(result.groups) == 7 * 2 and set(result.color_levels) == {"u", "w"}
+    assert {g.label for g in result.groups} == {str(k) for k in range(7)}
+    swapped_places = compare(
+        connection, "data", col("v", NUM), col("h", CAT), color=col("seven", CAT)
+    )
+    assert swapped_places.layout is not None and swapped_places.layout.axis == "seven"
+    assert swapped_places.group_axis == "y"
     scatter = compare(connection, "data", col("x", NUM), col("y", NUM), color=col("seven", CAT))
     assert scatter.points is not None and scatter.points.color is not None
+
+
+def test_two_large_categories_are_cut_to_15_boxes(connection) -> None:
+    result = compare(connection, "data", col("g", CAT), col("v", NUM), color=col("seven", CAT))
+    # seven (7 values) goes on the axis, g (3) in colour: 7 x 3 = 21 > 15, so 5 x 3 with Others
+    assert result.layout is not None and result.layout.axis == "seven"
+    assert len(result.groups) <= 15 and result.layout.axis_kept == 5
+    assert "Others" in {g.label for g in result.groups}
+    assert result.message and "at most 15" in result.message

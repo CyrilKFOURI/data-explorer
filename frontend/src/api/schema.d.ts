@@ -2223,6 +2223,7 @@ export interface components {
             categories?: components["schemas"]["CategoryRead"][];
             /** Color Levels */
             color_levels?: string[];
+            layout?: components["schemas"]["GroupLayout"] | null;
         };
         /**
          * ComputeSettings
@@ -2938,6 +2939,28 @@ export interface components {
         "Group-Input": {
             /** Column */
             column: string;
+        };
+        /**
+         * GroupLayout
+         * @description How a number and one or two categories were laid out (R-CMP-04, R-CMP-05).
+         */
+        GroupLayout: {
+            /** Axis */
+            axis: string;
+            /** Color */
+            color: string | null;
+            /** Swapped */
+            swapped: boolean;
+            /** Axis Values */
+            axis_values: number;
+            /** Color Values */
+            color_values: number;
+            /** Axis Kept */
+            axis_kept: number;
+            /** Color Kept */
+            color_kept: number;
+            /** Sentence */
+            sentence: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {

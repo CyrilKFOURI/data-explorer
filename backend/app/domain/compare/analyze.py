@@ -42,14 +42,14 @@ ROLES: dict[str, Role] = {
 MAX_POINTS = 20_000
 TEST_SAMPLE = 5_000
 VIOLIN_SAMPLE = 1_000
-MAX_GROUPS = 12
+MAX_BOXES = 15  # R-CMP-05: boxes on a groups chart, "Others" included (axis * colours)
+MAX_COLORS = 5  # R-CMP-05: colour levels that stay readable
+SWAP_ABOVE = 5  # R-CMP-04: a colour with more values than this (and than the axis) goes on the axis
 MAX_TABLE = 15
 MAX_SERIES = 8
 MAX_DISCRETE_CATEGORIES = (
     12  # R-CMP-01: a whole number with this many values or fewer reads as levels
 )
-MAX_COLOR_GROUPS = 6  # R-CMP-04: colour levels inside the groups of a box plot
-MAX_GROUPS_WITH_COLOR = 8  # R-CMP-05: groups on the axis when they are coloured
 DENSITY_BINS = 40
 OTHERS = "Others"
 
@@ -162,6 +162,37 @@ class TrendSummary:
 
 
 @dataclass
+class GroupLayout:
+    """How a number and one or two categories were laid out (R-CMP-04, R-CMP-05)."""
+
+    axis: str  # the category on the axis of the groups
+    color: str | None  # the category in colour
+    swapped: bool  # the chosen colour went on the axis (it had more values)
+    axis_values: int
+    color_values: int
+    axis_kept: int  # slots shown, "Others" included
+    color_kept: int
+    sentence: str
+
+
+def plan_layout(axis_values: int, color_values: int) -> tuple[bool, int, int]:
+    """(swapped, axis slots, colour slots), "Others" included in the slots. The category with
+    more values goes on the axis when the colour has more than 5; at most 5 colours and 15 boxes,
+    the colour reduced first, then the axis."""
+    swapped = color_values > SWAP_ABOVE and color_values > axis_values
+    axis, color = (color_values, axis_values) if swapped else (axis_values, color_values)
+    color_slots = min(color, MAX_COLORS) if color else 1
+    axis_slots = min(axis, MAX_BOXES // color_slots)
+    return swapped, axis_slots, color_slots
+
+
+def keep_slots(labels: list[str], slots: int) -> list[str]:
+    """The most frequent labels (given most frequent first): all of them if they fit, otherwise
+    one slot fewer, the last slot being "Others"."""
+    return labels if len(labels) <= slots else labels[: slots - 1]
+
+
+@dataclass
 class CategoryRead:
     """A whole-number column read as categories (R-CMP-01)."""
 
@@ -194,6 +225,7 @@ class Comparison:
     message: str | None = None
     categories: list[CategoryRead] = field(default_factory=list)
     color_levels: list[str] = field(default_factory=list)  # groups: the colours, in legend order
+    layout: GroupLayout | None = None  # groups: what is on the axis and in colour, and why
 
 
 def label_sql(column: TypedColumn) -> str:
@@ -412,9 +444,10 @@ class Comparer:
             result.message = "Fewer than 3 rows have both values."
             return result
         if self.color is not None:
-            return self.colored_groups(numeric, category, result)
+            return self.colored_groups(numeric, category, self.color, result)
         counted = self.all(f"SELECT g, count(*) AS c FROM {relation} GROUP BY g ORDER BY c DESC, g")
-        kept = ordered([str(label) for label, _ in counted[:MAX_GROUPS]], category)
+        _, slots, _ = plan_layout(len(counted), 0)
+        kept = ordered(keep_slots([str(label) for label, _ in counted], slots), category)
         listed = ", ".join(lit(label) for label in kept)
         grouped = (
             f"(SELECT v, CASE WHEN g IN ({listed}) THEN g ELSE '{OTHERS}' END AS g, rn "
@@ -445,48 +478,58 @@ class Comparer:
         for group in result.groups:
             group.sample = group.sample[:VIOLIN_SAMPLE]
         result.tests = group_tests(group_stats, group_samples) if len(tested) >= 2 else []
-        if len(counted) > MAX_GROUPS:
+        hidden = len(counted) - len(kept)
+        result.layout = GroupLayout(category.name, None, False, len(counted), 0, len(order), 1, "")
+        if hidden > 0:
             result.message = (
-                f'{len(counted) - MAX_GROUPS} smaller groups are shown together as "{OTHERS}" '
+                f'{hidden} smaller groups are shown together as "{OTHERS}" '
                 "and left out of the tests."
             )
+            result.layout.sentence = result.message
         return result
 
     def colored_groups(
-        self, numeric: CompareColumn, category: CompareColumn, result: Comparison
+        self,
+        numeric: CompareColumn,
+        category: CompareColumn,
+        color: CompareColumn,
+        result: Comparison,
     ) -> Comparison:
-        """One box per colour level inside each group (R-CMP-03 to 06); the tests still compare
-        the groups, all colours together."""
-        assert self.color is not None
-        relation = self.rows_of({"v": numeric, "g": category, "c": self.color})
-        colors = self.all(f"SELECT c, count(*) AS n FROM {relation} GROUP BY c ORDER BY n DESC, c")
-        if len(colors) > MAX_COLOR_GROUPS:
-            raise NotComparableError(
-                f"Color has {len(colors)} values: pick one with at most {MAX_COLOR_GROUPS}."
-            )
+        """One box per colour level inside each group. Whatever the places chosen, the category
+        with more values goes on the axis (R-CMP-04), at most 5 colours and 15 boxes (R-CMP-05);
+        the tests still compare the groups of the axis, all colours together (R-CMP-06)."""
+        relation = self.rows_of({"v": numeric, "a": category, "b": color})
         (n,) = self.one(f"SELECT count(*) FROM {relation}")
         result.rows = int(n)
         if n < 3:
             result.message = "Fewer than 3 rows have all three values."
             return result
-        levels = ordered([str(c) for c, _ in colors], self.color)
-        counted = self.all(f"SELECT g, count(*) AS c FROM {relation} GROUP BY g ORDER BY c DESC, g")
-        kept = ordered([str(label) for label, _ in counted[:MAX_GROUPS_WITH_COLOR]], category)
-        listed = ", ".join(lit(label) for label in kept)
+        first = self.all(f"SELECT a, count(*) AS n FROM {relation} GROUP BY a ORDER BY n DESC, a")
+        second = self.all(f"SELECT b, count(*) AS n FROM {relation} GROUP BY b ORDER BY n DESC, b")
+        swapped, axis_slots, color_slots = plan_layout(len(first), len(second))
+        axis, hue = (color, category) if swapped else (category, color)
+        axis_counts, hue_counts = (second, first) if swapped else (first, second)
+        g, c = ("b", "a") if swapped else ("a", "b")
+        kept = ordered(keep_slots([str(x) for x, _ in axis_counts], axis_slots), axis)
+        levels = ordered(keep_slots([str(x) for x, _ in hue_counts], color_slots), hue)
+        if len(levels) < len(hue_counts):
+            levels = [*levels, OTHERS]
+        axis_list = ", ".join(lit(label) for label in kept)
+        hue_list = ", ".join(lit(label) for label in levels if label != OTHERS)
         grouped = (
-            f"(SELECT v, CASE WHEN g IN ({listed}) THEN g ELSE '{OTHERS}' END AS g, c, rn "
-            f"FROM {relation})"
+            f"(SELECT v, CASE WHEN {g} IN ({axis_list}) THEN {g} ELSE '{OTHERS}' END AS g, "
+            f"CASE WHEN {c} IN ({hue_list}) THEN {c} ELSE '{OTHERS}' END AS c, rn FROM {relation})"
         )
         summaries = {
-            (str(label), str(color)): row
-            for label, color, *row in self.all(
+            (str(label), str(level)): row
+            for label, level, *row in self.all(
                 f"SELECT g, c, count(*), avg(v), var_samp(v), min(v), max(v), "
                 f"quantile_cont(v, [0.25, 0.5, 0.75]) FROM {grouped} GROUP BY g, c"
             )
         }
         samples = {
-            (str(label), str(color)): [float(v) for v in values]
-            for label, color, values in self.all(
+            (str(label), str(level)): [float(v) for v in values]
+            for label, level, values in self.all(
                 f"SELECT g, c, list(v) FROM (SELECT g, c, v, row_number() OVER "
                 f"(PARTITION BY g, c ORDER BY hash(rn + {SEED})) AS k FROM {grouped}) "
                 f"WHERE k <= {VIOLIN_SAMPLE} GROUP BY g, c"
@@ -494,33 +537,47 @@ class Comparer:
         }
         order = kept + ([OTHERS] if any(label == OTHERS for label, _ in summaries) else [])
         for label in order:
-            for color in levels:
-                if (label, color) in summaries:
+            for level in levels:
+                if (label, level) in summaries:
                     group = self.group(
-                        label, summaries[(label, color)], samples.get((label, color), [])
+                        label, summaries[(label, level)], samples.get((label, level), [])
                     )
-                    group.color = color
+                    group.color = level
                     result.groups.append(group)
         result.color_levels = levels
-        # tests: the groups of the axis, every colour together (as without a colour)
+        # the categories now sit on the axis that is not the number's
+        result.group_axis = "y" if numeric is self.x else "x"
         pooled = self.all(
             f"SELECT g, count(*), avg(v), var_samp(v), list(v ORDER BY hash(rn + {SEED}))"
             f"[1:{TEST_SAMPLE}] FROM {grouped} WHERE g <> '{OTHERS}' GROUP BY g"
         )
         stats = [
-            GroupStats(int(c), float(m or 0.0), float(var or 0.0)) for _, c, m, var, _ in pooled
+            GroupStats(int(k), float(m or 0.0), float(var or 0.0)) for _, k, m, var, _ in pooled
         ]
         values = [np.array(sample, dtype=float) for *_, sample in pooled]
         result.tests = group_tests(stats, values) if len(pooled) >= 2 else []
+        boxes = len(result.groups)
         notes = [
-            f"Tests compare the {category.name} groups, all {self.color.name} values together."
+            f"{axis.name} on the axis ({len(axis_counts)} values), {hue.name} in colour "
+            f"({len(hue_counts)} values)"
+            + (": the category with more values goes on the axis." if swapped else ".")
         ]
-        if len(counted) > MAX_GROUPS_WITH_COLOR:
+        if len(order) < len(axis_counts) or len(levels) < len(hue_counts) or OTHERS in levels:
             notes.append(
-                f"{len(counted) - MAX_GROUPS_WITH_COLOR} smaller groups are shown together "
-                f'as "{OTHERS}".'
+                f'{boxes} boxes at most {MAX_BOXES}: the smaller values are shown as "{OTHERS}".'
             )
+        notes.append(f"Tests compare the {axis.name} groups, all {hue.name} values together.")
         result.message = " ".join(notes)
+        result.layout = GroupLayout(
+            axis.name,
+            hue.name,
+            swapped,
+            len(axis_counts),
+            len(hue_counts),
+            len(order),
+            len(levels),
+            result.message,
+        )
         return result
 
     @staticmethod

@@ -10231,6 +10231,16 @@
             },
             "type": "array",
             "title": "Color Levels"
+          },
+          "layout": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GroupLayout"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -12543,6 +12553,62 @@
           "column"
         ],
         "title": "Group"
+      },
+      "GroupLayout": {
+        "properties": {
+          "axis": {
+            "type": "string",
+            "title": "Axis"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "swapped": {
+            "type": "boolean",
+            "title": "Swapped"
+          },
+          "axis_values": {
+            "type": "integer",
+            "title": "Axis Values"
+          },
+          "color_values": {
+            "type": "integer",
+            "title": "Color Values"
+          },
+          "axis_kept": {
+            "type": "integer",
+            "title": "Axis Kept"
+          },
+          "color_kept": {
+            "type": "integer",
+            "title": "Color Kept"
+          },
+          "sentence": {
+            "type": "string",
+            "title": "Sentence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "axis",
+          "color",
+          "swapped",
+          "axis_values",
+          "color_values",
+          "axis_kept",
+          "color_kept",
+          "sentence"
+        ],
+        "title": "GroupLayout",
+        "description": "How a number and one or two categories were laid out (R-CMP-04, R-CMP-05)."
       },
       "HTTPValidationError": {
         "properties": {

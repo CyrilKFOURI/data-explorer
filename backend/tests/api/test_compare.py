@@ -107,5 +107,6 @@ def test_whole_numbers_with_few_values_read_as_categories(client: TestClient, tr
     assert numbers["kind"] == "scatter" and numbers["categories"] == []
     colored = client.get(url, params={"x": "segment", "y": "income", "color": "is_active"}).json()
     assert {g["color"] for g in colored["groups"]} == set(colored["color_levels"])
-    too_many = client.get(url, params={"x": "segment", "y": "income", "color": "city"})
-    assert too_many.status_code == 422 and "at most 6" in too_many.json()["error"]["message"]
+    many = client.get(url, params={"x": "segment", "y": "income", "color": "city"}).json()
+    assert many["layout"]["axis"] == "city" and many["layout"]["swapped"]
+    assert len(many["groups"]) <= 15
