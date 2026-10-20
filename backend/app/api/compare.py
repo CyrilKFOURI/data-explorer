@@ -31,7 +31,12 @@ def compare(
     agg: Aggregate | Literal["auto"] = "auto",
     window: Annotated[int | None, Query(ge=2, le=365)] = None,
     align: Align = "trailing",
+    numbers: Annotated[
+        str | None, Query(description="Whole-number columns to keep as numbers, comma-separated.")
+    ] = None,
 ) -> Comparison:
-    """Chart data and tests; period, agg, window and align shape a date-and-number series."""
+    """Chart data and tests; period, agg, window and align shape a date-and-number series. A whole
+    number with at most 12 values reads as categories unless listed in `numbers`."""
     options = Options(period, agg, window, align)
-    return service.compare(dataset_id, x, y, z, color, filters, options)
+    kept = [n for n in (numbers or "").split(",") if n]
+    return service.compare(dataset_id, x, y, z, color, filters, options, kept)

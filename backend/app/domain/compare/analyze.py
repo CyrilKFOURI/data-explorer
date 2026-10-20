@@ -45,6 +45,11 @@ VIOLIN_SAMPLE = 1_000
 MAX_GROUPS = 12
 MAX_TABLE = 15
 MAX_SERIES = 8
+MAX_DISCRETE_CATEGORIES = (
+    12  # R-CMP-01: a whole number with this many values or fewer reads as levels
+)
+MAX_COLOR_GROUPS = 6  # R-CMP-04: colour levels inside the groups of a box plot
+MAX_GROUPS_WITH_COLOR = 8  # R-CMP-05: groups on the axis when they are coloured
 DENSITY_BINS = 40
 OTHERS = "Others"
 
@@ -61,9 +66,12 @@ class CompareColumn:
     parser: Parser
     order: list[str] | None = None
     semantic_role: str | None = None  # amount, quantity, age… (column roles)
+    as_category: bool = False  # a whole number with few values, read as levels (R-CMP-01)
 
     @property
     def role(self) -> Role:
+        if self.as_category:
+            return "cat"
         role = ROLES.get(self.type)
         if role is None:
             raise NotComparableError(f"{self.name!r} ({self.type}) can't be compared.")
@@ -106,6 +114,7 @@ class Group:
     ci_low: float | None  # 95% confidence interval of the mean
     ci_high: float | None
     sample: list[float] = field(default_factory=list)
+    color: str | None = None  # the colour level of this box (None without a colour)
 
 
 @dataclass
@@ -153,6 +162,14 @@ class TrendSummary:
 
 
 @dataclass
+class CategoryRead:
+    """A whole-number column read as categories (R-CMP-01)."""
+
+    column: str
+    values: int
+
+
+@dataclass
 class Comparison:
     kind: Kind
     x: str
@@ -175,6 +192,8 @@ class Comparison:
     trend: TrendSummary | None = None
     tests: list[BivariateTest] = field(default_factory=list)
     message: str | None = None
+    categories: list[CategoryRead] = field(default_factory=list)
+    color_levels: list[str] = field(default_factory=list)  # groups: the colours, in legend order
 
 
 def label_sql(column: TypedColumn) -> str:
@@ -187,6 +206,32 @@ def label_sql(column: TypedColumn) -> str:
 
 def number_sql(column: TypedColumn) -> str:
     return f"CAST({typed_sql(column.name, column.parser)} AS DOUBLE)"
+
+
+def number_label_sql(column: TypedColumn) -> str:
+    """A whole number as a level: "1", not "1.0"."""
+    value = number_sql(column)
+    return (
+        f"(CASE WHEN {value} = floor({value}) THEN CAST(CAST({value} AS BIGINT) AS VARCHAR) "
+        f"ELSE CAST({value} AS VARCHAR) END)"
+    )
+
+
+def ordered(labels: list[str], column: "CompareColumn") -> list[str]:
+    """Levels in their natural order: an ordinal's order, numbers by value; else as given."""
+    if column.type == "categorical_ordinal" and column.order:
+        rank = {label: i for i, label in enumerate(column.order)}
+        return sorted(labels, key=lambda label: rank.get(label, len(rank)))
+    if column.as_category:
+
+        def value(label: str) -> float:
+            try:
+                return float(label)
+            except ValueError:
+                return float("inf")
+
+        return sorted(labels, key=value)
+    return labels
 
 
 class Comparer:
@@ -223,6 +268,8 @@ class Comparer:
             return number_sql(column)
         if role == "date":
             return f"CAST({typed_sql(column.name, column.parser)} AS TIMESTAMP)"
+        if column.as_category:
+            return number_label_sql(column)
         return label_sql(column)
 
     def rows_of(self, columns: dict[str, CompareColumn]) -> str:
@@ -364,11 +411,10 @@ class Comparer:
         if n < 3:
             result.message = "Fewer than 3 rows have both values."
             return result
+        if self.color is not None:
+            return self.colored_groups(numeric, category, result)
         counted = self.all(f"SELECT g, count(*) AS c FROM {relation} GROUP BY g ORDER BY c DESC, g")
-        kept = [str(label) for label, _ in counted[:MAX_GROUPS]]
-        if category.type == "categorical_ordinal" and category.order:
-            rank = {label: i for i, label in enumerate(category.order)}
-            kept.sort(key=lambda label: rank.get(label, len(rank)))
+        kept = ordered([str(label) for label, _ in counted[:MAX_GROUPS]], category)
         listed = ", ".join(lit(label) for label in kept)
         grouped = (
             f"(SELECT v, CASE WHEN g IN ({listed}) THEN g ELSE '{OTHERS}' END AS g, rn "
@@ -404,6 +450,77 @@ class Comparer:
                 f'{len(counted) - MAX_GROUPS} smaller groups are shown together as "{OTHERS}" '
                 "and left out of the tests."
             )
+        return result
+
+    def colored_groups(
+        self, numeric: CompareColumn, category: CompareColumn, result: Comparison
+    ) -> Comparison:
+        """One box per colour level inside each group (R-CMP-03 to 06); the tests still compare
+        the groups, all colours together."""
+        assert self.color is not None
+        relation = self.rows_of({"v": numeric, "g": category, "c": self.color})
+        colors = self.all(f"SELECT c, count(*) AS n FROM {relation} GROUP BY c ORDER BY n DESC, c")
+        if len(colors) > MAX_COLOR_GROUPS:
+            raise NotComparableError(
+                f"Color has {len(colors)} values: pick one with at most {MAX_COLOR_GROUPS}."
+            )
+        (n,) = self.one(f"SELECT count(*) FROM {relation}")
+        result.rows = int(n)
+        if n < 3:
+            result.message = "Fewer than 3 rows have all three values."
+            return result
+        levels = ordered([str(c) for c, _ in colors], self.color)
+        counted = self.all(f"SELECT g, count(*) AS c FROM {relation} GROUP BY g ORDER BY c DESC, g")
+        kept = ordered([str(label) for label, _ in counted[:MAX_GROUPS_WITH_COLOR]], category)
+        listed = ", ".join(lit(label) for label in kept)
+        grouped = (
+            f"(SELECT v, CASE WHEN g IN ({listed}) THEN g ELSE '{OTHERS}' END AS g, c, rn "
+            f"FROM {relation})"
+        )
+        summaries = {
+            (str(label), str(color)): row
+            for label, color, *row in self.all(
+                f"SELECT g, c, count(*), avg(v), var_samp(v), min(v), max(v), "
+                f"quantile_cont(v, [0.25, 0.5, 0.75]) FROM {grouped} GROUP BY g, c"
+            )
+        }
+        samples = {
+            (str(label), str(color)): [float(v) for v in values]
+            for label, color, values in self.all(
+                f"SELECT g, c, list(v) FROM (SELECT g, c, v, row_number() OVER "
+                f"(PARTITION BY g, c ORDER BY hash(rn + {SEED})) AS k FROM {grouped}) "
+                f"WHERE k <= {VIOLIN_SAMPLE} GROUP BY g, c"
+            )
+        }
+        order = kept + ([OTHERS] if any(label == OTHERS for label, _ in summaries) else [])
+        for label in order:
+            for color in levels:
+                if (label, color) in summaries:
+                    group = self.group(
+                        label, summaries[(label, color)], samples.get((label, color), [])
+                    )
+                    group.color = color
+                    result.groups.append(group)
+        result.color_levels = levels
+        # tests: the groups of the axis, every colour together (as without a colour)
+        pooled = self.all(
+            f"SELECT g, count(*), avg(v), var_samp(v), list(v ORDER BY hash(rn + {SEED}))"
+            f"[1:{TEST_SAMPLE}] FROM {grouped} WHERE g <> '{OTHERS}' GROUP BY g"
+        )
+        stats = [
+            GroupStats(int(c), float(m or 0.0), float(var or 0.0)) for _, c, m, var, _ in pooled
+        ]
+        values = [np.array(sample, dtype=float) for *_, sample in pooled]
+        result.tests = group_tests(stats, values) if len(pooled) >= 2 else []
+        notes = [
+            f"Tests compare the {category.name} groups, all {self.color.name} values together."
+        ]
+        if len(counted) > MAX_GROUPS_WITH_COLOR:
+            notes.append(
+                f"{len(counted) - MAX_GROUPS_WITH_COLOR} smaller groups are shown together "
+                f'as "{OTHERS}".'
+            )
+        result.message = " ".join(notes)
         return result
 
     @staticmethod
@@ -464,11 +581,7 @@ class Comparer:
             f"SELECT {alias}, count(*) AS c FROM {relation} GROUP BY 1 ORDER BY c DESC, 1 "
             f"LIMIT {MAX_TABLE}"
         )
-        labels = [str(label) for label, _ in counted]
-        if column.type == "categorical_ordinal" and column.order:
-            rank = {label: i for i, label in enumerate(column.order)}
-            labels.sort(key=lambda label: rank.get(label, len(rank)))
-        return labels
+        return ordered([str(label) for label, _ in counted], column)
 
     @staticmethod
     def bucket(alias: str, kept: list[str]) -> str:

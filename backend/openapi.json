@@ -1530,7 +1530,7 @@
           "compare"
         ],
         "summary": "Compare",
-        "description": "Chart data and tests; period, agg, window and align shape a date-and-number series.",
+        "description": "Chart data and tests; period, agg, window and align shape a date-and-number series. A whole\nnumber with at most 12 values reads as categories unless listed in `numbers`.",
         "operationId": "compare_api_v1_datasets__dataset_id__compare_get",
         "parameters": [
           {
@@ -1679,6 +1679,24 @@
               "default": "trailing",
               "title": "Align"
             }
+          },
+          {
+            "name": "numbers",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Whole-number columns to keep as numbers, comma-separated.",
+              "title": "Numbers"
+            },
+            "description": "Whole-number columns to keep as numbers, comma-separated."
           },
           {
             "name": "filters",
@@ -8436,6 +8454,25 @@
         ],
         "title": "CategoricalProfile"
       },
+      "CategoryRead": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "values": {
+            "type": "integer",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "column",
+          "values"
+        ],
+        "title": "CategoryRead",
+        "description": "A whole-number column read as categories (R-CMP-01)."
+      },
       "Chart": {
         "properties": {
           "kind": {
@@ -10180,6 +10217,20 @@
               }
             ],
             "title": "Message"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryRead"
+            },
+            "type": "array",
+            "title": "Categories"
+          },
+          "color_levels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Color Levels"
           }
         },
         "type": "object",
@@ -21496,6 +21547,17 @@
             },
             "type": "array",
             "title": "Sample"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
           }
         },
         "type": "object",

@@ -41,6 +41,8 @@ export type CompareSearch = {
   y?: string;
   z?: string;
   color?: string;
+  /** Whole-number columns kept as numbers (R-CMP-02), comma-separated. */
+  numbers?: string;
 } & TimeSearch;
 
 const text = (value: unknown) =>
@@ -54,6 +56,7 @@ export function validateCompareSearch(
     y: text(search.y),
     z: text(search.z),
     color: text(search.color),
+    numbers: text(search.numbers),
     ...validateTimeSearch(search),
   };
 }
@@ -68,6 +71,22 @@ const ROLE: Partial<Record<AnalysisType, Role>> = {
   datetime: "date",
 };
 const HEIGHT = 460;
+const MAX_DISCRETE_CATEGORIES = 12; // R-CMP-01
+const MAX_COLOR_GROUPS = 6; // R-CMP-04
+
+const distinctOf = (column: Column) => {
+  const value = (column.summary as { distinct_count?: unknown } | null)?.distinct_count;
+  return typeof value === "number" ? value : null;
+};
+
+/** A whole number with at most 12 values reads as categories, unless kept as numbers. */
+const readsAsLevels = (column: Column) =>
+  column.type === "numeric_discrete" && (distinctOf(column) ?? Infinity) <= MAX_DISCRETE_CATEGORIES;
+
+function roleOf(column: Column, numbers: string[]): Role | undefined {
+  if (readsAsLevels(column) && !numbers.includes(column.name)) return "cat";
+  return ROLE[column.type];
+}
 
 export function ComparePage() {
   const { datasetId } = useParams({ from: "/d/$datasetId/compare" });
@@ -84,18 +103,26 @@ export function ComparePage() {
     [columns.data],
   );
   const byName = new Map(usable.map((c) => [c.name, c]));
+  const numbers = (search.numbers ?? "").split(",").filter(Boolean);
+  const role = (column: Column) => roleOf(column, numbers);
   const x = search.x && byName.get(search.x);
   const y = search.y && byName.get(search.y);
-  const bothNumeric = Boolean(
-    x && y && ROLE[x.type] === "num" && ROLE[y.type] === "num",
+  const bothNumeric = Boolean(x && y && role(x) === "num" && role(y) === "num");
+  const grouped = Boolean(
+    x && y && [role(x), role(y)].includes("num") && [role(x), role(y)].includes("cat"),
   );
   const z = bothNumeric && search.z ? byName.get(search.z) : undefined;
-  const color = search.color ? byName.get(search.color) : undefined;
   const colorAllowed = Boolean(
-    x &&
-    y &&
-    (bothNumeric || ROLE[x.type] === "date" || ROLE[y.type] === "date"),
+    x && y && (bothNumeric || grouped || role(x) === "date" || role(y) === "date"),
   );
+  const colorFits = (column: Column) =>
+    !grouped || (distinctOf(column) ?? Infinity) <= MAX_COLOR_GROUPS;
+  const colorChoice = search.color ? byName.get(search.color) : undefined;
+  const color = colorChoice && colorFits(colorChoice) ? colorChoice : undefined;
+  const toggleNumbers = (name: string) => {
+    const next = numbers.includes(name) ? numbers.filter((n) => n !== name) : [...numbers, name];
+    set({ numbers: next.length ? next.join(",") : undefined });
+  };
   const params =
     x && y && x.name !== y.name
       ? {
@@ -107,6 +134,7 @@ export function ComparePage() {
           agg: search.agg,
           window: search.window,
           align: search.align,
+          numbers: numbers.filter((n) => n === x.name || n === y.name || n === color?.name),
         }
       : null;
   const comparison = useCompare(datasetId, params);
@@ -126,13 +154,18 @@ export function ComparePage() {
         <p className="mt-1 text-ink-2">{t("compare.description")}</p>
       </header>
 
-      <div className="flex flex-wrap items-end gap-3">
-        <ColumnPicker
-          label="X"
-          value={x ? x.name : ""}
-          columns={usable}
-          onChange={(name) => set({ x: name })}
-        />
+      <div className="flex flex-wrap items-end gap-x-3 gap-y-6 pb-4">
+        <div className="relative">
+          <ColumnPicker
+            label="X"
+            value={x ? x.name : ""}
+            columns={usable}
+            onChange={(name) => set({ x: name })}
+          />
+          {x && readsAsLevels(x) && (
+            <ReadAs column={x} asNumbers={numbers.includes(x.name)} onToggle={() => toggleNumbers(x.name)} />
+          )}
+        </div>
         <Button
           variant="ghost"
           icon={ArrowLeftRight}
@@ -142,16 +175,21 @@ export function ComparePage() {
           disabled={!x || !y}
           onClick={() => set({ x: search.y, y: search.x })}
         />
-        <ColumnPicker
-          label="Y"
-          value={y ? y.name : ""}
-          columns={usable}
-          onChange={(name) => set({ y: name })}
-        />
+        <div className="relative">
+          <ColumnPicker
+            label="Y"
+            value={y ? y.name : ""}
+            columns={usable}
+            onChange={(name) => set({ y: name })}
+          />
+          {y && readsAsLevels(y) && (
+            <ReadAs column={y} asNumbers={numbers.includes(y.name)} onToggle={() => toggleNumbers(y.name)} />
+          )}
+        </div>
         <ColumnPicker
           label={t("compare.z")}
           value={z?.name ?? ""}
-          columns={usable.filter((c) => ROLE[c.type] === "num")}
+          columns={usable.filter((c) => role(c) === "num")}
           optional
           disabled={!bothNumeric}
           hint={bothNumeric ? undefined : t("compare.zHint")}
@@ -160,10 +198,15 @@ export function ComparePage() {
         <ColumnPicker
           label={t("compare.color")}
           value={colorAllowed ? (color?.name ?? "") : ""}
-          columns={usable.filter((c) => ROLE[c.type] === "cat")}
+          columns={usable.filter((c) => role(c) === "cat")}
           optional
           disabled={!colorAllowed}
           hint={colorAllowed ? undefined : t("compare.colorHint")}
+          unavailable={(c) =>
+            colorFits(c)
+              ? null
+              : t("compare.colorTooMany", { count: String(distinctOf(c)), max: String(MAX_COLOR_GROUPS) })
+          }
           onChange={(name) => set({ color: name || undefined })}
         />
       </div>
@@ -207,6 +250,20 @@ export function ComparePage() {
   );
 }
 
+/** "Pclass: 3 values, read as categories · As numbers" under a picker (R-CMP-01/02). */
+function ReadAs({ column, asNumbers, onToggle }: { column: Column; asNumbers: boolean; onToggle: () => void }) {
+  return (
+    <p className="absolute top-full left-0 mt-1 text-[11px] whitespace-nowrap text-ink-3">
+      {asNumbers
+        ? t("compare.readAsNumbers")
+        : t("compare.readAsLevels", { count: String(distinctOf(column)) })}{" "}
+      <button type="button" onClick={onToggle} className="text-accent hover:underline">
+        {asNumbers ? t("compare.asCategories") : t("compare.asNumbers")}
+      </button>
+    </p>
+  );
+}
+
 function ColumnPicker({
   label,
   value,
@@ -215,6 +272,7 @@ function ColumnPicker({
   optional = false,
   disabled = false,
   hint,
+  unavailable,
 }: {
   label: string;
   value: string;
@@ -223,6 +281,8 @@ function ColumnPicker({
   optional?: boolean;
   disabled?: boolean;
   hint?: string;
+  /** Why a column cannot be picked here (null: it can). */
+  unavailable?: (column: Column) => string | null;
 }) {
   return (
     <Field label={label}>
@@ -236,11 +296,15 @@ function ColumnPicker({
         <option value="">
           {optional ? t("compare.none") : t("compare.choose")}
         </option>
-        {columns.map((column) => (
-          <option key={column.name} value={column.name}>
-            {column.name}
-          </option>
-        ))}
+        {columns.map((column) => {
+          const reason = unavailable?.(column) ?? null;
+          return (
+            <option key={column.name} value={column.name} disabled={reason !== null} title={reason ?? undefined}>
+              {column.name}
+              {reason ? ` (${reason})` : ""}
+            </option>
+          );
+        })}
       </Select>
     </Field>
   );

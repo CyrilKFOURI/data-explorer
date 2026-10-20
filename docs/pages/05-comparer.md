@@ -24,6 +24,12 @@ Chaque test est présenté avec un `TestResult` et ses conditions d'application 
 
 - **Table des données utilisées** sous le graphique (repliable), exportable.
 
+## Nombres discrets et couleur sur les groupes — [024](../features/024-comparer-categories-couleur/spec.md)
+
+- Un nombre discret d'au plus 12 valeurs (Survived, Pclass) est lu comme une catégorie par défaut ; mention « 2 values, read as categories » et bouton « As numbers » à côté du sélecteur (URL : `numbers=`).
+- La couleur marche aussi pour nombre × catégorie : boîtes, violons ou moyennes côte à côte, une par modalité de couleur, avec une légende. Au plus 6 modalités de couleur (au-delà, la colonne est grisée avec sa raison) et 8 groupes sur l'axe (le reste en « Others »).
+- Les tests comparent les groupes de l'axe, toutes couleurs confondues, ce qu'une note rappelle.
+
 ## Vue temporelle (date × num) — [011](../features/011-vue-temporelle/spec.md)
 
 Agrégation par période (Auto : pas typique des dates, relevé au-delà de 400 périodes ; Sum pour les rôles `amount`/`quantity`, Mean sinon), moyenne et écart-type glissants (fenêtre Auto selon la période, arrière ou centrée), bande ± 1σ (série unique), une courbe par groupe avec Couleur. Barre d'options (Period, Aggregate, Window, alignement, tracés) dans l'URL ; libellé résumé ; périodes incomplètes au début / à la fin signalées et exclues du test (Sum, Count) ; avertissement d'autocorrélation ; table « Data used » ; lien « Analyze as time series → » (actif avec 012).

@@ -92,3 +92,20 @@ def test_five_million_rows(client: TestClient, tmp_path: Path) -> None:
     assert response.status_code == 200, response.text
     assert response.json()["kind"] == "timeline"
     assert seconds < 2, ("day", "a", seconds)
+
+
+def test_whole_numbers_with_few_values_read_as_categories(client: TestClient, traps: str) -> None:
+    url = f"/api/v1/datasets/{traps}/compare"
+    grouped = client.get(url, params={"x": "nb_children", "y": "income"}).json()
+    assert grouped["kind"] == "groups"
+    assert grouped["categories"][0]["column"] == "nb_children"
+    labels = [g["label"] for g in grouped["groups"]]
+    assert labels == sorted(labels, key=float) and all("." not in label for label in labels)
+    numbers = client.get(
+        url, params={"x": "nb_children", "y": "income", "numbers": "nb_children"}
+    ).json()
+    assert numbers["kind"] == "scatter" and numbers["categories"] == []
+    colored = client.get(url, params={"x": "segment", "y": "income", "color": "is_active"}).json()
+    assert {g["color"] for g in colored["groups"]} == set(colored["color_levels"])
+    too_many = client.get(url, params={"x": "segment", "y": "income", "color": "city"})
+    assert too_many.status_code == 422 and "at most 6" in too_many.json()["error"]["message"]

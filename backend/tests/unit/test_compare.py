@@ -34,6 +34,8 @@ def connection() -> duckdb.DuckDBPyConnection:
             "h": rng.choice(["u", "w"], size=N),
             "flag": rng.random(N) < 0.3,
             "when": [datetime(2024, 1, 1) + timedelta(days=int(i % 90)) for i in range(N)],
+            "level": rng.choice([3, 1, 2], size=N).astype(float),  # a whole number, 3 values
+            "seven": rng.integers(0, 7, size=N).astype(str),  # a category of 7 values
         }
     )
     con = duckdb.connect()
@@ -195,3 +197,47 @@ def test_points_are_sampled_beyond_the_limit(connection: duckdb.DuckDBPyConnecti
 def test_invalid_choices(connection, x, y, z, color, message) -> None:
     with pytest.raises(NotComparableError, match=message):
         compare(connection, "data", x, y, z, color)
+
+
+DISCRETE = "numeric_discrete"
+
+
+def levels(name: str) -> CompareColumn:
+    return CompareColumn(name, DISCRETE, RAW, as_category=True)  # type: ignore[arg-type]
+
+
+def test_a_whole_number_read_as_categories_gives_ordered_groups(connection) -> None:
+    result = compare(connection, "data", levels("level"), col("v", NUM))
+    assert result.kind == "groups" and [g.label for g in result.groups] == ["1", "2", "3"]
+    assert result.roles["level"] == "cat" and result.tests
+    as_numbers = compare(connection, "data", col("level", DISCRETE), col("v", NUM))
+    assert as_numbers.kind == "scatter"
+    crossed = compare(connection, "data", levels("level"), col("h", CAT))
+    assert crossed.kind == "contingency" and crossed.contingency is not None
+    assert crossed.contingency.columns == ["1", "2", "3"]
+
+
+def test_a_colour_splits_each_group_into_boxes(connection) -> None:
+    result = compare(connection, "data", col("g", CAT), col("v", NUM), color=col("h", CAT))
+    assert result.kind == "groups" and set(result.color_levels) == {"u", "w"}
+    pairs = [(g.label, g.color) for g in result.groups]
+    assert set(pairs) == {(a, b) for a in ("a", "b", "c") for b in ("u", "w")}
+    total = sum(g.n for g in result.groups)
+    assert total == result.rows == N
+    plain = compare(connection, "data", col("g", CAT), col("v", NUM))
+    # the tests still compare the groups, all colours together
+    assert [t.p_value for t in result.tests] == pytest.approx(
+        [t.p_value for t in plain.tests], rel=1e-6, abs=1e-12
+    )
+    assert result.message and "all h values together" in result.message
+    numeric_colour = compare(
+        connection, "data", col("g", CAT), col("v", NUM), color=levels("level")
+    )
+    assert numeric_colour.color_levels == ["1", "2", "3"]
+
+
+def test_a_colour_with_too_many_values_is_refused_on_groups(connection) -> None:
+    with pytest.raises(NotComparableError, match="Color has 7 values: pick one with at most 6"):
+        compare(connection, "data", col("g", CAT), col("v", NUM), color=col("seven", CAT))
+    scatter = compare(connection, "data", col("x", NUM), col("y", NUM), color=col("seven", CAT))
+    assert scatter.points is not None and scatter.points.color is not None

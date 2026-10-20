@@ -6,7 +6,14 @@ from typing import Any
 import duckdb
 
 from app.domain.columns.service import ColumnService
-from app.domain.compare.analyze import CompareColumn, Comparison, NotComparableError, compare
+from app.domain.compare.analyze import (
+    MAX_DISCRETE_CATEGORIES,
+    CategoryRead,
+    CompareColumn,
+    Comparison,
+    NotComparableError,
+    compare,
+)
 from app.domain.filters.model import Condition, filters_key
 from app.domain.filters.scope import scoped_source, where_for
 from app.domain.timeseries.series import Options
@@ -28,8 +35,11 @@ class CompareService:
         color: str | None = None,
         conditions: list[Condition] | None = None,
         options: Options | None = None,
+        numbers: list[str] | None = None,
     ) -> Comparison:
+        """`numbers`: whole-number columns to keep as numbers (R-CMP-02)."""
         conditions = conditions or []
+        kept_numbers = set(numbers or [])
         options = options or Options()
         dataset = self.columns.ready(dataset_id)
         views = {view.name: view for view in self.columns.columns(dataset_id)}
@@ -40,7 +50,16 @@ class CompareService:
             view = views.get(name)
             if view is None or view.excluded:
                 raise NotComparableError(f"Unknown or excluded column {name!r}.")
-            return CompareColumn(view.name, view.type, view.parser, view.order, view.role)
+            distinct = (view.summary or {}).get("distinct_count")
+            as_category = (
+                view.type == "numeric_discrete"
+                and isinstance(distinct, int)
+                and distinct <= MAX_DISCRETE_CATEGORIES
+                and view.name not in kept_numbers
+            )
+            return CompareColumn(
+                view.name, view.type, view.parser, view.order, view.role, as_category
+            )
 
         chosen = [pick(name) for name in (x, y, z, color)]
         key = (
@@ -50,6 +69,7 @@ class CompareService:
             filters_key(conditions),
             (options.period, options.aggregate, options.window, options.align),
             tuple(c.semantic_role if c else None for c in chosen),
+            tuple(c.as_category if c else None for c in chosen),
         )
         if key in self._cache:
             self._cache.move_to_end(key)
@@ -70,6 +90,11 @@ class CompareService:
             )
         finally:
             connection.close()
+        result.categories = [
+            CategoryRead(c.name, int((views[c.name].summary or {}).get("distinct_count", 0)))
+            for c in chosen
+            if c is not None and c.as_category
+        ]
         self._cache[key] = result
         if len(self._cache) > CACHE_SIZE:
             self._cache.popitem(last=False)

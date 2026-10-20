@@ -171,6 +171,8 @@ export type CompareParams = {
   agg?: string;
   window?: number;
   align?: string;
+  /** Whole-number columns kept as numbers (otherwise few values read as categories). */
+  numbers?: string[];
 };
 export type OutlierMethod = Outliers["method"];
 export type AppSettings = Schemas["AppSettings"];
@@ -410,6 +412,7 @@ export const api = {
     if (params.agg) query.set("agg", params.agg);
     if (params.window) query.set("window", String(params.window));
     if (params.align) query.set("align", params.align);
+    if (params.numbers?.length) query.set("numbers", params.numbers.join(","));
     return request<Comparison>("GET", `/datasets/${id}/compare?${query}`);
   },
   seriesSection: <T>(

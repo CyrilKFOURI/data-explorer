@@ -2139,5 +2139,10 @@
   "synthetic.predictiveHelp": "Next-step error trained on real ({real}) vs on synthetic ({synthetic}) windows, tested on held-out real histories.",
   "synthetic.sequencesOf": "{sequences} synthetic sequences of {length} steps ({step}); entity: {entity}; learned from {windows} real windows.",
   "synthetic.acfOf": "Autocorrelation of {column}, real and synthetic",
-  "synthetic.sampleSequences": "Sequences, real and synthetic"
+  "synthetic.sampleSequences": "Sequences, real and synthetic",
+  "compare.readAsLevels": "{count} values, read as categories ·",
+  "compare.readAsNumbers": "Read as numbers ·",
+  "compare.asNumbers": "As numbers",
+  "compare.asCategories": "As categories",
+  "compare.colorTooMany": "{count} values: at most {max}"
 }

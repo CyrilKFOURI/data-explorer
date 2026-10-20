@@ -133,7 +133,58 @@ function setup(result: object = scatter) {
 
 afterEach(() => vi.unstubAllGlobals());
 
+const summaryWith = (distinct: number) => ({ ...column().summary, distinct_count: distinct });
+
+const coloredGroups = {
+  ...scatter,
+  kind: "groups",
+  x: "pclass",
+  y: "age",
+  color: "segment",
+  roles: { pclass: "cat", age: "num", segment: "cat" },
+  group_axis: "x",
+  points: null,
+  regression: null,
+  groups: ["1", "2"].flatMap((label) =>
+    ["low", "high"].map((color) => ({ label, color, n: 40, mean: 30, std: 5, q1: 25, median: 30, q3: 35, low: 20, high: 40, ci_low: 28, ci_high: 32, sample: [] })),
+  ),
+  color_levels: ["low", "high"],
+  categories: [{ column: "pclass", values: 3 }],
+  message: "Tests compare the pclass groups, all segment values together.",
+};
+
 describe("Compare page", () => {
+  it("reads a whole number with few values as categories, and colours its groups", async () => {
+    const calls = mockApi({
+      "GET /health": health,
+      "GET /datasets/d1": dataset(),
+      "GET /datasets/d1/columns": [
+        column({ name: "pclass", position: 0, type: "numeric_discrete", detected_type: "numeric_discrete", summary: summaryWith(3) }),
+        column({ name: "age", position: 1 }),
+        column({ name: "segment", position: 2, type: "categorical_nominal", detected_type: "categorical_nominal", summary: summaryWith(2) }),
+        column({ name: "city", position: 3, type: "categorical_nominal", detected_type: "categorical_nominal", summary: summaryWith(9) }),
+      ],
+      "GET /column-roles": roles,
+      "GET /datasets/d1/compare": coloredGroups,
+    });
+    renderAt("/d/d1/compare?x=pclass&y=age&color=segment");
+
+    expect(await screen.findByText(/3 values, read as categories/)).toBeInTheDocument();
+    const colorPicker = screen.getByRole("combobox", { name: "Color" });
+    expect(colorPicker).toBeEnabled();
+    expect(within(colorPicker).getByRole("option", { name: /city \(9 values: at most 6\)/ })).toBeDisabled();
+    await waitFor(() => {
+      const request = calls.find((c) => c.key === "GET /datasets/d1/compare");
+      expect(request?.params.get("color")).toBe("segment");
+      expect(request?.params.get("numbers")).toBeNull();
+    });
+    fireEvent.click(screen.getByRole("button", { name: "As numbers" }));
+    await waitFor(() => {
+      const last = calls.filter((c) => c.key === "GET /datasets/d1/compare").at(-1);
+      expect(last?.params.get("numbers")).toBe("pclass");
+    });
+  });
+
   it("asks for two columns first and hides non-comparable ones", async () => {
     setup();
     renderAt("/d/d1/compare");

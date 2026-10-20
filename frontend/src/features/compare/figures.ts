@@ -198,6 +198,67 @@ export function scatter3dFigure(result: Comparison): Figure {
 
 export type GroupView = "box" | "violin" | "means";
 
+/** Groups split by a colour: one box (violin, mean) per colour level, side by side. */
+function coloredGroups(result: Comparison, view: GroupView, tokens: ChartTokens, vertical: boolean): Data[] {
+  const colors = colorOf(result.color_levels, tokens);
+  return result.color_levels.map((level) => {
+    const groups = result.groups.filter((g) => g.color === level);
+    const labels = groups.map((g) => g.label);
+    const color = colors.get(level) ?? tokens.ink3;
+    const shared = { name: level, legendgroup: level, offsetgroup: level };
+    if (view === "means") {
+      return {
+        type: "scatter",
+        mode: "markers",
+        ...shared,
+        [vertical ? "x" : "y"]: labels,
+        [vertical ? "y" : "x"]: groups.map((g) => g.mean),
+        marker: { size: 10, color },
+        [vertical ? "error_y" : "error_x"]: {
+          type: "data",
+          symmetric: false,
+          array: groups.map((g) => (g.ci_high ?? 0) - (g.mean ?? 0)),
+          arrayminus: groups.map((g) => (g.mean ?? 0) - (g.ci_low ?? 0)),
+          color,
+          thickness: 1.5,
+          width: 6,
+        },
+        customdata: groups.map((g) => [g.n, formatNumber(g.ci_low), formatNumber(g.ci_high)]),
+        hovertemplate: `${level} · %{${vertical ? "x" : "y"}}<br>mean %{${vertical ? "y" : "x"}:,.4g}<br>95% CI %{customdata[1]} – %{customdata[2]}<br>n = %{customdata[0]:,}<extra></extra>`,
+      } as Data;
+    }
+    if (view === "violin") {
+      return {
+        type: "violin",
+        ...shared,
+        [vertical ? "x" : "y"]: groups.flatMap((g) => g.sample.map(() => g.label)),
+        [vertical ? "y" : "x"]: groups.flatMap((g) => g.sample),
+        orientation: vertical ? "v" : "h",
+        line: { color, width: 1.5 },
+        fillcolor: withAlpha(color, 0.25),
+        box: { visible: true, width: 0.15, fillcolor: tokens.surface },
+        meanline: { visible: true },
+        points: false,
+        spanmode: "hard",
+      } as Data;
+    }
+    return {
+      type: "box",
+      ...shared,
+      [vertical ? "x" : "y"]: labels,
+      q1: groups.map((g) => g.q1),
+      median: groups.map((g) => g.median),
+      q3: groups.map((g) => g.q3),
+      lowerfence: groups.map((g) => g.low),
+      upperfence: groups.map((g) => g.high),
+      mean: groups.map((g) => g.mean),
+      orientation: vertical ? "v" : "h",
+      fillcolor: withAlpha(color, 0.25),
+      line: { color, width: 1.5 },
+    } as Data;
+  });
+}
+
 export function groupsFigure(result: Comparison, view: GroupView): Figure {
   return (tokens) => {
     const vertical = result.group_axis === "x";
@@ -210,7 +271,9 @@ export function groupsFigure(result: Comparison, view: GroupView): Figure {
     const place = (labels: string[], values: (number | null)[]) =>
       vertical ? { x: labels, y: values } : { x: values, y: labels };
     let data: Data[];
-    if (view === "means") {
+    if (result.color_levels.length > 0) {
+      data = coloredGroups(result, view, tokens, vertical);
+    } else if (view === "means") {
       data = [
         {
           type: "scatter",
@@ -289,10 +352,14 @@ export function groupsFigure(result: Comparison, view: GroupView): Figure {
     return {
       data,
       layout: {
-        showlegend: false,
+        showlegend: result.color_levels.length > 0,
+        legend: { title: { text: result.color ?? "" }, orientation: "h", y: 1.08 },
+        boxmode: "group",
+        violinmode: "group",
+        scattermode: "group",
         xaxis: vertical ? categoryAxis : valueAxis,
         yaxis: vertical ? valueAxis : categoryAxis,
-      },
+      } as Partial<Layout>,
     };
   };
 }

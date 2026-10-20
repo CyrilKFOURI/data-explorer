@@ -56,6 +56,8 @@ Everything about one column, in tabs. Use the arrows to go to the previous or ne
 - **Categories** (categories, booleans) — every value with count, %, cumulative %. **Dates** — range, granularity, rows per period, empty periods, rows per weekday and hour. **Text** — lengths and most frequent words. **Identifiers** — duplicates.
 
 ### Compare
+- **Whole numbers with few values** (at most 12, like a class 1–3 or a number of children) are read as categories: box plots instead of a scatter. *As numbers* under the picker switches back.
+- **Color on groups**: a number against a category can be split by a color of at most 6 values — box plots, violins or means side by side, one per color, with a legend. The tests still compare the groups, all colors together.
 
 Pick an **X** and a **Y**: the chart and the statistical tests follow their types.
 

@@ -449,7 +449,8 @@ export interface paths {
         };
         /**
          * Compare
-         * @description Chart data and tests; period, agg, window and align shape a date-and-number series.
+         * @description Chart data and tests; period, agg, window and align shape a date-and-number series. A whole
+         *     number with at most 12 values reads as categories unless listed in `numbers`.
          */
         get: operations["compare_api_v1_datasets__dataset_id__compare_get"];
         put?: never;
@@ -1696,6 +1697,16 @@ export interface components {
             /** Chi2 P */
             chi2_p?: number | null;
         };
+        /**
+         * CategoryRead
+         * @description A whole-number column read as categories (R-CMP-01).
+         */
+        CategoryRead: {
+            /** Column */
+            column: string;
+            /** Values */
+            values: number;
+        };
         /** Chart */
         Chart: {
             /**
@@ -2208,6 +2219,10 @@ export interface components {
             tests?: components["schemas"]["BivariateTest"][];
             /** Message */
             message?: string | null;
+            /** Categories */
+            categories?: components["schemas"]["CategoryRead"][];
+            /** Color Levels */
+            color_levels?: string[];
         };
         /**
          * ComputeSettings
@@ -5702,6 +5717,8 @@ export interface components {
             ci_high: number | null;
             /** Sample */
             sample?: number[];
+            /** Color */
+            color?: string | null;
         };
         /** Pair */
         app__domain__correlations__matrix__Pair: {
@@ -6843,6 +6860,8 @@ export interface operations {
                 agg?: ("sum" | "mean" | "median" | "min" | "max" | "count") | "auto";
                 window?: number | null;
                 align?: "trailing" | "centered";
+                /** @description Whole-number columns to keep as numbers, comma-separated. */
+                numbers?: string | null;
                 /** @description JSON list of conditions, combined with AND. */
                 filters?: string | null;
             };
