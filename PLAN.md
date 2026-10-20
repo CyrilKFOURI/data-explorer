@@ -57,3 +57,4 @@ Roadmap en **sprints**, chacun composé de **tranches verticales** : chaque case
 - [ ] À planifier — Rapport HTML exportable du dataset
 - [ ] À planifier — Vidéo / GIF de démo pour le README
 - [ ] À planifier — Interface en français (i18n déjà prête)
+- [ ] À planifier — Reconnaissance du thème du dataset : des « packs » par domaine (colonnes typiques et synonymes, indices sur les valeurs, KPI et visuels associés), reconnaissance par score sur les colonnes plutôt que le titre, suggestions transparentes (« reconnu grâce à… ») que l'utilisateur accepte ou corrige. Commencer par 3 packs bien faits (véhicules, ventes, RH) pour valider la méthode, puis l'étendre aux autres domaines une fois qu'elle est légère et fiable.
