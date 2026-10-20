@@ -292,7 +292,10 @@ function Workbench({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
-      <aside className="space-y-5" aria-label={t("ml.settings")}>
+      <aside
+        className="space-y-5 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:self-start lg:overflow-y-auto lg:pr-2"
+        aria-label={t("ml.settings")}
+      >
         <section className="space-y-2">
           <label className="flex items-center justify-between gap-3">
             <span className="text-xs text-ink-3">{t("ml.predict")}</span>
@@ -507,16 +510,6 @@ function Workbench({
         {job.data?.status === "cancelled" && <p className="text-xs text-ink-3">{job.data.error}</p>}
         {train.isError && <ErrorNote>{train.error.message}</ErrorNote>}
         {job.data?.status === "failed" && <ErrorNote>{job.data.error}</ErrorNote>}
-      </aside>
-
-      <div className={`min-w-0 space-y-5 ${training ? "opacity-60" : ""}`} aria-busy={training}>
-        {run.data ? (
-          <Results run={run.data} datasetId={datasetId} />
-        ) : (
-          <div className="flex h-72 items-center justify-center rounded-lg border border-dashed border-line text-ink-3">
-            {training ? t("ml.trainingFirst") : t("ml.noRunYet")}
-          </div>
-        )}
         {runs.data && runs.data.length > 0 && (
           <RunStrip
             runs={runs.data}
@@ -526,6 +519,16 @@ function Workbench({
             selected={selected}
             onSelect={setSelected}
           />
+        )}
+      </aside>
+
+      <div className={`min-w-0 space-y-5 ${training ? "opacity-60" : ""}`} aria-busy={training}>
+        {run.data ? (
+          <Results run={run.data} datasetId={datasetId} />
+        ) : (
+          <div className="flex h-72 items-center justify-center rounded-lg border border-dashed border-line text-ink-3">
+            {training ? t("ml.trainingFirst") : t("ml.noRunYet")}
+          </div>
         )}
         {runs.data && selected.length >= 2 && (
           <RunCompare datasetId={datasetId} summaries={runs.data.filter((r) => selected.includes(r.id))} />
@@ -580,13 +583,13 @@ function RunStrip({
       ? [...comparable].sort((a, b) => (a.greater_is_better ? (b.score ?? 0) - (a.score ?? 0) : (a.score ?? 0) - (b.score ?? 0)))[0]
       : undefined;
   return (
-    <section aria-label={t("ml.runs")} className="space-y-1.5">
+    <section aria-label={t("ml.runs")} className="space-y-1.5 border-t border-line pt-4">
       <h3 className="text-xs text-ink-3">{t("ml.runs")}</h3>
-      <div className="flex flex-wrap gap-2">
+      <div className="space-y-0.5">
         {runs.map((r, index) => {
           const reason = first && first.id !== r.id ? incomparable(first, r) : null;
           return (
-            <span key={r.id} className="inline-flex items-start gap-1">
+            <span key={r.id} className="flex items-start gap-1.5">
               <input
                 type="checkbox"
                 className="mt-2 size-3.5 accent-(--accent)"
@@ -600,9 +603,9 @@ function RunStrip({
                 type="button"
                 onClick={() => onPick(r.id)}
                 aria-pressed={shown?.id === r.id}
-                className={`rounded-md border px-2.5 py-1.5 text-left text-xs ${shown?.id === r.id ? "border-accent bg-accent-soft" : "border-line hover:bg-surface-1"}`}
+                className={`min-w-0 flex-1 rounded-md border px-2 py-1.5 text-left text-xs ${shown?.id === r.id ? "border-accent bg-accent-soft" : "border-transparent hover:bg-surface-1"}`}
               >
-                <span className="text-ink-1">
+                <span className="block truncate text-ink-1">
                   #{runs.length - index} {r.label || labels[r.model] || r.model}
                   {typeof r.settings.regularization === "string" && r.settings.regularization !== "none"
                     ? ` · ${t(`ml.option.${r.settings.regularization}` as MessageKey)}`

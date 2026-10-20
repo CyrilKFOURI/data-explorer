@@ -1326,6 +1326,7 @@
   "ml.thresholdLabel": "Decision threshold",
   "ml.atThreshold": "precision {precision} · recall {recall} · accuracy {accuracy}",
   "ml.confusion": "Confusion matrix",
+  "ml.perClass": "Scores by class",
   "ml.class": "Class",
   "ml.precision": "Precision",
   "ml.recall": "Recall",

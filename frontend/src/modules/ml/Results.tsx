@@ -3,10 +3,11 @@ import { useMemo, useState } from "react";
 import { api, type MlRun } from "../../api/client";
 import { Plot } from "../../charts/Plot";
 import { formatNumber } from "../../charts/figures";
-import { Metrics } from "../../features/variable/Metrics";
+import type { Metric } from "../../features/variable/Metrics";
 import { pLabel } from "../../features/variable/normality";
 import { t, type MessageKey } from "../../lib/i18n";
 import { Checkbox } from "../../ui/fields";
+import { InfoTip } from "../../ui/InfoTip";
 import { SegmentedControl } from "../../ui/SegmentedControl";
 import { ExplainTab, RowExplanation } from "./Explain";
 import {
@@ -56,8 +57,8 @@ export function verdict(run: MlRun): string {
 export function Results({ run, datasetId }: { run: MlRun; datasetId: string }) {
   const [tab, setTab] = useState<Tab>("performance");
   return (
-    <div className="space-y-4">
-      <p className="text-base font-medium text-ink-1">{verdict(run)}</p>
+    <div className="@container space-y-4">
+      <p className="text-[17px] leading-snug font-medium text-ink-1">{verdict(run)}</p>
       <ScoreTiles run={run} />
       <AllMetrics run={run} />
       <p className="text-xs text-ink-3">
@@ -78,7 +79,7 @@ export function Results({ run, datasetId }: { run: MlRun; datasetId: string }) {
         (run.regression ? (
           <RegressionPerformance run={run} />
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {run.classification?.threshold != null && run.classification.threshold !== 0.5 && run.validation.threshold !== "default" && (
               <p className="text-xs text-ink-2">
                 {t("ml.thresholdChosen", {
@@ -87,7 +88,6 @@ export function Results({ run, datasetId }: { run: MlRun; datasetId: string }) {
                 })}
               </p>
             )}
-            <LearningCurvePanel run={run} />
             <ClassificationPerformance run={run} />
           </div>
         ))}
@@ -98,11 +98,29 @@ export function Results({ run, datasetId }: { run: MlRun; datasetId: string }) {
   );
 }
 
+/** Key figures in one band of numbers separated by thin rules (no tiles). */
+function ScoreBand({ items }: { items: Metric[] }) {
+  return (
+    <dl className="flex flex-wrap border-y border-line">
+      {items.map((item, i) => (
+        <div key={item.label} className={`min-w-32 flex-1 px-4 py-2.5 ${i > 0 ? "border-l border-line" : "pl-0"}`}>
+          <dt className="flex items-center gap-1 text-xs text-ink-3">
+            {item.label}
+            {item.explain && <InfoTip label={item.label} text={item.explain} />}
+          </dt>
+          <dd className="text-[22px] leading-tight font-semibold text-ink-1 tabular-nums">{item.value}</dd>
+          {item.note && <dd className="text-xs text-ink-3">{item.note}</dd>}
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 function ScoreTiles({ run }: { run: MlRun }) {
   if (run.regression) {
     const r = run.regression;
     return (
-      <Metrics
+      <ScoreBand
         items={[
           { label: "R²", value: formatNumber(r.r2), explain: t("ml.explain.r2") },
           { label: "MAE", value: formatNumber(r.mae), note: `avg ${formatNumber(r.baseline_mae)}`, explain: t("ml.explain.mae") },
@@ -116,7 +134,7 @@ function ScoreTiles({ run }: { run: MlRun }) {
   const c = run.classification;
   if (!c) return null;
   return (
-    <Metrics
+    <ScoreBand
       items={[
         { label: t("ml.accuracy"), value: pct(c.accuracy, 1), note: `${t("ml.majority")} ${pct(c.baseline_accuracy)}`, explain: t("ml.explain.accuracy") },
         { label: t("ml.balancedAccuracy"), value: pct(c.balanced_accuracy, 1), explain: t("ml.explain.balanced") },
@@ -138,21 +156,23 @@ function ScoreTiles({ run }: { run: MlRun }) {
   );
 }
 
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+function Panel({ title, children, wide = false }: { title: string; children: React.ReactNode; wide?: boolean }) {
   return (
-    <figure className="min-w-0 rounded-md border border-line bg-surface-1 p-2">
-      <figcaption className="mb-1 px-1 text-xs text-ink-3">{title}</figcaption>
+    <figure className={`min-w-0 border-t border-line pt-2 ${wide ? "@6xl:col-span-2" : ""}`}>
+      <figcaption className="mb-1 text-xs font-medium text-ink-2">{title}</figcaption>
       {children}
     </figure>
   );
 }
+
+const HEIGHT = 240;
 
 function LearningCurvePanel({ run }: { run: MlRun }) {
   const curve = run.learning_curve;
   if (!curve) return null;
   return (
     <Panel title={t("ml.learningCurve", { label: curve.label })}>
-      <Plot figure={learningCurveFigure(curve)} height={240} label={t("ml.learningCurve", { label: curve.label })} />
+      <Plot figure={learningCurveFigure(curve)} height={HEIGHT} label={t("ml.learningCurve", { label: curve.label })} />
     </Panel>
   );
 }
@@ -162,18 +182,18 @@ function RegressionPerformance({ run }: { run: MlRun }) {
   if (!r) return null;
   return (
     <div className="space-y-3">
-      <LearningCurvePanel run={run} />
-      <div className="grid gap-4 xl:grid-cols-2">
-        <Panel title={t("ml.predictedVsActual")}>
-          <Plot figure={predictedFigure(r, run.target)} height={300} label={t("ml.predictedVsActual")} />
+      <div className="grid gap-x-5 gap-y-4 @2xl:grid-cols-2 @6xl:grid-cols-3">
+        <Panel title={t("ml.predictedVsActual")} wide>
+          <Plot figure={predictedFigure(r, run.target)} height={HEIGHT} label={t("ml.predictedVsActual")} />
+        </Panel>
+        <Panel title={t("ml.residualDistribution")}>
+          <Plot figure={residualHistogram(r)} height={HEIGHT} label={t("ml.residualDistribution")} />
         </Panel>
         <Panel title={t("ml.residuals")}>
-          <Plot figure={residualsFigure(r)} height={300} label={t("ml.residuals")} />
+          <Plot figure={residualsFigure(r)} height={HEIGHT} label={t("ml.residuals")} />
         </Panel>
+        <LearningCurvePanel run={run} />
       </div>
-      <Panel title={t("ml.residualDistribution")}>
-        <Plot figure={residualHistogram(r)} height={220} label={t("ml.residualDistribution")} />
-      </Panel>
       {r.heteroscedasticity_p !== null && (
         <p className={`text-[13px] ${r.heteroscedasticity_p < 0.05 ? "text-warn" : "text-ink-2"}`}>
           {t(r.heteroscedasticity_p < 0.05 ? "ml.heteroscedastic" : "ml.homoscedastic", { p: pLabel(r.heteroscedasticity_p) })}
@@ -238,13 +258,14 @@ function ClassificationPerformance({ run }: { run: MlRun }) {
           </label>
         )}
       </div>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-x-5 gap-y-4 @2xl:grid-cols-2 @6xl:grid-cols-3">
         <Panel title={t("ml.confusion")}>
-          <Plot figure={confusionFigure(labels, matrix, percent)} height={300} label={t("ml.confusion")} />
+          <Plot figure={confusionFigure(labels, matrix, percent)} height={HEIGHT} label={t("ml.confusion")} />
         </Panel>
-        <div className="overflow-x-auto rounded-md border border-line">
+        <Panel title={t("ml.perClass")}>
+          <div className="max-h-[240px] overflow-auto">
           <table className="w-full border-collapse text-[13px] tabular-nums">
-            <thead className="bg-surface-2 text-left text-xs text-ink-3">
+            <thead className="text-left text-xs text-ink-3">
               <tr>
                 <th className="px-3 py-1.5 font-normal">{t("ml.class")}</th>
                 <th className="px-3 py-1.5 text-right font-normal">{t("ml.precision")}</th>
@@ -265,30 +286,28 @@ function ClassificationPerformance({ run }: { run: MlRun }) {
               ))}
             </tbody>
           </table>
-        </div>
-      </div>
+          </div>
+        </Panel>
       {c.roc && c.pr && c.calibration && (
-        <div className="grid gap-4 xl:grid-cols-3">
+        <>
           <Panel title={t("ml.roc")}>
-            <Plot figure={curveFigure(c.roc.x, c.roc.y, "False positive rate", "True positive rate", "diagonal")} height={240} label={t("ml.roc")} />
+            <Plot figure={curveFigure(c.roc.x, c.roc.y, "False positive rate", "True positive rate", "diagonal")} height={HEIGHT} label={t("ml.roc")} />
           </Panel>
           <Panel title={t("ml.pr")}>
             <Plot
               figure={curveFigure(c.pr.x, c.pr.y, "Recall", "Precision", "flat", binary ? binary.truth.filter((v) => v === 1).length / (binary.truth.length || 1) : 0)}
-              height={240}
+              height={HEIGHT}
               label={t("ml.pr")}
             />
           </Panel>
           <Panel title={t("ml.calibration")}>
-            <Plot figure={curveFigure(c.calibration.x, c.calibration.y, "Predicted probability", "Observed share", "diagonal")} height={240} label={t("ml.calibration")} />
+            <Plot figure={curveFigure(c.calibration.x, c.calibration.y, "Predicted probability", "Observed share", "diagonal")} height={HEIGHT} label={t("ml.calibration")} />
           </Panel>
-        </div>
+        </>
       )}
       {c.class_curves.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-xs text-ink-3">{t("ml.classCurves")}</p>
-          <div className="grid gap-4 xl:grid-cols-3">
-            <Panel title={t("ml.roc")}>
+        <>
+            <Panel title={`${t("ml.roc")} · ${t("ml.classCurves")}`}>
               <Plot
                 figure={classCurvesFigure(
                   c.class_curves.map((k) => ({ name: k.auc === null ? k.label : `${k.label} · AUC ${k.auc.toFixed(2)}`, x: k.roc.x, y: k.roc.y })),
@@ -296,11 +315,11 @@ function ClassificationPerformance({ run }: { run: MlRun }) {
                   "True positive rate",
                   true,
                 )}
-                height={280}
+                height={HEIGHT}
                 label={t("ml.roc")}
               />
             </Panel>
-            <Panel title={t("ml.pr")}>
+            <Panel title={`${t("ml.pr")} · ${t("ml.classCurves")}`}>
               <Plot
                 figure={classCurvesFigure(
                   c.class_curves.map((k) => ({ name: `${k.label} · ${t("ml.classShare", { share: (k.share * 100).toFixed(0) })}`, x: k.pr.x, y: k.pr.y })),
@@ -308,12 +327,12 @@ function ClassificationPerformance({ run }: { run: MlRun }) {
                   "Precision",
                   false,
                 )}
-                height={280}
+                height={HEIGHT}
                 label={t("ml.pr")}
               />
             </Panel>
             {c.class_curves.some((k) => k.calibration) && (
-              <Panel title={t("ml.calibration")}>
+              <Panel title={`${t("ml.calibration")} · ${t("ml.classCurves")}`}>
                 <Plot
                   figure={classCurvesFigure(
                     c.class_curves.flatMap((k) => (k.calibration ? [{ name: k.label, x: k.calibration.x, y: k.calibration.y }] : [])),
@@ -321,14 +340,15 @@ function ClassificationPerformance({ run }: { run: MlRun }) {
                     "Observed share",
                     true,
                   )}
-                  height={280}
+                  height={HEIGHT}
                   label={t("ml.calibration")}
                 />
               </Panel>
             )}
-          </div>
-        </div>
+        </>
       )}
+        <LearningCurvePanel run={run} />
+      </div>
     </div>
   );
 }
@@ -379,6 +399,7 @@ function Importances({ run }: { run: MlRun }) {
   return (
     <div className="space-y-3">
       <p className="text-[13px] text-ink-2">{t("ml.importancesHint")}</p>
+      <div className="grid gap-5 @4xl:grid-cols-2">
       <Panel title={t("ml.importances")}>
         <Plot figure={importancesFigure(run.importances)} height={Math.max(220, 24 * Math.min(15, run.importances.length) + 60)} label={t("ml.importances")} />
       </Panel>
@@ -400,6 +421,7 @@ function Importances({ run }: { run: MlRun }) {
           </tbody>
         </table>
       </div>
+      </div>
     </div>
   );
 }
@@ -413,6 +435,7 @@ function Features({ run }: { run: MlRun }) {
   return (
     <div className="space-y-3">
       <p className="text-[13px] text-ink-2">{t(run.regression ? "ml.coefficientsHint" : "ml.coefficientsLogisticHint")}</p>
+      <div className="grid gap-5 @4xl:grid-cols-2">
       <Panel title={t("ml.topCoefficients")}>
         <Plot figure={coefficientsFigure(coefficients)} height={Math.max(220, 24 * Math.min(15, coefficients.length) + 60)} label={t("ml.topCoefficients")} />
       </Panel>
@@ -455,6 +478,7 @@ function Features({ run }: { run: MlRun }) {
             ))}
           </tbody>
         </table>
+      </div>
       </div>
     </div>
   );
