@@ -55,6 +55,7 @@ Navigateur (React)  ──HTTP /api/v1──▶  FastAPI
 
 - **Une commande** pour le visiteur : `docker compose up`, puis ouvrir `http://localhost:8000`.
 - **Image multi-étapes** : une étape Node build l'interface, l'image finale (Python slim) ne contient que le backend et le front compilé. Objectif : < 600 Mo pour la V1 ; < 900 Mo avec les modules séries temporelles et ML (statsmodels, scikit-learn, XGBoost), contrôlé par la CI.
+- **PyTorch (023b)** : extra optionnel `deep` (`uv sync --extra deep`). La version CUDA 13.0 est installée sous Windows (pilote ≥ 580, environ 3 Go), la version CPU sous Linux (CI), la version par défaut sous macOS (GPU Apple par MPS). Il n'est pas dans l'image Docker par défaut ; sans lui, CTGAN et TVAE restent listés mais désactivés. Le paquet `ctgan` n'est pas utilisé (licence BUSL-1.1) : les modèles sont codés dans le projet à partir de l'article.
 - **Accès aux fichiers** : un conteneur ne voit pas `C:\...`. Deux voies d'import :
   1. **Glisser-déposer / upload** depuis le navigateur : marche partout.
   2. **Dossier monté** : `docker-compose.yml` monte un dossier de l'hôte (`./data` par défaut, modifiable dans `.env`) en `/data` **en lecture seule**. Le bouton « Browse » de l'app parcourt `/data`. C'est la voie pour les gros fichiers et les dossiers.

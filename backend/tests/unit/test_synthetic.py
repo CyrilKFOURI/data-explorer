@@ -306,7 +306,7 @@ def test_a_healthy_synthetic_set_protects_the_real_rows() -> None:
     train, holdout = mixed(2_000), mixed(600, seed=5)
     learned = synthesize(train, SPECS, "cart", Options(rows=2_000, seed=2))
     found = privacy.privacy(train, holdout, learned.frame, learned.learned)
-    assert found.copies == 0 and found.overfitting is not None and found.overfitting >= 0.9
+    assert found.unique_copies == 0 and found.overfitting is not None and found.overfitting >= 0.9
     assert found.baseline is not None and found.histogram is not None
 
 

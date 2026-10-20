@@ -21,6 +21,7 @@ def test_migrations_create_tables(tmp_path: Path) -> None:
         "0007_ml_tuning",
         "0008_kpi_definitions",
         "0009_synthetic_runs",
+        "0010_synthetic_device",
     ]
     expected = {
         "schema_migrations",

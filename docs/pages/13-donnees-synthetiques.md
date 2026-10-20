@@ -44,7 +44,8 @@ Columns · Links · Checks · Privacy · Utility · Overview · Data
 - **Utility** : choisir une cible → Run ; deux scores côte à côte (entraîné sur réel / sur synthétique, testés sur les mêmes lignes réelles) et leur rapport.
 - **Overview** : nuage moyenne / écart-type (log) et PCA ajustée sur le réel ; colonnes laissées de côté avec leur raison.
 - **Data** : aperçu des 100 premières lignes ; **Save as dataset**, Download CSV, Download Parquet.
-- **Progression** : à la place de la bande des chiffres, les étapes (Loading · Learning · Generating · Evaluating · Saving) et **Cancel**.
+- **Progression** : à la place de la bande des chiffres, les étapes (Loading · Learning & generating · Evaluating · Saving) et **Cancel** ; pour CTGAN et TVAE, une barre suit les époques (« Epoch 120 / 300 · loss … »).
+- **Méthodes profondes (023b)** : CTGAN et TVAE dans le menu Method, avec le badge « Deep · GPU » ou « Deep · CPU (slow) ». Sans PyTorch, elles sont grisées avec la raison. Quand l'une d'elles est choisie, la barre ajoute **Epochs** (Auto, avec la valeur prévue) et une pastille **GPU · <carte>** ou **CPU** qu'un clic bascule pour ce run ; sans carte prête, elle reste sur CPU avec la raison. L'appareil utilisé, les époques et un éventuel repli sur le CPU s'affichent avec le run (Overview, Runs, comparaison).
 - **Runs** : menu en haut à droite (méthode, lignes, Quality, date) ; cocher 2 à 5 runs → **Compare** : tableau côte à côte, meilleur score marqué, barres groupées par propriété.
 
 ## États

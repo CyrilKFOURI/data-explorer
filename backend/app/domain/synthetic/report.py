@@ -129,7 +129,7 @@ def evaluate(
             _diagnostic_verdict(checks),
             quality.verdict(resemblance.score),
             detection.verdict(detected.score),
-            "No copied rows" if not protected.warnings else protected.warnings[0],
+            "No unique row copied" if not protected.warnings else protected.warnings[0],
         ),
         header,
         checks,

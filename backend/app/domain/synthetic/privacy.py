@@ -58,8 +58,10 @@ class DcrHistogram:
 
 @dataclass
 class Privacy:
-    score: float  # min(1 - exact copy share, overfitting protection)
-    copies: int  # synthetic rows exactly equal to a training row
+    score: float  # min(1 - share of copied unique rows, overfitting protection)
+    unique_copies: int  # synthetic rows equal to a training row that is unique in the data
+    unique_copy_share: float
+    copies: int  # synthetic rows exactly equal to any training row
     copy_share: float
     near_copies: int  # numbers within 1 % of the range (SDMetrics' NewRowSynthesis)
     new_rows: float  # NewRowSynthesis = 1 - near copy share
@@ -170,6 +172,17 @@ def _copy_keys(rows: Rows, tolerance: float | None) -> pd.MultiIndex | pd.Index:
     return pd.MultiIndex.from_frame(frame)
 
 
+def unique_copies(synthetic: Rows, train: Rows) -> int:
+    """Synthetic rows equal to a training row whose values no other training row shares: the
+    copies that can point to one person."""
+    if synthetic.numbers.shape[1] + synthetic.codes.shape[1] == 0:
+        return 0
+    keys = _copy_keys(train, None)
+    counts = pd.Series(1, index=keys).groupby(level=list(range(keys.nlevels))).size()
+    single = counts[counts == 1].index
+    return int(_copy_keys(synthetic, None).isin(single).sum())
+
+
 def copies(synthetic: Rows, train: Rows, tolerance: float | None = None) -> int:
     """Synthetic rows equal to a training row: exactly, or with numbers within `tolerance` * the
     range (SDMetrics' NewRowSynthesis uses 1 %)."""
@@ -234,6 +247,8 @@ def privacy(
     train_rows, holdout_rows, synthetic_rows = code_rows([train, holdout, synthetic], learned)
     copy_count = copies(synthetic_rows, train_rows)
     copy_share = copy_count / len(synthetic) if len(synthetic) else 0.0
+    unique_count = unique_copies(synthetic_rows, train_rows)
+    unique_share = unique_count / len(synthetic) if len(synthetic) else 0.0
     near = copies(synthetic_rows, train_rows, COPY_TOLERANCE)
     query = _sample(synthetic_rows, MAX_QUERY, rng)
     size = min(len(train_rows), len(holdout_rows), MAX_REFERENCE)
@@ -257,10 +272,13 @@ def privacy(
             (np.histogram(holdout_to_train, edges)[0] / len(holdout_to_train)).tolist(),
         )
     new_rows = 1 - (near / len(synthetic) if len(synthetic) else 0.0)
-    score = min(1 - copy_share, overfitting if overfitting is not None else 1.0)
+    score = min(1 - unique_share, overfitting if overfitting is not None else 1.0)
     warnings = []
-    if copy_count:
-        warnings.append(f"{copy_count:,} synthetic rows ({copy_share:.1%}) copy a real row.")
+    if unique_count:
+        warnings.append(
+            f"{unique_count:,} synthetic rows ({unique_share:.1%}) copy a real row that is unique "
+            "in the data."
+        )
     if overfitting is not None and overfitting < MEMORISATION:
         warnings.append(
             f"Memorisation: {closer:.0%} of synthetic rows are closer to the training rows than "
@@ -269,11 +287,13 @@ def privacy(
     verdict = (
         " ".join(warnings)
         if warnings
-        else "No copied rows, and synthetic rows are no closer to the real ones than new real "
-        "rows would be."
+        else "No unique real row copied, and synthetic rows are no closer to the real ones than "
+        "new real rows would be."
     )
     return Privacy(
         score,
+        unique_count,
+        unique_share,
         copy_count,
         copy_share,
         near,

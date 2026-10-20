@@ -42,7 +42,7 @@ def test_a_generation_is_valid_saved_and_reopened(client: TestClient, traps: str
     report = run["report"]
     assert run["rows"] == 500 and report["scores"]["diagnostic"] == 1.0
     assert set(report["verdicts"]) == {"diagnostic", "quality", "detection", "privacy"}
-    assert report["privacy"]["copies"] == 0
+    assert report["privacy"]["unique_copies"] == 0
     assert {c["column"] for c in report["header"]["left_out"]} >= {"comment", "email"}
     preview = client.get(f"{BASE}/datasets/{traps}/runs/{run['id']}/preview").json()
     assert preview["total"] == 500 and len(preview["rows"]) == 100
@@ -151,3 +151,18 @@ def test_fifty_thousand_rows_generate_and_evaluate_within_a_minute(
     run = generate(client, dataset, rows=50_000)
     assert run["train_rows"] == 50_000
     assert time.perf_counter() - started < 60
+
+
+def test_a_deep_model_trains_with_its_progress_and_device(client: TestClient, traps: str) -> None:
+    pytest.importorskip("torch")
+    found = client.get(f"{BASE}/datasets/{traps}/plan").json()
+    methods = {m["key"]: m for m in found["methods"]}
+    assert methods["ctgan"]["available"] and methods["tvae"]["epochs"] == 300
+    run = generate(client, traps, method="tvae", epochs=10, device="cpu", rows=300)
+    fitted = run["report"]["fitted"]
+    assert fitted["device"] == "CPU" and fitted["epochs"] == 10
+    assert run["report"]["scores"]["diagnostic"] == 1.0
+    listed = client.get(f"{BASE}/datasets/{traps}/runs").json()
+    assert listed[0]["device"] == "CPU" and listed[0]["method_label"] == "TVAE"
+    bad = client.post(f"{BASE}/datasets/{traps}/runs", json={"method": "ctgan", "epochs": 5})
+    assert bad.status_code == 422

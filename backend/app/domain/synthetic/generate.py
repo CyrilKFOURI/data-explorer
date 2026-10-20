@@ -85,11 +85,11 @@ def _row_hashes(frame: pd.DataFrame) -> pd.Series:
 def drop_copies(
     synthetic: pd.DataFrame, train: pd.DataFrame, rows: int, seed: int
 ) -> tuple[pd.DataFrame, int]:
-    """Keep `rows` synthetic rows that are not identical to a training row (synthpop's
-    "replicated uniques" rule); the spare rows generated take their place."""
-    copied = _row_hashes(synthetic).isin(
-        set(_row_hashes(cast(pd.DataFrame, train[list(synthetic.columns)])))
-    )
+    """Keep `rows` synthetic rows that do not copy a training row unique in the data (synthpop's
+    "replicated uniques" rule); the spare rows generated take their place. A combination that
+    many real rows share reveals nobody, so it stays."""
+    real = _row_hashes(cast(pd.DataFrame, train[list(synthetic.columns)])).value_counts()
+    copied = _row_hashes(synthetic).isin(set(real[real == 1].index))
     kept = cast(pd.DataFrame, synthetic[~copied.to_numpy()])
     dropped = int(copied.iloc[:rows].sum())
     if len(kept) < rows and len(kept):

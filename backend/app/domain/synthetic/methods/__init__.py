@@ -3,6 +3,7 @@ columns of the same kind (numbers, seconds, level indexes; NaN = empty)."""
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import Literal
 
 import numpy as np
 
@@ -21,6 +22,10 @@ class Options:
     smooth: bool = True  # CART: Gaussian noise on numbers, scaled to the leaf's spread
     order: list[str] | None = None  # CART: column order (None = automatic)
     drop_copies: bool = True  # replace synthetic rows identical to a training row
+    epochs: int | None = None  # deep methods: None = automatic
+    device: Literal["auto", "cpu", "gpu"] = "auto"  # deep methods
+    allow_gpu: bool = True  # the app setting "Use the GPU when available" (decides "auto")
+    progress: Callable[[float, str], None] | None = None  # deep methods: per epoch
 
 
 @dataclass
@@ -39,6 +44,8 @@ class Fitted:
     edges: list[Edge] = field(default_factory=list)  # Bayesian network: the Chow-Liu tree
     notes: list[str] = field(default_factory=list)
     dropped: int = 0  # synthetic rows identical to a training row, replaced
+    device: str | None = None  # deep methods: the card or "CPU"
+    epochs: int | None = None  # deep methods
 
 
 StopCheck = Callable[[], bool]
@@ -75,6 +82,10 @@ def generate(
 ) -> tuple[Coded, Fitted]:
     from app.domain.synthetic.methods import bayes, cart, copula, independent
 
+    if method in ("ctgan", "tvae"):
+        from app.domain.synthetic.methods import deep  # needs PyTorch: imported on use
+
+        return deep.generate(method, coded, learned, options, should_stop)
     runners = {
         "cart": cart.generate,
         "copula": copula.generate,

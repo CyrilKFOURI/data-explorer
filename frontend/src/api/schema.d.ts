@@ -2804,7 +2804,7 @@ export interface components {
              * Method
              * @enum {string}
              */
-            method: "cart" | "copula" | "bayes" | "independent";
+            method: "cart" | "copula" | "bayes" | "independent" | "ctgan" | "tvae";
             /** Order */
             order?: string[];
             /** Edges */
@@ -2816,6 +2816,10 @@ export interface components {
              * @default 0
              */
             dropped: number;
+            /** Device */
+            device?: string | null;
+            /** Epochs */
+            epochs?: number | null;
         };
         /** ForecastJob */
         ForecastJob: {
@@ -3320,11 +3324,22 @@ export interface components {
              * Key
              * @enum {string}
              */
-            key: "cart" | "copula" | "bayes" | "independent";
+            key: "cart" | "copula" | "bayes" | "independent" | "ctgan" | "tvae";
             /** Label */
             label: string;
             /** Why */
             why: string;
+            /**
+             * Available
+             * @default true
+             */
+            available: boolean;
+            /** Unavailable */
+            unavailable?: string | null;
+            /** Badge */
+            badge?: string | null;
+            /** Epochs */
+            epochs?: number | null;
         };
         /** MethodResult */
         MethodResult: {
@@ -3720,7 +3735,7 @@ export interface components {
              * Method
              * @enum {string}
              */
-            method: "cart" | "copula" | "bayes" | "independent";
+            method: "cart" | "copula" | "bayes" | "independent" | "ctgan" | "tvae";
             /** Method Reason */
             method_reason: string;
             /** Methods */
@@ -3745,6 +3760,8 @@ export interface components {
              * @default On: continuous numbers stay off the real values, so far fewer rows copy a real one.
              */
             smooth_reason: string;
+            /** Gpu */
+            gpu?: string | null;
         };
         /** Points */
         Points: {
@@ -3861,6 +3878,10 @@ export interface components {
         Privacy: {
             /** Score */
             score: number;
+            /** Unique Copies */
+            unique_copies: number;
+            /** Unique Copy Share */
+            unique_copy_share: number;
             /** Copies */
             copies: number;
             /** Copy Share */
@@ -4152,7 +4173,7 @@ export interface components {
              * @default cart
              * @enum {string}
              */
-            method: "cart" | "copula" | "bayes" | "independent";
+            method: "cart" | "copula" | "bayes" | "independent" | "ctgan" | "tvae";
             /** Rows */
             rows?: number | null;
             /**
@@ -4178,6 +4199,14 @@ export interface components {
             bounds?: {
                 [key: string]: components["schemas"]["Bound"];
             };
+            /** Epochs */
+            epochs?: number | null;
+            /**
+             * Device
+             * @default auto
+             * @enum {string}
+             */
+            device: "auto" | "cpu" | "gpu";
         };
         /** RunSummary */
         RunSummary: {
@@ -4856,6 +4885,10 @@ export interface components {
             run_id?: string | null;
             /** Error */
             error?: string | null;
+            /** Progress */
+            progress?: number | null;
+            /** Message */
+            message?: string | null;
         };
         /** SyntheticOverview */
         SyntheticOverview: {
@@ -4884,7 +4917,7 @@ export interface components {
              * Method
              * @enum {string}
              */
-            method: "cart" | "copula" | "bayes" | "independent";
+            method: "cart" | "copula" | "bayes" | "independent" | "ctgan" | "tvae";
             /** Method Label */
             method_label: string;
             settings: components["schemas"]["RunRequest"];
@@ -4910,7 +4943,7 @@ export interface components {
              * Method
              * @enum {string}
              */
-            method: "cart" | "copula" | "bayes" | "independent";
+            method: "cart" | "copula" | "bayes" | "independent" | "ctgan" | "tvae";
             /** Method Label */
             method_label: string;
             /** Rows */
@@ -4929,6 +4962,8 @@ export interface components {
             settings?: {
                 [key: string]: unknown;
             };
+            /** Device */
+            device?: string | null;
         };
         /** SyntheticScores */
         SyntheticScores: {

@@ -23,9 +23,15 @@ export function PrivacyTab({ run, datasetId }: { run: SyntheticRun; datasetId: s
   const disclosure = actions.disclosure.data ?? run.report.disclosure;
   const measures: { label: string; value: string; score: number | null; reading: string }[] = [
     {
+      label: t("synthetic.uniqueCopies"),
+      value: `${count(privacy.unique_copies)} (${pct(privacy.unique_copy_share, 1)})`,
+      score: 1 - privacy.unique_copy_share,
+      reading: t("synthetic.uniqueCopiesHelp"),
+    },
+    {
       label: t("synthetic.exactCopies"),
       value: `${count(privacy.copies)} (${pct(privacy.copy_share, 1)})`,
-      score: 1 - privacy.copy_share,
+      score: null,
       reading: t("synthetic.exactCopiesHelp"),
     },
     {

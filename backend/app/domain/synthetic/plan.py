@@ -6,7 +6,7 @@ from typing import Literal
 from app.domain.typing.types import AnalysisType
 
 Treatment = Literal["model", "unique", "fake", "leave"]
-Method = Literal["cart", "copula", "bayes", "independent"]
+Method = Literal["cart", "copula", "bayes", "independent", "ctgan", "tvae"]
 
 MAX_MODELLED = 100
 MAX_TRAIN_ROWS = 50_000
@@ -29,7 +29,15 @@ METHODS: dict[Method, tuple[str, str]] = {
     "copula": ("Gaussian copula", "Fast; keeps monotonic links between columns."),
     "bayes": ("Bayesian network", "Suited to mostly categorical data; shows its structure."),
     "independent": ("Independent columns", "Reference only: every link between columns is lost."),
+    "ctgan": ("CTGAN", "Neural network (GAN): multimodal numbers and rare levels; needs training."),
+    "tvae": (
+        "TVAE",
+        "Neural network (autoencoder): often the most faithful deep model; needs training.",
+    ),
 }
+DEEP: set[Method] = {"ctgan", "tvae"}
+DEEP_MISSING = "Needs the deep extra (PyTorch): uv sync --extra deep."
+LARGE_FOR_DEEP = 20_000  # training rows from which a ready GPU makes CTGAN worth suggesting
 
 
 @dataclass
@@ -61,6 +69,10 @@ class MethodOption:
     key: Method
     label: str
     why: str
+    available: bool = True
+    unavailable: str | None = None  # why it cannot run here
+    badge: str | None = None  # "Deep · GPU" or "Deep · CPU (slow)"
+    epochs: int | None = None  # deep methods: the automatic number of epochs
 
 
 @dataclass
@@ -76,6 +88,7 @@ class Plan:
     error: str | None = None  # why nothing can be generated
     smooth: bool = True  # CART: noise on numbers by default
     smooth_reason: str = SMOOTH_REASON
+    gpu: str | None = None  # the card the deep methods would train on (None: the CPU)
 
 
 def _treat(column: PlanColumn) -> ColumnPlan:
@@ -130,7 +143,29 @@ def _treat(column: PlanColumn) -> ColumnPlan:
     )
 
 
-def make_plan(columns: list[PlanColumn], rows: int) -> Plan:
+def method_options(train_rows: int, deep_installed: bool, gpu: str | None) -> list[MethodOption]:
+    from app.domain.synthetic.deep import auto_epochs
+
+    options = []
+    for key, (label, why) in METHODS.items():
+        option = MethodOption(key, label, why)
+        if key in DEEP:
+            option.available, option.unavailable = (
+                deep_installed,
+                None if deep_installed else DEEP_MISSING,
+            )
+            option.badge = "Deep · GPU" if gpu else "Deep · CPU (slow)"
+            option.epochs = auto_epochs(train_rows, gpu is not None)
+            if key == "ctgan" and gpu and train_rows >= LARGE_FOR_DEEP:
+                option.why += " Worth trying here: many rows and a ready GPU."
+        options.append(option)
+    return options
+
+
+def make_plan(
+    columns: list[PlanColumn], rows: int, deep_installed: bool = False, gpu: str | None = None
+) -> Plan:
+    """`gpu`: the ready card the deep methods may use (None: they train on the CPU)."""
     planned = [_treat(c) for c in columns]
     modelled = [p for p in planned if p.treatment == "model"]
     for extra in modelled[MAX_MODELLED:]:
@@ -143,14 +178,16 @@ def make_plan(columns: list[PlanColumn], rows: int) -> Plan:
     elif count == 0:
         error = "No column can be modelled: include numbers, categories or dates in Columns."
     label, why = METHODS["cart"]
+    train_rows = min(int(rows * 0.8), MAX_TRAIN_ROWS)
     return Plan(
         planned,
         "cart",
         f"{label}: {why[0].lower()}{why[1:]}",
-        [MethodOption(key, *METHODS[key]) for key in METHODS],
+        method_options(train_rows, deep_installed, gpu),
         rows,
         min(max(rows, MIN_GENERATED), MAX_GENERATED),
-        min(int(rows * 0.8), MAX_TRAIN_ROWS),
+        train_rows,
         count,
         error,
+        gpu=gpu if deep_installed else None,
     )

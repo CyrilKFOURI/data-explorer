@@ -172,6 +172,11 @@ function OverviewTab({ run }: { run: SyntheticRun }) {
       <div className="grid gap-8 lg:grid-cols-2">
         <div>
           <h3 className="pb-1.5 text-xs font-medium text-ink-2">{t("synthetic.method")}: {run.method_label}</h3>
+          {fitted.device && (
+            <p className="text-[13px] text-ink-2">
+              {t("synthetic.trainedOn", { device: fitted.device, epochs: String(fitted.epochs ?? "") })}
+            </p>
+          )}
           {fitted.order.length > 0 && (
             <p className="text-[13px] text-ink-2">
               {t("synthetic.cartOrder")} {fitted.order.join(" → ")}
@@ -296,7 +301,7 @@ export function Report({
     <section className="space-y-4" aria-label={t("synthetic.report")}>
       <p className="text-xs text-ink-3">
         {run.method_label} · {count(run.rows)} {t("synthetic.rowsShort")} · {t("synthetic.seed")} {run.settings.seed} ·{" "}
-        {run.seconds.toFixed(1)} s · {new Date(run.created_at).toLocaleString("en", { dateStyle: "medium", timeStyle: "short" })}
+        {run.seconds.toFixed(1)} s{run.report.fitted.device ? ` · ${run.report.fitted.device}` : ""} · {new Date(run.created_at).toLocaleString("en", { dateStyle: "medium", timeStyle: "short" })}
       </p>
       <Headline report={report} />
       {report.diagnostic.failures.length > 0 && <ErrorNote>{report.diagnostic.failures.join(" ")}</ErrorNote>}

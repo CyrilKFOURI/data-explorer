@@ -12156,7 +12156,9 @@
               "cart",
               "copula",
               "bayes",
-              "independent"
+              "independent",
+              "ctgan",
+              "tvae"
             ],
             "title": "Method"
           },
@@ -12185,6 +12187,28 @@
             "type": "integer",
             "title": "Dropped",
             "default": 0
+          },
+          "device": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device"
+          },
+          "epochs": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Epochs"
           }
         },
         "type": "object",
@@ -13744,7 +13768,9 @@
               "cart",
               "copula",
               "bayes",
-              "independent"
+              "independent",
+              "ctgan",
+              "tvae"
             ],
             "title": "Key"
           },
@@ -13755,6 +13781,44 @@
           "why": {
             "type": "string",
             "title": "Why"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available",
+            "default": true
+          },
+          "unavailable": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailable"
+          },
+          "badge": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Badge"
+          },
+          "epochs": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Epochs"
           }
         },
         "type": "object",
@@ -14918,7 +14982,9 @@
               "cart",
               "copula",
               "bayes",
-              "independent"
+              "independent",
+              "ctgan",
+              "tvae"
             ],
             "title": "Method"
           },
@@ -14969,6 +15035,17 @@
             "type": "string",
             "title": "Smooth Reason",
             "default": "On: continuous numbers stay off the real values, so far fewer rows copy a real one."
+          },
+          "gpu": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gpu"
           }
         },
         "type": "object",
@@ -15351,6 +15428,14 @@
             "type": "number",
             "title": "Score"
           },
+          "unique_copies": {
+            "type": "integer",
+            "title": "Unique Copies"
+          },
+          "unique_copy_share": {
+            "type": "number",
+            "title": "Unique Copy Share"
+          },
           "copies": {
             "type": "integer",
             "title": "Copies"
@@ -15444,6 +15529,8 @@
         "type": "object",
         "required": [
           "score",
+          "unique_copies",
+          "unique_copy_share",
           "copies",
           "copy_share",
           "near_copies",
@@ -16314,7 +16401,9 @@
               "cart",
               "copula",
               "bayes",
-              "independent"
+              "independent",
+              "ctgan",
+              "tvae"
             ],
             "title": "Method",
             "default": "cart"
@@ -16368,6 +16457,29 @@
             },
             "type": "object",
             "title": "Bounds"
+          },
+          "epochs": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000.0,
+                "minimum": 10.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Epochs"
+          },
+          "device": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "cpu",
+              "gpu"
+            ],
+            "title": "Device",
+            "default": "auto"
           }
         },
         "type": "object",
@@ -18728,6 +18840,28 @@
               }
             ],
             "title": "Error"
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
           }
         },
         "type": "object",
@@ -18820,7 +18954,9 @@
               "cart",
               "copula",
               "bayes",
-              "independent"
+              "independent",
+              "ctgan",
+              "tvae"
             ],
             "title": "Method"
           },
@@ -18898,7 +19034,9 @@
               "cart",
               "copula",
               "bayes",
-              "independent"
+              "independent",
+              "ctgan",
+              "tvae"
             ],
             "title": "Method"
           },
@@ -18947,6 +19085,17 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Settings"
+          },
+          "device": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device"
           }
         },
         "type": "object",

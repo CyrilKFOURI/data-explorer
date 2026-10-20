@@ -22,6 +22,10 @@ dependencies = [
     "xgboost-cpu>=3 ; sys_platform == 'linux'",
 ]
 
+[project.optional-dependencies]
+# Deep synthetic-data models (023b: CTGAN, TVAE, TimeGAN). Not in the default Docker image.
+deep = ["torch>=2.14"]
+
 [dependency-groups]
 dev = [
     "httpx>=0.28.1",
@@ -29,6 +33,24 @@ dev = [
     "pytest>=9.1.1",
     "ruff>=0.17.0",
 ]
+
+# PyTorch: built for CUDA 13.0 on Windows (driver >= 580), CPU-only on Linux (CI, small), the
+# default wheels on macOS (Apple GPU through MPS).
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cu130", marker = "sys_platform == 'win32'" },
+    { index = "pytorch-cpu", marker = "sys_platform == 'linux'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [build-system]
 requires = ["hatchling"]

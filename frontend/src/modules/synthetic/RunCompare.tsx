@@ -39,6 +39,14 @@ export function RunCompare({ datasetId, runIds, onClose }: { datasetId: string; 
               );
             })}
             <tr className="border-b border-line/60">
+              <td className="py-1.5 pr-3 text-ink-2">{t("synthetic.device")}</td>
+              {runs.map((r) => (
+                <td key={r.id} className="py-1.5 pr-3 text-right text-xs">
+                  {r.device ?? "–"}
+                </td>
+              ))}
+            </tr>
+            <tr className="border-b border-line/60">
               <td className="py-1.5 pr-3 text-ink-2">{t("synthetic.duration")}</td>
               {runs.map((r) => (
                 <td key={r.id} className="py-1.5 pr-3 text-right">

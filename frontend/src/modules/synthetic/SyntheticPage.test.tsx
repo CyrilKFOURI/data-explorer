@@ -32,10 +32,12 @@ const plan = {
   method: "cart",
   method_reason: "Sequential CART: best fidelity on mixed columns: keeps non-linear links.",
   methods: [
-    { key: "cart", label: "Sequential CART", why: "Best fidelity on mixed columns." },
-    { key: "copula", label: "Gaussian copula", why: "Fast; keeps monotonic links between columns." },
-    { key: "bayes", label: "Bayesian network", why: "Suited to mostly categorical data." },
-    { key: "independent", label: "Independent columns", why: "Reference only." },
+    { key: "cart", label: "Sequential CART", why: "Best fidelity on mixed columns.", available: true, unavailable: null, badge: null, epochs: null },
+    { key: "copula", label: "Gaussian copula", why: "Fast; keeps monotonic links between columns.", available: true, unavailable: null, badge: null, epochs: null },
+    { key: "bayes", label: "Bayesian network", why: "Suited to mostly categorical data.", available: true, unavailable: null, badge: null, epochs: null },
+    { key: "independent", label: "Independent columns", why: "Reference only.", available: true, unavailable: null, badge: null, epochs: null },
+    { key: "ctgan", label: "CTGAN", why: "Neural network (GAN).", available: false, unavailable: "Needs the deep extra (PyTorch): uv sync --extra deep.", badge: "Deep · GPU", epochs: 300 },
+    { key: "tvae", label: "TVAE", why: "Neural network (autoencoder).", available: true, unavailable: null, badge: "Deep · GPU", epochs: 300 },
   ],
   rows: 1200,
   default_rows: 1200,
@@ -44,6 +46,7 @@ const plan = {
   error: null,
   smooth: true,
   smooth_reason: "On: continuous numbers stay off the real values.",
+  gpu: "NVIDIA GeForce RTX 4050 Laptop GPU",
 };
 
 const learned = (name: string, kind: string, levels: string[] = []) => ({
@@ -81,6 +84,8 @@ const run = {
     detection: { score: 0.88, detectors: [], giveaways: [], rows: 960 },
     privacy: {
       score: 0.97,
+      unique_copies: 0,
+      unique_copy_share: 0,
       copies: 0,
       copy_share: 0,
       near_copies: 12,
@@ -92,7 +97,7 @@ const run = {
       rare: [],
       histogram: null,
       warnings: [],
-      verdict: "No copied rows, and synthetic rows are no closer to the real ones than new real rows would be.",
+      verdict: "No unique real row copied, and synthetic rows are no closer to the real ones than new real rows would be.",
     },
     columns: [
       { column: "country", type: "categorical_nominal", kind: "category", metric: "TV", score: 0.9, real: [0.6, 0.4], synthetic: [0.5, 0.5], biggest: "'FR' 60 % → 50 %" },
@@ -178,12 +183,29 @@ describe("Synthetic data page", () => {
     expect(await screen.findByRole("table", { name: "Levels, aligned" })).toBeInTheDocument();
   });
 
+  it("offers the deep models with their epochs and the GPU, greyed out when PyTorch is missing", async () => {
+    const calls = setup();
+    renderAt("/d/d1/synthetic");
+
+    const method = await screen.findByRole("combobox", { name: "Method" });
+    expect(within(method).getByRole("option", { name: /CTGAN · needs PyTorch/ })).toBeDisabled();
+    fireEvent.change(method, { target: { value: "tvae" } });
+    expect(screen.getByRole("spinbutton", { name: "Epochs" })).toHaveAttribute("placeholder", "Auto (300)");
+    const pill = screen.getByRole("button", { name: "GPU · RTX 4050" });
+    fireEvent.click(pill);
+    expect(screen.getByRole("button", { name: "CPU" })).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(screen.getByRole("button", { name: "Generate" }));
+    await screen.findByText("Very close");
+    const posted = calls.find((c) => c.key === "POST /modules/synthetic/datasets/d1/runs");
+    expect(posted?.body).toMatchObject({ method: "tvae", device: "cpu", epochs: null });
+  });
+
   it("reopens the latest run and says where its privacy stands", async () => {
     setup([{ id: "r1", method: "cart", method_label: "Sequential CART", rows: 1200, seconds: 2.4, created_at: run.created_at, scores: run.report.scores, created_dataset_id: null, settings: run.settings }]);
     renderAt("/d/d1/synthetic?tab=privacy");
 
-    expect(await screen.findByText(/No copied rows, and synthetic rows/)).toBeInTheDocument();
-    expect(screen.getByText("Exact copies")).toBeInTheDocument();
+    expect(await screen.findByText(/No unique real row copied, and synthetic rows/)).toBeInTheDocument();
+    expect(screen.getByText("Copies of unique real rows")).toBeInTheDocument();
     expect(screen.getByText(/not a differential-privacy guarantee/)).toBeInTheDocument();
   });
 });

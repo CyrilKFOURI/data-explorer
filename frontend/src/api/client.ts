@@ -200,6 +200,8 @@ export type SyntheticRequest = {
   drop_copies?: boolean;
   treatments?: Record<string, SyntheticTreatment>;
   bounds?: Record<string, { minimum?: number | null; maximum?: number | null }>;
+  epochs?: number | null;
+  device?: "auto" | "cpu" | "gpu";
 };
 export type StorageInfo = Schemas["StorageInfo"];
 export type RowsColumn = Schemas["RowsColumn"];

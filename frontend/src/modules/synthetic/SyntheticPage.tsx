@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
-import { ChevronDown, ChevronRight, History, Play, Square, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Cpu, History, Play, Square, Trash2, Zap } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
 import type {
@@ -23,7 +23,7 @@ import {
 } from "../../api/hooks";
 import { t, type MessageKey } from "../../lib/i18n";
 import { Button } from "../../ui/Button";
-import { Checkbox, ErrorNote, Select, TextInput } from "../../ui/fields";
+import { Checkbox, ErrorNote, ProgressBar, Select, TextInput } from "../../ui/fields";
 import { Popover } from "../../ui/Popover";
 import { pct } from "./format";
 import { Report } from "./Report";
@@ -49,6 +49,9 @@ function Group({ label, children }: { label: string; children: ReactNode }) {
 }
 
 const Divider = () => <span className="hidden h-5 w-px bg-line sm:block" aria-hidden />;
+
+/** "NVIDIA GeForce RTX 4050 Laptop GPU" → "RTX 4050". */
+const shortGpu = (name: string) => /(RTX|GTX|RX|Arc)\s*\w+/i.exec(name)?.[0] ?? name.replace(/^NVIDIA (GeForce )?/, "");
 
 const treatmentLabel = (value: SyntheticTreatment) => t(`synthetic.treatment.${value}` as MessageKey);
 
@@ -247,7 +250,19 @@ function RunsMenu({
   );
 }
 
-function Progress({ stage, onCancel, cancelling }: { stage: string; onCancel: () => void; cancelling: boolean }) {
+function Progress({
+  stage,
+  share,
+  message,
+  onCancel,
+  cancelling,
+}: {
+  stage: string;
+  share: number | null;
+  message: string | null;
+  onCancel: () => void;
+  cancelling: boolean;
+}) {
   const index = STAGES.indexOf(stage as (typeof STAGES)[number]);
   return (
     <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-y border-line py-4" aria-live="polite">
@@ -268,6 +283,14 @@ function Progress({ stage, onCancel, cancelling }: { stage: string; onCancel: ()
       <Button icon={Square} variant="ghost" onClick={onCancel} disabled={cancelling}>
         {t("synthetic.cancel")}
       </Button>
+      {share !== null && (
+        <div className="flex w-full items-center gap-3">
+          <div className="max-w-md flex-1">
+            <ProgressBar value={share} label={t("synthetic.training")} />
+          </div>
+          <span className="text-xs text-ink-2 tabular-nums">{message}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -308,6 +331,10 @@ export function SyntheticPage() {
   const seed = draft.seed ?? 42;
   const smooth = draft.smooth ?? p?.smooth ?? true;
   const dropCopies = draft.drop_copies ?? true;
+  const option = p?.methods.find((m) => m.key === method);
+  const deep = Boolean(option?.badge);
+  const device = draft.device ?? "auto";
+  const onGpu = Boolean(p?.gpu) && device !== "cpu";
   const modelled = p ? p.columns.filter((c) => (draft.treatments[c.name] ?? c.treatment) === "model").length : 0;
   const showColumns = columnsOpen ?? !runId;
 
@@ -316,6 +343,10 @@ export function SyntheticPage() {
       Object.entries(draft.bounds).filter(([, b]) => b.minimum != null || b.maximum != null),
     );
     const body: SyntheticRequest = { method, rows, seed, smooth, drop_copies: dropCopies, treatments: draft.treatments, bounds };
+    if (deep) {
+      body.epochs = draft.epochs ?? null;
+      body.device = device;
+    }
     generate.mutate(body, {
       onSuccess: (created) => {
         setJobId(created.id);
@@ -363,13 +394,42 @@ export function SyntheticPage() {
                     className={small}
                   >
                     {p.methods.map((m) => (
-                      <option key={m.key} value={m.key}>
+                      <option key={m.key} value={m.key} disabled={!m.available} title={m.unavailable ?? undefined}>
                         {m.label}
                         {m.key === p.method ? " ★" : ""}
+                        {m.badge ? ` · ${m.available ? m.badge : t("synthetic.needsPytorch")}` : ""}
                       </option>
                     ))}
                   </Select>
                 </Group>
+                {deep && option && (
+                  <>
+                    <Divider />
+                    <Group label={t("synthetic.epochs")}>
+                      <TextInput
+                        type="number"
+                        min={10}
+                        max={1000}
+                        aria-label={t("synthetic.epochs")}
+                        placeholder={onGpu || !p.gpu ? t("synthetic.epochsAuto", { epochs: String(option.epochs) }) : t("synthetic.auto")}
+                        value={draft.epochs ?? ""}
+                        onChange={(e) => setDraft({ ...draft, epochs: e.target.value === "" ? null : Math.min(1000, Math.max(10, Number(e.target.value))) })}
+                        className={`${small} w-24 text-right`}
+                      />
+                    </Group>
+                    <button
+                      type="button"
+                      onClick={() => p.gpu && setDraft({ ...draft, device: onGpu ? "cpu" : "auto" })}
+                      disabled={!p.gpu}
+                      aria-pressed={onGpu}
+                      title={p.gpu ? t("synthetic.deviceToggle") : t("synthetic.noGpu")}
+                      className={`inline-flex h-7 items-center gap-1 rounded-full border px-2.5 ${onGpu ? "border-accent text-accent" : "border-line text-ink-2"} disabled:opacity-60`}
+                    >
+                      {onGpu ? <Zap size={12} aria-hidden /> : <Cpu size={12} aria-hidden />}
+                      {onGpu ? `GPU · ${shortGpu(p.gpu ?? "")}` : "CPU"}
+                    </button>
+                  </>
+                )}
                 <Divider />
                 <Group label={t("synthetic.rows")}>
                   <TextInput
@@ -443,7 +503,13 @@ export function SyntheticPage() {
 
         {generate.error && <ErrorNote>{generate.error.message}</ErrorNote>}
         {running && job.data && (
-          <Progress stage={job.data.stage} onCancel={() => jobId && cancel.mutate(jobId)} cancelling={cancel.isPending} />
+          <Progress
+            stage={job.data.stage}
+            share={job.data.progress}
+            message={job.data.message}
+            onCancel={() => jobId && cancel.mutate(jobId)}
+            cancelling={cancel.isPending}
+          />
         )}
         {status === "failed" && <ErrorNote>{job.data?.error}</ErrorNote>}
         {status === "cancelled" && <p className="text-[13px] text-ink-2">{job.data?.error}</p>}

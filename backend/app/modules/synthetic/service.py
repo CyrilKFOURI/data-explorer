@@ -9,7 +9,7 @@ import threading
 import time
 import uuid
 from collections import OrderedDict
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -30,7 +30,7 @@ from app.domain.ingestion.options import ImportOptions
 from app.domain.ml.data import Field as TypedField
 from app.domain.ml.data import _expression
 from app.domain.synthetic import compare as side_by_side
-from app.domain.synthetic import plan
+from app.domain.synthetic import deep, plan
 from app.domain.synthetic.generate import Spec, group_like, synthesize
 from app.domain.synthetic.methods import Cancelled, Options
 from app.domain.synthetic.plan import Method, Plan, PlanColumn, Treatment
@@ -66,6 +66,8 @@ class RunRequest(BaseModel):
     drop_copies: bool = True  # replace synthetic rows identical to a real one
     treatments: dict[str, Treatment] = Field(default_factory=dict)
     bounds: dict[str, Bound] = Field(default_factory=dict)
+    epochs: int | None = Field(default=None, ge=10, le=1_000)  # deep methods: None = automatic
+    device: Literal["auto", "cpu", "gpu"] = "auto"  # deep methods; "auto" follows the setting
 
 
 @dataclass
@@ -75,6 +77,8 @@ class SyntheticJob:
     stage: Stage
     run_id: str | None = None
     error: str | None = None
+    progress: float | None = None  # deep methods: share of the epochs done
+    message: str | None = None  # "Epoch 12 / 300 · loss …"
 
 
 @dataclass
@@ -112,6 +116,7 @@ class SyntheticRunSummary:
     scores: dict[str, float | None]
     created_dataset_id: str | None = None
     settings: dict[str, Any] = field(default_factory=dict)
+    device: str | None = None  # deep methods: the card or "CPU"
 
 
 @dataclass
@@ -142,9 +147,17 @@ def _safe_name(name: str) -> str:
 
 
 class SyntheticService:
-    def __init__(self, columns: ColumnService, workspace: Workspace) -> None:
+    def __init__(
+        self,
+        columns: ColumnService,
+        workspace: Workspace,
+        compute: Callable[[], tuple[str | None, bool]] = lambda: (None, False),
+    ) -> None:
+        """`compute()` gives the ready card PyTorch sees (or None) and whether the app setting
+        allows the GPU."""
         self.columns = columns
         self.workspace = workspace
+        self.compute = compute
         self._executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="synthetic")
         self._jobs: OrderedDict[str, SyntheticJob] = OrderedDict()
         self._stops: set[str] = set()
@@ -190,7 +203,8 @@ class SyntheticService:
             )
             for i, v in enumerate(views)
         ]
-        return plan.make_plan(columns, rows)
+        gpu, allowed = self.compute()
+        return plan.make_plan(columns, rows, deep.installed(), gpu if allowed else None)
 
     def _specs(
         self, dataset_id: str, request: RunRequest
@@ -235,6 +249,9 @@ class SyntheticService:
 
     def start(self, dataset_id: str, request: RunRequest) -> SyntheticJob:
         found, specs, left_out = self._specs(dataset_id, request)
+        option = next(m for m in found.methods if m.key == request.method)
+        if not option.available:
+            raise SyntheticError(f"{option.label}: {option.unavailable}", "method_unavailable")
         rows = request.rows or found.default_rows
         job = SyntheticJob(uuid.uuid4().hex[:12], "running", "loading")
         with self._lock:
@@ -334,13 +351,25 @@ class SyntheticService:
             if stopped():
                 raise Cancelled
             job.stage = "generating"
+            _, allowed = self.compute()
+
+            def progress(share: float, message: str) -> None:
+                job.progress, job.message = share, message
+
             options = Options(
-                rows=rows, seed=request.seed, smooth=request.smooth, drop_copies=request.drop_copies
+                rows=rows,
+                seed=request.seed,
+                smooth=request.smooth,
+                drop_copies=request.drop_copies,
+                epochs=request.epochs,
+                device=request.device,
+                allow_gpu=allowed,
+                progress=progress,
             )
             synthesis = synthesize(train, specs, request.method, options, existing, stopped)
             if stopped():
                 raise Cancelled
-            job.stage = "evaluating"
+            job.stage, job.progress, job.message = "evaluating", None, None
             train, holdout = synthesis.train, group_like(holdout, synthesis.learned)
             unique = [s.name for s in specs if s.treatment == "unique"]
             report = evaluate(
@@ -396,7 +425,8 @@ class SyntheticService:
             with self._db() as connection, connection:
                 connection.execute(
                     "INSERT INTO synthetic_runs (id, dataset_id, method, settings, rows, scores,"
-                    " status, seconds, created_at) VALUES (?, ?, ?, ?, ?, ?, 'done', ?, ?)",
+                    " status, seconds, created_at, device)"
+                    " VALUES (?, ?, ?, ?, ?, ?, 'done', ?, ?, ?)",
                     (
                         run.id,
                         run.dataset_id,
@@ -406,6 +436,7 @@ class SyntheticService:
                         json.dumps(self._scores(run)),
                         run.seconds,
                         run.created_at,
+                        run.report.fitted.device,
                     ),
                 )
         except Exception:
@@ -464,6 +495,7 @@ class SyntheticService:
             json.loads(row["scores"]) if row["scores"] else {},
             row["created_dataset_id"],
             json.loads(row["settings"]),
+            row["device"],
         )
 
     def run(self, dataset_id: str, run_id: str) -> SyntheticRun:
