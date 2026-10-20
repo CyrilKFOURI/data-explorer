@@ -202,6 +202,14 @@ export type SyntheticRequest = {
   bounds?: Record<string, { minimum?: number | null; maximum?: number | null }>;
   epochs?: number | null;
   device?: "auto" | "cpu" | "gpu";
+  sequence?: {
+    time?: string | null;
+    entity?: string | null;
+    no_entity?: boolean;
+    length?: number | null;
+    sequences?: number | null;
+    steps?: number | null;
+  };
 };
 export type StorageInfo = Schemas["StorageInfo"];
 export type RowsColumn = Schemas["RowsColumn"];

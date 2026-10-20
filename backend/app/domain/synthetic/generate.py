@@ -110,7 +110,27 @@ def synthesize(
     bounds = {s.name: (s.minimum, s.maximum) for s in specs if s.treatment == "model"}
     columns: dict[str, pd.Series] = {}
     fitted = Fitted(method)
-    if learned:
+    entity_ids: pd.Series | None = None
+    if method == "timegan":
+        from app.domain.synthetic.methods import timegan  # needs PyTorch: imported on use
+
+        sequence = options.sequence
+        assert sequence is not None and sequence.time is not None
+        made = timegan.generate(frame, learned, options, should_stop)
+        fitted = made.fitted
+        options = replace(options, rows=len(made.times))
+        for item in learned:
+            if item.name == sequence.time:
+                columns[item.name] = encode.decode_column(made.times, item, clip=False)
+            elif item.name != sequence.entity:
+                columns[item.name] = encode.decode_column(
+                    made.coded[item.name], item, bounds[item.name]
+                )
+        if sequence.entity is not None:
+            real = (existing or {}).get(sequence.entity, encode.column_of(train, sequence.entity))
+            names = identifiers.new_identifiers(real, sequence.sequences, options.seed)
+            entity_ids = pd.Series(names.to_numpy()[made.sequence])
+    elif learned:
         extra = max(10, options.rows // 20) if options.drop_copies else 0
         wanted = replace(options, rows=options.rows + extra)
         coded, fitted = generate(
@@ -135,5 +155,7 @@ def synthesize(
             columns[spec.name] = identifiers.new_identifiers(real, options.rows, options.seed + i)
         elif spec.treatment == "fake":
             columns[spec.name] = identifiers.fake_values(real, options.rows, options.seed + i)
+    if entity_ids is not None and options.sequence and options.sequence.entity:
+        columns[options.sequence.entity] = entity_ids
     result = pd.DataFrame({s.name: columns[s.name].reset_index(drop=True) for s in specs})
     return Synthesis(result, frame, learned, fitted, bounds)

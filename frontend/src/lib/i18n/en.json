@@ -2122,5 +2122,22 @@
   "synthetic.trainedOn": "Trained on {device}, {epochs} epochs.",
   "synthetic.device": "Device",
   "synthetic.uniqueCopies": "Copies of unique real rows",
-  "synthetic.uniqueCopiesHelp": "Synthetic rows identical to a real row that no other real row shares: they can point to a person. Expected: 0."
+  "synthetic.uniqueCopiesHelp": "Synthetic rows identical to a real row that no other real row shares: they can point to a person. Expected: 0.",
+  "synthetic.tab.sequences": "Sequences",
+  "synthetic.sequences": "Sequences",
+  "synthetic.time": "Time",
+  "synthetic.entity": "Entity",
+  "synthetic.oneSeries": "None: one series",
+  "synthetic.length": "Length",
+  "synthetic.sequenceCount": "Sequences",
+  "synthetic.steps": "Steps",
+  "synthetic.autocorrelation": "Autocorrelation similarity",
+  "synthetic.autocorrelationHelp": "1 − mean gap between the real and synthetic autocorrelations (lags 1 to 10): how alike the dynamics are.",
+  "synthetic.discriminative": "Discriminative",
+  "synthetic.discriminativeHelp": "A recurrent classifier tries to tell real from synthetic windows; 100 % = it cannot.",
+  "synthetic.predictive": "Predictive",
+  "synthetic.predictiveHelp": "Next-step error trained on real ({real}) vs on synthetic ({synthetic}) windows, tested on held-out real histories.",
+  "synthetic.sequencesOf": "{sequences} synthetic sequences of {length} steps ({step}); entity: {entity}; learned from {windows} real windows.",
+  "synthetic.acfOf": "Autocorrelation of {column}, real and synthetic",
+  "synthetic.sampleSequences": "Sequences, real and synthetic"
 }

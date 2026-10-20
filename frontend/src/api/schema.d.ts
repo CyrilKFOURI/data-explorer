@@ -1924,6 +1924,17 @@ export interface components {
             /** Odds Ratio */
             odds_ratio?: number | null;
         };
+        /** ColumnAutocorrelation */
+        ColumnAutocorrelation: {
+            /** Column */
+            column: string;
+            /** Real */
+            real: number[];
+            /** Synthetic */
+            synthetic: number[];
+            /** Similarity */
+            similarity: number;
+        };
         /**
          * ColumnChange
          * @description A correction of one column. `None` fields are left unchanged.
@@ -2710,6 +2721,17 @@ export interface components {
             /** Magnitude */
             magnitude: ("negligible" | "small" | "medium" | "large") | null;
         };
+        /** EntityCandidate */
+        EntityCandidate: {
+            /** Name */
+            name: string;
+            /** Sequences */
+            sequences: number;
+            /** Median Length */
+            median_length: number;
+            /** Reason */
+            reason: string;
+        };
         /** Entry */
         Entry: {
             /** Name */
@@ -2804,7 +2826,7 @@ export interface components {
              * Method
              * @enum {string}
              */
-            method: "cart" | "copula" | "bayes" | "independent" | "ctgan" | "tvae";
+            method: "cart" | "copula" | "bayes" | "independent" | "ctgan" | "tvae" | "timegan";
             /** Order */
             order?: string[];
             /** Edges */
@@ -2820,6 +2842,8 @@ export interface components {
             device?: string | null;
             /** Epochs */
             epochs?: number | null;
+            /** Steps */
+            steps?: number | null;
         };
         /** ForecastJob */
         ForecastJob: {
@@ -3324,7 +3348,7 @@ export interface components {
              * Key
              * @enum {string}
              */
-            key: "cart" | "copula" | "bayes" | "independent" | "ctgan" | "tvae";
+            key: "cart" | "copula" | "bayes" | "independent" | "ctgan" | "tvae" | "timegan";
             /** Label */
             label: string;
             /** Why */
@@ -3735,7 +3759,7 @@ export interface components {
              * Method
              * @enum {string}
              */
-            method: "cart" | "copula" | "bayes" | "independent" | "ctgan" | "tvae";
+            method: "cart" | "copula" | "bayes" | "independent" | "ctgan" | "tvae" | "timegan";
             /** Method Reason */
             method_reason: string;
             /** Methods */
@@ -3762,6 +3786,7 @@ export interface components {
             smooth_reason: string;
             /** Gpu */
             gpu?: string | null;
+            sequence?: components["schemas"]["SequencePlan"] | null;
         };
         /** Points */
         Points: {
@@ -4039,6 +4064,7 @@ export interface components {
             learned: components["schemas"]["Learned"][];
             utility?: components["schemas"]["Utility"] | null;
             disclosure?: components["schemas"]["Disclosure"] | null;
+            sequences?: components["schemas"]["SequenceReport"] | null;
         };
         /** Resolved */
         Resolved: {
@@ -4173,7 +4199,7 @@ export interface components {
              * @default cart
              * @enum {string}
              */
-            method: "cart" | "copula" | "bayes" | "independent" | "ctgan" | "tvae";
+            method: "cart" | "copula" | "bayes" | "independent" | "ctgan" | "tvae" | "timegan";
             /** Rows */
             rows?: number | null;
             /**
@@ -4207,6 +4233,7 @@ export interface components {
              * @enum {string}
              */
             device: "auto" | "cpu" | "gpu";
+            sequence?: components["schemas"]["SequenceRequest"] | null;
         };
         /** RunSummary */
         RunSummary: {
@@ -4253,6 +4280,15 @@ export interface components {
             format: string;
             /** Size */
             size: number;
+        };
+        /** SampleSequences */
+        SampleSequences: {
+            /** Column */
+            column: string;
+            /** Real */
+            real: number[][];
+            /** Synthetic */
+            synthetic: number[][];
         };
         /** SaveFilterRequest */
         SaveFilterRequest: {
@@ -4397,6 +4433,95 @@ export interface components {
             kept: number;
             /** Of */
             of: number;
+        };
+        /** SequencePlan */
+        SequencePlan: {
+            /** Time */
+            time: string | null;
+            /** Entity */
+            entity: string | null;
+            /** Candidates */
+            candidates?: components["schemas"]["EntityCandidate"][];
+            /** Step Seconds */
+            step_seconds?: number | null;
+            /**
+             * Step
+             * @default
+             */
+            step: string;
+            /**
+             * Length
+             * @default 24
+             */
+            length: number;
+            /**
+             * Sequences
+             * @default 1
+             */
+            sequences: number;
+            /**
+             * Reason
+             * @default
+             */
+            reason: string;
+            /** Error */
+            error?: string | null;
+            /** Warning */
+            warning?: string | null;
+        };
+        /** SequenceReport */
+        SequenceReport: {
+            /** Time */
+            time: string;
+            /** Entity */
+            entity: string | null;
+            /** Length */
+            length: number;
+            /** Step */
+            step: string;
+            /** Sequences */
+            sequences: number;
+            /** Train Windows */
+            train_windows: number;
+            /** Autocorrelation */
+            autocorrelation: number | null;
+            /** Columns */
+            columns?: components["schemas"]["ColumnAutocorrelation"][];
+            /** Discriminative */
+            discriminative?: number | null;
+            /** Discriminative Accuracy */
+            discriminative_accuracy?: number | null;
+            /** Predictive Real */
+            predictive_real?: number | null;
+            /** Predictive Synthetic */
+            predictive_synthetic?: number | null;
+            /** Predictive Ratio */
+            predictive_ratio?: number | null;
+            /** Samples */
+            samples?: components["schemas"]["SampleSequences"][];
+            /** Sentences */
+            sentences?: string[];
+        };
+        /**
+         * SequenceRequest
+         * @description TimeGAN: every field not given takes the plan's choice.
+         */
+        SequenceRequest: {
+            /** Time */
+            time?: string | null;
+            /** Entity */
+            entity?: string | null;
+            /**
+             * No Entity
+             * @default false
+             */
+            no_entity: boolean;
+            /** Length */
+            length?: number | null;
+            /** Sequences */
+            sequences?: number | null;
+            /** Steps */
+            steps?: number | null;
         };
         /** Series */
         Series: {
@@ -4917,7 +5042,7 @@ export interface components {
              * Method
              * @enum {string}
              */
-            method: "cart" | "copula" | "bayes" | "independent" | "ctgan" | "tvae";
+            method: "cart" | "copula" | "bayes" | "independent" | "ctgan" | "tvae" | "timegan";
             /** Method Label */
             method_label: string;
             settings: components["schemas"]["RunRequest"];
@@ -4943,7 +5068,7 @@ export interface components {
              * Method
              * @enum {string}
              */
-            method: "cart" | "copula" | "bayes" | "independent" | "ctgan" | "tvae";
+            method: "cart" | "copula" | "bayes" | "independent" | "ctgan" | "tvae" | "timegan";
             /** Method Label */
             method_label: string;
             /** Rows */

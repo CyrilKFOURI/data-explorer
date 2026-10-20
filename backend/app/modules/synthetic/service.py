@@ -30,9 +30,10 @@ from app.domain.ingestion.options import ImportOptions
 from app.domain.ml.data import Field as TypedField
 from app.domain.ml.data import _expression
 from app.domain.synthetic import compare as side_by_side
-from app.domain.synthetic import deep, plan
+from app.domain.synthetic import deep, encode, plan
+from app.domain.synthetic import sequences as seq
 from app.domain.synthetic.generate import Spec, group_like, synthesize
-from app.domain.synthetic.methods import Cancelled, Options
+from app.domain.synthetic.methods import Cancelled, Options, SequenceSettings
 from app.domain.synthetic.plan import Method, Plan, PlanColumn, Treatment
 from app.domain.synthetic.privacy import Disclosure, PrivacyError, disclosure
 from app.domain.synthetic.report import LeftOut, Report, evaluate
@@ -42,6 +43,7 @@ Stage = Literal["loading", "generating", "evaluating", "saving"]
 KEPT_JOBS = 32
 HOLDOUT_SHARE = 5  # 1 row in 5 is held out
 MAX_HOLDOUT = 20_000
+SEQUENCE_ROWS = 200_000  # TimeGAN reads whole histories, in file order
 PREVIEW_ROWS = 100
 FRAMES_CACHE = 2
 
@@ -56,6 +58,17 @@ class Bound(BaseModel):
     maximum: float | None = None
 
 
+class SequenceRequest(BaseModel):
+    """TimeGAN: every field not given takes the plan's choice."""
+
+    time: str | None = None
+    entity: str | None = None
+    no_entity: bool = False  # one long series even if an entity was found
+    length: int | None = Field(default=None, ge=seq.MIN_LENGTH, le=seq.MAX_LENGTH)
+    sequences: int | None = Field(default=None, ge=1, le=seq.MAX_SEQUENCES)
+    steps: int | None = Field(default=None, ge=100, le=20_000)
+
+
 class RunRequest(BaseModel):
     """Everything not given takes the plan's automatic choice."""
 
@@ -68,6 +81,7 @@ class RunRequest(BaseModel):
     bounds: dict[str, Bound] = Field(default_factory=dict)
     epochs: int | None = Field(default=None, ge=10, le=1_000)  # deep methods: None = automatic
     device: Literal["auto", "cpu", "gpu"] = "auto"  # deep methods; "auto" follows the setting
+    sequence: SequenceRequest | None = None  # TimeGAN
 
 
 @dataclass
@@ -184,7 +198,8 @@ class SyntheticService:
         dataset = self.columns.ready(dataset_id)
         return dataset.storage_path, self.columns.columns(dataset_id)
 
-    def plan(self, dataset_id: str) -> Plan:
+    def plan(self, dataset_id: str, request: "SequenceRequest | None" = None) -> Plan:
+        """`request`: TimeGAN's choices of time, entity and length, if any."""
         storage, views = self._views(dataset_id)
         source = scoped_source(storage, where_for(views, []))
         fields = [TypedField(v.name, v.type, v.parser, v.role, v.order) for v in views]
@@ -204,12 +219,64 @@ class SyntheticService:
             for i, v in enumerate(views)
         ]
         gpu, allowed = self.compute()
-        return plan.make_plan(columns, rows, deep.installed(), gpu if allowed else None)
+        sequence = self._sequence_plan(storage, views, columns, request)
+        return plan.make_plan(columns, rows, deep.installed(), gpu if allowed else None, sequence)
+
+    def _sequence_plan(
+        self,
+        storage: str,
+        views: list[ColumnView],
+        columns: list[PlanColumn],
+        request: SequenceRequest | None,
+    ) -> seq.SequencePlan:
+        """Time, entity and length for TimeGAN (rules R-SEQ), from the dates and the columns
+        that may name a history."""
+        treated = {
+            c.name: c for c in plan.make_plan(columns, columns[0].rows if columns else 0).columns
+        }
+        times = [
+            c.name for c in columns if c.type == "datetime" and treated[c.name].treatment == "model"
+        ]
+        entities = [
+            c.name
+            for c in columns
+            if c.type in seq.ENTITY_TYPES
+            and not c.excluded
+            and 2 <= c.distinct <= c.rows // seq.MIN_LENGTH
+        ]
+        if request and request.time:
+            times = [request.time, *[t for t in times if t != request.time]]
+        if request and request.entity:
+            entities = [request.entity]
+        if request and request.no_entity:
+            entities = []
+        if not times:
+            return seq.plan_sequences(pd.DataFrame(), [], [])
+        wanted = list(dict.fromkeys([*times[:1], *entities]))
+        by_name = {v.name: v for v in views}
+        fields = [
+            TypedField(n, by_name[n].type, by_name[n].parser, by_name[n].role, by_name[n].order)
+            for n in wanted
+        ]
+        source = scoped_source(storage, where_for(views, []), numbered=True)
+        selected = ", ".join(f"{_expression(f)} AS c{i}" for i, f in enumerate(fields))
+        connection = duckdb.connect()
+        try:
+            frame = connection.execute(
+                f"SELECT {selected} FROM {source} ORDER BY file_row_number LIMIT {SEQUENCE_ROWS}"
+            ).df()
+        finally:
+            connection.close()
+        frame.columns = wanted
+        found = seq.plan_sequences(frame, times[:1], entities, request.length if request else None)
+        if request and request.sequences and not found.error:
+            found.sequences = request.sequences
+        return found
 
     def _specs(
         self, dataset_id: str, request: RunRequest
     ) -> tuple[Plan, list[Spec], list[LeftOut]]:
-        found = self.plan(dataset_id)
+        found = self.plan(dataset_id, request.sequence if request.method == "timegan" else None)
         if found.error:
             raise SyntheticError(found.error, "cannot_generate")
         names = {c.name for c in found.columns}
@@ -219,9 +286,22 @@ class SyntheticService:
         _, views = self._views(dataset_id)
         orders = {v.name: v.order for v in views}
         specs, left_out = [], []
+        if request.method == "timegan" and found.sequence and found.sequence.error:
+            raise SyntheticError(f"TimeGAN: {found.sequence.error}", "method_unavailable")
         for column in found.columns:
             treatment = request.treatments.get(column.name, column.treatment)
-            if treatment != column.treatment and treatment not in column.options:
+            if (
+                found.sequence
+                and request.method == "timegan"
+                and column.name == found.sequence.entity
+            ):
+                treatment = "unique"  # new entities, one per synthetic history
+            entity = (
+                request.method == "timegan"
+                and found.sequence
+                and column.name == found.sequence.entity
+            )
+            if treatment != column.treatment and treatment not in column.options and not entity:
                 raise SyntheticError(
                     f"{column.name!r} cannot be set to {treatment!r} ({column.reason})",
                     "bad_treatment",
@@ -253,12 +333,15 @@ class SyntheticService:
         if not option.available:
             raise SyntheticError(f"{option.label}: {option.unavailable}", "method_unavailable")
         rows = request.rows or found.default_rows
+        if request.method == "timegan" and found.sequence:
+            rows = found.sequence.sequences * found.sequence.length
+        sequence = found.sequence if request.method == "timegan" else None
         job = SyntheticJob(uuid.uuid4().hex[:12], "running", "loading")
         with self._lock:
             self._jobs[job.id] = job
             while len(self._jobs) > KEPT_JOBS:
                 self._jobs.popitem(last=False)
-        self._executor.submit(self._run, job, dataset_id, request, specs, left_out, rows)
+        self._executor.submit(self._run, job, dataset_id, request, specs, left_out, rows, sequence)
         return job
 
     def job(self, job_id: str) -> SyntheticJob:
@@ -276,7 +359,11 @@ class SyntheticService:
         return job
 
     def _load(
-        self, dataset_id: str, specs: list[Spec], seed: int
+        self,
+        dataset_id: str,
+        specs: list[Spec],
+        seed: int,
+        histories: seq.SequencePlan | None = None,
     ) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, pd.Series]]:
         """Training and held-out real rows (typed), and every real value of the columns that are
         regenerated or faked (so none is reused)."""
@@ -297,14 +384,26 @@ class SyntheticService:
         relation = f"(SELECT {selected}, hash(file_row_number + {int(seed)}) AS __h FROM {source})"
         connection = duckdb.connect()
         try:
-            train = connection.execute(
-                f"SELECT * EXCLUDE (__h) FROM {relation} WHERE __h % {HOLDOUT_SHARE} <> 0 "
-                f"ORDER BY __h LIMIT {plan.MAX_TRAIN_ROWS}"
-            ).df()
-            holdout = connection.execute(
-                f"SELECT * EXCLUDE (__h) FROM {relation} WHERE __h % {HOLDOUT_SHARE} = 0 "
-                f"ORDER BY __h LIMIT {MAX_HOLDOUT}"
-            ).df()
+            if histories is not None:
+                # whole histories: held-out rows are entire entities (or the end of the series)
+                every = connection.execute(
+                    f"SELECT * EXCLUDE (__h) FROM {relation} LIMIT {SEQUENCE_ROWS}"
+                ).df()
+                every.columns = [s.name for s in specs]
+                assert histories.time is not None
+                train, holdout = seq.split_histories(
+                    self._typed(every, specs), histories.time, histories.entity, seed
+                )
+                train.columns = holdout.columns = [f"c{i}" for i in range(len(specs))]
+            else:
+                train = connection.execute(
+                    f"SELECT * EXCLUDE (__h) FROM {relation} WHERE __h % {HOLDOUT_SHARE} <> 0 "
+                    f"ORDER BY __h LIMIT {plan.MAX_TRAIN_ROWS}"
+                ).df()
+                holdout = connection.execute(
+                    f"SELECT * EXCLUDE (__h) FROM {relation} WHERE __h % {HOLDOUT_SHARE} = 0 "
+                    f"ORDER BY __h LIMIT {MAX_HOLDOUT}"
+                ).df()
             existing = {}
             for i, spec in enumerate(specs):
                 if spec.treatment in ("unique", "fake"):
@@ -324,7 +423,7 @@ class SyntheticService:
     @staticmethod
     def _typed(frame: pd.DataFrame, specs: list[Spec]) -> pd.DataFrame:
         for spec in specs:
-            if spec.treatment == "model" and spec.type in plan.NUMERIC:
+            if spec.treatment == "model" and spec.type in encode.NUMERIC:
                 frame[spec.name] = cast(
                     pd.Series, pd.to_numeric(frame[spec.name], errors="coerce")
                 ).astype(float)
@@ -338,6 +437,7 @@ class SyntheticService:
         specs: list[Spec],
         left_out: list[LeftOut],
         rows: int,
+        histories: seq.SequencePlan | None = None,
     ) -> None:
         started = time.perf_counter()
 
@@ -345,7 +445,7 @@ class SyntheticService:
             return job.id in self._stops
 
         try:
-            train, holdout, existing = self._load(dataset_id, specs, request.seed)
+            train, holdout, existing = self._load(dataset_id, specs, request.seed, histories)
             if len(train) < plan.MIN_ROWS // 2:
                 raise SyntheticError("Too few rows to learn from.")
             if stopped():
@@ -365,13 +465,24 @@ class SyntheticService:
                 device=request.device,
                 allow_gpu=allowed,
                 progress=progress,
+                sequence=SequenceSettings(
+                    histories.time,
+                    histories.entity,
+                    histories.length,
+                    histories.sequences,
+                    request.sequence.steps if request.sequence else None,
+                    histories.step_seconds,
+                )
+                if histories
+                else None,
             )
             synthesis = synthesize(train, specs, request.method, options, existing, stopped)
             if stopped():
                 raise Cancelled
             job.stage, job.progress, job.message = "evaluating", None, None
             train, holdout = synthesis.train, group_like(holdout, synthesis.learned)
-            unique = [s.name for s in specs if s.treatment == "unique"]
+            entity = histories.entity if histories else None
+            unique = [s.name for s in specs if s.treatment == "unique" and s.name != entity]
             report = evaluate(
                 train,
                 holdout,
@@ -384,6 +495,21 @@ class SyntheticService:
                 request.seed,
                 stopped,
             )
+            if histories is not None and histories.time is not None:
+                from app.domain.synthetic.deep.sequence_report import evaluate_sequences
+
+                report.sequences = evaluate_sequences(
+                    train,
+                    holdout,
+                    synthesis.frame,
+                    synthesis.learned,
+                    histories.time,
+                    histories.entity,
+                    histories.length,
+                    histories.step,
+                    request.seed,
+                    allowed,
+                )
             if stopped():
                 raise Cancelled
             job.stage = "saving"

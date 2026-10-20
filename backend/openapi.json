@@ -9149,6 +9149,40 @@
         ],
         "title": "Coefficient"
       },
+      "ColumnAutocorrelation": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "real": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Real"
+          },
+          "synthetic": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Synthetic"
+          },
+          "similarity": {
+            "type": "number",
+            "title": "Similarity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "column",
+          "real",
+          "synthetic",
+          "similarity"
+        ],
+        "title": "ColumnAutocorrelation"
+      },
       "ColumnChange": {
         "properties": {
           "name": {
@@ -11852,6 +11886,34 @@
         ],
         "title": "Effect"
       },
+      "EntityCandidate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "sequences": {
+            "type": "integer",
+            "title": "Sequences"
+          },
+          "median_length": {
+            "type": "integer",
+            "title": "Median Length"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "sequences",
+          "median_length",
+          "reason"
+        ],
+        "title": "EntityCandidate"
+      },
       "Entry": {
         "properties": {
           "name": {
@@ -12158,7 +12220,8 @@
               "bayes",
               "independent",
               "ctgan",
-              "tvae"
+              "tvae",
+              "timegan"
             ],
             "title": "Method"
           },
@@ -12209,6 +12272,17 @@
               }
             ],
             "title": "Epochs"
+          },
+          "steps": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Steps"
           }
         },
         "type": "object",
@@ -13770,7 +13844,8 @@
               "bayes",
               "independent",
               "ctgan",
-              "tvae"
+              "tvae",
+              "timegan"
             ],
             "title": "Key"
           },
@@ -14984,7 +15059,8 @@
               "bayes",
               "independent",
               "ctgan",
-              "tvae"
+              "tvae",
+              "timegan"
             ],
             "title": "Method"
           },
@@ -15046,6 +15122,16 @@
               }
             ],
             "title": "Gpu"
+          },
+          "sequence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SequencePlan"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -15991,6 +16077,16 @@
                 "type": "null"
               }
             ]
+          },
+          "sequences": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SequenceReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -16403,7 +16499,8 @@
               "bayes",
               "independent",
               "ctgan",
-              "tvae"
+              "tvae",
+              "timegan"
             ],
             "title": "Method",
             "default": "cart"
@@ -16480,6 +16577,16 @@
             ],
             "title": "Device",
             "default": "auto"
+          },
+          "sequence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SequenceRequest"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -16597,6 +16704,41 @@
           "size"
         ],
         "title": "SampleOut"
+      },
+      "SampleSequences": {
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "real": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Real"
+          },
+          "synthetic": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Synthetic"
+          }
+        },
+        "type": "object",
+        "required": [
+          "column",
+          "real",
+          "synthetic"
+        ],
+        "title": "SampleSequences"
       },
       "SaveFilterRequest": {
         "properties": {
@@ -17066,6 +17208,304 @@
           "of"
         ],
         "title": "SelectionReport"
+      },
+      "SequencePlan": {
+        "properties": {
+          "time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time"
+          },
+          "entity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/EntityCandidate"
+            },
+            "type": "array",
+            "title": "Candidates"
+          },
+          "step_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step Seconds"
+          },
+          "step": {
+            "type": "string",
+            "title": "Step",
+            "default": ""
+          },
+          "length": {
+            "type": "integer",
+            "title": "Length",
+            "default": 24
+          },
+          "sequences": {
+            "type": "integer",
+            "title": "Sequences",
+            "default": 1
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "default": ""
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "warning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warning"
+          }
+        },
+        "type": "object",
+        "required": [
+          "time",
+          "entity"
+        ],
+        "title": "SequencePlan"
+      },
+      "SequenceReport": {
+        "properties": {
+          "time": {
+            "type": "string",
+            "title": "Time"
+          },
+          "entity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity"
+          },
+          "length": {
+            "type": "integer",
+            "title": "Length"
+          },
+          "step": {
+            "type": "string",
+            "title": "Step"
+          },
+          "sequences": {
+            "type": "integer",
+            "title": "Sequences"
+          },
+          "train_windows": {
+            "type": "integer",
+            "title": "Train Windows"
+          },
+          "autocorrelation": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Autocorrelation"
+          },
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/ColumnAutocorrelation"
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "discriminative": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discriminative"
+          },
+          "discriminative_accuracy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discriminative Accuracy"
+          },
+          "predictive_real": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predictive Real"
+          },
+          "predictive_synthetic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predictive Synthetic"
+          },
+          "predictive_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predictive Ratio"
+          },
+          "samples": {
+            "items": {
+              "$ref": "#/components/schemas/SampleSequences"
+            },
+            "type": "array",
+            "title": "Samples"
+          },
+          "sentences": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sentences"
+          }
+        },
+        "type": "object",
+        "required": [
+          "time",
+          "entity",
+          "length",
+          "step",
+          "sequences",
+          "train_windows",
+          "autocorrelation"
+        ],
+        "title": "SequenceReport"
+      },
+      "SequenceRequest": {
+        "properties": {
+          "time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time"
+          },
+          "entity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity"
+          },
+          "no_entity": {
+            "type": "boolean",
+            "title": "No Entity",
+            "default": false
+          },
+          "length": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100.0,
+                "minimum": 8.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Length"
+          },
+          "sequences": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sequences"
+          },
+          "steps": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 20000.0,
+                "minimum": 100.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Steps"
+          }
+        },
+        "type": "object",
+        "title": "SequenceRequest",
+        "description": "TimeGAN: every field not given takes the plan's choice."
       },
       "Series": {
         "properties": {
@@ -18956,7 +19396,8 @@
               "bayes",
               "independent",
               "ctgan",
-              "tvae"
+              "tvae",
+              "timegan"
             ],
             "title": "Method"
           },
@@ -19036,7 +19477,8 @@
               "bayes",
               "independent",
               "ctgan",
-              "tvae"
+              "tvae",
+              "timegan"
             ],
             "title": "Method"
           },

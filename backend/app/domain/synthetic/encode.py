@@ -11,8 +11,11 @@ from typing import Literal, cast
 import numpy as np
 import pandas as pd
 
-from app.domain.synthetic.plan import CATEGORICAL, NUMERIC, RARE
 from app.domain.typing.types import AnalysisType
+
+NUMERIC: set[AnalysisType] = {"numeric_continuous", "numeric_discrete"}
+CATEGORICAL: set[AnalysisType] = {"categorical_nominal", "categorical_ordinal", "boolean"}
+RARE = 5  # a level seen fewer times is rare
 
 Kind = Literal["number", "integer", "date", "category"]
 OTHER = "Other"
@@ -137,14 +140,18 @@ def decode_column(
     codes: np.ndarray,
     learned: Learned,
     bounds: tuple[float | None, float | None] = (None, None),
+    clip: bool = True,
 ) -> pd.Series:
-    """Codes back to typed values, inside the bounds, with the column's decimals."""
+    """Codes back to typed values, inside the bounds (unless `clip` is off: the dates of new
+    sequences), with the column's decimals."""
     if learned.kind == "category":
         levels = np.array([*learned.levels, None], dtype=object)
         index = np.where(np.isnan(codes), len(learned.levels), codes).astype(int)
         return pd.Series(levels[np.clip(index, 0, len(learned.levels))], dtype=object)
     low = bounds[0] if bounds[0] is not None else learned.minimum
     high = bounds[1] if bounds[1] is not None else learned.maximum
+    if not clip:
+        low = high = None
     values = codes.astype(float).copy()
     if learned.kind == "date":
         if learned.day_only:

@@ -1,4 +1,4 @@
-export const TABS = ["columns", "links", "checks", "privacy", "utility", "overview", "data"] as const;
+export const TABS = ["columns", "sequences", "links", "checks", "privacy", "utility", "overview", "data"] as const;
 export type Tab = (typeof TABS)[number];
 
 /** URL of the Synthetic data page: the run shown and its tab. */

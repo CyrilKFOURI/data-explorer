@@ -28,12 +28,14 @@ import { Popover } from "../../ui/Popover";
 import { pct } from "./format";
 import { Report } from "./Report";
 import { RunCompare } from "./RunCompare";
+import { SequenceSettings, type SequenceDraft } from "./SequencesTab";
 import type { SyntheticSearch, Tab } from "./search";
 
 const small = "h-7 text-xs";
 const STAGES = ["loading", "generating", "evaluating", "saving"] as const;
 
-type Draft = SyntheticRequest & {
+type Draft = Omit<SyntheticRequest, "sequence"> & {
+  sequence?: SequenceDraft;
   treatments: Record<string, SyntheticTreatment>;
   bounds: Record<string, { minimum?: number | null; maximum?: number | null }>;
 };
@@ -335,6 +337,8 @@ export function SyntheticPage() {
   const deep = Boolean(option?.badge);
   const device = draft.device ?? "auto";
   const onGpu = Boolean(p?.gpu) && device !== "cpu";
+  const timegan = method === "timegan";
+  const dates = p ? p.columns.filter((c) => c.type === "datetime" && (draft.treatments[c.name] ?? c.treatment) === "model").map((c) => c.name) : [];
   const modelled = p ? p.columns.filter((c) => (draft.treatments[c.name] ?? c.treatment) === "model").length : 0;
   const showColumns = columnsOpen ?? !runId;
 
@@ -344,9 +348,10 @@ export function SyntheticPage() {
     );
     const body: SyntheticRequest = { method, rows, seed, smooth, drop_copies: dropCopies, treatments: draft.treatments, bounds };
     if (deep) {
-      body.epochs = draft.epochs ?? null;
+      body.epochs = timegan ? null : (draft.epochs ?? null);
       body.device = device;
     }
+    if (timegan) body.sequence = draft.sequence ?? {};
     generate.mutate(body, {
       onSuccess: (created) => {
         setJobId(created.id);
@@ -402,21 +407,37 @@ export function SyntheticPage() {
                     ))}
                   </Select>
                 </Group>
-                {deep && option && (
+                {timegan && p.sequence && option && (
                   <>
                     <Divider />
-                    <Group label={t("synthetic.epochs")}>
-                      <TextInput
-                        type="number"
-                        min={10}
-                        max={1000}
-                        aria-label={t("synthetic.epochs")}
-                        placeholder={onGpu || !p.gpu ? t("synthetic.epochsAuto", { epochs: String(option.epochs) }) : t("synthetic.auto")}
-                        value={draft.epochs ?? ""}
-                        onChange={(e) => setDraft({ ...draft, epochs: e.target.value === "" ? null : Math.min(1000, Math.max(10, Number(e.target.value))) })}
-                        className={`${small} w-24 text-right`}
-                      />
-                    </Group>
+                    <SequenceSettings
+                      plan={p.sequence}
+                      dates={dates}
+                      draft={draft.sequence ?? {}}
+                      steps={option.epochs ?? 1000}
+                      onChange={(sequence) => setDraft({ ...draft, sequence })}
+                    />
+                  </>
+                )}
+                {deep && option && (
+                  <>
+                    {!timegan && (
+                      <>
+                        <Divider />
+                        <Group label={t("synthetic.epochs")}>
+                          <TextInput
+                            type="number"
+                            min={10}
+                            max={1000}
+                            aria-label={t("synthetic.epochs")}
+                            placeholder={onGpu || !p.gpu ? t("synthetic.epochsAuto", { epochs: String(option.epochs) }) : t("synthetic.auto")}
+                            value={draft.epochs ?? ""}
+                            onChange={(e) => setDraft({ ...draft, epochs: e.target.value === "" ? null : Math.min(1000, Math.max(10, Number(e.target.value))) })}
+                            className={`${small} w-24 text-right`}
+                          />
+                        </Group>
+                      </>
+                    )}
                     <button
                       type="button"
                       onClick={() => p.gpu && setDraft({ ...draft, device: onGpu ? "cpu" : "auto" })}
@@ -430,18 +451,22 @@ export function SyntheticPage() {
                     </button>
                   </>
                 )}
-                <Divider />
-                <Group label={t("synthetic.rows")}>
-                  <TextInput
-                    type="number"
-                    min={100}
-                    max={1_000_000}
-                    aria-label={t("synthetic.rows")}
-                    value={rows}
-                    onChange={(e) => setDraft({ ...draft, rows: Math.min(1_000_000, Math.max(100, Number(e.target.value) || 100)) })}
-                    className={`${small} w-24 text-right`}
-                  />
-                </Group>
+                {!timegan && (
+                  <>
+                    <Divider />
+                    <Group label={t("synthetic.rows")}>
+                      <TextInput
+                        type="number"
+                        min={100}
+                        max={1_000_000}
+                        aria-label={t("synthetic.rows")}
+                        value={rows}
+                        onChange={(e) => setDraft({ ...draft, rows: Math.min(1_000_000, Math.max(100, Number(e.target.value) || 100)) })}
+                        className={`${small} w-24 text-right`}
+                      />
+                    </Group>
+                  </>
+                )}
                 <Divider />
                 <Group label={t("synthetic.seed")}>
                   <TextInput
@@ -493,9 +518,11 @@ export function SyntheticPage() {
               {draft.method && draft.method !== p.method
                 ? p.methods.find((m) => m.key === draft.method)?.why
                 : p.method_reason}
+              {timegan && p.sequence && !p.sequence.error ? ` ${p.sequence.reason} · ${p.sequence.step}` : ""}
               {" · "}
               {t("synthetic.learnsFrom", { rows: p.train_rows.toLocaleString("en") })}
             </p>
+            {timegan && p.sequence?.warning && <p className="border-l-2 border-warn pl-3 text-xs text-ink-2">{p.sequence.warning}</p>}
             {p.error && <ErrorNote>{p.error}</ErrorNote>}
             {showColumns && <PlanTable plan={p} draft={draft} onChange={setDraft} />}
           </>

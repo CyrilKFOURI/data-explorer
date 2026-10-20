@@ -3,24 +3,23 @@
 from dataclasses import dataclass, field
 from typing import Literal
 
+from app.domain.synthetic.encode import RARE
+from app.domain.synthetic.sequences import SequencePlan
 from app.domain.typing.types import AnalysisType
 
 Treatment = Literal["model", "unique", "fake", "leave"]
-Method = Literal["cart", "copula", "bayes", "independent", "ctgan", "tvae"]
+Method = Literal["cart", "copula", "bayes", "independent", "ctgan", "tvae", "timegan"]
 
 MAX_MODELLED = 100
 MAX_TRAIN_ROWS = 50_000
 MIN_ROWS = 50
 MIN_GENERATED, MAX_GENERATED = 100, 1_000_000
 MANY_LEVELS = 200  # R-SYN-08: above this, rare levels are grouped before learning
-RARE = 5  # a level seen fewer times is rare
 MOSTLY_EMPTY = 0.95
 SMOOTH_REASON = (
     "On: continuous numbers stay off the real values, so far fewer rows copy a real one."
 )
 
-NUMERIC: set[AnalysisType] = {"numeric_continuous", "numeric_discrete"}
-CATEGORICAL: set[AnalysisType] = {"categorical_nominal", "categorical_ordinal", "boolean"}
 FAKE_ROLES = {"email", "phone", "url"}
 TEXT_ROLES = FAKE_ROLES | {"free_text"}
 
@@ -34,8 +33,9 @@ METHODS: dict[Method, tuple[str, str]] = {
         "TVAE",
         "Neural network (autoencoder): often the most faithful deep model; needs training.",
     ),
+    "timegan": ("TimeGAN", "Neural network for sequences: keeps how each history moves over time."),
 }
-DEEP: set[Method] = {"ctgan", "tvae"}
+DEEP: set[Method] = {"ctgan", "tvae", "timegan"}
 DEEP_MISSING = "Needs the deep extra (PyTorch): uv sync --extra deep."
 LARGE_FOR_DEEP = 20_000  # training rows from which a ready GPU makes CTGAN worth suggesting
 
@@ -72,7 +72,7 @@ class MethodOption:
     available: bool = True
     unavailable: str | None = None  # why it cannot run here
     badge: str | None = None  # "Deep · GPU" or "Deep · CPU (slow)"
-    epochs: int | None = None  # deep methods: the automatic number of epochs
+    epochs: int | None = None  # deep methods: automatic epochs (TimeGAN: steps per phase)
 
 
 @dataclass
@@ -89,6 +89,7 @@ class Plan:
     smooth: bool = True  # CART: noise on numbers by default
     smooth_reason: str = SMOOTH_REASON
     gpu: str | None = None  # the card the deep methods would train on (None: the CPU)
+    sequence: SequencePlan | None = None  # TimeGAN: time, entity, length (023c)
 
 
 def _treat(column: PlanColumn) -> ColumnPlan:
@@ -143,8 +144,10 @@ def _treat(column: PlanColumn) -> ColumnPlan:
     )
 
 
-def method_options(train_rows: int, deep_installed: bool, gpu: str | None) -> list[MethodOption]:
-    from app.domain.synthetic.deep import auto_epochs
+def method_options(
+    train_rows: int, deep_installed: bool, gpu: str | None, sequence_error: str | None = None
+) -> list[MethodOption]:
+    from app.domain.synthetic.deep import TIMEGAN_CPU_STEPS, TIMEGAN_GPU_STEPS, auto_epochs
 
     options = []
     for key, (label, why) in METHODS.items():
@@ -155,7 +158,13 @@ def method_options(train_rows: int, deep_installed: bool, gpu: str | None) -> li
                 None if deep_installed else DEEP_MISSING,
             )
             option.badge = "Deep · GPU" if gpu else "Deep · CPU (slow)"
-            option.epochs = auto_epochs(train_rows, gpu is not None)
+            option.epochs = (
+                auto_epochs(train_rows, gpu is not None)
+                if key != "timegan"
+                else (TIMEGAN_GPU_STEPS if gpu else TIMEGAN_CPU_STEPS)  # steps per phase
+            )
+            if key == "timegan" and deep_installed and sequence_error:
+                option.available, option.unavailable = False, sequence_error
             if key == "ctgan" and gpu and train_rows >= LARGE_FOR_DEEP:
                 option.why += " Worth trying here: many rows and a ready GPU."
         options.append(option)
@@ -163,7 +172,11 @@ def method_options(train_rows: int, deep_installed: bool, gpu: str | None) -> li
 
 
 def make_plan(
-    columns: list[PlanColumn], rows: int, deep_installed: bool = False, gpu: str | None = None
+    columns: list[PlanColumn],
+    rows: int,
+    deep_installed: bool = False,
+    gpu: str | None = None,
+    sequence: SequencePlan | None = None,
 ) -> Plan:
     """`gpu`: the ready card the deep methods may use (None: they train on the CPU)."""
     planned = [_treat(c) for c in columns]
@@ -183,11 +196,17 @@ def make_plan(
         planned,
         "cart",
         f"{label}: {why[0].lower()}{why[1:]}",
-        method_options(train_rows, deep_installed, gpu),
+        method_options(
+            train_rows,
+            deep_installed,
+            gpu,
+            sequence.error if sequence else "Needs a date column.",
+        ),
         rows,
         min(max(rows, MIN_GENERATED), MAX_GENERATED),
         train_rows,
         count,
         error,
         gpu=gpu if deep_installed else None,
+        sequence=sequence,
     )

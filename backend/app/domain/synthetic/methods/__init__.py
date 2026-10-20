@@ -16,6 +16,18 @@ class Cancelled(Exception):
 
 
 @dataclass
+class SequenceSettings:
+    """TimeGAN (023c): how rows form histories, and what to generate."""
+
+    time: str | None
+    entity: str | None = None
+    length: int = 24
+    sequences: int = 1
+    steps: int | None = None  # per training phase; None = automatic
+    step_seconds: float | None = None  # time between two steps; None = the real median
+
+
+@dataclass
 class Options:
     rows: int
     seed: int = 42
@@ -26,6 +38,7 @@ class Options:
     device: Literal["auto", "cpu", "gpu"] = "auto"  # deep methods
     allow_gpu: bool = True  # the app setting "Use the GPU when available" (decides "auto")
     progress: Callable[[float, str], None] | None = None  # deep methods: per epoch
+    sequence: SequenceSettings | None = None  # TimeGAN
 
 
 @dataclass
@@ -46,6 +59,7 @@ class Fitted:
     dropped: int = 0  # synthetic rows identical to a training row, replaced
     device: str | None = None  # deep methods: the card or "CPU"
     epochs: int | None = None  # deep methods
+    steps: int | None = None  # TimeGAN: training steps per phase
 
 
 StopCheck = Callable[[], bool]

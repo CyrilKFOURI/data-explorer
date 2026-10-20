@@ -16,6 +16,7 @@ import { count, pct, tone, toneText } from "./format";
 import { LinksTab } from "./LinksTab";
 import { PrivacyTab, UtilityTab } from "./PrivacyTab";
 import { TABS, type Tab } from "./search";
+import { SequencesTab } from "./SequencesTab";
 
 /** The four headline figures, each with its verdict in words (spec 023, section 3). */
 function Headline({ report }: { report: SyntheticReport }) {
@@ -308,10 +309,15 @@ export function Report({
       <Tabs
         label={t("synthetic.report")}
         value={tab}
-        items={TABS.map((value) => ({ value, label: t(`synthetic.tab.${value}` as MessageKey), badge: badges[value] }))}
+        items={TABS.filter((value) => value !== "sequences" || report.sequences).map((value) => ({
+          value,
+          label: t(`synthetic.tab.${value}` as MessageKey),
+          badge: badges[value],
+        }))}
         onChange={onTab}
       >
         {tab === "columns" && <ColumnsTab run={run} datasetId={datasetId} />}
+        {tab === "sequences" && <SequencesTab run={run} />}
         {tab === "links" && <LinksTab run={run} datasetId={datasetId} />}
         {tab === "checks" && <ChecksTab report={report} />}
         {tab === "privacy" && <PrivacyTab run={run} datasetId={datasetId} />}

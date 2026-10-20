@@ -28,6 +28,7 @@ const plan = {
     planColumn("revenue", "numeric_continuous", "model", "R-SYN-01", "Modelled; real bounds and decimals kept.", ["model", "leave"]),
     planColumn("country", "categorical_nominal", "model", "R-SYN-03", "Modelled; only existing levels are produced.", ["model", "leave"]),
     planColumn("comment", "text", "leave", "R-SYN-06", "Free text could leak real content.", ["leave"]),
+    planColumn("signup", "datetime", "model", "R-SYN-04", "Modelled as a number of seconds, converted back to dates.", ["model", "leave"]),
   ],
   method: "cart",
   method_reason: "Sequential CART: best fidelity on mixed columns: keeps non-linear links.",
@@ -38,6 +39,7 @@ const plan = {
     { key: "independent", label: "Independent columns", why: "Reference only.", available: true, unavailable: null, badge: null, epochs: null },
     { key: "ctgan", label: "CTGAN", why: "Neural network (GAN).", available: false, unavailable: "Needs the deep extra (PyTorch): uv sync --extra deep.", badge: "Deep · GPU", epochs: 300 },
     { key: "tvae", label: "TVAE", why: "Neural network (autoencoder).", available: true, unavailable: null, badge: "Deep · GPU", epochs: 300 },
+    { key: "timegan", label: "TimeGAN", why: "Neural network for sequences.", available: true, unavailable: null, badge: "Deep · GPU", epochs: 1000 },
   ],
   rows: 1200,
   default_rows: 1200,
@@ -47,6 +49,17 @@ const plan = {
   smooth: true,
   smooth_reason: "On: continuous numbers stay off the real values.",
   gpu: "NVIDIA GeForce RTX 4050 Laptop GPU",
+  sequence: {
+    time: "signup",
+    entity: "country",
+    candidates: [{ name: "country", sequences: 3, median_length: 400, reason: "3 histories of about 400 dates, one value per date." }],
+    step_seconds: 86400,
+    step: "daily",
+    length: 24,
+    sequences: 3,
+    reason: "One sequence per country, 24 steps each.",
+    error: null,
+  },
 };
 
 const learned = (name: string, kind: string, levels: string[] = []) => ({
@@ -160,7 +173,7 @@ describe("Synthetic data page", () => {
     expect(within(table).getByText("R-SYN-05")).toBeInTheDocument();
     expect(within(table).getByText("Free text could leak real content.")).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: "Method" })).toHaveValue("cart");
-    expect(screen.getByText("2 of 4 columns modelled")).toBeInTheDocument();
+    expect(screen.getByText("3 of 5 columns modelled")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Generate" })).toBeEnabled();
   });
 
@@ -169,7 +182,7 @@ describe("Synthetic data page", () => {
     renderAt("/d/d1/synthetic");
 
     fireEvent.change(await screen.findByRole("combobox", { name: "Treatment of country" }), { target: { value: "leave" } });
-    expect(screen.getByText("1 of 4 columns modelled")).toBeInTheDocument();
+    expect(screen.getByText("2 of 5 columns modelled")).toBeInTheDocument();
     fireEvent.change(screen.getByRole("combobox", { name: "Treatment of customer_id" }), { target: { value: "leave" } });
     fireEvent.click(screen.getByRole("button", { name: "Generate" }));
 
@@ -198,6 +211,22 @@ describe("Synthetic data page", () => {
     await screen.findByText("Very close");
     const posted = calls.find((c) => c.key === "POST /modules/synthetic/datasets/d1/runs");
     expect(posted?.body).toMatchObject({ method: "tvae", device: "cpu", epochs: null });
+  });
+
+  it("sets up TimeGAN's sequences and shows how their dynamics compare", async () => {
+    const calls = setup();
+    renderAt("/d/d1/synthetic");
+
+    fireEvent.change(await screen.findByRole("combobox", { name: "Method" }), { target: { value: "timegan" } });
+    expect(screen.getByRole("combobox", { name: "Entity" })).toHaveValue("country");
+    expect(screen.getByText("= 72 rows")).toBeInTheDocument();
+    expect(screen.queryByRole("spinbutton", { name: "Rows" })).not.toBeInTheDocument();
+    expect(document.body).toHaveTextContent("Neural network for sequences. One sequence per country, 24 steps each. · daily");
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Length" }), { target: { value: "12" } });
+    fireEvent.click(screen.getByRole("button", { name: "Generate" }));
+    await screen.findByText("Very close");
+    const posted = calls.find((c) => c.key === "POST /modules/synthetic/datasets/d1/runs");
+    expect(posted?.body).toMatchObject({ method: "timegan", sequence: { length: 12 }, epochs: null });
   });
 
   it("reopens the latest run and says where its privacy stands", async () => {

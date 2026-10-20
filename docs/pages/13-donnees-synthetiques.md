@@ -36,6 +36,19 @@ Columns (dépliable ; ouvert tant qu'aucun run n'existe)
 Columns · Links · Checks · Privacy · Utility · Overview · Data
 ```
 
+- **TimeGAN (023c)** : quand il est choisi, la barre remplace Rows par un groupe **Sequences** :
+  - Time (colonne de temps) ;
+  - Entity (colonne d'entité, ou « None: one series ») ;
+  - Length (longueur des séquences) ;
+  - Sequences (nombre à générer) ;
+  - Steps (Auto, avec la valeur prévue).
+
+  Chaque choix automatique a sa raison sous la barre (« One sequence per store, 24 steps each · daily »). La progression montre la phase (Autoencoder, Supervisor, Joint training) et le pas.
+- **Onglet Sequences** (runs TimeGAN) :
+  - trois chiffres : Autocorrelation similarity, Discriminative, Predictive ;
+  - les phrases de lecture ;
+  - l'autocorrélation réelle et synthétique par colonne (lignes superposées) ;
+  - 5 séquences réelles et 5 synthétiques d'une colonne, au choix.
 - **Bande des 4 chiffres** : grands nombres tabulaires entre deux filets, verdict en dessous ; pas de cartes.
 - **Columns** : une ligne compacte par colonne, de la plus abîmée à la moins abîmée : nom, type, score (KS ou TV), mini-histogramme superposé, plus grosse différence en clair. Un clic déplie le détail : bande de base, histogramme ou ECDF superposés, statistiques appariées avec Δ, valeurs fréquentes et extrêmes croisées (nombres) ; tableau aligné et barres appariées (catégories). « Overlay a target » en tête de l'onglet.
 - **Links** : trois matrices (réel, synthétique, |écart| plafonné à 0,3), les 5 paires les plus abîmées ; un clic sur une case ou une paire ouvre la paire côte à côte.

@@ -12,6 +12,8 @@ GPU_BATCH = 2_000  # CTGAN on a GPU: twice the rows per second of batches of 500
 GPU_ROWS = 6_000_000  # rows seen in training at most (epochs * rows): ~3 minutes on a laptop GPU
 CPU_ROWS = 1_500_000  # ~2 minutes on a laptop CPU
 MIN_EPOCHS, MAX_EPOCHS = 30, 300
+TIMEGAN_GPU_STEPS = 1_000  # TimeGAN steps per phase: about 2 minutes on a laptop GPU
+TIMEGAN_CPU_STEPS = 150  # recurrent networks are about 5x slower on a CPU: short and rough
 
 
 @dataclass

@@ -10,6 +10,7 @@ from app.domain.synthetic import compare, detection, diagnostic, privacy, qualit
 from app.domain.synthetic.encode import Learned
 from app.domain.synthetic.methods import Cancelled, Fitted, StopCheck
 from app.domain.synthetic.privacy import Disclosure
+from app.domain.synthetic.sequences import SequenceReport
 from app.domain.synthetic.utility import Utility
 
 EVALUATION_ROWS = 20_000
@@ -67,6 +68,7 @@ class Report:
     learned: list[Learned]
     utility: Utility | None = None
     disclosure: Disclosure | None = None
+    sequences: SequenceReport | None = None  # TimeGAN (023c)
 
 
 def sample(frame: pd.DataFrame, rows: int, seed: int) -> pd.DataFrame:

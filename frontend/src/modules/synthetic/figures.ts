@@ -392,3 +392,50 @@ export function compareFigure(runs: SyntheticRunSummary[], labels: Record<string
     layout: { ...legend, barmode: "group", yaxis: { ...percentAxis, range: [0, 1] } },
   });
 }
+
+type SequenceReport = NonNullable<SyntheticReport["sequences"]>;
+
+/** Mean autocorrelation by lag, real and synthetic. */
+export function acfFigure(column: SequenceReport["columns"][number]): Figure {
+  return (tokens) => {
+    const look = looks(tokens);
+    const lags = column.real.map((_, i) => i + 1);
+    return {
+      data: [
+        { type: "scatter", mode: "lines+markers", name: look.real.name, x: lags, y: column.real, line: { color: look.real.color, width: 2 }, marker: { size: 5 } } as Data,
+        { type: "scatter", mode: "lines+markers", name: look.synthetic.name, x: lags, y: column.synthetic, line: { color: look.synthetic.color, width: 2, dash: "dash" }, marker: { size: 6, symbol: "circle-open" } } as Data,
+      ],
+      layout: {
+        ...legend,
+        xaxis: { ...axisTitle("Lag (steps)"), dtick: 1 },
+        yaxis: { range: [-1, 1], zeroline: true, zerolinecolor: tokens.ink3, ...axisTitle("Autocorrelation") },
+      },
+    };
+  };
+}
+
+/** A few real and synthetic histories of one column, step by step. */
+export function samplesFigure(sample: SequenceReport["samples"][number]): Figure {
+  return (tokens) => {
+    const look = looks(tokens);
+    const lines = (series: number[][], side: "real" | "synthetic"): Data[] =>
+      series.map(
+        (values, i) =>
+          ({
+            type: "scatter",
+            mode: "lines",
+            name: look[side].name,
+            legendgroup: side,
+            showlegend: i === 0,
+            x: values.map((_, k) => k + 1),
+            y: values,
+            line: { color: side === "real" ? look.real.color : look.synthetic.color, width: 1.5, dash: side === "real" ? "solid" : "dash" },
+            opacity: side === "real" ? 0.7 : 0.9,
+          }) as Data,
+      );
+    return {
+      data: [...lines(sample.real, "real"), ...lines(sample.synthetic, "synthetic")],
+      layout: { ...legend, xaxis: axisTitle("Step"), yaxis: axisTitle(sample.column) },
+    };
+  };
+}

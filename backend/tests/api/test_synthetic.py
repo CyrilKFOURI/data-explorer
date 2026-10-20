@@ -16,10 +16,10 @@ def traps(client: TestClient) -> str:
     return import_path(client, default_samples_dir() / "typing_traps.csv")
 
 
-def generate(client: TestClient, dataset: str, **body: object) -> dict:
+def generate(client: TestClient, dataset: str, wait: float = 120, **body: object) -> dict:
     job = client.post(f"{BASE}/datasets/{dataset}/runs", json=body)
     assert job.status_code == 202, job.text
-    deadline = time.monotonic() + 120
+    deadline = time.monotonic() + wait
     state = job.json()
     while state["status"] == "running" and time.monotonic() < deadline:
         time.sleep(0.2)
@@ -166,3 +166,46 @@ def test_a_deep_model_trains_with_its_progress_and_device(client: TestClient, tr
     assert listed[0]["device"] == "CPU" and listed[0]["method_label"] == "TVAE"
     bad = client.post(f"{BASE}/datasets/{traps}/runs", json={"method": "ctgan", "epochs": 5})
     assert bad.status_code == 422
+
+
+def test_timegan_plans_and_generates_histories(client: TestClient) -> None:
+    pytest.importorskip("torch")
+    sales = import_path(client, default_samples_dir() / "sales_timeseries.csv")
+    found = client.get(f"{BASE}/datasets/{sales}/plan").json()
+    plan = found["sequence"]
+    assert (plan["time"], plan["entity"], plan["step"], plan["length"], plan["sequences"]) == (
+        "date",
+        "store",
+        "daily",
+        24,
+        3,
+    )
+    assert next(m for m in found["methods"] if m["key"] == "timegan")["available"]
+    run = generate(
+        client,
+        sales,
+        wait=600,
+        method="timegan",
+        device="cpu",
+        sequence={"steps": 100, "sequences": 4},
+    )
+    assert run["rows"] == 4 * 24
+    sequences = run["report"]["sequences"]
+    assert sequences["entity"] == "store" and sequences["sequences"] == 4
+    assert sequences["columns"] and sequences["sentences"]
+    preview = client.get(f"{BASE}/datasets/{sales}/runs/{run['id']}/preview").json()
+    stores = {row[preview["columns"].index("store")] for row in preview["rows"]}
+    assert len(stores) == 4 and not stores & {"Paris", "Lyon", "Lille"}
+
+
+def test_timegan_needs_a_date(client: TestClient, traps: str) -> None:
+    pytest.importorskip("torch")
+    columns = client.get(f"/api/v1/datasets/{traps}/columns").json()
+    dates = [c["name"] for c in columns if c["type"] == "datetime"]
+    client.patch(
+        f"/api/v1/datasets/{traps}/columns",
+        json={"changes": [{"name": d, "excluded": True} for d in dates]},
+    )
+    found = client.get(f"{BASE}/datasets/{traps}/plan").json()
+    timegan = next(m for m in found["methods"] if m["key"] == "timegan")
+    assert not timegan["available"] and timegan["unavailable"] == "Needs a date column."
