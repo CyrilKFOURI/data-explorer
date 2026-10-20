@@ -106,3 +106,33 @@ def test_settings_importance_after_enough_trials_and_fixed_settings() -> None:
 def test_a_model_with_nothing_to_tune_says_so() -> None:
     with pytest.raises(tuner.TuneError, match="nothing worth tuning"):
         search("bayesian_ridge", {"trials": 2})
+
+
+@pytest.mark.parametrize("model", ["xgboost", "lightgbm", "catboost"])
+def test_boosting_libraries_can_be_tuned_on_a_class_with_roc_auc(model: str) -> None:
+    spec = catalog.CATALOGUE[model]
+    if not spec.installed:
+        pytest.skip(f"{model} is not installed")
+    target = by_name["expensive"]
+    features = [f for f in FIELDS if f.name not in ("price", "price_copy", "expensive")]
+    setup = _setup(FRAME, features, target, "binary", model, None, None, None)
+    progress = tuner.TuneProgress("roc_auc", True)
+
+    def build(values: dict[str, Any], rows: int) -> Any:
+        return model_pipeline(setup.spec, values, setup.context, setup.preparation, "binary", rows)
+
+    found = tuner.tune(
+        setup.x_train,
+        setup.y_train,
+        "binary",
+        setup.spec,
+        setup.context,
+        setup.preparation,
+        tuner.TuneRequest(model=model, trials=2, budget_seconds=None, sampler="grid"),
+        "roc_auc",
+        progress,
+        lambda: False,
+        build,
+    )
+    # the wrapper says it is a classifier: the scorer takes one column of probabilities
+    assert found.default_value is not None and found.best_value is not None

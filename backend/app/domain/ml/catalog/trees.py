@@ -30,6 +30,7 @@ from sklearn.tree import (
     ExtraTreeClassifier,
     ExtraTreeRegressor,
 )
+from sklearn.utils import ClassifierTags, RegressorTags
 from sklearn.utils.class_weight import compute_sample_weight
 
 from app.domain.ml.catalog.base import (
@@ -646,6 +647,18 @@ class EarlyStopped(BaseEstimator):
 
     def predict_proba(self, X):
         return self.model_.predict_proba(X)
+
+    def __sklearn_tags__(self):
+        """A classifier when it predicts classes: scikit-learn's scorers (roc_auc while tuning) then
+        take the positive class's probability instead of the whole matrix."""
+        tags = super().__sklearn_tags__()
+        if self.classes:
+            tags.estimator_type = "classifier"
+            tags.classifier_tags = ClassifierTags()
+        else:
+            tags.estimator_type = "regressor"
+            tags.regressor_tags = RegressorTags()
+        return tags
 
     @property
     def feature_importances_(self):
