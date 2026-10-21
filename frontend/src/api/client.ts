@@ -289,7 +289,7 @@ export class ApiError extends Error {
   }
 }
 
-async function apiError(response: Response): Promise<ApiError> {
+export async function apiError(response: Response): Promise<ApiError> {
   try {
     const body = (await response.json()) as {
       error?: { message?: string } & Record<string, unknown>;
@@ -316,7 +316,7 @@ function mlQuery(
   return query;
 }
 
-async function request<T>(
+export async function request<T>(
   method: string,
   path: string,
   body?: unknown,

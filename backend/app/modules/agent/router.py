@@ -1,0 +1,234 @@
+"""HTTP routes of the agent (`/api/v1/modules/agent/…`, spec 026 § 10)."""
+
+import json
+from collections.abc import Iterator
+from typing import Annotated, Any
+
+from fastapi import APIRouter, Depends, Request
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
+
+from app.domain.filters.model import Condition
+from app.modules.agent.engine.messages import Message
+from app.modules.agent.engine.provider import Effort
+from app.modules.agent.engine.tools import ToolError
+from app.modules.agent.repository import Conversation
+from app.modules.agent.service import AgentService, strip_context
+from app.modules.agent.settings import MODELS, AgentSettings, KeyStatus
+
+router = APIRouter(tags=["agent"])
+
+
+def get_agent(request: Request) -> AgentService:
+    return request.app.state.agent
+
+
+Agent = Annotated[AgentService, Depends(get_agent)]
+
+
+# --- settings ---------------------------------------------------------------------------------
+
+
+class AgentKey(BaseModel):
+    configured: bool
+    source: str  # env | file | none
+    hint: str | None
+
+
+class AgentSettingsOut(BaseModel):
+    provider: str = "anthropic"
+    model: str
+    models: list[str]
+    effort: Effort
+    budget_usd: float
+    key: AgentKey
+    sdk_installed: bool
+
+    @classmethod
+    def of(cls, settings: AgentSettings, key: KeyStatus, sdk: bool) -> "AgentSettingsOut":
+        return cls(
+            model=settings.model,
+            models=list(MODELS),
+            effort=settings.effort,
+            budget_usd=settings.budget_usd,
+            key=AgentKey(configured=key.configured, source=key.source, hint=key.hint),
+            sdk_installed=sdk,
+        )
+
+
+class AgentSettingsIn(BaseModel):
+    model: str | None = None
+    effort: Effort | None = None
+    budget_usd: float | None = None
+    api_key: str | None = Field(None, description="Write-only; an empty string removes it.")
+
+
+class AgentKeyTest(BaseModel):
+    ok: bool
+    model: str
+
+
+@router.get("/settings")
+def read_settings(agent: Agent) -> AgentSettingsOut:
+    return AgentSettingsOut.of(*agent.settings(), agent.sdk_available())
+
+
+@router.put("/settings")
+def write_settings(body: AgentSettingsIn, agent: Agent) -> AgentSettingsOut:
+    settings, key = agent.update_settings(body.model, body.effort, body.budget_usd, body.api_key)
+    return AgentSettingsOut.of(settings, key, agent.sdk_available())
+
+
+@router.post("/settings/test")
+def test_key(agent: Agent) -> AgentKeyTest:
+    return AgentKeyTest(ok=True, model=agent.test_key())
+
+
+# --- conversations ----------------------------------------------------------------------------
+
+
+class AgentConversation(BaseModel):
+    id: str
+    dataset_id: str
+    title: str
+    model: str
+    cost_usd: float
+    created_at: str
+    updated_at: str
+    running: bool = False
+
+    @classmethod
+    def of(cls, found: Conversation, running: bool = False) -> "AgentConversation":
+        return cls(**vars(found), running=running)
+
+
+class AgentLink(BaseModel):
+    page: str
+    params: dict[str, str]
+    label: str
+
+
+class AgentStep(BaseModel):
+    id: str
+    tool: str
+    label: str
+    input: dict[str, Any]
+    ok: bool | None = None  # None: no result recorded
+    summary: str | None = None
+    link: AgentLink | None = None
+
+
+class AgentMessage(BaseModel):
+    role: str
+    text: str
+    thinking: str = ""
+    steps: list[AgentStep] = Field(default_factory=list)
+
+
+class AgentConversationDetail(BaseModel):
+    conversation: AgentConversation
+    messages: list[AgentMessage]
+
+
+@router.get("/datasets/{dataset_id}/conversations")
+def list_conversations(dataset_id: str, agent: Agent) -> list[AgentConversation]:
+    return [AgentConversation.of(c, agent.running(c.id)) for c in agent.conversations(dataset_id)]
+
+
+@router.post("/datasets/{dataset_id}/conversations", status_code=201)
+def create_conversation(dataset_id: str, agent: Agent) -> AgentConversation:
+    return AgentConversation.of(agent.create(dataset_id))
+
+
+@router.get("/conversations/{conversation_id}")
+def read_conversation(conversation_id: str, agent: Agent) -> AgentConversationDetail:
+    found, messages = agent.conversation(conversation_id)
+    return AgentConversationDetail(
+        conversation=AgentConversation.of(found, agent.running(found.id)),
+        messages=transcript(messages, agent),
+    )
+
+
+@router.delete("/conversations/{conversation_id}", status_code=204)
+def delete_conversation(conversation_id: str, agent: Agent) -> None:
+    agent.delete(conversation_id)
+
+
+class AgentSend(BaseModel):
+    text: str = Field(min_length=1, max_length=20_000)
+    filters: list[Condition] = Field(default_factory=list, max_length=50)
+    page: str | None = Field(None, max_length=300, description="Where the user is, in words.")
+
+
+@router.post("/conversations/{conversation_id}/messages")
+def send_message(conversation_id: str, body: AgentSend, agent: Agent) -> StreamingResponse:
+    """Plays a turn and streams its events as server-sent events (one JSON object per event)."""
+    run = agent.send(conversation_id, body.text, body.filters, body.page)
+
+    def stream() -> Iterator[str]:
+        for event in agent.events(run):
+            yield ": keep-alive\n\n" if event is None else f"data: {json.dumps(event)}\n\n"
+
+    return StreamingResponse(
+        stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+@router.post("/conversations/{conversation_id}/stop")
+def stop(conversation_id: str, agent: Agent) -> dict[str, bool]:
+    return {"stopping": agent.stop(conversation_id)}
+
+
+# --- transcript -------------------------------------------------------------------------------
+
+
+def transcript(messages: list[Message], agent: AgentService) -> list[AgentMessage]:
+    """The stored history as the panel shows it: tool results folded into their steps."""
+    shown: list[AgentMessage] = []
+    steps: dict[str, AgentStep] = {}
+    for message in messages:
+        if message.role == "user" and all(b.kind == "tool_result" for b in message.blocks):
+            for block in message.blocks:
+                step = steps.get(block.call_id or "")
+                if step is None:
+                    continue
+                meta = block.meta or {}
+                step.ok = not block.is_error
+                step.summary = meta.get("summary")
+                link = meta.get("link")
+                step.link = AgentLink(**link) if link else None
+            continue
+        if message.role == "user":
+            shown.append(AgentMessage(role="user", text=strip_context(message.text)))
+            continue
+        current = shown[-1] if shown and shown[-1].role == "assistant" else None
+        if current is None:
+            current = AgentMessage(role="assistant", text="")
+            shown.append(current)
+        for block in message.blocks:
+            if block.kind == "text":
+                current.text += ("\n\n" if current.text else "") + block.text
+            elif block.kind == "thinking" and block.text:
+                current.thinking += ("\n\n" if current.thinking else "") + block.text
+            elif block.kind == "tool_call":
+                step = AgentStep(
+                    id=block.call_id or "",
+                    tool=block.name or "",
+                    label=_label(agent, block.name or "", block.input),
+                    input=block.input or {},
+                )
+                steps[step.id] = step
+                current.steps.append(step)
+    return shown
+
+
+def _label(agent: AgentService, name: str, raw: dict[str, Any] | None) -> str:
+    tool = agent.registry.get(name)
+    if tool is None:
+        return name
+    try:
+        return tool.label(tool.parse(raw))
+    except ToolError:
+        return name

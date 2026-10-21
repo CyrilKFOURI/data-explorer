@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from fastapi import APIRouter, FastAPI
 
-from app.modules import kpi, ml, synthetic, timeseries
+from app.modules import agent, kpi, ml, synthetic, timeseries
 
 
 @dataclass(frozen=True)
@@ -20,6 +20,7 @@ MODULES: list[Module] = [
     Module(id="ml", router=ml.router, setup=ml.setup),
     Module(id="kpi", router=kpi.router, setup=kpi.setup),
     Module(id="synthetic", router=synthetic.router, setup=synthetic.setup),
+    Module(id="agent", router=agent.router, setup=agent.setup),
 ]
 
 

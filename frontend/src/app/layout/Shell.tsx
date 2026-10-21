@@ -3,7 +3,7 @@ import { useState } from "react";
 
 import { KeyboardLayer } from "../../features/command/Shortcuts";
 import { t } from "../../lib/i18n";
-import type { ModuleManifest } from "../../modules/types";
+import type { ModuleManifest, PanelManifest } from "../../modules/types";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 
@@ -17,7 +17,7 @@ function readCollapsed(): boolean {
   }
 }
 
-export function Shell({ modules }: { modules: ModuleManifest[] }) {
+export function Shell({ modules, panels = [] }: { modules: ModuleManifest[]; panels?: PanelManifest[] }) {
   const [collapsed, setCollapsed] = useState(readCollapsed);
 
   const toggle = () => {
@@ -49,6 +49,9 @@ export function Shell({ modules }: { modules: ModuleManifest[] }) {
           <Outlet />
         </main>
       </div>
+      {panels.map(({ id, component: Panel }) => (
+        <Panel key={id} />
+      ))}
       <KeyboardLayer />
     </div>
   );

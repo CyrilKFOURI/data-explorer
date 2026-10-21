@@ -52,7 +52,10 @@ Roadmap en **sprints**, chacun composé de **tranches verticales** : chaque case
 - [x] 024-comparer-categories-couleur — nombres discrets (≤ 12 valeurs) lus comme catégories dans Compare (« As numbers » pour revenir), couleur sur les boîtes / violons / moyennes (au plus 15 boîtes et 5 couleurs, la catégorie la plus fournie passe sur l'axe)
 - [x] Machine learning, mise en page des résultats (2026-10-20) — colonne de réglages collante avec la liste des runs, bande de métriques, graphiques Performance en grille de même hauteur (1 à 3 colonnes selon la largeur), Features en deux colonnes
 - [x] Rapidité (2026-10-20) — `scripts/serve.ps1` (app compilée servie par le backend), plotly préchargé pendant les temps morts, graphiques dessinés un par un (ceux à l'écran d'abord, aucun n'attend le défilement)
-- [ ] À planifier — Module Assistant IA (LLM local optionnel)
+- [ ] 026-agent-ia — agent analyste par API (clé de l'utilisateur), module isolé ([spec](docs/features/026-agent-ia/spec.md))
+  - [x] 026a — socle : moteur pur (boucle ReAct, budget, Stop, outils en parallèle, garde des effets de bord), fournisseur Anthropic (SDK en extra `[agent]`, flux, cache, réflexion adaptative, repli serveur), 7 outils en lecture seule sur les analyses V1, conversations en SQLite, flux SSE, panneau à droite (Ctrl+J) avec étapes et liens « Open in … », réglages et clé
+  - [ ] 026b — actions (ML, KPI, séries temporelles, rapport, synthétique) avec confirmations
+  - [ ] 026c — mémoire et qualité (notes du dataset, playbooks, vérificateur d'ancrage, partage des lignes, évaluation)
 - [ ] Dernière étape — Bibliothèque Python : tout le moteur utilisable en `pip install` (notebooks, scripts), l'app en extra `[app]` — [bibliotheque-python.md](docs/modules-futurs/bibliotheque-python.md)
 - [x] 025-rapport-html — rapport HTML autonome (sans script ni lien externe) : résumé et alertes, une fiche par variable avec graphique SVG, verdict de normalité et aberrants, matrice d'association, paires les plus liées et insights, manquants, méthodes ; sur les lignes filtrées ; tâche de fond avec progression et annulation ; bouton Export report (Vue d'ensemble) et menu Export (Données)
 - [ ] À planifier — Vidéo / GIF de démo pour le README

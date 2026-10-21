@@ -19,7 +19,7 @@ jobs:
         with:
           version: "0.12.15"
       - run: uv python install 3.12
-      - run: uv sync --frozen --extra deep  # CPU PyTorch on Linux: the deep models are tested too
+      - run: uv sync --frozen --extra deep --extra agent  # CPU PyTorch on Linux: the deep models are tested too; the agent's SDK
       - name: Lint
         run: uv run ruff check . && uv run ruff format --check .
       - name: Typecheck

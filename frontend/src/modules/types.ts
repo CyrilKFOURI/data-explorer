@@ -13,6 +13,12 @@ type Base = {
   validateSearch?: (search: Record<string, unknown>) => Record<string, unknown>;
 };
 
+/** A panel a module docks beside every page (e.g. the assistant); it decides when to show itself. */
+export type PanelManifest = {
+  id: string;
+  component: () => ReactElement | null;
+};
+
 /** What a module declares to appear in the sidebar and own a route. */
 export type ModuleManifest = Base &
   (

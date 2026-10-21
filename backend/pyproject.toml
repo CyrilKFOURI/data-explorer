@@ -25,6 +25,8 @@ dependencies = [
 [project.optional-dependencies]
 # Deep synthetic-data models (023b: CTGAN, TVAE, TimeGAN). Not in the default Docker image.
 deep = ["torch>=2.14"]
+# AI agent (026): the official Anthropic SDK. Optional: without it the agent says how to enable it.
+agent = ["anthropic>=2"]
 
 [dependency-groups]
 dev = [
@@ -71,6 +73,7 @@ select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
 "app/domain/compare/*" = ["RUF001", "RUF003"]
 "app/domain/correlations/*" = ["RUF001", "RUF003"]
 "app/domain/report/*" = ["RUF001", "RUF002", "RUF003"]
+"app/modules/agent/**" = ["RUF001", "RUF002", "RUF003"]
 
 [tool.pyright]
 pythonVersion = "3.12"

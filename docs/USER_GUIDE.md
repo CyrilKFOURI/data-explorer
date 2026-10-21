@@ -168,6 +168,15 @@ An artificial copy of the data — same distributions, same links between column
 - **Data**: the first 100 synthetic rows, **Save as dataset** (a new dataset with the same column types, marked *Synthetic, from …*), or download CSV / Parquet.
 - **Runs**: every generation is kept; reopen one, tick 2 to 5 to compare their scores, delete.
 
+### Assistant
+
+An optional AI analyst docked on the right of every dataset page (**Ask the assistant**, or **Ctrl+J**). Ask in plain words — "what drives Survived?", "which columns need cleaning?" — and it runs the app's own analyses (overview, column profiles, Compare, correlations, counts), reads their results and explains them. Every figure it gives comes from one of those analyses: each step is listed under its answer, with a link that opens the analysis in the app. It follows your filters and knows which page you are on.
+
+- **Setup**: it uses Claude through your own Anthropic API key. Paste it in the assistant's settings (it is saved on this computer, never shown again) or set `DATA_EXPLORER_ANTHROPIC_API_KEY` before starting the app. The Docker image includes what it needs; from source, run `uv sync --extra agent` in `backend/`.
+- **What leaves your computer**: your messages, the column names and types, and the statistics the analyses return (counts, means, tests, the most frequent values) — never whole rows.
+- **Cost**: each conversation shows what it has spent; it stops at its budget (1 $ by default, change it in the settings). Pick the model and how hard it thinks (effort) there too: Opus 5.5 is the most capable, Sonnet 5.5 costs half, Haiku 5.5 is the quickest and cheapest.
+- **Stop** ends an answer after the current step. Conversations are kept per dataset; start a new one with **+**.
+
 ### Correlations
 
 Every pair of variables measured at once, whatever their types.

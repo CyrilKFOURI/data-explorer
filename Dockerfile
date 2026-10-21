@@ -18,10 +18,10 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_PROJECT_ENVIRONMENT=/opt/venv
 WORKDIR /app
 COPY backend/pyproject.toml backend/uv.lock ./
-RUN uv sync --frozen --no-dev --no-install-project
+RUN uv sync --frozen --no-dev --no-install-project --extra agent
 COPY backend/ ./
 # Libraries' own test suites are never run here (~55 MB).
-RUN uv sync --frozen --no-dev \
+RUN uv sync --frozen --no-dev --extra agent \
     && find /opt/venv -type d -name tests -prune -exec rm -rf {} +
 
 # --- Runtime: Python backend serving the API and the built frontend (no uv, no build tools) --

@@ -8,8 +8,8 @@ import {
 } from "@tanstack/react-router";
 
 import { validateFilterSearch, type FilterSearch } from "../api/filters";
-import { modules as registeredModules } from "../modules/registry";
-import type { ModuleManifest } from "../modules/types";
+import { modules as registeredModules, panels as registeredPanels } from "../modules/registry";
+import type { ModuleManifest, PanelManifest } from "../modules/types";
 import { ColumnsPage } from "../pages/columns/ColumnsPage";
 import { HelpPage } from "../pages/help/HelpPage";
 import { HomePage } from "../pages/home/HomePage";
@@ -28,17 +28,19 @@ import { Shell } from "./layout/Shell";
 type RouterOptions = {
   history?: RouterHistory;
   modules?: ModuleManifest[];
+  panels?: PanelManifest[];
 };
 
 export function createAppRouter({
   history = createBrowserHistory(),
   modules = registeredModules,
+  panels = registeredPanels,
 }: RouterOptions = {}) {
   const rootRoute = createRootRoute({
     // Filters follow the user from page to page (see api/filters.ts).
     validateSearch: validateFilterSearch,
     search: { middlewares: [retainSearchParams<FilterSearch>(["filters"])] },
-    component: () => <Shell modules={modules} />,
+    component: () => <Shell modules={modules} panels={panels} />,
     notFoundComponent: NotFoundPage,
   });
 
