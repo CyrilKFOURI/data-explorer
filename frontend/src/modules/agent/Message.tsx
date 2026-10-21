@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { Markdown, parse } from "../../features/help/markdown";
 import { t } from "../../lib/i18n";
 import type { AgentLink } from "./api";
-import { linkTarget, safeMarkdown } from "./links";
+import { appHref, linkTarget } from "./links";
 
 export type ShownStep = {
   id: string;
@@ -37,7 +37,7 @@ export function AssistantMessage({
   steps: ShownStep[];
   streaming?: boolean;
 }) {
-  const blocks = useMemo(() => parse(safeMarkdown(text)), [text]);
+  const blocks = useMemo(() => parse(text), [text]);
   return (
     <div className="space-y-2.5">
       {thinking && (
@@ -55,7 +55,7 @@ export function AssistantMessage({
       )}
       {text ? (
         <div className="agent-answer text-[13.5px] leading-relaxed text-ink-1 [&_li]:my-0.5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-2 [&_table]:my-2 [&_table]:text-xs [&_td]:border-b [&_td]:border-line [&_td]:px-2 [&_td]:py-1 [&_th]:px-2 [&_th]:py-1 [&_th]:text-left [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5">
-          <Markdown blocks={blocks} />
+          <Markdown blocks={blocks} href={appHref} />
         </div>
       ) : (
         streaming && <p className="text-xs text-ink-3">{t("agent.working")}</p>

@@ -72,8 +72,13 @@ export function parse(markdown: string): Block[] {
   return blocks;
 }
 
+/** Decides what a link may point to: the href to use, or null to show the link as plain text. */
+export type HrefFilter = (href: string) => string | null;
+
+const anyHref: HrefFilter = (href) => href;
+
 /** **bold**, *italic*, `code`, [text](url) and \| escapes. */
-export function inline(text: string): ReactNode[] {
+export function inline(text: string, href: HrefFilter = anyHref): ReactNode[] {
   const pattern = /(\*\*[^*]+\*\*|\*[^*\s][^*]*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g;
   return text
     .replace(/\\\|/g, "|")
@@ -83,9 +88,11 @@ export function inline(text: string): ReactNode[] {
       if (part.startsWith("**")) return <strong key={key} className="font-semibold text-ink-1">{part.slice(2, -2)}</strong>;
       if (part.startsWith("`")) return <code key={key} className="rounded bg-surface-2 px-1 py-px font-mono text-[12px] text-ink-1">{part.slice(1, -1)}</code>;
       if (part.startsWith("[")) {
-        const [, label, href] = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(part) ?? [];
+        const [, label = "", target = ""] = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(part) ?? [];
+        const safe = href(target);
+        if (safe === null) return label;
         return (
-          <a key={key} href={href} className="text-accent underline-offset-2 hover:underline">
+          <a key={key} href={safe} className="text-accent underline-offset-2 hover:underline">
             {label}
           </a>
         );
@@ -95,7 +102,7 @@ export function inline(text: string): ReactNode[] {
     });
 }
 
-export function Markdown({ blocks }: { blocks: Block[] }) {
+export function Markdown({ blocks, href = anyHref }: { blocks: Block[]; href?: HrefFilter }) {
   return (
     <>
       {blocks.map((block, key) => {
@@ -109,18 +116,18 @@ export function Markdown({ blocks }: { blocks: Block[] }) {
           const Tag = `h${block.level}` as const;
           return (
             <Tag key={key} id={block.id} className={`scroll-mt-6 ${className}`}>
-              {inline(block.text)}
+              {inline(block.text, href)}
             </Tag>
           );
         }
-        if (block.kind === "paragraph") return <p key={key} className="mt-3 leading-relaxed text-ink-2">{inline(block.text)}</p>;
+        if (block.kind === "paragraph") return <p key={key} className="mt-3 leading-relaxed text-ink-2">{inline(block.text, href)}</p>;
         if (block.kind === "list") {
           const Tag = block.ordered ? "ol" : "ul";
           return (
             <Tag key={key} className={`mt-3 space-y-1.5 pl-5 text-ink-2 ${block.ordered ? "list-decimal" : "list-disc"} marker:text-ink-3`}>
               {block.items.map((item, i) => (
                 <li key={i} className="leading-relaxed">
-                  {inline(item)}
+                  {inline(item, href)}
                 </li>
               ))}
             </Tag>
@@ -133,7 +140,7 @@ export function Markdown({ blocks }: { blocks: Block[] }) {
                 <tr>
                   {block.header.map((cell, i) => (
                     <th key={i} scope="col" className="px-3 py-1.5 font-medium">
-                      {inline(cell)}
+                      {inline(cell, href)}
                     </th>
                   ))}
                 </tr>
@@ -143,7 +150,7 @@ export function Markdown({ blocks }: { blocks: Block[] }) {
                   <tr key={i} className="border-t border-line align-top">
                     {row.map((cell, j) => (
                       <td key={j} className={`px-3 py-1.5 ${j === 0 ? "text-ink-1" : "text-ink-2"}`}>
-                        {inline(cell)}
+                        {inline(cell, href)}
                       </td>
                     ))}
                   </tr>
