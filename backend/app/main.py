@@ -79,6 +79,7 @@ def create_app(settings: Settings | None = None, job_runner: JobRunner | None = 
         app.state.profiling,
         app.state.variable,
         app.state.correlations,
+        app.state.compare,
         health.app_version,
         runner,
     )

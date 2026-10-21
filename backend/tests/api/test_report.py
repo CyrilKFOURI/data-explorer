@@ -32,22 +32,33 @@ def test_report_of_a_dataset(client: TestClient, traps: str) -> None:
     assert page.startswith("<!doctype html>")
     # R-REP-01: self-contained, no script, no link out.
     assert "<script" not in page and "http://" not in page and "https://" not in page
-    for section in ("summary", "variables", "correlations", "missing", "methods"):
+    for section in (
+        "findings",
+        "glance",
+        "variables",
+        "relationships",
+        "correlations",
+        "missing",
+        "methods",
+    ):
         assert f'id="{section}"' in page
     # one card per analysed column, the ignored ones listed
     columns = client.get(f"/api/v1/datasets/{traps}/columns").json()
     used = [c["name"] for c in columns if c["type"] != "ignored" and not c["excluded"]]
-    assert page.count('<article class="card"') == len(used)
+    assert page.count('<article class="variable"') == len(used)
     assert "Left out of the analysis" in page
-    # numbers: histogram, normality verdict and outliers (R-REP-05, R-REP-06)
+    # numbers: histogram with density, box plot, QQ-plot, percentiles (R-REP-05, R-REP-06)
     age = page[page.index(">age</h3>") :].split("</article>")[0]
-    assert "<svg" in age and "normality" in age and "outliers by the IQR rule" in age
+    assert 'class="curve"' in age and "Box plot" in age and "QQ-plot" in age
+    assert "Percentiles" in age and "What stands out" in age
     # categories: a Top N in bars
     country = page[page.index(">country</h3>") :].split("</article>")[0]
     assert 'class="bar"' in country
-    # correlations: heatmap, strongest links and insights
+    # correlations: heatmap, strongest links, insights; key findings and drawn pairs
     assert 'aria-label="Association matrix"' in page and "Strongest links" in page
     assert "Insights" in page
+    assert page.count('<article class="finding') >= 5
+    assert page.count('<article class="pair"') >= 2
 
 
 def test_report_follows_the_filters(client: TestClient, traps: str) -> None:

@@ -13,11 +13,14 @@ from app.core.errors import AppError
 from app.core.jobs import JobRunner
 from app.domain.charts.prepare import ChartParams
 from app.domain.columns.service import ColumnService
+from app.domain.compare.analyze import Comparison
+from app.domain.compare.service import CompareService
+from app.domain.correlations.matrix import Pair
 from app.domain.correlations.service import Correlations, CorrelationService
 from app.domain.filters.model import Condition
 from app.domain.profiling.service import ProfilingService
 from app.domain.report import html
-from app.domain.report.build import ColumnResult, build_report, file_name
+from app.domain.report.build import ColumnResult, build_report, file_name, pairs_to_draw
 from app.domain.variable.service import VariableService
 
 KEPT_JOBS = 8
@@ -50,6 +53,7 @@ class ReportService:
         profiling: ProfilingService,
         variable: VariableService,
         correlations: CorrelationService,
+        compare: CompareService,
         version: Callable[[], str],
         runner: JobRunner,
     ) -> None:
@@ -57,6 +61,7 @@ class ReportService:
         self.profiling = profiling
         self.variable = variable
         self.correlations = correlations
+        self.compare = compare
         self.version = version
         self.runner = runner
         self._jobs: OrderedDict[str, ReportJob] = OrderedDict()
@@ -117,12 +122,12 @@ class ReportService:
     def build(
         self, dataset_id: str, conditions: list[Condition], job: ReportJob | None = None
     ) -> tuple[str, str]:
-        """(HTML, file name). Steps: overview, one per column, correlations."""
+        """(HTML, file name). Steps: overview, one per column, correlations, pairs."""
         dataset = self.columns.ready(dataset_id)
         views = self.columns.columns(dataset_id)
         used = [v for v in views if not v.excluded and v.type != "ignored"]
         excluded = [v.name for v in views if v.excluded or v.type == "ignored"]
-        steps = len(used) + 2
+        steps = len(used) + 3
 
         def advance(done: int, message: str) -> None:
             if job is not None:
@@ -139,6 +144,13 @@ class ReportService:
                 result.chart = self.profiling.chart(
                     dataset_id, view.name, ChartParams(), conditions
                 )
+                if view.type == "datetime" and result.chart.kind == "timeline":
+                    for part, title in (("month", "month"), ("day_of_week", "day of week")):
+                        if part in result.chart.views:
+                            extra = self.profiling.chart(
+                                dataset_id, view.name, ChartParams(view=part), conditions
+                            )
+                            result.extra.append((title, extra))
                 if view.type in NUMERIC:
                     found = self.variable.outliers(dataset_id, view.name, "iqr", conditions)
                     result.outliers = next((r for r in found.rules if r.method == "iqr"), None)
@@ -151,6 +163,15 @@ class ReportService:
             correlations = self.correlations.correlations(dataset_id, "pearson", None, conditions)
         except Exception:  # the report goes on without the matrix
             correlations = None
+        advance(steps - 1, "Relationships")
+        comparisons: list[tuple[Pair, Comparison]] = []
+        for pair in pairs_to_draw(correlations.matrix if correlations else None):
+            try:
+                comparisons.append(
+                    (pair, self.compare.compare(dataset_id, pair.a, pair.b, conditions=conditions))
+                )
+            except Exception:  # a pair that can't be drawn is left out
+                continue
         report = build_report(
             title=dataset.name,
             source=Path(dataset.source_path).name if dataset.source_path else dataset.name,
@@ -159,6 +180,7 @@ class ReportService:
             results=results,
             excluded=excluded,
             correlations=correlations,
+            comparisons=comparisons,
             conditions=conditions,
             now=datetime.now(),
         )
