@@ -13,15 +13,17 @@ from app.domain.filters.model import Condition
 from app.domain.report.build import describe_condition
 from app.modules.agent.engine.budget import Budget
 from app.modules.agent.engine.loop import (
+    Decision,
     Notice,
     Spent,
     StepDone,
+    StepProgress,
     StepStarted,
     Turn,
     TurnEvent,
     TurnResult,
 )
-from app.modules.agent.engine.messages import Message, user_text
+from app.modules.agent.engine.messages import Block, Message, user_text
 from app.modules.agent.engine.prompt import ColumnBrief, system_prompt, turn_context
 from app.modules.agent.engine.provider import (
     Completed,
@@ -31,7 +33,7 @@ from app.modules.agent.engine.provider import (
     TextDelta,
     ThinkingDelta,
 )
-from app.modules.agent.engine.tools import ToolContext, ToolRegistry
+from app.modules.agent.engine.tools import Tool, ToolContext, ToolError, ToolRegistry
 from app.modules.agent.repository import Conversation, ConversationRepository
 from app.modules.agent.settings import EFFORTS, MODELS, AgentSettings, KeyStatus, SettingsStore
 from app.modules.agent.tools import AppServices
@@ -40,6 +42,7 @@ CONTEXT = re.compile(r"^<app_context>.*?</app_context>\s*", re.DOTALL)
 NEW_TITLE = "New conversation"
 TITLE_CHARS = 60
 END = object()  # closes an event stream
+CONFIRM_TIMEOUT = 600.0  # seconds the assistant waits for the user's decision
 BUDGET_REACHED = (
     "This conversation reached its budget: raise it in the assistant settings or start a new one."
 )
@@ -52,12 +55,45 @@ class AgentError(AppError):
 
 
 @dataclass
+class Pending:
+    """A change the assistant asked to make, waiting for the user's Confirm or Dismiss."""
+
+    decided: threading.Event = field(default_factory=threading.Event)
+    approved: bool = False
+
+
+@dataclass
 class Run:
-    """A turn being played: its events, and the flag Stop raises."""
+    """A turn being played: its events, the flag Stop raises, the changes awaiting approval."""
 
     conversation_id: str
     events: "queue.Queue[Any]" = field(default_factory=queue.Queue)
     stop: threading.Event = field(default_factory=threading.Event)
+    pending: dict[str, Pending] = field(default_factory=dict)
+
+    def gate(self, tool: Tool[Any], call: Block) -> Decision:
+        """Asks the user before a tool that changes the app (R-AG-P4); waits for the answer."""
+        if tool.kind != "write":  # raw rows need the data-sharing setting (026c): not yet
+            return "deny"
+        try:
+            text = tool.confirmation(tool.parse(call.input))
+        except ToolError:
+            return "deny"
+        call_id = call.call_id or ""
+        waiting = Pending()
+        self.pending[call_id] = waiting
+        self.events.put({"type": "confirm", "id": call_id, "tool": tool.name, "text": text})
+        decided = waiting.decided.wait(timeout=CONFIRM_TIMEOUT)
+        self.pending.pop(call_id, None)
+        return "allow" if decided and waiting.approved and not self.stop.is_set() else "deny"
+
+    def decide(self, call_id: str, approved: bool) -> bool:
+        waiting = self.pending.get(call_id)
+        if waiting is None:
+            return False
+        waiting.approved = approved
+        waiting.decided.set()
+        return True
 
 
 class AgentService:
@@ -66,18 +102,25 @@ class AgentService:
         repository: ConversationRepository,
         store: SettingsStore,
         services: AppServices,
-        registry: ToolRegistry,
+        registry_factory: Callable[[], ToolRegistry],
         provider_factory: Callable[[str], Provider],
         sdk_available: Callable[[], bool] = lambda: True,
     ) -> None:
         self.repository = repository
         self.store = store
         self.services = services
-        self.registry = registry
+        self._registry_factory = registry_factory
+        self._registry: ToolRegistry | None = None
         self.provider_factory = provider_factory
         self.sdk_available = sdk_available
         self._runs: dict[str, Run] = {}
         self._lock = threading.Lock()
+
+    @property
+    def registry(self) -> ToolRegistry:
+        if self._registry is None:
+            self._registry = self._registry_factory()
+        return self._registry
 
     # --- settings -------------------------------------------------------------------------------
 
@@ -185,7 +228,14 @@ class AgentService:
         run = self._runs.get(conversation_id)
         if run is not None:
             run.stop.set()
+            for call_id in list(run.pending):
+                run.decide(call_id, approved=False)
         return run is not None
+
+    def confirm(self, conversation_id: str, call_id: str, approved: bool) -> None:
+        run = self._runs.get(conversation_id)
+        if run is None or not run.decide(call_id, approved):
+            raise AgentError("Nothing is waiting for this decision.", "unknown_confirmation", 404)
 
     def events(self, run: Run, heartbeat: float = 15.0) -> Iterator[dict[str, Any] | None]:
         """The turn's events, then the end; None is a keep-alive while nothing happens."""
@@ -242,6 +292,7 @@ class AgentService:
                 budget=budget,
                 emit=lambda event: emit(_event(event)),
                 should_stop=run.stop.is_set,
+                gate=run.gate,
                 effort=settings.effort,
             )
             result = turn.run()
@@ -298,6 +349,13 @@ def _event(event: TurnEvent) -> dict[str, Any]:
             "tool": event.tool,
             "label": event.label,
             "input": event.input,
+        }
+    if isinstance(event, StepProgress):
+        return {
+            "type": "step_progress",
+            "id": event.call_id,
+            "message": event.message,
+            "share": event.share,
         }
     if isinstance(event, StepDone):
         return {

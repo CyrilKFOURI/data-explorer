@@ -170,12 +170,13 @@ An artificial copy of the data — same distributions, same links between column
 
 ### Assistant
 
-An optional AI analyst docked on the right of every dataset page (**Ask the assistant**, or **Ctrl+J**). Ask in plain words — "what drives Survived?", "which columns need cleaning?" — and it runs the app's own analyses (overview, column profiles, Compare, correlations, counts), reads their results and explains them. Every figure it gives comes from one of those analyses: each step is listed under its answer, with a link that opens the analysis in the app. It follows your filters and knows which page you are on.
+An optional AI analyst docked on the right of every dataset page (**Ask the assistant**, or **Ctrl+J**). Ask in plain words — "what drives Survived?", "which columns need cleaning?" — and it runs the app's own analyses, reads their results and explains them: the overview, column profiles, Compare, correlations and counts, and also the modules — it trains, compares, tunes and explains machine-learning models, analyses and forecasts time series, suggests and computes KPIs, generates synthetic data with its fidelity and privacy report, and writes the HTML report (with a link to download it). Long analyses show their progress under their step. Every figure it gives comes from one of those analyses: each step is listed under its answer, with a link that opens the analysis in the app. It follows your filters and knows which page you are on.
 
 - **Setup**: it uses Claude through your own Anthropic API key. Paste it in the assistant's settings (it is saved on this computer, never shown again) or set `DATA_EXPLORER_ANTHROPIC_API_KEY` before starting the app. The Docker image includes what it needs; from source, run `uv sync --extra agent` in `backend/`.
 - **What leaves your computer**: your messages, the column names and types, and the statistics the analyses return (counts, means, tests, the most frequent values) — never whole rows.
 - **Cost**: each conversation shows what it has spent; it stops at its budget (1 $ by default, change it in the settings). Pick the model and how hard it thinks (effort) there too: Opus 5.5 is the most capable, Sonnet 5.5 costs half, Haiku 5.5 is the quickest and cheapest.
-- **Stop** ends an answer after the current step. Conversations are kept per dataset; start a new one with **+**.
+- **It asks before changing anything.** Saving a KPI or creating a dataset from synthetic data shows a card: **Confirm** or **Dismiss**. Trained models and generated runs are kept like the ones you make yourself.
+- **Stop** ends an answer after the current step (and cancels a training, forecast or generation in progress). Conversations are kept per dataset; start a new one with **+**.
 
 ### Correlations
 

@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI
 
+from app.modules.kpi.agent_tools import agent_tools
 from app.modules.kpi.router import router
 from app.modules.kpi.service import KpiService
 
@@ -13,4 +14,4 @@ def setup(app: FastAPI) -> None:
         clearers.cache_clearers.append(app.state.kpi.clear)
 
 
-__all__ = ["router", "setup"]
+__all__ = ["agent_tools", "router", "setup"]

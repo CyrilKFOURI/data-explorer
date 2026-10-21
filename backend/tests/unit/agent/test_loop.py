@@ -168,3 +168,32 @@ def test_messages_round_trip_and_costs() -> None:
     usage = Usage("claude-opus-5-5", 1_000_000, 100_000, 1_000_000, 0)
     assert round(cost(usage), 4) == round(4.0 + 2.0 + 0.2, 4)
     assert cost(Usage("claude-haiku-5-5", 1_000_000)) == 0.10
+
+
+def test_a_long_tool_reports_its_progress() -> None:
+    from typing import ClassVar
+
+    from pydantic import BaseModel
+
+    from app.modules.agent.engine.loop import StepProgress
+    from app.modules.agent.engine.tools import Tool, ToolOutput
+
+    class Empty(BaseModel):
+        pass
+
+    class Slow(Tool[Empty]):
+        name: ClassVar[str] = "slow"
+        description: ClassVar[str] = "Slow."
+        kind = "compute"
+        Input: ClassVar[type[BaseModel]] = Empty
+
+        def run(self, ctx, args):  # type: ignore[override]
+            ctx.progress("Half way", 0.5)
+            return ToolOutput("done", "done")
+
+    played, events = turn([calls(("slow", {})), answer("ok")], Slow())
+
+    played.run()
+
+    progress = [e for e in events if isinstance(e, StepProgress)]
+    assert [(p.call_id, p.message, p.share) for p in progress] == [("c0", "Half way", 0.5)]

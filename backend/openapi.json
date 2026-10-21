@@ -8091,6 +8091,61 @@
         }
       }
     },
+    "/api/v1/modules/agent/conversations/{conversation_id}/confirm/{call_id}": {
+      "post": {
+        "tags": [
+          "agent"
+        ],
+        "summary": "Confirm",
+        "description": "The user's answer to a change the assistant asked to make (Confirm or Dismiss).",
+        "operationId": "confirm_api_v1_modules_agent_conversations__conversation_id__confirm__call_id__post",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Conversation Id"
+            }
+          },
+          {
+            "name": "call_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Call Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentDecision"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/modules/agent/conversations/{conversation_id}/stop": {
       "post": {
         "tags": [
@@ -8207,6 +8262,19 @@
           "messages"
         ],
         "title": "AgentConversationDetail"
+      },
+      "AgentDecision": {
+        "properties": {
+          "approved": {
+            "type": "boolean",
+            "title": "Approved"
+          }
+        },
+        "type": "object",
+        "required": [
+          "approved"
+        ],
+        "title": "AgentDecision"
       },
       "AgentKey": {
         "properties": {

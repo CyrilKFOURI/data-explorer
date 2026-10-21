@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI
 
+from app.modules.synthetic.agent_tools import agent_tools
 from app.modules.synthetic.router import router
 from app.modules.synthetic.service import SyntheticService
 
@@ -22,4 +23,4 @@ def setup(app: FastAPI) -> None:
     app.state.datasets.after_import.append(app.state.synthetic.after_import)
 
 
-__all__ = ["router", "setup"]
+__all__ = ["agent_tools", "router", "setup"]

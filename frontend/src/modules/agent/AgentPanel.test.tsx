@@ -132,3 +132,50 @@ describe("Assistant panel", () => {
     expect(screen.queryByRole("button", { name: "Ask the assistant" })).not.toBeInTheDocument();
   });
 });
+
+describe("Assistant confirmations", () => {
+  it("asks before a change and sends the user's answer", async () => {
+    const calls = setup();
+    let push: ((event: object) => void) | null = null;
+    let close: () => void = () => {};
+    const json = globalThis.fetch;
+    vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.endsWith("/conversations/c1/messages")) {
+        const encoder = new TextEncoder();
+        const body = new ReadableStream({
+          start(controller) {
+            push = (event) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+            close = () => controller.close();
+          },
+        });
+        return new Response(body, { headers: { "Content-Type": "text/event-stream" } });
+      }
+      if (url.endsWith("/conversations/c1/confirm/s1")) {
+        calls.push({ key: "POST confirm", body: JSON.parse(String(init?.body)), params: new URLSearchParams() });
+        return new Response(null, { status: 204 });
+      }
+      return json(input, init);
+    });
+    renderAt("/d/d1/columns");
+    fireEvent.click(await screen.findByRole("button", { name: "Ask the assistant" }));
+    const panel = await screen.findByRole("complementary", { name: "Assistant" });
+    fireEvent.change(await within(panel).findByRole("textbox", { name: "Message to the assistant" }), {
+      target: { value: "Save a revenue KPI" },
+    });
+    fireEvent.click(within(panel).getByRole("button", { name: "Send" }));
+
+    await vi.waitFor(() => expect(push).not.toBeNull());
+    const send = (event: object) => push?.(event);
+    send({ type: "step_started", id: "s1", tool: "save_kpi", label: "Saving the KPI", input: {} });
+    send({ type: "confirm", id: "s1", tool: "save_kpi", text: "Save the KPI “Revenue” in the KPI builder." });
+
+    const card = await within(panel).findByRole("group", { name: "The assistant asks before changing something" });
+    expect(within(card).getByText("Save the KPI “Revenue” in the KPI builder.")).toBeInTheDocument();
+    fireEvent.click(within(card).getByRole("button", { name: "Confirm" }));
+
+    await vi.waitFor(() => expect(calls.find((c) => c.key === "POST confirm")?.body).toEqual({ approved: true }));
+    send({ type: "done", end: "answered", message: null, turn_usd: 0.01, conversation_usd: 0.01 });
+    close();
+  });
+});

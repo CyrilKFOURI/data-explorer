@@ -58,6 +58,9 @@ export type LiveStep = {
   summary?: string;
   link?: AgentLink | null;
   ms?: number;
+  progress?: { message: string; share: number | null };
+  /** A change waiting for the user's Confirm or Dismiss. */
+  confirm?: string;
 };
 
 /** The turn being played: what the assistant has said and done so far. */
@@ -89,13 +92,30 @@ function apply(state: TurnState, event: TurnEvent): TurnState {
       return { ...state, live: { ...live, thinking: live.thinking + event.text } };
     case "step_started":
       return { ...state, live: { ...live, steps: [...live.steps, { id: event.id, tool: event.tool, label: event.label }] } };
+    case "step_progress":
+      return {
+        ...state,
+        live: {
+          ...live,
+          steps: live.steps.map((s) =>
+            s.id === event.id ? { ...s, progress: { message: event.message, share: event.share } } : s,
+          ),
+        },
+      };
+    case "confirm":
+      return {
+        ...state,
+        live: { ...live, steps: live.steps.map((s) => (s.id === event.id ? { ...s, confirm: event.text } : s)) },
+      };
     case "step_done":
       return {
         ...state,
         live: {
           ...live,
           steps: live.steps.map((s) =>
-            s.id === event.id ? { ...s, ok: event.ok, summary: event.summary, link: event.link, ms: event.ms } : s,
+            s.id === event.id
+              ? { ...s, ok: event.ok, summary: event.summary, link: event.link, ms: event.ms, confirm: undefined, progress: undefined }
+              : s,
           ),
         },
       };
@@ -149,5 +169,17 @@ export function useTurn(datasetId: string) {
 
   const reset = useCallback(() => setState(IDLE), []);
 
-  return { state, send, stop, reset };
+  /** The user's answer to a change the assistant asked to make. */
+  const decide = useCallback((callId: string, approved: boolean) => {
+    const id = conversationRef.current;
+    if (!id) return;
+    setState((s) =>
+      s.live
+        ? { ...s, live: { ...s.live, steps: s.live.steps.map((step) => (step.id === callId ? { ...step, confirm: undefined } : step)) } }
+        : s,
+    );
+    void agentApi.confirm(id, callId, approved);
+  }, []);
+
+  return { state, send, stop, reset, decide };
 }

@@ -8,7 +8,7 @@ import json
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Literal
 
 from app.modules.agent.engine.budget import Budget
@@ -51,6 +51,13 @@ class StepStarted:
 
 
 @dataclass
+class StepProgress:
+    call_id: str
+    message: str
+    share: float | None  # 0..1, or None when unknown
+
+
+@dataclass
 class StepDone:
     call_id: str
     ok: bool
@@ -71,7 +78,7 @@ class Notice:
     message: str
 
 
-TurnEvent = TextDelta | ThinkingDelta | StepStarted | StepDone | Spent | Notice
+TurnEvent = TextDelta | ThinkingDelta | StepStarted | StepProgress | StepDone | Spent | Notice
 
 
 @dataclass
@@ -208,7 +215,11 @@ class Turn:
             denied = f"The user did not allow {tool.name} here; continue without it."
             return self._done(call_id, started, _error_output(denied), False)
         try:
-            output = tool.run(self.context, args)
+            context = replace(
+                self.context,
+                progress=lambda message, share: self.emit(StepProgress(call_id, message, share)),
+            )
+            output = tool.run(context, args)
             ok = True
         except ToolError as error:
             output, ok = _error_output(str(error)), False

@@ -1572,6 +1572,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/modules/agent/conversations/{conversation_id}/confirm/{call_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm
+         * @description The user's answer to a change the assistant asked to make (Confirm or Dismiss).
+         */
+        post: operations["confirm_api_v1_modules_agent_conversations__conversation_id__confirm__call_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/modules/agent/conversations/{conversation_id}/stop": {
         parameters: {
             query?: never;
@@ -1620,6 +1640,11 @@ export interface components {
             conversation: components["schemas"]["AgentConversation"];
             /** Messages */
             messages: components["schemas"]["AgentMessage"][];
+        };
+        /** AgentDecision */
+        AgentDecision: {
+            /** Approved */
+            approved: boolean;
         };
         /** AgentKey */
         AgentKey: {
@@ -9724,6 +9749,40 @@ export interface operations {
                 content: {
                     "application/json": unknown;
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_api_v1_modules_agent_conversations__conversation_id__confirm__call_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+                call_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgentDecision"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

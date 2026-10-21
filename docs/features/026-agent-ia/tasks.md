@@ -38,9 +38,18 @@ backend/app/modules/agent/
 - [x] Vérifier : tests (backend 26 + frontend 3 nouveaux), lint, typecheck, panneau vu dans le navigateur sans clé (mise en route, réglages)
 - [ ] Essai réel avec la clé de l'utilisateur (un appel facturé : à faire avec lui)
 
-## 026b — Actions (plus tard)
+## 026b — Actions
 
-Outils `compute` / `write` (ML, KPI, séries temporelles, rapport, synthétique) apportés par chaque module via un point d'extension (`agent_tools(app)`), confirmations, `wait_job`.
+- [x] Contrat d'outil déplacé dans `app/core/tools.py` (partagé, neutre) + `wait_for` (suivi d'une tâche de fond avec progression, annulation au Stop, délai) + `compact` (résultat allégé) ; le moteur le réexporte
+- [x] Point d'extension `Module.agent_tools` dans `modules/registry.py` : chaque module déclare ses outils, collectés après tous les `setup` dans `app.state.agent_tools` ; registre de l'agent construit à la première utilisation
+- [x] ML (`modules/ml/agent_tools.py`) : `list_ml_targets`, `list_ml_models`, `train_model`, `compare_models`, `tune_model`, `explain_model`, `list_ml_runs`
+- [x] Séries temporelles : `analyze_time_series` (tendance, saisonnalité, stationnarité), `forecast`
+- [x] KPI : `suggest_kpis`, `compute_kpi`, `save_kpi` (write)
+- [x] Synthétique : `plan_synthetic`, `generate_synthetic`, `save_synthetic_dataset` (write)
+- [x] Rapport HTML (service du domaine, outil de l'agent) : `export_report`, lien de téléchargement
+- [x] Confirmation des `write` : événement `confirm`, le tour attend la décision (10 min max, Stop = refus), route `POST /conversations/{id}/confirm/{call_id}` ; carte Confirm / Dismiss dans le panneau
+- [x] Progression des tâches longues dans l'étape (`step_progress`), liens vers ML, séries temporelles, KPI, synthétique, nouveau dataset, téléchargement du rapport
+- [x] Tests : contrat partagé, collecte des outils, chaque outil sur les jeux de démo, confirmation acceptée / refusée, progression, carte de confirmation et liens côté panneau
 
 ## 026c — Mémoire et qualité (plus tard)
 

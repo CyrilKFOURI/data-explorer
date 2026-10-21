@@ -5,6 +5,7 @@ See docs/pages/10-series-temporelles.md.
 
 from fastapi import FastAPI
 
+from app.modules.timeseries.agent_tools import agent_tools
 from app.modules.timeseries.router import router
 from app.modules.timeseries.service import TimeSeriesService
 
@@ -16,4 +17,4 @@ def setup(app: FastAPI) -> None:
         clearers.cache_clearers.append(app.state.timeseries.clear)
 
 
-__all__ = ["router", "setup"]
+__all__ = ["agent_tools", "router", "setup"]

@@ -1,86 +1,48 @@
-"""The contract every agent tool follows (spec 026, § 5.1).
+"""The agent's tool registry. The tool contract itself lives in `app.core.tools`, shared with the
+modules that offer tools (re-exported here for the engine and the agent's own tools)."""
 
-A tool wraps one capability of the app: typed input (a Pydantic model, so the model's arguments are
-validated before anything runs), a compact result for the model, a one-line summary and a link
-that reopens the same analysis in the app. Its `kind` decides what the loop may do on its own."""
+from collections.abc import Iterator
+from typing import Any
 
-from abc import ABC, abstractmethod
-from collections.abc import Callable
-from dataclasses import dataclass, field
-from typing import Any, ClassVar, Literal
-
-from pydantic import BaseModel, ValidationError
-
-from app.domain.filters.model import Condition
+from app.core.tools import (
+    AppLink,
+    Tool,
+    ToolContext,
+    ToolError,
+    ToolKind,
+    ToolOutput,
+    compact,
+    wait_for,
+)
 from app.modules.agent.engine.provider import ToolSpec
-
-ToolKind = Literal["read", "compute", "write", "rows"]
-# read: no effect · compute: may take long, no lasting effect · write: changes the app's state
-# (always confirmed) · rows: reads raw rows (data sharing level applies)
 
 MAX_RESULT_CHARS = 8_000  # ≈ 2,000 tokens (R-AG-T2)
 
-
-@dataclass
-class ToolContext:
-    dataset_id: str
-    conditions: list[Condition] = field(default_factory=list)  # the user's active filters
-    cancelled: Callable[[], bool] = lambda: False
-
-
-@dataclass(frozen=True)
-class AppLink:
-    """A page of the app in a given state (R-AG-T5), e.g. compare?x=Sex&y=Survived."""
-
-    page: str
-    params: dict[str, str] = field(default_factory=dict)
-    label: str = ""
+__all__ = [
+    "MAX_RESULT_CHARS",
+    "AppLink",
+    "Tool",
+    "ToolContext",
+    "ToolError",
+    "ToolKind",
+    "ToolOutput",
+    "ToolRegistry",
+    "compact",
+    "spec_of",
+    "wait_for",
+]
 
 
-@dataclass
-class ToolOutput:
-    summary: str  # one line for the conversation: "Sex × Survived: χ², V = 0.54 (strong)"
-    content: dict[str, Any] | str  # what the model reads
-    link: AppLink | None = None
+def spec_of(tool: Tool[Any]) -> ToolSpec:
+    return ToolSpec(tool.name, tool.description, _clean_schema(tool.Input.model_json_schema()))
 
 
-class ToolError(Exception):
-    """A failure the model can fix on its next step: say what was wrong and what to do."""
-
-
-class Tool[I: BaseModel](ABC):
-    name: ClassVar[str]
-    description: ClassVar[str]  # when to use it, and when not to
-    kind: ClassVar[ToolKind] = "read"
-    Input: ClassVar[type[BaseModel]]
-
-    def label(self, args: I) -> str:
-        """What the step shows while it runs: "Comparing Sex × Survived"."""
-        return self.name.replace("_", " ").capitalize()
-
-    @abstractmethod
-    def run(self, ctx: ToolContext, args: I) -> ToolOutput: ...
-
-    def parse(self, raw: dict[str, Any] | None) -> I:
-        try:
-            return self.Input.model_validate(raw or {})  # type: ignore[return-value]
-        except ValidationError as error:
-            problems = "; ".join(
-                f"{'.'.join(str(p) for p in e['loc']) or 'input'}: {e['msg']}"
-                for e in error.errors()
-            )
-            raise ToolError(f"Invalid arguments for {self.name}: {problems}.") from error
-
-    def spec(self) -> ToolSpec:
-        return ToolSpec(self.name, self.description, _clean_schema(self.Input.model_json_schema()))
-
-
-def _clean_schema(schema: dict[str, Any]) -> dict[str, Any]:
+def _clean_schema(schema: Any) -> Any:
     """Pydantic's JSON schema without the titles (noise for the model)."""
     if isinstance(schema, dict):
         return {k: _clean_schema(v) for k, v in schema.items() if k != "title"}
     if isinstance(schema, list):
-        return [_clean_schema(v) for v in schema]  # type: ignore[return-value]
+        return [_clean_schema(v) for v in schema]
     return schema
 
 
@@ -101,10 +63,10 @@ class ToolRegistry:
         return self._tools.get(name)
 
     def specs(self) -> list[ToolSpec]:
-        return [tool.spec() for tool in self._tools.values()]
+        return [spec_of(tool) for tool in self._tools.values()]
 
     def __len__(self) -> int:
         return len(self._tools)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Tool[Any]]:
         return iter(self._tools.values())

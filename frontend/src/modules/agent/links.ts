@@ -1,11 +1,12 @@
 import type { AgentLink } from "./api";
 
 /** Where an "Open in …" link goes: a route of the app and its parameters (R-AG-T5). */
-export type LinkTarget = {
-  to: string;
-  params: Record<string, string>;
-  search?: Record<string, string>;
-};
+export type LinkTarget =
+  | { to: string; params: Record<string, string>; search?: Record<string, string> }
+  /** A file to download (a report): a plain link to the app's own API. */
+  | { href: string; download: true };
+
+const ID = /^[\w-]{1,64}$/;
 
 export function linkTarget(datasetId: string, link: AgentLink): LinkTarget | null {
   const p = link.params ?? {};
@@ -22,9 +23,25 @@ export function linkTarget(datasetId: string, link: AgentLink): LinkTarget | nul
       return { to: "/d/$datasetId/correlations", params: { datasetId } };
     case "data":
       return { to: "/d/$datasetId/data", params: { datasetId } };
+    case "ml":
+      return { to: "/d/$datasetId/ml", params: { datasetId }, search: pick(p, ["target", "run"]) };
+    case "timeseries":
+      return { to: "/d/$datasetId/timeseries", params: { datasetId }, search: pick(p, ["time", "value"]) };
+    case "kpi":
+      return { to: "/d/$datasetId/kpi", params: { datasetId }, search: pick(p, ["kpi"]) };
+    case "synthetic":
+      return { to: "/d/$datasetId/synthetic", params: { datasetId }, search: pick(p, ["run"]) };
+    case "dataset":
+      return p.dataset && ID.test(p.dataset) ? { to: "/d/$datasetId", params: { datasetId: p.dataset } } : null;
+    case "report_file":
+      return p.job && ID.test(p.job) ? { href: `/api/v1/reports/jobs/${p.job}/file`, download: true } : null;
     default:
       return null;
   }
+}
+
+function pick(params: Record<string, string>, keys: string[]): Record<string, string> {
+  return Object.fromEntries(keys.filter((key) => params[key]).map((key) => [key, params[key] as string]));
 }
 
 const PAGES: Record<string, string> = {

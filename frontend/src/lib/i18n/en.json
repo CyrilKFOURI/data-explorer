@@ -2200,5 +2200,9 @@
   "agent.filtered": "Filters on: {count}",
   "agent.allRows": "All rows",
   "agent.cost": "Spent {cost}",
-  "agent.costHint": "Estimated from the tokens each answer used"
+  "agent.costHint": "Estimated from the tokens each answer used",
+  "agent.confirm": "Confirm",
+  "agent.dismiss": "Dismiss",
+  "agent.confirmTitle": "The assistant asks before changing something",
+  "agent.download": "Download"
 }

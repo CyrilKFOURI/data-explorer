@@ -16,6 +16,8 @@ export type TurnEvent =
   | { type: "text"; text: string }
   | { type: "thinking"; text: string }
   | { type: "step_started"; id: string; tool: string; label: string; input: Record<string, unknown> }
+  | { type: "step_progress"; id: string; message: string; share: number | null }
+  | { type: "confirm"; id: string; tool: string; text: string }
   | { type: "step_done"; id: string; ok: boolean; summary: string; link: AgentLink | null; ms: number }
   | { type: "spent"; turn_usd: number; conversation_usd: number; tokens: number }
   | { type: "notice"; message: string }
@@ -35,6 +37,8 @@ export const agentApi = {
   conversation: (id: string) => request<AgentConversationDetail>("GET", `${BASE}/conversations/${id}`),
   deleteConversation: (id: string) => request<void>("DELETE", `${BASE}/conversations/${id}`),
   stop: (id: string) => request<{ stopping: boolean }>("POST", `${BASE}/conversations/${id}/stop`),
+  confirm: (id: string, callId: string, approved: boolean) =>
+    request<void>("POST", `${BASE}/conversations/${id}/confirm/${callId}`, { approved }),
 };
 
 /** Sends a message and calls `onEvent` for each streamed event until the turn ends. */

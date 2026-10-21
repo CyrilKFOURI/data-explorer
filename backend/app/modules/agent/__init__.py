@@ -22,12 +22,14 @@ def setup(app: FastAPI) -> None:
         variable=state.variable,
         compare=state.compare,
         correlations=state.correlations,
+        reports=state.reports,
     )
     state.agent = AgentService(
         repository=ConversationRepository(state.workspace.db_path),
         store=SettingsStore(state.workspace.root / "agent"),
         services=services,
-        registry=default_registry(services),
+        # built on first use: the modules' tools are collected after every module's setup
+        registry_factory=lambda: default_registry(services, getattr(state, "agent_tools", [])),
         provider_factory=AnthropicProvider,
         sdk_available=sdk_installed,
     )

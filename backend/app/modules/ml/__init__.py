@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI
 
+from app.modules.ml.agent_tools import agent_tools
 from app.modules.ml.router import router
 from app.modules.ml.service import MlService
 
@@ -10,4 +11,4 @@ def setup(app: FastAPI) -> None:
     app.state.ml = MlService(app.state.columns, app.state.workspace)
 
 
-__all__ = ["router", "setup"]
+__all__ = ["agent_tools", "router", "setup"]

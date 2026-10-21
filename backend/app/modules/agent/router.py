@@ -176,6 +176,16 @@ def send_message(conversation_id: str, body: AgentSend, agent: Agent) -> Streami
     )
 
 
+class AgentDecision(BaseModel):
+    approved: bool
+
+
+@router.post("/conversations/{conversation_id}/confirm/{call_id}", status_code=204)
+def confirm(conversation_id: str, call_id: str, body: AgentDecision, agent: Agent) -> None:
+    """The user's answer to a change the assistant asked to make (Confirm or Dismiss)."""
+    agent.confirm(conversation_id, call_id, body.approved)
+
+
 @router.post("/conversations/{conversation_id}/stop")
 def stop(conversation_id: str, agent: Agent) -> dict[str, bool]:
     return {"stopping": agent.stop(conversation_id)}

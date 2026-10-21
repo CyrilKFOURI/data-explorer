@@ -63,7 +63,7 @@ function Chat({ datasetId, onClose }: { datasetId: string; onClose: () => void }
   const conversations = useConversations(datasetId, true);
   const detail = useConversation(current);
   const remove = useDeleteConversation(datasetId);
-  const { state, send, stop, reset } = useTurn(datasetId);
+  const { state, send, stop, reset, decide } = useTurn(datasetId);
   const filters = useActiveFilters(datasetId);
   const location = useRouterState({ select: (s) => s.location });
   const scroller = useRef<HTMLDivElement>(null);
@@ -173,6 +173,7 @@ function Chat({ datasetId, onClose }: { datasetId: string; onClose: () => void }
                   thinking={state.live.thinking}
                   steps={state.live.steps}
                   streaming={state.running}
+                  onDecide={decide}
                 />
               </>
             )}
