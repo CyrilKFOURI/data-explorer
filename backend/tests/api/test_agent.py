@@ -81,7 +81,7 @@ def test_a_turn_runs_tools_streams_and_is_saved(client: TestClient, traps: str) 
     # the model saw the filters and the page, and the system prompt lists the columns
     first = provider.requests[0]
     assert "country is FR" in first.messages[-1].text and "Overview" in first.messages[-1].text
-    assert "- age:" in first.system
+    assert '"name": "age"' in first.system and "<dataset_schema>" in first.system
     # saved: title, cost, transcript without the app context
     detail = client.get(f"{BASE}/conversations/{cid}").json()
     assert detail["conversation"]["title"] == "Describe age"

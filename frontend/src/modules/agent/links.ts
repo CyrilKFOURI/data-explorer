@@ -54,3 +54,13 @@ export function describePage(pathname: string, search: Record<string, unknown>):
   }
   return details.length ? `${page} (${details.join(", ")})` : page;
 }
+
+const LINK = /\[([^\]]+)\]\(([^)]+)\)/g;
+
+/** Model output can be steered by data it read (a column name, a category): it may only link
+ * inside the app. Any other link is shown as its text, so nothing is sent to an outside URL. */
+export function safeMarkdown(text: string): string {
+  return text.replace(LINK, (whole, label: string, href: string) =>
+    /^\/d\/[\w-]+(\/[^\s]*)?$/.test(href.trim()) && !href.includes("//") ? whole : label,
+  );
+}

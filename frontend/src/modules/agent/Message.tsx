@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { Markdown, parse } from "../../features/help/markdown";
 import { t } from "../../lib/i18n";
 import type { AgentLink } from "./api";
-import { linkTarget } from "./links";
+import { linkTarget, safeMarkdown } from "./links";
 
 export type ShownStep = {
   id: string;
@@ -37,7 +37,7 @@ export function AssistantMessage({
   steps: ShownStep[];
   streaming?: boolean;
 }) {
-  const blocks = useMemo(() => parse(text), [text]);
+  const blocks = useMemo(() => parse(safeMarkdown(text)), [text]);
   return (
     <div className="space-y-2.5">
       {thinking && (
