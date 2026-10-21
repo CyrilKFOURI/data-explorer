@@ -1499,6 +1499,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/modules/agent/settings/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Models
+         * @description The chat models the active vendor offers to the key (listed from its API).
+         */
+        get: operations["models_api_v1_modules_agent_settings_models_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/modules/agent/settings/test": {
         parameters: {
             query?: never;
@@ -1687,6 +1707,26 @@ export interface components {
             /** Steps */
             steps?: components["schemas"]["AgentStep"][];
         };
+        /** AgentModels */
+        AgentModels: {
+            /** Models */
+            models: string[];
+            /** Default */
+            default: string | null;
+        };
+        /** AgentProvider */
+        AgentProvider: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+            /** Configured */
+            configured: boolean;
+            /** Console */
+            console: string;
+            /** Needs Key */
+            needs_key: boolean;
+        };
         /** AgentSend */
         AgentSend: {
             /** Text */
@@ -1701,8 +1741,21 @@ export interface components {
         };
         /** AgentSettingsIn */
         AgentSettingsIn: {
-            /** Model */
+            /**
+             * Provider
+             * @description A vendor id, or auto.
+             */
+            provider?: string | null;
+            /**
+             * Model
+             * @description Empty for the vendor's default.
+             */
             model?: string | null;
+            /**
+             * Base Url
+             * @description Custom OpenAI-compatible API only.
+             */
+            base_url?: string | null;
             /** Effort */
             effort?: ("low" | "medium" | "high" | "xhigh" | "max") | null;
             /** Budget Usd */
@@ -1715,20 +1768,27 @@ export interface components {
         };
         /** AgentSettingsOut */
         AgentSettingsOut: {
-            /**
-             * Provider
-             * @default anthropic
-             */
+            /** Provider */
             provider: string;
+            /** Active */
+            active: string;
+            /** Active Label */
+            active_label: string;
+            /** Providers */
+            providers: components["schemas"]["AgentProvider"][];
             /** Model */
             model: string;
-            /** Models */
-            models: string[];
+            /** Known Models */
+            known_models: string[];
+            /** Base Url */
+            base_url: string | null;
             /**
              * Effort
              * @enum {string}
              */
             effort: "low" | "medium" | "high" | "xhigh" | "max";
+            /** Effort Supported */
+            effort_supported: boolean;
             /** Budget Usd */
             budget_usd: number;
             key: components["schemas"]["AgentKey"];
@@ -9571,6 +9631,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AgentSettingsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    models_api_v1_modules_agent_settings_models_get: {
+        parameters: {
+            query?: {
+                refresh?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentModels"];
                 };
             };
             /** @description Validation Error */

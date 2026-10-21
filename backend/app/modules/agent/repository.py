@@ -22,6 +22,7 @@ class Conversation:
     cost_usd: float
     created_at: str
     updated_at: str
+    tokens: int = 0
 
 
 def _now() -> str:
@@ -37,6 +38,7 @@ def _conversation(row: sqlite3.Row) -> Conversation:
         row["cost_usd"],
         row["created_at"],
         row["updated_at"],
+        row["tokens"],
     )
 
 
@@ -58,7 +60,9 @@ class ConversationRepository:
         found = Conversation(uuid.uuid4().hex[:12], dataset_id, title, model, 0.0, now, now)
         with self._db() as connection:
             connection.execute(
-                "INSERT INTO agent_conversations VALUES (?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO agent_conversations "
+                "(id, dataset_id, title, model, cost_usd, created_at, updated_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
                 (found.id, dataset_id, title, model, 0.0, now, now),
             )
         return found
@@ -101,7 +105,12 @@ class ConversationRepository:
         return [from_dict({"role": r["role"], **json.loads(r["content"])}) for r in rows]
 
     def append(
-        self, conversation_id: str, messages: list[Message], cost_usd: float, model: str
+        self,
+        conversation_id: str,
+        messages: list[Message],
+        cost_usd: float,
+        model: str,
+        tokens: int = 0,
     ) -> None:
         """Adds a turn's messages and its cost, in one transaction (append-only history)."""
         now = _now()
@@ -115,7 +124,7 @@ class ConversationRepository:
                     (conversation_id, message.role, json.dumps(payload, ensure_ascii=False), now),
                 )
             connection.execute(
-                "UPDATE agent_conversations SET cost_usd = cost_usd + ?, model = ?, updated_at = ? "
-                "WHERE id = ?",
-                (cost_usd, model, now, conversation_id),
+                "UPDATE agent_conversations SET cost_usd = cost_usd + ?, tokens = tokens + ?, "
+                "model = ?, updated_at = ? WHERE id = ?",
+                (cost_usd, tokens, model, now, conversation_id),
             )

@@ -70,7 +70,9 @@ class StepDone:
 class Spent:
     turn_usd: float
     conversation_usd: float
-    tokens: int
+    tokens: int  # this response
+    conversation_tokens: int
+    priced: bool  # False: the model's price is unknown, count tokens instead of dollars
 
 
 @dataclass
@@ -179,7 +181,15 @@ class Turn:
         result.usage.append(completed.usage)
         spent = self.budget.add(completed.usage)
         result.cost_usd += spent
-        self.emit(Spent(result.cost_usd, self.budget.spent_usd, completed.usage.total))
+        self.emit(
+            Spent(
+                result.cost_usd,
+                self.budget.spent_usd,
+                completed.usage.total,
+                self.budget.tokens,
+                self.budget.priced,
+            )
+        )
         return completed
 
     # --- tools -------------------------------------------------------------------------------

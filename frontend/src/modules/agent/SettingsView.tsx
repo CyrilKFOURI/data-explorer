@@ -78,7 +78,7 @@ export function SettingsView({ settings, onDone }: { settings: AgentSettings; on
       <section className="space-y-3">
         <Field label={t("agent.model")}>
           <Select value={settings.model} onChange={(event) => update.mutate({ model: event.target.value })}>
-            {settings.models.map((model) => (
+            {settings.known_models.map((model) => (
               <option key={model} value={model}>
                 {MODEL_LABELS[model] ?? model}
               </option>

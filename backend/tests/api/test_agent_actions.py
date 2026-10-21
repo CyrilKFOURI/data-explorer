@@ -7,14 +7,17 @@ from fastapi.testclient import TestClient
 
 from app.config import default_samples_dir
 from app.core.tools import ToolContext, ToolError
+from app.modules.agent.providers.vendors import VENDORS
 from tests.api.test_profiling import import_path
 from tests.unit.agent.fakes import ScriptedProvider, answer, calls
 
 
 @pytest.fixture(autouse=True)
 def no_key_in_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("DATA_EXPLORER_ANTHROPIC_API_KEY", raising=False)
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    """No real key reaches a test: every vendor's variable is cleared."""
+    for vendor in VENDORS:
+        monkeypatch.delenv(vendor.secret, raising=False)
+        monkeypatch.delenv(f"DATA_EXPLORER_{vendor.secret}", raising=False)
 
 
 @pytest.fixture
@@ -142,7 +145,7 @@ def _turn_with_confirmation(client: TestClient, dataset_id: str, approve: bool) 
     provider = ScriptedProvider(
         [calls(("save_kpi", {"name": "Units per week", "definition": definition})), answer("Done.")]
     )
-    service.provider_factory = lambda key: provider
+    service.provider_factory = lambda *args: provider
     service.store.save_key("sk-ant-test-1234abcd")
     cid = client.post(f"/api/v1/modules/agent/datasets/{dataset_id}/conversations").json()["id"]
 

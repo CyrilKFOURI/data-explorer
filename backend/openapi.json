@@ -7858,6 +7858,50 @@
         }
       }
     },
+    "/api/v1/modules/agent/settings/models": {
+      "get": {
+        "tags": [
+          "agent"
+        ],
+        "summary": "Models",
+        "description": "The chat models the active vendor offers to the key (listed from its API).",
+        "operationId": "models_api_v1_modules_agent_settings_models_get",
+        "parameters": [
+          {
+            "name": "refresh",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Refresh"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentModels"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/modules/agent/settings/test": {
       "post": {
         "tags": [
@@ -8380,6 +8424,67 @@
         ],
         "title": "AgentMessage"
       },
+      "AgentModels": {
+        "properties": {
+          "models": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Models"
+          },
+          "default": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default"
+          }
+        },
+        "type": "object",
+        "required": [
+          "models",
+          "default"
+        ],
+        "title": "AgentModels"
+      },
+      "AgentProvider": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "configured": {
+            "type": "boolean",
+            "title": "Configured"
+          },
+          "console": {
+            "type": "string",
+            "title": "Console"
+          },
+          "needs_key": {
+            "type": "boolean",
+            "title": "Needs Key"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "configured",
+          "console",
+          "needs_key"
+        ],
+        "title": "AgentProvider"
+      },
       "AgentSend": {
         "properties": {
           "text": {
@@ -8418,6 +8523,18 @@
       },
       "AgentSettingsIn": {
         "properties": {
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider",
+            "description": "A vendor id, or auto."
+          },
           "model": {
             "anyOf": [
               {
@@ -8427,7 +8544,20 @@
                 "type": "null"
               }
             ],
-            "title": "Model"
+            "title": "Model",
+            "description": "Empty for the vendor's default."
+          },
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url",
+            "description": "Custom OpenAI-compatible API only."
           },
           "effort": {
             "anyOf": [
@@ -8478,19 +8608,44 @@
         "properties": {
           "provider": {
             "type": "string",
-            "title": "Provider",
-            "default": "anthropic"
+            "title": "Provider"
+          },
+          "active": {
+            "type": "string",
+            "title": "Active"
+          },
+          "active_label": {
+            "type": "string",
+            "title": "Active Label"
+          },
+          "providers": {
+            "items": {
+              "$ref": "#/components/schemas/AgentProvider"
+            },
+            "type": "array",
+            "title": "Providers"
           },
           "model": {
             "type": "string",
             "title": "Model"
           },
-          "models": {
+          "known_models": {
             "items": {
               "type": "string"
             },
             "type": "array",
-            "title": "Models"
+            "title": "Known Models"
+          },
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
           },
           "effort": {
             "type": "string",
@@ -8502,6 +8657,10 @@
               "max"
             ],
             "title": "Effort"
+          },
+          "effort_supported": {
+            "type": "boolean",
+            "title": "Effort Supported"
           },
           "budget_usd": {
             "type": "number",
@@ -8517,9 +8676,15 @@
         },
         "type": "object",
         "required": [
+          "provider",
+          "active",
+          "active_label",
+          "providers",
           "model",
-          "models",
+          "known_models",
+          "base_url",
           "effort",
+          "effort_supported",
           "budget_usd",
           "key",
           "sdk_installed"

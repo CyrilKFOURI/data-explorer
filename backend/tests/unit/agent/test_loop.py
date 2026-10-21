@@ -1,6 +1,8 @@
 import threading
 from typing import Any
 
+import pytest
+
 from app.modules.agent.engine.budget import Budget, cost
 from app.modules.agent.engine.loop import MAX_FAILURES, Spent, StepDone, StepStarted, Turn
 from app.modules.agent.engine.messages import Message, from_dict, to_dict, user_text
@@ -166,8 +168,17 @@ def test_messages_round_trip_and_costs() -> None:
     assert isinstance(from_dict(to_dict(user_text("hi"))), Message)
 
     usage = Usage("claude-opus-5-5", 1_000_000, 100_000, 1_000_000, 0)
-    assert round(cost(usage), 4) == round(4.0 + 2.0 + 0.2, 4)
-    assert cost(Usage("claude-haiku-5-5", 1_000_000)) == 0.10
+    assert cost(usage) == pytest.approx(4.0 + 2.0 + 0.2)
+    assert cost(Usage("claude-haiku-5-5", 1_000_000)) == pytest.approx(0.10)
+    assert cost(Usage("gemini-x-pro", 1_000_000)) is None  # never guessed
+
+
+def test_unpriced_models_are_budgeted_in_tokens() -> None:
+    budget = Budget(1.0, token_limit=1_000)
+    assert budget.add(Usage("gemini-x-pro", 600, 300)) == 0.0
+    assert not budget.priced and not budget.exceeded
+    budget.add(Usage("gemini-x-pro", 100, 50))
+    assert budget.exceeded and budget.tokens == 1_050
 
 
 def test_a_long_tool_reports_its_progress() -> None:

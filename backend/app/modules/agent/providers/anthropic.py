@@ -40,14 +40,6 @@ STOPS: dict[str, StopReason] = {
 }
 
 
-def sdk_installed() -> bool:
-    try:
-        import anthropic  # noqa: F401
-    except ImportError:
-        return False
-    return True
-
-
 class AnthropicProvider:
     id = PROVIDER
 

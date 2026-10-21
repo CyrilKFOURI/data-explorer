@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from app.config import default_samples_dir
 from app.modules.agent.engine.provider import ProviderError
 from app.modules.agent.engine.tools import ToolContext, ToolError
+from app.modules.agent.providers.vendors import VENDORS
 from tests.api.test_profiling import import_path
 from tests.unit.agent.fakes import ScriptedProvider, answer, calls
 
@@ -15,8 +16,10 @@ BASE = "/api/v1/modules/agent"
 
 @pytest.fixture(autouse=True)
 def no_key_in_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("DATA_EXPLORER_ANTHROPIC_API_KEY", raising=False)
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    """No real key reaches a test: every vendor's variable is cleared."""
+    for vendor in VENDORS:
+        monkeypatch.delenv(vendor.secret, raising=False)
+        monkeypatch.delenv(f"DATA_EXPLORER_{vendor.secret}", raising=False)
 
 
 @pytest.fixture
@@ -26,7 +29,7 @@ def traps(client: TestClient) -> str:
 
 def script(client: TestClient, *steps: Any) -> ScriptedProvider:
     provider = ScriptedProvider(list(steps))
-    client.app.state.agent.provider_factory = lambda key: provider  # type: ignore[attr-defined]
+    client.app.state.agent.provider_factory = lambda *args: provider  # type: ignore[attr-defined]
     return provider
 
 
@@ -44,18 +47,37 @@ def conversation(client: TestClient, dataset_id: str) -> str:
 
 def test_settings_and_key_never_leave_the_backend(client: TestClient) -> None:
     settings = client.get(f"{BASE}/settings").json()
-    assert settings["model"] == "claude-opus-5-5" and settings["key"]["configured"] is False
+    assert settings["provider"] == "auto" and settings["active"] == "anthropic"
+    assert settings["known_models"][0] == "claude-opus-5-5"
+    assert settings["key"]["configured"] is False and settings["effort_supported"] is True
 
     saved = client.put(
         f"{BASE}/settings", json={"api_key": "sk-ant-test-1234abcd", "budget_usd": 2}
     ).json()
 
     assert saved["key"] == {"configured": True, "source": "file", "hint": "…abcd"}
-    assert saved["budget_usd"] == 2
+    assert saved["budget_usd"] == 2 and saved["active"] == "anthropic"
     assert "sk-ant-test-1234abcd" not in json.dumps(client.get(f"{BASE}/settings").json())
     removed = client.put(f"{BASE}/settings", json={"api_key": ""}).json()
     assert removed["key"]["configured"] is False
-    assert client.put(f"{BASE}/settings", json={"model": "gpt-5"}).status_code == 400
+    assert client.put(f"{BASE}/settings", json={"provider": "nope"}).status_code == 400
+
+
+def test_a_key_is_filed_under_the_vendor_it_belongs_to(client: TestClient) -> None:
+    saved = client.put(f"{BASE}/settings", json={"api_key": "AIzaSyTest-1234567890abcd"}).json()
+
+    assert saved["active"] == "gemini" and saved["provider"] == "gemini"
+    assert saved["effort_supported"] is False and saved["known_models"] == []
+    configured = {p["id"]: p["configured"] for p in saved["providers"]}
+    assert configured["gemini"] and not configured["anthropic"]
+    # a key whose shape says nothing needs a chosen provider
+    client.put(f"{BASE}/settings", json={"provider": "auto"})
+    refused = client.put(f"{BASE}/settings", json={"api_key": "plainkey1234567890"})
+    assert refused.status_code == 400 and "provider" in refused.json()["error"]["message"]
+    mistral = client.put(
+        f"{BASE}/settings", json={"provider": "mistral", "api_key": "plainkey1234567890"}
+    ).json()
+    assert mistral["active"] == "mistral" and mistral["key"]["configured"]
 
 
 def test_a_turn_runs_tools_streams_and_is_saved(client: TestClient, traps: str) -> None:
@@ -202,7 +224,7 @@ def test_stop_ends_the_turn_after_the_current_step(client: TestClient, traps: st
 
     agent = client.app.state.agent  # type: ignore[attr-defined]
     provider = Waiting([calls(("list_columns", {})), answer("never reached")])
-    agent.provider_factory = lambda key: provider
+    agent.provider_factory = lambda *args: provider
     agent.store.save_key("sk-ant-test-1234abcd")
     cid = conversation(client, traps)
 

@@ -25,8 +25,9 @@ dependencies = [
 [project.optional-dependencies]
 # Deep synthetic-data models (023b: CTGAN, TVAE, TimeGAN). Not in the default Docker image.
 deep = ["torch>=2.14"]
-# AI agent (026): the official Anthropic SDK. Optional: without it the agent says how to enable it.
-agent = ["anthropic>=2"]
+# AI agent (026): the official Anthropic SDK (Claude) and OpenAI SDK (OpenAI and every
+# OpenAI-compatible API: Gemini, Mistral, Groq, OpenRouter, local models). Optional.
+agent = ["anthropic>=2", "openai>=3"]
 
 [dependency-groups]
 dev = [

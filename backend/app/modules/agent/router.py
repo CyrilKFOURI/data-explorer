@@ -12,9 +12,9 @@ from app.domain.filters.model import Condition
 from app.modules.agent.engine.messages import Message
 from app.modules.agent.engine.provider import Effort
 from app.modules.agent.engine.tools import ToolError
+from app.modules.agent.providers.vendors import VENDORS
 from app.modules.agent.repository import Conversation
 from app.modules.agent.service import AgentService, strip_context
-from app.modules.agent.settings import MODELS, AgentSettings, KeyStatus
 
 router = APIRouter(tags=["agent"])
 
@@ -35,29 +35,61 @@ class AgentKey(BaseModel):
     hint: str | None
 
 
+class AgentProvider(BaseModel):
+    id: str
+    label: str
+    configured: bool
+    console: str
+    needs_key: bool
+
+
 class AgentSettingsOut(BaseModel):
-    provider: str = "anthropic"
-    model: str
-    models: list[str]
+    provider: str  # the setting: a vendor id or "auto"
+    active: str  # the vendor in use
+    active_label: str
+    providers: list[AgentProvider]
+    model: str  # the setting; empty: the vendor's default
+    known_models: list[str]  # models listed without asking the vendor (Claude)
+    base_url: str | None
     effort: Effort
+    effort_supported: bool  # Claude only
     budget_usd: float
     key: AgentKey
     sdk_installed: bool
 
     @classmethod
-    def of(cls, settings: AgentSettings, key: KeyStatus, sdk: bool) -> "AgentSettingsOut":
+    def of(cls, agent: AgentService) -> "AgentSettingsOut":
+        settings, vendor, key = agent.settings()
+        store = agent.store
         return cls(
+            provider=settings.provider,
+            active=vendor.id,
+            active_label=vendor.label,
+            providers=[
+                AgentProvider(
+                    id=v.id,
+                    label=v.label,
+                    configured=store.key_status(v).configured,
+                    console=v.console,
+                    needs_key=v.needs_key,
+                )
+                for v in VENDORS
+            ],
             model=settings.model,
-            models=list(MODELS),
+            known_models=list(vendor.models),
+            base_url=settings.base_url,
             effort=settings.effort,
+            effort_supported=vendor.kind == "anthropic",
             budget_usd=settings.budget_usd,
             key=AgentKey(configured=key.configured, source=key.source, hint=key.hint),
-            sdk_installed=sdk,
+            sdk_installed=agent.sdk_available(vendor),
         )
 
 
 class AgentSettingsIn(BaseModel):
-    model: str | None = None
+    provider: str | None = Field(None, description="A vendor id, or auto.")
+    model: str | None = Field(None, description="Empty for the vendor's default.")
+    base_url: str | None = Field(None, description="Custom OpenAI-compatible API only.")
     effort: Effort | None = None
     budget_usd: float | None = None
     api_key: str | None = Field(None, description="Write-only; an empty string removes it.")
@@ -68,15 +100,29 @@ class AgentKeyTest(BaseModel):
     model: str
 
 
+class AgentModels(BaseModel):
+    models: list[str]
+    default: str | None
+
+
 @router.get("/settings")
 def read_settings(agent: Agent) -> AgentSettingsOut:
-    return AgentSettingsOut.of(*agent.settings(), agent.sdk_available())
+    return AgentSettingsOut.of(agent)
 
 
 @router.put("/settings")
 def write_settings(body: AgentSettingsIn, agent: Agent) -> AgentSettingsOut:
-    settings, key = agent.update_settings(body.model, body.effort, body.budget_usd, body.api_key)
-    return AgentSettingsOut.of(settings, key, agent.sdk_available())
+    agent.update_settings(
+        body.provider, body.model, body.base_url, body.effort, body.budget_usd, body.api_key
+    )
+    return AgentSettingsOut.of(agent)
+
+
+@router.get("/settings/models")
+def models(agent: Agent, refresh: bool = False) -> AgentModels:
+    """The chat models the active vendor offers to the key (listed from its API)."""
+    found, default = agent.models(refresh)
+    return AgentModels(models=found, default=default)
 
 
 @router.post("/settings/test")

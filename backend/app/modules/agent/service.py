@@ -34,8 +34,9 @@ from app.modules.agent.engine.provider import (
     ThinkingDelta,
 )
 from app.modules.agent.engine.tools import Tool, ToolContext, ToolError, ToolRegistry
+from app.modules.agent.providers.vendors import BY_ID, Vendor, chat_models, pick_default
 from app.modules.agent.repository import Conversation, ConversationRepository
-from app.modules.agent.settings import EFFORTS, MODELS, AgentSettings, KeyStatus, SettingsStore
+from app.modules.agent.settings import AUTO, EFFORTS, AgentSettings, KeyStatus, SettingsStore
 from app.modules.agent.tools import AppServices
 
 CONTEXT = re.compile(r"^<app_context>.*?</app_context>\s*", re.DOTALL)
@@ -46,7 +47,7 @@ CONFIRM_TIMEOUT = 600.0  # seconds the assistant waits for the user's decision
 BUDGET_REACHED = (
     "This conversation reached its budget: raise it in the assistant settings or start a new one."
 )
-NOT_INSTALLED = "The assistant needs the Anthropic SDK: run `uv sync --extra agent` in backend/."
+NOT_INSTALLED = "The assistant needs its SDKs: run `uv sync --extra agent` in backend/."
 
 
 class AgentError(AppError):
@@ -103,9 +104,10 @@ class AgentService:
         store: SettingsStore,
         services: AppServices,
         registry_factory: Callable[[], ToolRegistry],
-        provider_factory: Callable[[str], Provider],
-        sdk_available: Callable[[], bool] = lambda: True,
+        provider_factory: Callable[[Vendor, str, str | None], Provider],
+        sdk_available: Callable[[Vendor], bool] = lambda vendor: True,
     ) -> None:
+        """`provider_factory(vendor, key, base_url)` builds the provider of a turn."""
         self.repository = repository
         self.store = store
         self.services = services
@@ -115,6 +117,7 @@ class AgentService:
         self.sdk_available = sdk_available
         self._runs: dict[str, Run] = {}
         self._lock = threading.Lock()
+        self._models: dict[tuple[str, str, str | None], list[str]] = {}
 
     @property
     def registry(self) -> ToolRegistry:
@@ -124,21 +127,32 @@ class AgentService:
 
     # --- settings -------------------------------------------------------------------------------
 
-    def settings(self) -> tuple[AgentSettings, KeyStatus]:
-        return self.store.load(), self.store.key_status()
+    def settings(self) -> tuple[AgentSettings, Vendor, KeyStatus]:
+        settings = self.store.load()
+        vendor = self.store.vendor(settings)
+        return settings, vendor, self.store.key_status(vendor)
 
     def update_settings(
         self,
+        provider: str | None = None,
         model: str | None = None,
+        base_url: str | None = None,
         effort: str | None = None,
         budget_usd: float | None = None,
         api_key: str | None = None,
-    ) -> tuple[AgentSettings, KeyStatus]:
+    ) -> tuple[AgentSettings, Vendor, KeyStatus]:
         current = self.store.load()
+        if provider is not None:
+            if provider not in (AUTO, *BY_ID):
+                raise AgentError(f"Unknown provider {provider!r}.", "unknown_provider")
+            if provider != current.provider:
+                current.provider, current.model = provider, ""
         if model is not None:
-            if model not in MODELS:
-                raise AgentError(f"Unknown model {model!r}.", "unknown_model")
-            current.model = model
+            current.model = model.strip()[:200]
+        if base_url is not None:
+            if base_url and not base_url.startswith(("http://", "https://")):
+                raise AgentError("The address must start with http:// or https://.", "bad_url")
+            current.base_url = base_url or None
         if effort is not None:
             if effort not in EFFORTS:
                 raise AgentError(f"Unknown effort {effort!r}.", "unknown_effort")
@@ -147,29 +161,59 @@ class AgentService:
             if not 0 < budget_usd <= 100:
                 raise AgentError("The budget must be between $0.01 and $100.", "bad_budget")
             current.budget_usd = budget_usd
-        self.store.save(current)
         if api_key is not None:
+            chosen = BY_ID.get(current.provider)
             try:
-                self.store.save_key(api_key)
+                owner = self.store.save_key(api_key, chosen)
             except ValueError as error:
                 raise AgentError(str(error), "bad_key") from error
+            if api_key.strip() and owner.id != current.provider:
+                current.provider, current.model = owner.id, ""  # a new key: use its vendor
+        self.store.save(current)
         return self.settings()
+
+    def models(self, refresh: bool = False) -> tuple[list[str], str | None]:
+        """The chat models the active vendor offers to the key, and the default one."""
+        settings = self.store.load()
+        vendor = self.store.vendor(settings)
+        if vendor.models:
+            return list(vendor.models), vendor.models[0]
+        key, _ = self.store.key(vendor)
+        cache = (vendor.id, key[-8:], settings.base_url)
+        if refresh or cache not in self._models:
+            lister = self.provider_factory(vendor, key, settings.base_url)
+            try:
+                listed = lister.list_models()  # type: ignore[attr-defined]
+            except ProviderError as error:
+                raise AgentError(error.message, f"models_{error.kind}") from error
+            self._models[cache] = chat_models(listed)
+        found = self._models[cache]
+        return found, pick_default(vendor, found)
+
+    def model_in_use(self, settings: AgentSettings, vendor: Vendor) -> str:
+        if settings.model:
+            return settings.model
+        _, default = self.models()
+        if not default:
+            raise AgentError(f"{vendor.label} lists no chat model for this key.", "no_model")
+        return default
 
     def test_key(self) -> str:
         """A tiny request with the saved key and model: the model's answer, or a clear error."""
-        settings = self.store.load()
-        key, _ = self.store.key()
+        settings, vendor, _ = self.settings()
+        key, _ = self.store.key(vendor)
+        model = self.model_in_use(settings, vendor)
         request = Request(
-            model=settings.model,
+            model=model,
             system="Reply with the single word OK.",
             messages=[user_text("Test")],
             effort="low",
             max_tokens=2_000,
         )
         try:
-            for event in self.provider_factory(key).stream(request):
+            for event in self.provider_factory(vendor, key, settings.base_url).stream(request):
                 if isinstance(event, Completed):
-                    return settings.model
+                    return model
         except ProviderError as error:
             raise AgentError(error.message, f"key_{error.kind}") from error
         raise AgentError("The model gave no answer.", "key_other")
@@ -182,7 +226,8 @@ class AgentService:
 
     def create(self, dataset_id: str) -> Conversation:
         self.services.columns.ready(dataset_id)
-        return self.repository.create(dataset_id, NEW_TITLE, self.store.load().model)
+        settings = self.store.load()
+        return self.repository.create(dataset_id, NEW_TITLE, settings.model or settings.provider)
 
     def conversation(self, conversation_id: str) -> tuple[Conversation, list[Message]]:
         found = self.repository.get(conversation_id)
@@ -260,33 +305,28 @@ class AgentService:
     ) -> None:
         emit = run.events.put
         try:
-            settings = self.store.load()
-            budget = Budget(settings.budget_usd, conversation.cost_usd)
+            settings, vendor, _ = self.settings()
+            budget = Budget(settings.budget_usd, conversation.cost_usd, conversation.tokens)
             if budget.exceeded:
-                emit(
-                    _error(
-                        "budget",
-                        BUDGET_REACHED,
-                    )
-                )
+                emit(_error("budget", BUDGET_REACHED))
                 return
-            if not self.sdk_available():
-                emit(
-                    _error(
-                        "not_installed",
-                        NOT_INSTALLED,
-                    )
-                )
+            if not self.sdk_available(vendor):
+                emit(_error("not_installed", NOT_INSTALLED))
                 return
-            key, _ = self.store.key()
+            key, _ = self.store.key(vendor)
+            try:
+                model = self.model_in_use(settings, vendor) if key or not vendor.needs_key else ""
+            except AgentError as error:
+                emit(_error("bad_request", error.message))
+                return
             question = user_text(
                 turn_context([describe_condition(c) for c in conditions], page) + text
             )
             turn = Turn(
-                provider=self.provider_factory(key),
+                provider=self.provider_factory(vendor, key, settings.base_url),
                 registry=self.registry,
                 context=ToolContext(conversation.dataset_id, conditions, run.stop.is_set),
-                model=settings.model,
+                model=model,
                 system=self._system(conversation.dataset_id),
                 history=[*history, question],
                 budget=budget,
@@ -297,8 +337,9 @@ class AgentService:
             )
             result = turn.run()
             if result.messages:
+                tokens = sum(u.total for u in result.usage)
                 self.repository.append(
-                    conversation.id, [question, *result.messages], result.cost_usd, settings.model
+                    conversation.id, [question, *result.messages], result.cost_usd, model, tokens
                 )
                 if conversation.title == NEW_TITLE:
                     self.repository.rename(conversation.id, _title(text))
@@ -372,6 +413,8 @@ def _event(event: TurnEvent) -> dict[str, Any]:
             "turn_usd": event.turn_usd,
             "conversation_usd": event.conversation_usd,
             "tokens": event.tokens,
+            "conversation_tokens": event.conversation_tokens,
+            "priced": event.priced,
         }
     if isinstance(event, Notice):
         return {"type": "notice", "message": event.message}
@@ -401,4 +444,6 @@ def _finish(result: TurnResult, budget: Budget) -> dict[str, Any]:
         "message": ENDINGS.get(result.end),
         "turn_usd": result.cost_usd,
         "conversation_usd": budget.spent_usd,
+        "conversation_tokens": budget.tokens,
+        "priced": budget.priced,
     }
