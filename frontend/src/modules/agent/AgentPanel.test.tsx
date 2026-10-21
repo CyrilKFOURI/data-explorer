@@ -5,14 +5,26 @@ import { column, roles } from "../../test/columns";
 import { dataset, health, mockApi } from "../../test/mockApi";
 import { renderAt } from "../../test/render";
 
-const settings = (configured: boolean) => ({
-  provider: "anthropic",
-  model: "claude-opus-5-5",
-  models: ["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5"],
+const providers = [
+  { id: "anthropic", label: "Anthropic (Claude)", configured: false, console: "console.anthropic.com", needs_key: true },
+  { id: "gemini", label: "Google Gemini", configured: false, console: "aistudio.google.com", needs_key: true },
+];
+
+const settings = (configured: boolean, vendor: "anthropic" | "gemini" = "anthropic") => ({
+  provider: "auto",
+  active: vendor,
+  active_label: vendor === "anthropic" ? "Anthropic (Claude)" : "Google Gemini",
+  providers: providers.map((p) => ({ ...p, configured: configured && p.id === vendor })),
+  model: "",
+  known_models: vendor === "anthropic" ? ["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5"] : [],
+  base_url: null,
   effort: "high",
+  effort_supported: vendor === "anthropic",
   budget_usd: 1,
   key: { configured, source: configured ? "file" : "none", hint: configured ? "…abcd" : null },
   sdk_installed: true,
+  ready: configured,
+  token_limit: 2_000_000,
 });
 
 const conversation = {
@@ -21,13 +33,14 @@ const conversation = {
   title: "New conversation",
   model: "claude-opus-5-5",
   cost_usd: 0,
+  tokens: 0,
   created_at: "2026-10-21T10:00:00Z",
   updated_at: "2026-10-21T10:00:00Z",
   running: false,
 };
 
 const turn = [
-  { type: "spent", turn_usd: 0.01, conversation_usd: 0.01, tokens: 900 },
+  { type: "spent", turn_usd: 0.01, conversation_usd: 0.01, tokens: 900, conversation_tokens: 900, priced: true },
   { type: "step_started", id: "s1", tool: "rank_associations_with", label: "Ranking what is linked to Survived", input: {} },
   {
     type: "step_done",
@@ -38,7 +51,7 @@ const turn = [
     ms: 420,
   },
   { type: "text", text: "**Sex** is the strongest driver." },
-  { type: "done", end: "answered", message: null, turn_usd: 0.02, conversation_usd: 0.02 },
+  { type: "done", end: "answered", message: null, turn_usd: 0.02, conversation_usd: 0.02, conversation_tokens: 1800, priced: true },
 ];
 
 const saved = [
@@ -61,7 +74,7 @@ const saved = [
   },
 ];
 
-function setup(configured = true) {
+function setup(configured = true, vendor: "anthropic" | "gemini" = "anthropic", events = turn) {
   let answered = false;
   const calls = mockApi({
     "GET /health": health,
@@ -72,7 +85,8 @@ function setup(configured = true) {
       column({ name: "Age", position: 1 }),
     ],
     "GET /column-roles": roles,
-    "GET /modules/agent/settings": settings(configured),
+    "GET /modules/agent/settings": settings(configured, vendor),
+    "GET /modules/agent/settings/models": { models: ["gemini-2.5-flash", "gemini-2.5-pro"], default: "gemini-2.5-pro" },
     "GET /modules/agent/datasets/d1/conversations": [],
     "POST /modules/agent/datasets/d1/conversations": conversation,
     "GET /modules/agent/conversations/c1": () => ({ conversation, messages: answered ? saved : [] }),
@@ -82,7 +96,7 @@ function setup(configured = true) {
     if (String(input).endsWith("/conversations/c1/messages")) {
       calls.push({ key: "POST /modules/agent/conversations/c1/messages", body: JSON.parse(String(init?.body)), params: new URLSearchParams() });
       answered = true;
-      const body = turn.map((event) => `data: ${JSON.stringify(event)}\n\n`).join("");
+      const body = events.map((event) => `data: ${JSON.stringify(event)}\n\n`).join("");
       return new Response(body, { headers: { "Content-Type": "text/event-stream" } });
     }
     return json(input, init);
@@ -121,7 +135,30 @@ describe("Assistant panel", () => {
     expect(await within(panel).findByText("Set up the assistant")).toBeInTheDocument();
     expect(within(panel).getByRole("textbox", { name: "Message to the assistant" })).toBeDisabled();
     fireEvent.click(within(panel).getByRole("button", { name: "Add an API key" }));
-    expect(await within(panel).findByLabelText("Anthropic API key")).toBeInTheDocument();
+    expect(await within(panel).findByLabelText("Anthropic (Claude) key")).toBeInTheDocument();
+  });
+
+  it("works with a Gemini key: models listed from the API, tokens instead of dollars", async () => {
+    const tokensTurn = [
+      { type: "text", text: "Done." },
+      { type: "done", end: "answered", message: null, turn_usd: 0, conversation_usd: 0, conversation_tokens: 12_400, priced: false },
+    ];
+    setup(true, "gemini", tokensTurn);
+    renderAt("/d/d1/columns");
+    fireEvent.click(await screen.findByRole("button", { name: "Ask the assistant" }));
+    const panel = await screen.findByRole("complementary", { name: "Assistant" });
+
+    fireEvent.change(await within(panel).findByRole("textbox", { name: "Message to the assistant" }), {
+      target: { value: "Hi" },
+    });
+    fireEvent.click(within(panel).getByRole("button", { name: "Send" }));
+    expect(await within(panel).findByText("12k tokens / 2M")).toBeInTheDocument();
+
+    fireEvent.click(within(panel).getByRole("button", { name: "Assistant settings" }));
+    expect(await within(panel).findByRole("option", { name: "Default · gemini-2.5-pro" })).toBeInTheDocument();
+    expect(within(panel).getByRole("option", { name: "gemini-2.5-flash" })).toBeInTheDocument();
+    expect(within(panel).queryByLabelText("Effort")).not.toBeInTheDocument();
+    expect(within(panel).getByText(/each conversation stops at 2M tokens/)).toBeInTheDocument();
   });
 
   it("stays out of the way outside a dataset", async () => {
@@ -175,7 +212,7 @@ describe("Assistant confirmations", () => {
     fireEvent.click(within(card).getByRole("button", { name: "Confirm" }));
 
     await vi.waitFor(() => expect(calls.find((c) => c.key === "POST confirm")?.body).toEqual({ approved: true }));
-    send({ type: "done", end: "answered", message: null, turn_usd: 0.01, conversation_usd: 0.01 });
+    send({ type: "done", end: "answered", message: null, turn_usd: 0.01, conversation_usd: 0.01, conversation_tokens: 900, priced: true });
     close();
   });
 });

@@ -1645,6 +1645,11 @@ export interface components {
             model: string;
             /** Cost Usd */
             cost_usd: number;
+            /**
+             * Tokens
+             * @default 0
+             */
+            tokens: number;
             /** Created At */
             created_at: string;
             /** Updated At */
@@ -1794,6 +1799,10 @@ export interface components {
             key: components["schemas"]["AgentKey"];
             /** Sdk Installed */
             sdk_installed: boolean;
+            /** Ready */
+            ready: boolean;
+            /** Token Limit */
+            token_limit: number;
         };
         /** AgentStep */
         AgentStep: {

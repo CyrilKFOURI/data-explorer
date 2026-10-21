@@ -51,6 +51,18 @@ backend/app/modules/agent/
 - [x] Progression des tâches longues dans l'étape (`step_progress`), liens vers ML, séries temporelles, KPI, synthétique, nouveau dataset, téléchargement du rapport
 - [x] Tests : contrat partagé, collecte des outils, chaque outil sur les jeux de démo, confirmation acceptée / refusée, progression, carte de confirmation et liens côté panneau
 
+## 026b+ — Tous fournisseurs
+
+- [x] Dépendance : `openai>=3` dans l'extra `[agent]` (validé)
+- [x] `providers/vendors.py` : fournisseurs, préfixes de clé, modèles connus ou préférés, `detect`, `chat_models`, `pick_default`
+- [x] `providers/openai_compat.py` : flux chat-completions, appels d'outils réassemblés, usage, erreurs typées + tests (vrais objets du SDK, client simulé)
+- [x] Réglages : une clé par fournisseur (env puis fichier), clé rangée selon sa forme, clé mal rangée déplacée au démarrage, fournisseur « auto »
+- [x] Budget : coût inconnu → plafond en tokens (2 M), tokens enregistrés (migration `0012`), événements `spent` / `done` avec `conversation_tokens` et `priced`
+- [x] API : `providers`, `active`, `ready`, `token_limit`, `GET /settings/models` ; `tokens` sur les conversations
+- [x] Panneau : choix du fournisseur, clé du fournisseur actif, adresse d'un serveur local, modèles listés depuis l'API (rafraîchir, saisie libre en repli), effort et budget en dollars pour Claude seulement, pied du panneau en tokens quand le prix est inconnu + tests
+- [x] Docs : USER_GUIDE, PLAN
+- [ ] Essai réel avec la clé Gemini de l'utilisateur
+
 ## 026c — Mémoire et qualité (plus tard)
 
 Notes du dataset, compaction côté serveur, playbooks, partage des lignes et masquage, OpenAI, évaluation réelle.

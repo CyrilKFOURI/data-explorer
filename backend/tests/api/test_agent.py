@@ -50,13 +50,14 @@ def test_settings_and_key_never_leave_the_backend(client: TestClient) -> None:
     assert settings["provider"] == "auto" and settings["active"] == "anthropic"
     assert settings["known_models"][0] == "claude-opus-5-5"
     assert settings["key"]["configured"] is False and settings["effort_supported"] is True
+    assert settings["ready"] is False
 
     saved = client.put(
         f"{BASE}/settings", json={"api_key": "sk-ant-test-1234abcd", "budget_usd": 2}
     ).json()
 
     assert saved["key"] == {"configured": True, "source": "file", "hint": "…abcd"}
-    assert saved["budget_usd"] == 2 and saved["active"] == "anthropic"
+    assert saved["budget_usd"] == 2 and saved["active"] == "anthropic" and saved["ready"]
     assert "sk-ant-test-1234abcd" not in json.dumps(client.get(f"{BASE}/settings").json())
     removed = client.put(f"{BASE}/settings", json={"api_key": ""}).json()
     assert removed["key"]["configured"] is False
@@ -78,6 +79,11 @@ def test_a_key_is_filed_under_the_vendor_it_belongs_to(client: TestClient) -> No
         f"{BASE}/settings", json={"provider": "mistral", "api_key": "plainkey1234567890"}
     ).json()
     assert mistral["active"] == "mistral" and mistral["key"]["configured"]
+    # a local server needs no key, only its address
+    custom = client.put(f"{BASE}/settings", json={"provider": "custom"}).json()
+    assert custom["ready"] is False
+    custom = client.put(f"{BASE}/settings", json={"base_url": "http://localhost:11434/v1"}).json()
+    assert custom["ready"] is True and custom["token_limit"] == 2_000_000
 
 
 def test_a_turn_runs_tools_streams_and_is_saved(client: TestClient, traps: str) -> None:

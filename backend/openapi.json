@@ -8261,6 +8261,11 @@
             "type": "number",
             "title": "Cost Usd"
           },
+          "tokens": {
+            "type": "integer",
+            "title": "Tokens",
+            "default": 0
+          },
           "created_at": {
             "type": "string",
             "title": "Created At"
@@ -8672,6 +8677,14 @@
           "sdk_installed": {
             "type": "boolean",
             "title": "Sdk Installed"
+          },
+          "ready": {
+            "type": "boolean",
+            "title": "Ready"
+          },
+          "token_limit": {
+            "type": "integer",
+            "title": "Token Limit"
           }
         },
         "type": "object",
@@ -8687,7 +8700,9 @@
           "effort_supported",
           "budget_usd",
           "key",
-          "sdk_installed"
+          "sdk_installed",
+          "ready",
+          "token_limit"
         ],
         "title": "AgentSettingsOut"
       },

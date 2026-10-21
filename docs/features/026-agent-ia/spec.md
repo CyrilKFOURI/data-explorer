@@ -93,10 +93,12 @@ message utilisateur
 | Fournisseur | Modèle par défaut | Remarques |
 |---|---|---|
 | **Anthropic** (recommandé) | `claude-sonnet-5-5` | Meilleur appel d'outils. Cache de prompt sur le prompt système et les outils (`cache_control`), soit environ −80 % de coût sur les tours suivants. `claude-opus-5-5` pour les analyses difficiles, `claude-haiku-5-5` pour les tâches annexes (titre de conversation, compaction). |
-| OpenAI | réglable | Même interface, via l'appel de fonctions. |
-| Compatible OpenAI (Ollama, LM Studio…) | réglable | Pour un modèle local plus tard (6 Go de VRAM : 7–8B, appel d'outils fragile, à présenter comme expérimental). |
+| Google Gemini, OpenAI, OpenRouter, Groq, Mistral, DeepSeek | lu depuis l'API (famille préférée, version stable la plus récente) | Un seul fournisseur générique (`providers/openai_compat.py`, SDK `openai`) au format chat-completions, à l'adresse de chaque fournisseur (`providers/vendors.py`). Pas de prix connu : budget en tokens. |
+| Compatible OpenAI (Ollama, LM Studio…) | saisi ou listé | Adresse du serveur, clé facultative (6 Go de VRAM : 7–8B, appel d'outils fragile, expérimental). |
 
-Interface commune (`providers/base.py`) : `complete(system, messages, tools, stream) -> itérateur d'événements (text_delta, tool_call, usage, stop)`. Le reste de l'agent ignore le fournisseur.
+Le fournisseur est reconnu à la forme de la clé (`sk-ant-`, `AIza`, `sk-or-`, `gsk_`, `sk-`) ; sinon l'utilisateur le choisit. En « auto », le premier fournisseur qui a une clé est utilisé.
+
+Interface commune (`engine/provider.py`) : `stream(request) -> itérateur d'événements (TextDelta, ThinkingDelta, Completed)`. Le reste de l'agent ignore le fournisseur.
 
 ## 5. Outils
 
@@ -177,7 +179,7 @@ C'est l'équivalent léger d'agents spécialisés : la méthode change selon le 
 |---|---|
 | R-AG-P1 | **Ce qui part chez le fournisseur** : le schéma, les statistiques, les agrégats et les catégories les plus fréquentes (comme dans le rapport 025), ainsi que les messages de l'utilisateur. Le panneau l'annonce à l'activation, une fois, avec le nom du fournisseur. |
 | R-AG-P2 | **Lignes brutes** (`sample_rows`), selon un réglage à trois niveaux : *Never* / *Ask each time* (par défaut) / *Allow*. Les colonnes de rôle identifiant, e-mail, téléphone et adresse sont masquées (`a***@***.com`) sauf si l'utilisateur les autorise colonne par colonne. |
-| R-AG-P3 | **Clés d'API** : lues dans l'environnement (`DATA_EXPLORER_ANTHROPIC_API_KEY`, `DATA_EXPLORER_OPENAI_API_KEY`), sinon saisies dans Paramètres et écrites dans `<workspace>/secrets.env` (droits restreints, hors dépôt, jamais exporté). L'API ne renvoie jamais une clé, seulement `configured: true` et ses 4 derniers caractères. Les clés ne sont jamais journalisées. |
+| R-AG-P3 | **Clés d'API** : une par fournisseur, lues dans l'environnement (`DATA_EXPLORER_<NOM>` puis `<NOM>`, ex. `GEMINI_API_KEY`), sinon saisies dans Paramètres et écrites dans `<workspace>/secrets.env` (droits restreints, hors dépôt, jamais exporté). L'API ne renvoie jamais une clé, seulement `configured: true` et ses 4 derniers caractères. Les clés ne sont jamais journalisées. |
 | R-AG-P4 | **Injection de prompt** : les noms de colonnes, les catégories et les valeurs sont des données. Les résultats d'outils sont encadrés comme tels, et le prompt système interdit d'obéir à une instruction qui s'y trouverait. Les outils `write` exigent toujours la confirmation humaine, quoi que dise le modèle. Pas d'exécution de code arbitraire. |
 | R-AG-P5 | **Sécurité réseau** : seul le backend appelle le fournisseur (le navigateur ne voit jamais la clé). Les protections existantes de `app/api/security.py` s'appliquent aux nouvelles routes. |
 

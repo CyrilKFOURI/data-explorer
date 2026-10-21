@@ -9,6 +9,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from app.domain.filters.model import Condition
+from app.modules.agent.engine.budget import TOKEN_LIMIT
 from app.modules.agent.engine.messages import Message
 from app.modules.agent.engine.provider import Effort
 from app.modules.agent.engine.tools import ToolError
@@ -56,6 +57,8 @@ class AgentSettingsOut(BaseModel):
     budget_usd: float
     key: AgentKey
     sdk_installed: bool
+    ready: bool  # a key (or none needed), an address for a custom API, and the SDK
+    token_limit: int  # per conversation, when the model's price is unknown
 
     @classmethod
     def of(cls, agent: AgentService) -> "AgentSettingsOut":
@@ -83,6 +86,10 @@ class AgentSettingsOut(BaseModel):
             budget_usd=settings.budget_usd,
             key=AgentKey(configured=key.configured, source=key.source, hint=key.hint),
             sdk_installed=agent.sdk_available(vendor),
+            ready=(key.configured or not vendor.needs_key)
+            and (vendor.id != "custom" or bool(settings.base_url))
+            and agent.sdk_available(vendor),
+            token_limit=TOKEN_LIMIT,
         )
 
 
@@ -139,6 +146,7 @@ class AgentConversation(BaseModel):
     title: str
     model: str
     cost_usd: float
+    tokens: int = 0
     created_at: str
     updated_at: str
     running: bool = False

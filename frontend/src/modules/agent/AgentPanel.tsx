@@ -10,7 +10,7 @@ import { Button } from "../../ui/Button";
 import { ErrorNote, Select } from "../../ui/fields";
 import { describePage } from "./links";
 import { AssistantMessage, UserMessage } from "./Message";
-import { SettingsView } from "./SettingsView";
+import { formatTokens, SettingsView } from "./SettingsView";
 import { useAgentSettings, useConversation, useConversations, useDeleteConversation, useTurn } from "./useAgent";
 
 const OPEN_KEY = "de.agent.open";
@@ -72,13 +72,15 @@ function Chat({ datasetId, onClose }: { datasetId: string; onClose: () => void }
   const conversationId = current && !detail.isError ? current : null;
   const messages = conversationId ? (detail.data?.messages ?? []) : [];
   const spent = state.conversationUsd ?? detail.data?.conversation.cost_usd ?? null;
+  const tokens = state.conversationTokens ?? detail.data?.conversation.tokens ?? null;
+  const priced = state.priced ?? settings.data?.effort_supported ?? true;
 
   useEffect(() => {
     const box = scroller.current;
     if (box) box.scrollTop = box.scrollHeight;
   }, [messages.length, state.live?.text, state.live?.steps.length]);
 
-  const ready = settings.data?.key.configured && settings.data.sdk_installed;
+  const ready = settings.data?.ready;
 
   const ask = async (text: string) => {
     const page = describePage(location.pathname, location.search as Record<string, unknown>);
@@ -183,10 +185,16 @@ function Chat({ datasetId, onClose }: { datasetId: string; onClose: () => void }
           <Composer running={state.running} disabled={!ready} onSend={ask} onStop={stop} />
           <p className="flex shrink-0 justify-between border-t border-line px-4 py-1.5 text-[11px] text-ink-3">
             <span>{filters.length ? t("agent.filtered", { count: String(filters.length) }) : t("agent.allRows")}</span>
-            {spent !== null && (
+            {priced && spent !== null && (
               <span className="tabular-nums" title={t("agent.costHint")}>
                 {t("agent.cost", { cost: spent < 0.01 ? "< $0.01" : `$${spent.toFixed(2)}` })}
                 {settings.data && ` / $${settings.data.budget_usd.toFixed(2)}`}
+              </span>
+            )}
+            {!priced && tokens !== null && (
+              <span className="tabular-nums" title={t("agent.tokensHint")}>
+                {t("agent.tokens", { count: formatTokens(tokens) })}
+                {settings.data && ` / ${formatTokens(settings.data.token_limit)}`}
               </span>
             )}
           </p>

@@ -6,6 +6,7 @@ import { agentApi, streamTurn, type AgentLink, type AgentSettingsChange, type Tu
 
 const keys = {
   settings: ["agent", "settings"] as const,
+  models: ["agent", "models"] as const,
   conversations: (datasetId: string) => ["agent", "conversations", datasetId] as const,
   conversation: (id: string) => ["agent", "conversation", id] as const,
 };
@@ -18,8 +19,21 @@ export function useUpdateAgentSettings() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (change: AgentSettingsChange) => agentApi.updateSettings(change),
-    onSuccess: (settings) => client.setQueryData(keys.settings, settings),
+    onSuccess: (settings) => {
+      client.setQueryData(keys.settings, settings);
+      void client.invalidateQueries({ queryKey: keys.models });
+    },
   });
+}
+
+/** The chat models the active provider offers to the key (listed from its API). */
+export function useAgentModels(enabled: boolean) {
+  const client = useQueryClient();
+  const query = useQuery({ queryKey: keys.models, queryFn: () => agentApi.models(false), enabled, retry: false });
+  const refresh = useCallback(async () => {
+    client.setQueryData(keys.models, await agentApi.models(true));
+  }, [client]);
+  return { ...query, refresh };
 }
 
 export function useTestAgentKey() {
@@ -76,11 +90,22 @@ export type TurnState = {
   running: boolean;
   /** Spent on the conversation so far (US dollars). */
   conversationUsd: number | null;
+  conversationTokens: number | null;
+  /** False when the model's price is unknown: the panel counts tokens instead of dollars. */
+  priced: boolean | null;
   ending: string | null;
   error: { kind: string; message: string } | null;
 };
 
-const IDLE: TurnState = { live: null, running: false, conversationUsd: null, ending: null, error: null };
+const IDLE: TurnState = {
+  live: null,
+  running: false,
+  conversationUsd: null,
+  conversationTokens: null,
+  priced: null,
+  ending: null,
+  error: null,
+};
 
 function apply(state: TurnState, event: TurnEvent): TurnState {
   const live = state.live;
@@ -120,11 +145,23 @@ function apply(state: TurnState, event: TurnEvent): TurnState {
         },
       };
     case "spent":
-      return { ...state, conversationUsd: event.conversation_usd };
+      return {
+        ...state,
+        conversationUsd: event.conversation_usd,
+        conversationTokens: event.conversation_tokens,
+        priced: event.priced,
+      };
     case "notice":
       return { ...state, ending: event.message };
     case "done":
-      return { ...state, running: false, conversationUsd: event.conversation_usd, ending: event.message };
+      return {
+        ...state,
+        running: false,
+        conversationUsd: event.conversation_usd,
+        conversationTokens: event.conversation_tokens,
+        priced: event.priced,
+        ending: event.message,
+      };
     case "error":
       return { ...state, running: false, error: { kind: event.kind, message: event.message } };
   }

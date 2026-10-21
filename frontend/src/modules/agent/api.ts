@@ -19,9 +19,24 @@ export type TurnEvent =
   | { type: "step_progress"; id: string; message: string; share: number | null }
   | { type: "confirm"; id: string; tool: string; text: string }
   | { type: "step_done"; id: string; ok: boolean; summary: string; link: AgentLink | null; ms: number }
-  | { type: "spent"; turn_usd: number; conversation_usd: number; tokens: number }
+  | {
+      type: "spent";
+      turn_usd: number;
+      conversation_usd: number;
+      tokens: number;
+      conversation_tokens: number;
+      priced: boolean;
+    }
   | { type: "notice"; message: string }
-  | { type: "done"; end: string; message: string | null; turn_usd: number; conversation_usd: number }
+  | {
+      type: "done";
+      end: string;
+      message: string | null;
+      turn_usd: number;
+      conversation_usd: number;
+      conversation_tokens: number;
+      priced: boolean;
+    }
   | { type: "error"; kind: string; message: string };
 
 const BASE = "/modules/agent";
@@ -29,6 +44,8 @@ const BASE = "/modules/agent";
 export const agentApi = {
   settings: () => request<AgentSettings>("GET", `${BASE}/settings`),
   updateSettings: (change: AgentSettingsChange) => request<AgentSettings>("PUT", `${BASE}/settings`, change),
+  models: (refresh: boolean) =>
+    request<Schemas["AgentModels"]>("GET", `${BASE}/settings/models${refresh ? "?refresh=true" : ""}`),
   testKey: () => request<{ ok: boolean; model: string }>("POST", `${BASE}/settings/test`),
   conversations: (datasetId: string) =>
     request<AgentConversation[]>("GET", `${BASE}/datasets/${datasetId}/conversations`),
