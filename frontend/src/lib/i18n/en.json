@@ -2144,5 +2144,13 @@
   "compare.readAsLevels": "{count} values, read as categories ·",
   "compare.readAsNumbers": "Read as numbers ·",
   "compare.asNumbers": "As numbers",
-  "compare.asCategories": "As categories"
+  "compare.asCategories": "As categories",
+  "report.export": "Export report",
+  "report.menu": "Report (HTML)",
+  "report.hint": "One HTML file about the whole dataset, after your filters: summary, every variable, correlations, missing values.",
+  "report.running": "Report · {message}",
+  "report.starting": "Report · starting",
+  "report.cancel": "Cancel",
+  "report.failed": "The report failed: {error}",
+  "report.done": "Report downloaded"
 }

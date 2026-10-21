@@ -1,11 +1,13 @@
 import * as Menu from "@radix-ui/react-dropdown-menu";
-import { Check, ChevronDown, Download, FileSpreadsheet, FileText, Sigma, type LucideIcon } from "lucide-react";
+import { Check, ChevronDown, Download, FileCode, FileSpreadsheet, FileText, Sigma, type LucideIcon } from "lucide-react";
 import { useState } from "react";
 
 import { exportUrl, summaryUrl, type ExportFormat, type RowsView } from "../../api/client";
 import type { Condition } from "../../api/filters";
 import { formatCount } from "../../lib/format";
 import { t } from "../../lib/i18n";
+import { ReportProgress } from "../report/ReportButton";
+import { useReport } from "../report/useReport";
 
 export const EXCEL_ROWS = 1_048_575;
 
@@ -30,7 +32,10 @@ const itemClass =
 export function ExportMenu({ datasetId, view, filters, total, visible, allColumns }: ExportMenuProps) {
   const [onlyVisible, setOnlyVisible] = useState(true);
   const columns = onlyVisible && visible.length < allColumns ? visible : null;
+  const report = useReport(datasetId);
   return (
+    <span className="inline-flex items-center gap-3">
+    <ReportProgress report={report} />
     <Menu.Root>
       <Menu.Trigger className="inline-flex h-(--control-h) items-center gap-1.5 rounded-md border border-line bg-surface-1 px-2.5 text-[13px] text-ink-1 hover:bg-surface-2 data-[state=open]:bg-surface-2">
         <Download size={14} strokeWidth={1.5} aria-hidden />
@@ -80,8 +85,13 @@ export function ExportMenu({ datasetId, view, filters, total, visible, allColumn
               {t("data.exportSummary")}
             </a>
           </Menu.Item>
+          <Menu.Item onSelect={report.start} disabled={report.running} className={itemClass} title={t("report.hint")}>
+            <FileCode size={14} strokeWidth={1.5} className="text-ink-3" aria-hidden />
+            {t("report.menu")}
+          </Menu.Item>
         </Menu.Content>
       </Menu.Portal>
     </Menu.Root>
+    </span>
   );
 }

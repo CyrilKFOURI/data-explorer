@@ -529,6 +529,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/datasets/{dataset_id}/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start
+         * @description Generate the HTML report of the dataset, over the filtered rows (spec 025).
+         */
+        post: operations["start_api_v1_datasets__dataset_id__report_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Job */
+        get: operations["job_api_v1_reports_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        /** Cancel */
+        delete: operations["cancel_api_v1_reports_jobs__job_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/jobs/{job_id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download */
+        get: operations["download_api_v1_reports_jobs__job_id__file_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/settings": {
         parameters: {
             query?: never;
@@ -4104,6 +4159,27 @@ export interface components {
             disclosure?: components["schemas"]["Disclosure"] | null;
             sequences?: components["schemas"]["SequenceReport"] | null;
         };
+        /** ReportJob */
+        ReportJob: {
+            /** Id */
+            id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "running" | "done" | "failed" | "cancelled";
+            /**
+             * Progress
+             * @default 0
+             */
+            progress: number;
+            /** Message */
+            message?: string | null;
+            /** Error */
+            error?: string | null;
+            /** File Name */
+            file_name?: string | null;
+        };
         /** Resolved */
         Resolved: {
             grain: components["schemas"]["app__domain__kpi__rules__Decision"] | null;
@@ -7041,6 +7117,131 @@ export interface operations {
             header?: never;
             path: {
                 dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_api_v1_datasets__dataset_id__report_post: {
+        parameters: {
+            query?: {
+                /** @description JSON list of conditions, combined with AND. */
+                filters?: string | null;
+            };
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    job_api_v1_reports_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_api_v1_reports_jobs__job_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_api_v1_reports_jobs__job_id__file_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
             };
             cookie?: never;
         };

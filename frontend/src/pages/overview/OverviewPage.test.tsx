@@ -121,6 +121,33 @@ describe("Overview page", () => {
     expect(localStorage.getItem("de.overview.d1.topN")).toBe("20");
   });
 
+  it("exports the HTML report and downloads it once done", async () => {
+    const job = { id: "j1", status: "running", progress: 0.5, message: "Variables 2 / 3", error: null, file_name: null };
+    let polls = 0;
+    const calls = mockApi({
+      "GET /health": health,
+      "GET /datasets/d1": dataset({ types_reviewed_at: "2026-10-13T10:00:00Z" }),
+      "POST /datasets/d1/open": dataset(),
+      "GET /datasets/d1/columns": columns,
+      "GET /datasets/d1/overview": overview,
+      "GET /column-roles": roles,
+      "GET /datasets/d1/columns/chart": bars(),
+      "POST /datasets/d1/report": job,
+      "GET /reports/jobs/j1": () =>
+        ++polls < 2 ? job : { ...job, status: "done", progress: 1, message: null, file_name: "sales-report.html" },
+    });
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    renderAt("/d/d1");
+
+    fireEvent.click(await screen.findByRole("button", { name: "Export report" }));
+
+    expect(await screen.findByText("Report · Variables 2 / 3")).toBeInTheDocument();
+    await waitFor(() => expect(click).toHaveBeenCalledTimes(1), { timeout: 3000 });
+    expect(calls.some((c) => c.key === "POST /datasets/d1/report")).toBe(true);
+    expect(screen.getByRole("button", { name: "Export report" })).toBeEnabled();
+    click.mockRestore();
+  });
+
   it("focuses a column from an alert", async () => {
     setup();
     renderAt("/d/d1");

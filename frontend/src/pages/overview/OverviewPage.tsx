@@ -7,6 +7,7 @@ import type { Alert, AnalysisType, Column, Overview } from "../../api/client";
 import { useColumns, useDataset, useOpenDataset, useOverview, useUpdateColumns } from "../../api/hooks";
 import { ANALYSIS_TYPES, TYPE_META } from "../../features/columns/columnTypes";
 import { NoRows } from "../../features/filters/NoRows";
+import { ReportButton } from "../../features/report/ReportButton";
 import { SummaryStrip } from "../../features/summary-strip/SummaryStrip";
 import { SyntheticOrigin } from "../../features/synthetic-origin/SyntheticOrigin";
 import { VariableCard } from "../../features/variable-grid/VariableCard";
@@ -107,14 +108,17 @@ export function OverviewPage() {
           </p>
           <SyntheticOrigin datasetId={datasetId} />
         </div>
-        <Link
-          to="/d/$datasetId/columns"
-          params={{ datasetId }}
-          className="inline-flex h-(--control-h) items-center gap-1.5 rounded-md border border-line bg-surface-1 px-3 text-[13px] text-ink-1 hover:bg-surface-2"
-        >
-          <Columns3 size={15} strokeWidth={1.5} aria-hidden />
-          {t("overview.reviewTypes")}
-        </Link>
+        <div className="flex items-start gap-2">
+          <ReportButton datasetId={datasetId} />
+          <Link
+            to="/d/$datasetId/columns"
+            params={{ datasetId }}
+            className="inline-flex h-(--control-h) items-center gap-1.5 rounded-md border border-line bg-surface-1 px-3 text-[13px] text-ink-1 hover:bg-surface-2"
+          >
+            <Columns3 size={15} strokeWidth={1.5} aria-hidden />
+            {t("overview.reviewTypes")}
+          </Link>
+        </div>
       </header>
 
       {!data.types_reviewed_at && (

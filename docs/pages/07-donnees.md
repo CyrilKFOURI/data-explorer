@@ -19,4 +19,4 @@ Voir les **lignes brutes** après filtres : point de contrôle et sortie des don
 - La vue courante (filtres, mode, recherche, tri) → CSV, Parquet, Excel (colonnes visibles ou toutes), valeurs typées ; Excel limité à 1 048 575 lignes (sinon proposer CSV / Parquet)
 - Résumé des statistiques de toutes les colonnes → CSV (sur les lignes filtrées)
 - Graphiques : PNG depuis chaque carte (déjà en place)
-- (Plus tard) rapport HTML complet du dataset
+- Rapport HTML complet du dataset (« Report (HTML) » dans le menu Export, comme le bouton de la Vue d'ensemble, voir la [025](../features/025-rapport-html/spec.md))

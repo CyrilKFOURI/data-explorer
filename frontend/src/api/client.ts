@@ -184,6 +184,7 @@ export type SyntheticColumnPlan = SyntheticPlan["columns"][number];
 export type SyntheticMethod = SyntheticPlan["method"];
 export type SyntheticTreatment = SyntheticColumnPlan["treatment"];
 export type SyntheticJob = Complete<Schemas["SyntheticJob"]>;
+export type ReportJob = Complete<Schemas["ReportJob"]>;
 export type SyntheticRun = Complete<Schemas["SyntheticRun"]>;
 export type SyntheticReport = SyntheticRun["report"];
 export type SyntheticRunSummary = Complete<Schemas["SyntheticRunSummary"]>;
@@ -256,6 +257,10 @@ export function exportUrl(
 
 export function summaryUrl(id: string, filters?: Condition[]) {
   return `/api/v1/datasets/${id}/export/summary?${new URLSearchParams(filtersParam(filters))}`;
+}
+
+export function reportFileUrl(jobId: string) {
+  return `/api/v1/reports/jobs/${jobId}/file`;
 }
 
 function chartQuery(
@@ -601,6 +606,10 @@ export const api = {
   syntheticPlan: (id: string) => request<SyntheticPlan>("GET", `/modules/synthetic/datasets/${id}/plan`),
   syntheticGenerate: (id: string, body: SyntheticRequest) =>
     request<SyntheticJob>("POST", `/modules/synthetic/datasets/${id}/runs`, body),
+  reportStart: (id: string, filters: Condition[]) =>
+    request<ReportJob>("POST", `/datasets/${id}/report?${new URLSearchParams(filtersParam(filters))}`),
+  reportJob: (jobId: string) => request<ReportJob>("GET", `/reports/jobs/${jobId}`),
+  reportCancel: (jobId: string) => request<ReportJob>("DELETE", `/reports/jobs/${jobId}`),
   syntheticJob: (jobId: string) => request<SyntheticJob>("GET", `/modules/synthetic/jobs/${jobId}`),
   syntheticCancel: (jobId: string) => request<SyntheticJob>("DELETE", `/modules/synthetic/jobs/${jobId}`),
   syntheticRuns: (id: string) => request<SyntheticRunSummary[]>("GET", `/modules/synthetic/datasets/${id}/runs`),

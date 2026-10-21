@@ -6,7 +6,7 @@ Balayer **toutes les variables d'un coup d'œil** et repérer ce qui mérite d'�
 
 ## Contenu
 
-0. **En-tête** : nom de la page, chemin de la source ; pour un dataset créé depuis des données synthétiques, la mention « Synthetic, from <source> » avec le lien vers le run (023).
+0. **En-tête** : nom de la page, chemin de la source, bouton **Export report** à droite (rapport HTML du dataset, sur les lignes filtrées, voir la [025](../features/025-rapport-html/spec.md) : progression dans le bouton, « Cancel » à côté, téléchargement automatique à la fin) ; pour un dataset créé depuis des données synthétiques, la mention « Synthetic, from <source> » avec le lien vers le run (023).
 1. **Bandeau de résumé** (transverse, voir [00-transverse.md](00-transverse.md))
 2. **Alertes qualité** (repliables) : colonnes vides ou constantes, doublons, types à faible confiance, colonnes très asymétriques, cardinalité extrême. Chaque alerte mène à la colonne concernée.
 3. **Barre d'outils de la grille** :

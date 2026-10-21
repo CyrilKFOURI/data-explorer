@@ -43,6 +43,7 @@ Each column gets an **analysis type**, which decides which charts and statistica
 - **Summary strip**: rows (filtered / total), columns, missing values, duplicate rows and columns, size.
 - **Alerts**: things worth a look — heavily skewed variables, high cardinality, constant or mostly empty columns, unreadable values.
 - **One card per variable**, three per row: its chart and key numbers. Sort (file order, name, most missing, most distinct, most skewed), search, choose the *Top N* categories shown (the rest is grouped as *Others*) and the number of cards per page.
+- **Export report** (top right) downloads one HTML file about the whole dataset, after your filters: summary and alerts, a card per variable with its chart, normality verdict and outliers, the correlation matrix with the strongest pairs and insights, missing values, and a note on each method. It opens offline in any browser, holds no whole row (only counts, statistics and the most frequent values) and prints well to PDF. Large datasets take a while: the button shows the progress and can be cancelled.
 - On a card: **full screen** (every category, with a table of counts, % and cumulative %; for numbers, the full statistics and normality tests), **change the chart**, **download PNG**, **open the variable page**. Click a bar or a range to filter on it.
 
 ### Variable page
@@ -186,7 +187,7 @@ The rows behind every chart, after your filters.
 - **Search** any column (case-insensitive). **Sort** by clicking a column name (ascending → descending → file order).
 - Column menu (⋮): sort, *Filter on this column…*, *Pin to the left*, *Hide column*, *Open the variable page*. Hidden and pinned columns are remembered per dataset.
 - Cells: numbers right-aligned, empty values as a grey "—", a value that can't be read in the column's type in orange italics (hover for details).
-- **Export** what you see (filters, mode, search, sort) as **CSV**, **Parquet** or **Excel** (Excel holds 1,048,575 rows at most), with the visible columns or all of them; or the **column summary** (one row per column: type, missing, distinct, min, quartiles, max, mean, std, top value).
+- **Export** what you see (filters, mode, search, sort) as **CSV**, **Parquet** or **Excel** (Excel holds 1,048,575 rows at most), with the visible columns or all of them; or the **column summary** (one row per column: type, missing, distinct, min, quartiles, max, mean, std, top value), or the full **HTML report** (see Overview).
 
 ### Settings
 

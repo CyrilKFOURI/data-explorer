@@ -54,7 +54,7 @@ Roadmap en **sprints**, chacun composé de **tranches verticales** : chaque case
 - [x] Rapidité (2026-10-20) — `scripts/serve.ps1` (app compilée servie par le backend), plotly préchargé pendant les temps morts, graphiques dessinés un par un (ceux à l'écran d'abord, aucun n'attend le défilement)
 - [ ] À planifier — Module Assistant IA (LLM local optionnel)
 - [ ] Dernière étape — Bibliothèque Python : tout le moteur utilisable en `pip install` (notebooks, scripts), l'app en extra `[app]` — [bibliotheque-python.md](docs/modules-futurs/bibliotheque-python.md)
-- [ ] À planifier — Rapport HTML exportable du dataset
+- [x] 025-rapport-html — rapport HTML autonome (sans script ni lien externe) : résumé et alertes, une fiche par variable avec graphique SVG, verdict de normalité et aberrants, matrice d'association, paires les plus liées et insights, manquants, méthodes ; sur les lignes filtrées ; tâche de fond avec progression et annulation ; bouton Export report (Vue d'ensemble) et menu Export (Données)
 - [ ] À planifier — Vidéo / GIF de démo pour le README
 - [ ] À planifier — Interface en français (i18n déjà prête)
 - [ ] À planifier — Reconnaissance du thème du dataset : des « packs » par domaine (colonnes typiques et synonymes, indices sur les valeurs, KPI et visuels associés), reconnaissance par score sur les colonnes plutôt que le titre, suggestions transparentes (« reconnu grâce à… ») que l'utilisateur accepte ou corrige. Commencer par 3 packs bien faits (véhicules, ventes, RH) pour valider la méthode, puis l'étendre aux autres domaines une fois qu'elle est légère et fiable.

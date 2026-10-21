@@ -70,6 +70,7 @@ select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
 # Statistical notation (×, ρ, η², en dashes) is intended in these messages.
 "app/domain/compare/*" = ["RUF001", "RUF003"]
 "app/domain/correlations/*" = ["RUF001", "RUF003"]
+"app/domain/report/*" = ["RUF001", "RUF002", "RUF003"]
 
 [tool.pyright]
 pythonVersion = "3.12"
