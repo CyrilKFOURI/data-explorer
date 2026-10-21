@@ -23,6 +23,7 @@ def test_migrations_create_tables(tmp_path: Path) -> None:
         "0009_synthetic_runs",
         "0010_synthetic_device",
         "0011_agent",
+        "0012_agent_tokens",
     ]
     expected = {
         "schema_migrations",
