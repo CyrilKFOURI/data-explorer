@@ -16,3 +16,7 @@ frontend/dist/
 # Local data mounted into Docker
 data/*
 !data/.gitkeep
+
+# Local assistant and tool settings
+CLAUDE.md
+.claude/
