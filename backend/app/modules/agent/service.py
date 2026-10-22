@@ -36,7 +36,13 @@ from app.modules.agent.engine.provider import (
 )
 from app.modules.agent.engine.tools import Tool, ToolContext, ToolError, ToolRegistry
 from app.modules.agent.providers.vendors import BY_ID, Vendor, chat_models, pick_default
-from app.modules.agent.repository import Conversation, ConversationRepository
+from app.modules.agent.repository import (
+    Conversation,
+    ConversationRepository,
+    Note,
+    NoteError,
+    NoteRepository,
+)
 from app.modules.agent.settings import AUTO, EFFORTS, AgentSettings, KeyStatus, SettingsStore
 from app.modules.agent.tools import AppServices
 
@@ -102,6 +108,7 @@ class AgentService:
     def __init__(
         self,
         repository: ConversationRepository,
+        notes: NoteRepository,
         store: SettingsStore,
         services: AppServices,
         registry_factory: Callable[[], ToolRegistry],
@@ -110,6 +117,7 @@ class AgentService:
     ) -> None:
         """`provider_factory(vendor, key, base_url)` builds the provider of a turn."""
         self.repository = repository
+        self.notes = notes
         self.store = store
         self.services = services
         self._registry_factory = registry_factory
@@ -243,6 +251,23 @@ class AgentService:
     def running(self, conversation_id: str) -> bool:
         return conversation_id in self._runs
 
+    # --- notes ----------------------------------------------------------------------------------
+
+    def dataset_notes(self, dataset_id: str) -> list[Note]:
+        self.services.columns.ready(dataset_id)
+        return self.notes.for_dataset(dataset_id)
+
+    def add_note(self, dataset_id: str, text: str) -> Note:
+        self.services.columns.ready(dataset_id)
+        try:
+            return self.notes.add(dataset_id, text, "user")
+        except NoteError as error:
+            raise AgentError(str(error), "bad_note") from error
+
+    def delete_note(self, dataset_id: str, note_id: str) -> None:
+        if not self.notes.delete(dataset_id, note_id):
+            raise AgentError("This note no longer exists.", "unknown_note", 404)
+
     # --- turns ----------------------------------------------------------------------------------
 
     def send(
@@ -368,7 +393,8 @@ class AgentService:
             for v in views
             if v.type != "ignored"
         ]
-        return system_prompt(dataset.name, dataset.row_count or 0, columns)
+        notes = [n.text for n in self.notes.for_dataset(dataset_id)]
+        return system_prompt(dataset.name, dataset.row_count or 0, columns, notes)
 
 
 def ground(system: str, history: list[Message], turn: list[Message]) -> Grounding | None:

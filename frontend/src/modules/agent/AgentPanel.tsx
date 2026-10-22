@@ -1,5 +1,5 @@
 import { useParams, useRouterState } from "@tanstack/react-router";
-import { ArrowUp, Plus, Settings2, Sparkles, Square, Trash2, X } from "lucide-react";
+import { ArrowUp, NotebookPen, Plus, Settings2, Sparkles, Square, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 
 import { useActiveFilters } from "../../api/filters";
@@ -10,6 +10,7 @@ import { Button } from "../../ui/Button";
 import { ErrorNote, Select } from "../../ui/fields";
 import { describePage } from "./links";
 import { AssistantMessage, UserMessage } from "./Message";
+import { NotesView } from "./NotesView";
 import { formatTokens, SettingsView } from "./SettingsView";
 import { useAgentSettings, useConversation, useConversations, useDeleteConversation, useTurn } from "./useAgent";
 
@@ -57,7 +58,7 @@ export function AgentPanel() {
 }
 
 function Chat({ datasetId, onClose }: { datasetId: string; onClose: () => void }) {
-  const [view, setView] = useState<"chat" | "settings">("chat");
+  const [view, setView] = useState<"chat" | "settings" | "notes">("chat");
   const [current, setCurrent] = useStoredState<string | null>(`de.agent.${datasetId}.conversation`, null);
   const settings = useAgentSettings(true);
   const conversations = useConversations(datasetId, true);
@@ -97,8 +98,8 @@ function Chat({ datasetId, onClose }: { datasetId: string; onClose: () => void }
     <>
       <header className="flex h-12 shrink-0 items-center gap-1.5 border-b border-line px-3">
         <Sparkles size={15} className="shrink-0 text-accent" aria-hidden />
-        {view === "settings" ? (
-          <h2 className="flex-1 text-[13px] font-medium">{t("agent.settings")}</h2>
+        {view !== "chat" ? (
+          <h2 className="flex-1 text-[13px] font-medium">{t(view === "settings" ? "agent.settings" : "agent.notes")}</h2>
         ) : (
           <Select
             aria-label={t("agent.conversations")}
@@ -135,6 +136,15 @@ function Chat({ datasetId, onClose }: { datasetId: string; onClose: () => void }
         <Button
           variant="ghost"
           iconOnly
+          icon={NotebookPen}
+          aria-label={t("agent.notes")}
+          title={t("agent.notes")}
+          aria-pressed={view === "notes"}
+          onClick={() => setView(view === "notes" ? "chat" : "notes")}
+        />
+        <Button
+          variant="ghost"
+          iconOnly
           icon={Settings2}
           aria-label={t("agent.settings")}
           title={t("agent.settings")}
@@ -144,7 +154,11 @@ function Chat({ datasetId, onClose }: { datasetId: string; onClose: () => void }
         <Button variant="ghost" iconOnly icon={X} aria-label={t("agent.close")} title={t("agent.shortcut")} onClick={onClose} />
       </header>
 
-      {view === "settings" && settings.data ? (
+      {view === "notes" ? (
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <NotesView datasetId={datasetId} onDone={() => setView("chat")} />
+        </div>
+      ) : view === "settings" && settings.data ? (
         <div className="min-h-0 flex-1 overflow-y-auto">
           <SettingsView settings={settings.data} onDone={() => setView("chat")} />
         </div>

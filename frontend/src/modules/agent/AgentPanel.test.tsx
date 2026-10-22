@@ -75,6 +75,8 @@ const saved = [
   },
 ];
 
+let notes: { id: string; text: string; source: string; created_at: string }[] = [];
+
 function setup(configured = true, vendor: "anthropic" | "gemini" = "anthropic", events = turn) {
   let answered = false;
   const calls = mockApi({
@@ -89,6 +91,12 @@ function setup(configured = true, vendor: "anthropic" | "gemini" = "anthropic", 
     "GET /modules/agent/settings": settings(configured, vendor),
     "GET /modules/agent/settings/models": { models: ["gemini-2.5-flash", "gemini-2.5-pro"], default: "gemini-2.5-pro" },
     "GET /modules/agent/datasets/d1/conversations": [],
+    "GET /modules/agent/datasets/d1/notes": () => notes,
+    "POST /modules/agent/datasets/d1/notes": (body: unknown) => {
+      const note = { id: `n${notes.length + 1}`, text: (body as { text: string }).text, source: "user", created_at: "" };
+      notes.push(note);
+      return note;
+    },
     "POST /modules/agent/datasets/d1/conversations": conversation,
     "GET /modules/agent/conversations/c1": () => ({ conversation, messages: answered ? saved : [] }),
   });
@@ -105,7 +113,10 @@ function setup(configured = true, vendor: "anthropic" | "gemini" = "anthropic", 
   return calls;
 }
 
-beforeEach(() => localStorage.clear());
+beforeEach(() => {
+  localStorage.clear();
+  notes = [{ id: "n0", text: "Survived is the target", source: "agent", created_at: "" }];
+});
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Assistant panel", () => {
@@ -161,6 +172,24 @@ describe("Assistant panel", () => {
     expect(within(panel).getByRole("option", { name: "gemini-2.5-flash" })).toBeInTheDocument();
     expect(within(panel).queryByLabelText("Effort")).not.toBeInTheDocument();
     expect(within(panel).getByText(/each conversation stops at 2M tokens/)).toBeInTheDocument();
+  });
+
+  it("lists, adds and attributes the dataset notes", async () => {
+    const calls = setup();
+    renderAt("/d/d1/columns");
+    fireEvent.click(await screen.findByRole("button", { name: "Ask the assistant" }));
+    const panel = await screen.findByRole("complementary", { name: "Assistant" });
+
+    fireEvent.click(await within(panel).findByRole("button", { name: "Dataset notes" }));
+    const list = await within(panel).findByRole("list", { name: "Dataset notes" });
+    expect(within(list).getByText("Survived is the target")).toBeInTheDocument();
+    expect(within(list).getByLabelText("Saved by the assistant")).toBeInTheDocument();
+
+    fireEvent.change(within(panel).getByRole("textbox", { name: "New note" }), { target: { value: "Fare is in pounds" } });
+    fireEvent.click(within(panel).getByRole("button", { name: "Add" }));
+
+    expect(await within(panel).findByText("Fare is in pounds")).toBeInTheDocument();
+    expect(calls.find((c) => c.key === "POST /modules/agent/datasets/d1/notes")?.body).toEqual({ text: "Fare is in pounds" });
   });
 
   it("stays out of the way outside a dataset", async () => {

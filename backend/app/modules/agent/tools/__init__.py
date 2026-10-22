@@ -1,4 +1,4 @@
-"""The agent's tools on the app's V1 analyses (spec 026, § 5.2). Read-only in 026a."""
+"""The agent's own tools: the app's V1 analyses (spec 026, § 5.2), its memory and method."""
 
 from dataclasses import dataclass
 from typing import Any
@@ -10,6 +10,7 @@ from app.domain.profiling.service import ProfilingService
 from app.domain.report.service import ReportService
 from app.domain.variable.service import VariableService
 from app.modules.agent.engine.tools import Tool, ToolRegistry
+from app.modules.agent.repository import NoteRepository
 
 
 @dataclass(frozen=True)
@@ -24,14 +25,17 @@ class AppServices:
     reports: ReportService
 
 
-def default_registry(services: AppServices, extra: list[Tool[Any]] | None = None) -> ToolRegistry:
-    """The agent's own tools on the V1 analyses, then the tools the modules offer."""
+def default_registry(
+    services: AppServices, notes: NoteRepository, extra: list[Tool[Any]] | None = None
+) -> ToolRegistry:
+    """The agent's own tools, then the tools the modules offer."""
     from app.modules.agent.tools.dataset import (
         CountRows,
         GetDatasetOverview,
         ListColumns,
         ProfileColumn,
     )
+    from app.modules.agent.tools.memory import GetPlaybook, Remember
     from app.modules.agent.tools.relations import (
         CompareColumns,
         GetCorrelations,
@@ -49,6 +53,8 @@ def default_registry(services: AppServices, extra: list[Tool[Any]] | None = None
             GetCorrelations(services),
             RankAssociationsWith(services),
             ExportReport(services),
+            GetPlaybook(),
+            Remember(notes),
             *(extra or []),
         ]
     )

@@ -2222,5 +2222,14 @@
   "agent.tokensHint": "Tokens used by this conversation (price unknown for this model)",
   "agent.unverifiedOne": "1 figure not found in the analyses: {figures}",
   "agent.unverifiedMany": "{count} figures not found in the analyses: {figures}",
-  "agent.unverifiedHint": "Every figure should come from an analysis the assistant ran. These ones could not be matched: they may be computed by the model (a difference, a ratio) or wrong. Check them before relying on them."
+  "agent.unverifiedHint": "Every figure should come from an analysis the assistant ran. These ones could not be matched: they may be computed by the model (a difference, a ratio) or wrong. Check them before relying on them.",
+  "agent.notes": "Dataset notes",
+  "agent.notesIntro": "Facts every conversation on this dataset starts with: the target, units, what a code means, a known problem. The assistant can add one when you confirm it.",
+  "agent.notesEmpty": "No notes yet.",
+  "agent.noteNew": "New note",
+  "agent.notePlaceholder": "e.g. Fare is in 1912 pounds",
+  "agent.noteAdd": "Add",
+  "agent.noteDelete": "Delete the note",
+  "agent.noteByAgent": "Saved by the assistant",
+  "agent.noteByUser": "Written by you"
 }

@@ -14,7 +14,7 @@ from app.modules.agent.engine.messages import Message
 from app.modules.agent.engine.provider import Effort
 from app.modules.agent.engine.tools import ToolError
 from app.modules.agent.providers.vendors import VENDORS
-from app.modules.agent.repository import Conversation
+from app.modules.agent.repository import MAX_NOTE_CHARS, Conversation, Note
 from app.modules.agent.service import AgentService, strip_context
 
 router = APIRouter(tags=["agent"])
@@ -135,6 +135,39 @@ def models(agent: Agent, refresh: bool = False) -> AgentModels:
 @router.post("/settings/test")
 def test_key(agent: Agent) -> AgentKeyTest:
     return AgentKeyTest(ok=True, model=agent.test_key())
+
+
+# --- notes ------------------------------------------------------------------------------------
+
+
+class AgentNote(BaseModel):
+    id: str
+    text: str
+    source: str  # user | agent
+    created_at: str
+
+    @classmethod
+    def of(cls, note: Note) -> "AgentNote":
+        return cls(id=note.id, text=note.text, source=note.source, created_at=note.created_at)
+
+
+class AgentNoteIn(BaseModel):
+    text: str = Field(min_length=1, max_length=MAX_NOTE_CHARS)
+
+
+@router.get("/datasets/{dataset_id}/notes")
+def list_notes(dataset_id: str, agent: Agent) -> list[AgentNote]:
+    return [AgentNote.of(n) for n in agent.dataset_notes(dataset_id)]
+
+
+@router.post("/datasets/{dataset_id}/notes", status_code=201)
+def add_note(dataset_id: str, body: AgentNoteIn, agent: Agent) -> AgentNote:
+    return AgentNote.of(agent.add_note(dataset_id, body.text))
+
+
+@router.delete("/datasets/{dataset_id}/notes/{note_id}", status_code=204)
+def delete_note(dataset_id: str, note_id: str, agent: Agent) -> None:
+    agent.delete_note(dataset_id, note_id)
 
 
 # --- conversations ----------------------------------------------------------------------------

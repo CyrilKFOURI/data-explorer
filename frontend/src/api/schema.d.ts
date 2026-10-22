@@ -1536,6 +1536,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/modules/agent/datasets/{dataset_id}/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Notes */
+        get: operations["list_notes_api_v1_modules_agent_datasets__dataset_id__notes_get"];
+        put?: never;
+        /** Add Note */
+        post: operations["add_note_api_v1_modules_agent_datasets__dataset_id__notes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/modules/agent/datasets/{dataset_id}/notes/{note_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Note */
+        delete: operations["delete_note_api_v1_modules_agent_datasets__dataset_id__notes__note_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/modules/agent/datasets/{dataset_id}/conversations": {
         parameters: {
             query?: never;
@@ -1723,6 +1758,22 @@ export interface components {
             models: string[];
             /** Default */
             default: string | null;
+        };
+        /** AgentNote */
+        AgentNote: {
+            /** Id */
+            id: string;
+            /** Text */
+            text: string;
+            /** Source */
+            source: string;
+            /** Created At */
+            created_at: string;
+        };
+        /** AgentNoteIn */
+        AgentNoteIn: {
+            /** Text */
+            text: string;
         };
         /** AgentProvider */
         AgentProvider: {
@@ -9705,6 +9756,102 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AgentKeyTest"];
+                };
+            };
+        };
+    };
+    list_notes_api_v1_modules_agent_datasets__dataset_id__notes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentNote"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_note_api_v1_modules_agent_datasets__dataset_id__notes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgentNoteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentNote"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_note_api_v1_modules_agent_datasets__dataset_id__notes__note_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+                note_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

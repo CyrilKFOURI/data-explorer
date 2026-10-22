@@ -66,8 +66,8 @@ backend/app/modules/agent/
 ## 026c — Mémoire et qualité (spec § 13.1)
 
 - [x] Vérificateur d'ancrage : `engine/grounding.py` (pur) + tests ; enregistré avec la réponse, événement `done`, transcription ; note sous la réponse dans le panneau
-- [ ] Notes : migration `0013_agent_notes.sql`, repository, outil `remember` (write), routes `GET|POST|DELETE /datasets/{id}/notes`, injection dans le prompt ; vue Notes dans le panneau + tests
-- [ ] Playbooks : six fichiers markdown, outil `get_playbook`, ligne dans le prompt + tests
+- [x] Notes : migration `0013_agent_notes.sql`, repository, outil `remember` (write), routes `GET|POST|DELETE /datasets/{id}/notes`, injection dans le prompt ; vue Notes dans le panneau + tests
+- [x] Playbooks : six fichiers markdown, outil `get_playbook`, ligne dans le prompt + tests
 - [ ] Compaction : `engine/compaction.py` (pur), appliquée à chaque requête + tests
 - [ ] Évaluation : `backend/evals/agent_eval.py` et ses cas ; un passage avec la clé Gemini de l'utilisateur, résultats notés ici
 - [ ] Docs : USER_GUIDE, BACKEND_SCHEMA, ARCHITECTURE, PLAN

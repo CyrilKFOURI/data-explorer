@@ -9,6 +9,7 @@ const keys = {
   models: ["agent", "models"] as const,
   conversations: (datasetId: string) => ["agent", "conversations", datasetId] as const,
   conversation: (id: string) => ["agent", "conversation", id] as const,
+  notes: (datasetId: string) => ["agent", "notes", datasetId] as const,
 };
 
 export function useAgentSettings(enabled: boolean) {
@@ -61,6 +62,26 @@ export function useDeleteConversation(datasetId: string) {
   return useMutation({
     mutationFn: agentApi.deleteConversation,
     onSuccess: () => client.invalidateQueries({ queryKey: keys.conversations(datasetId) }),
+  });
+}
+
+export function useNotes(datasetId: string) {
+  return useQuery({ queryKey: keys.notes(datasetId), queryFn: () => agentApi.notes(datasetId) });
+}
+
+export function useAddNote(datasetId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (text: string) => agentApi.addNote(datasetId, text),
+    onSuccess: () => client.invalidateQueries({ queryKey: keys.notes(datasetId) }),
+  });
+}
+
+export function useDeleteNote(datasetId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (noteId: string) => agentApi.deleteNote(datasetId, noteId),
+    onSuccess: () => client.invalidateQueries({ queryKey: keys.notes(datasetId) }),
   });
 }
 
@@ -190,6 +211,7 @@ export function useTurn(datasetId: string) {
         setState((s) => ({ ...s, running: false }));
         if (id) {
           await client.invalidateQueries({ queryKey: keys.conversation(id) });
+          void client.invalidateQueries({ queryKey: keys.notes(datasetId) });
           void client.invalidateQueries({ queryKey: keys.conversations(datasetId) });
           // the saved transcript now shows this turn; keep only an error or an ending note
           setState((s) => (s.error ? s : { ...s, live: null }));

@@ -7,7 +7,7 @@ itself and the rest of the app is unchanged."""
 from fastapi import FastAPI
 
 from app.modules.agent.providers import make_provider, sdk_installed
-from app.modules.agent.repository import ConversationRepository
+from app.modules.agent.repository import ConversationRepository, NoteRepository
 from app.modules.agent.router import router
 from app.modules.agent.service import AgentService
 from app.modules.agent.settings import SettingsStore
@@ -24,12 +24,16 @@ def setup(app: FastAPI) -> None:
         correlations=state.correlations,
         reports=state.reports,
     )
+    notes = NoteRepository(state.workspace.db_path)
     state.agent = AgentService(
         repository=ConversationRepository(state.workspace.db_path),
+        notes=notes,
         store=SettingsStore(state.workspace.root / "agent"),
         services=services,
         # built on first use: the modules' tools are collected after every module's setup
-        registry_factory=lambda: default_registry(services, getattr(state, "agent_tools", [])),
+        registry_factory=lambda: default_registry(
+            services, notes, getattr(state, "agent_tools", [])
+        ),
         provider_factory=make_provider,
         sdk_available=sdk_installed,
     )

@@ -10,6 +10,7 @@ export type AgentConversationDetail = Schemas["AgentConversationDetail"];
 export type AgentMessage = Schemas["AgentMessage"];
 export type AgentStep = Schemas["AgentStep"];
 export type AgentLink = Schemas["AgentLink"];
+export type AgentNote = Schemas["AgentNote"];
 
 /** One event of a turn, as the backend streams it (modules/agent/service.py). */
 export type TurnEvent =
@@ -54,6 +55,11 @@ export const agentApi = {
   conversation: (id: string) => request<AgentConversationDetail>("GET", `${BASE}/conversations/${id}`),
   deleteConversation: (id: string) => request<void>("DELETE", `${BASE}/conversations/${id}`),
   stop: (id: string) => request<{ stopping: boolean }>("POST", `${BASE}/conversations/${id}/stop`),
+  notes: (datasetId: string) => request<AgentNote[]>("GET", `${BASE}/datasets/${datasetId}/notes`),
+  addNote: (datasetId: string, text: string) =>
+    request<AgentNote>("POST", `${BASE}/datasets/${datasetId}/notes`, { text }),
+  deleteNote: (datasetId: string, noteId: string) =>
+    request<void>("DELETE", `${BASE}/datasets/${datasetId}/notes/${noteId}`),
   confirm: (id: string, callId: string, approved: boolean) =>
     request<void>("POST", `${BASE}/conversations/${id}/confirm/${callId}`, { approved }),
 };

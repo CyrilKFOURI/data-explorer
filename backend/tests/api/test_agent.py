@@ -264,3 +264,59 @@ def test_stop_ends_the_turn_after_the_current_step(client: TestClient, traps: st
     assert seen[-1]["type"] == "done" and seen[-1]["end"] == "stopped"
     assert len(provider.requests) == 1  # no second model call after Stop
     assert not agent.running(cid)
+
+
+def test_notes_are_kept_per_dataset_and_given_to_the_model(client: TestClient, traps: str) -> None:
+    added = client.post(f"{BASE}/datasets/{traps}/notes", json={"text": "  income is in  euros "})
+    assert added.status_code == 201 and added.json()["text"] == "income is in euros"
+    assert added.json()["source"] == "user"
+    assert client.post(f"{BASE}/datasets/{traps}/notes", json={"text": ""}).status_code == 422
+
+    provider = script(client, answer("Noted."))
+    cid = conversation(client, traps)
+    client.post(f"{BASE}/conversations/{cid}/messages", json={"text": "Hi"})
+
+    system = provider.requests[0].system
+    assert "<dataset_notes>" in system and "income is in euros" in system
+    note_id = added.json()["id"]
+    assert client.delete(f"{BASE}/datasets/{traps}/notes/{note_id}").status_code == 204
+    assert client.get(f"{BASE}/datasets/{traps}/notes").json() == []
+    assert client.delete(f"{BASE}/datasets/{traps}/notes/{note_id}").status_code == 404
+
+
+@pytest.mark.parametrize("approve", [True, False])
+def test_the_assistant_remembers_only_what_the_user_confirms(
+    client: TestClient, traps: str, approve: bool
+) -> None:
+    service = client.app.state.agent  # type: ignore[attr-defined]
+    script(client, calls(("remember", {"text": "country uses ISO codes"})), answer("Ok."))
+    service.store.save_key("sk-ant-test-1234abcd")
+    cid = conversation(client, traps)
+
+    run = service.send(cid, "Remember that", [])
+    asked = []
+    for event in service.events(run, heartbeat=0.5):
+        if event and event["type"] == "confirm":
+            asked.append(event["text"])
+            client.post(
+                f"{BASE}/conversations/{cid}/confirm/{event['id']}", json={"approved": approve}
+            )
+
+    assert asked == ["Remember for this dataset: “country uses ISO codes”"]
+    notes = client.get(f"{BASE}/datasets/{traps}/notes").json()
+    assert [(n["text"], n["source"]) for n in notes] == (
+        [("country uses ISO codes", "agent")] if approve else []
+    )
+
+
+def test_playbooks_are_read_on_demand(client: TestClient, traps: str) -> None:
+    from app.modules.agent.tools.memory import TOPICS
+
+    registry = client.app.state.agent.registry  # type: ignore[attr-defined]
+    playbook = registry.get("get_playbook")
+    context = ToolContext(traps, [], lambda: False)
+    for topic in TOPICS:
+        output = playbook.run(context, playbook.parse({"topic": topic}))
+        assert output.content.startswith("# ") and len(output.content) < 4_000
+    with pytest.raises(ToolError):
+        playbook.parse({"topic": "astrology"})
