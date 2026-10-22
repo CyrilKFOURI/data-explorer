@@ -66,6 +66,12 @@ def test_conditions_combine_with_and_values_with_or(connection: duckdb.DuckDBPyC
 
 def test_booleans_and_discrete_values(connection: duckdb.DuckDBPyConnection) -> None:
     assert ids(connection, c("active", "in", values=["True"])) == [1, 4]
+    # however a boolean is written, it means the same rows
+    for written in (["true"], ["1"], ["yes"], [True]):
+        assert ids(connection, c("active", "in", values=written)) == [1, 4]
+    assert ids(connection, c("active", "in", values=[False])) == ids(
+        connection, c("active", "in", values=["False"])
+    )
     assert ids(connection, c("kids", "in", values=["2", "3"])) == [2, 4, 5]
 
 

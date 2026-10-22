@@ -69,6 +69,11 @@ backend/app/modules/agent/
 - [x] Notes : migration `0013_agent_notes.sql`, repository, outil `remember` (write), routes `GET|POST|DELETE /datasets/{id}/notes`, injection dans le prompt ; vue Notes dans le panneau + tests
 - [x] Playbooks : six fichiers markdown, outil `get_playbook`, ligne dans le prompt + tests
 - [x] Compaction : `engine/compaction.py` (pur), appliquée à chaque requête + tests
-- [ ] Évaluation : `backend/evals/agent_eval.py` et ses cas ; un passage avec la clé Gemini de l'utilisateur, résultats notés ici
+- [x] Évaluation : `backend/evals/agent_eval.py` (`--model`, `--only`, pauses, reprise après une limite par minute, arrêt net sur un quota du jour) et 15 cas dans `agent_cases.json`. Premiers passages (2026-10-22, clé Gemini gratuite : **20 requêtes par jour et par modèle**, d'où 6 cas joués sur `gemini-3.6-flash` et `gemini-3.5-flash`) : 3 réussis (titanic-drivers, titanic-quality, sales-top-store). Échecs utiles, tous corrigés :
+  - le vérificateur signalait 10 chiffres justes calculés par le modèle à partir du tableau croisé → `compare_columns` donne désormais totaux et pourcentages par ligne et par colonne ;
+  - le modèle divisait lui-même des effectifs (62 / 714) → `count_rows` accepte `within` (taux dans un groupe, calculé par l'app) ;
+  - un filtre booléen écrit `true` (JSON) ou `"true"` échouait ou ne gardait aucune ligne → valeurs converties en texte, booléens reconnus quelle que soit l'écriture ;
+  - quota du jour : message clair (« today's quota of 20 requests… again in 21h56m ») au lieu d'une limite générique
+- [ ] Rejouer les 15 cas quand le quota le permet (ou avec une clé payante)
 - [ ] Docs : USER_GUIDE, BACKEND_SCHEMA, ARCHITECTURE, PLAN
 - [ ] Partage des lignes (`sample_rows`) : reporté en V2

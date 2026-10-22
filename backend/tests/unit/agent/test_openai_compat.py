@@ -238,3 +238,23 @@ def test_a_key_saved_under_the_wrong_vendor_is_moved(tmp_path, monkeypatch) -> N
     assert store.key(BY_ID["gemini"]) == ("AIzaSyMisfiled1234", "file")
     assert store.key(BY_ID["anthropic"])[0] == ""
     assert store.vendor().id == "gemini"
+
+
+def test_a_daily_quota_says_so_and_when_it_comes_back() -> None:
+    response = httpx2.Response(429, request=httpx2.Request("POST", "https://x"))
+    body = [
+        {
+            "error": {
+                "message": "Quota exceeded for metric: free_tier_requests, limit: 20, "
+                "model: gemini-3.8-flash\nPlease retry in 22h3m38.6s.",
+                "details": [
+                    {"violations": [{"quotaId": "GenerateRequestsPerDayPerProjectPerModel"}]}
+                ],
+            }
+        }
+    ]
+    daily = translate(openai.RateLimitError("quota", response=response, body=body), "Google Gemini")
+    assert daily.kind == "rate_limit"
+    assert "today's quota of 20 requests" in daily.message and "22h3m" in daily.message
+    minute = translate(openai.RateLimitError("slow down", response=response, body=None), "Groq")
+    assert "try again in a minute" in minute.message

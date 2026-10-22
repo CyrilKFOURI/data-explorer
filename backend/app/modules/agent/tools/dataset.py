@@ -257,13 +257,25 @@ class CountInput(BaseModel):
         ),
         max_length=10,
     )
+    within: list[Condition] = Field(
+        default_factory=list,
+        description=(
+            "Optional: count among the rows meeting these conditions only, so the share is a "
+            "rate within that group. Example: conditions Survived in True, within Sex in female "
+            "→ the survival rate of women. Rows with an empty value in a 'within' column are "
+            "left out of the group."
+        ),
+        max_length=10,
+    )
 
 
 class CountRows(Tool[CountInput]):
     name: ClassVar[str] = "count_rows"
     description: ClassVar[str] = (
-        "How many rows meet some conditions, and their share of the filtered rows. Shows no row. "
-        "Use it for questions like “how many passengers under 10 survived?”."
+        "How many rows meet some conditions, and their share of the filtered rows, or of a group "
+        "('within'). Shows no row. Use it for questions like “how many passengers under 10 "
+        "survived?” or “what share of women survived?”: the app computes every share, so never "
+        "divide counts yourself."
     )
     Input: ClassVar[type[BaseModel]] = CountInput
 
@@ -274,15 +286,21 @@ class CountRows(Tool[CountInput]):
         return "Counting rows"
 
     def run(self, ctx: ToolContext, args: CountInput) -> ToolOutput:
-        for condition in args.conditions:
+        for condition in [*args.conditions, *args.within]:
             find_column(self.services, ctx, condition.column)
-        base = self.services.profiling.overview(ctx.dataset_id, ctx.conditions).rows
+        group = ctx.conditions + args.within
         try:
-            matched = self.services.profiling.overview(
-                ctx.dataset_id, ctx.conditions + args.conditions
-            ).rows
+            base = self.services.profiling.overview(ctx.dataset_id, group).rows
+            matched = self.services.profiling.overview(ctx.dataset_id, group + args.conditions).rows
         except Exception as error:
             raise ToolError(f"These conditions can't be applied: {error}") from error
         share = matched / base if base else 0.0
-        content = {"rows": matched, "of_rows": base, "share": _r(share, 3)}
+        content: dict[str, Any] = {
+            "rows": matched,
+            "of_rows": base,
+            "share": _r(share, 3),
+            "pct": round(100 * share, 1),
+        }
+        if args.within:
+            content["of"] = "the rows meeting 'within'"
         return ToolOutput(f"{matched:,} of {base:,} rows ({share:.1%})", content)

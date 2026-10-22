@@ -3,7 +3,7 @@
 import json
 from typing import Literal
 
-from pydantic import BaseModel, Field, TypeAdapter, ValidationError
+from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_validator
 
 from app.core.errors import AppError
 from app.domain.typing.dates import DatePart
@@ -43,6 +43,15 @@ class Condition(BaseModel):
     columns: list[str] = Field(default_factory=list, max_length=MAX_KEY_COLUMNS)
     keep: Literal["first", "last"] = "first"
     order_by: str | None = None  # None: the file order
+
+    @field_validator("values", mode="before")
+    @classmethod
+    def _as_text(cls, values: object) -> object:
+        """Values are text: a JSON true or 2 becomes "True" or "2" (an API client or the
+        assistant may send them unquoted)."""
+        if isinstance(values, list):
+            return [v if isinstance(v, str) else str(v) for v in values]
+        return values
 
 
 Conditions = TypeAdapter(list[Condition])

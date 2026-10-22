@@ -226,6 +226,18 @@ def test_tools_return_the_apps_own_figures(client: TestClient, traps: str) -> No
         {"conditions": [{"column": "country", "op": "in", "values": ["FR"]}]},
     )
     assert 0 < counted.content["rows"] < counted.content["of_rows"] == 600
+    # a rate within a group: active customers among the French ones, computed by the app
+    within = run_tool(
+        client,
+        traps,
+        "count_rows",
+        {
+            "conditions": [{"column": "is_active", "op": "in", "values": [True]}],
+            "within": [{"column": "country", "op": "in", "values": ["FR"]}],
+        },
+    )
+    assert within.content["of_rows"] == counted.content["rows"]
+    assert within.content["pct"] == round(100 * within.content["share"], 1)
 
     overview = run_tool(client, traps, "get_dataset_overview", {})
     assert overview.content["rows"] == 600 and overview.content["alerts"]

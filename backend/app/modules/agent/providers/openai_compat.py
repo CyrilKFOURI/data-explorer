@@ -11,6 +11,7 @@ signatures, in `extra_content`). It is kept as the block's `native` part, tagged
 and only ever replayed to that vendor."""
 
 import json
+import re
 from collections.abc import Callable, Iterator
 from typing import Any
 
@@ -222,6 +223,24 @@ def _usage(usage: Any, model: str) -> Usage:
     )
 
 
+def _rate_limit(label: str, details: str) -> str:
+    """A quota message that says which quota, when the vendor tells (Gemini's free tier does:
+    "limit: 20 … PerDay … retry in 22h3m")."""
+    retry = re.search(r"retry in ((?:\d+h)?(?:\d+m)?)", details)
+    limit = re.search(r"limit: (\d+)", details)
+    when = f" (again in {retry.group(1)})" if retry and retry.group(1) else ""
+    if re.search(r"PerDay|per day", details, re.IGNORECASE):
+        cap = f" of {limit.group(1)} requests" if limit else ""
+        return (
+            f"{label}: today's quota{cap} for this model is used up{when}. Choose another model "
+            "in the settings: each one has its own quota."
+        )
+    return (
+        f"{label}: rate limit or quota reached for this model{when}; try again in a minute or "
+        "choose another model in the settings (free keys often have no quota for the largest ones)."
+    )
+
+
 def translate(error: Exception, label: str) -> ProviderError:
     try:
         import openai
@@ -230,11 +249,7 @@ def translate(error: Exception, label: str) -> ProviderError:
     if isinstance(error, openai.AuthenticationError | openai.PermissionDeniedError):
         return ProviderError("auth", f"{label} refused the API key: check it in the settings.")
     if isinstance(error, openai.RateLimitError):
-        return ProviderError(
-            "rate_limit",
-            f"{label}: rate limit or quota reached for this model; try again later or choose "
-            "another model in the settings (free keys often have no quota for the largest ones).",
-        )
+        return ProviderError("rate_limit", _rate_limit(label, f"{error.message} {error.body}"))
     if isinstance(error, openai.NotFoundError):
         return ProviderError("bad_request", f"{label} does not offer this model to your key.")
     if isinstance(error, openai.BadRequestError | openai.UnprocessableEntityError):

@@ -85,6 +85,20 @@ def _label(typed: str, analysis_type: str) -> str:
     return f"CAST({typed} AS VARCHAR)"
 
 
+TRUE_WORDS = {"true", "1", "yes", "y", "oui", "vrai"}
+FALSE_WORDS = {"false", "0", "no", "n", "non", "faux"}
+
+
+def _boolean_label(value: str) -> str:
+    """ "True" or "False" as the charts label them, however the value is written."""
+    word = value.strip().lower()
+    if word in TRUE_WORDS:
+        return "True"
+    if word in FALSE_WORDS:
+        return "False"
+    return value
+
+
 def condition_sql(condition: Condition, column: FilterColumn) -> str:
     kind = column.type
     if kind == "ignored":
@@ -126,7 +140,10 @@ def condition_sql(condition: Condition, column: FilterColumn) -> str:
             listed = ", ".join(_number(v, column.name) for v in condition.values)
             sql = f"{subject} IN ({listed})"
         else:
-            listed = ", ".join(lit(v) for v in condition.values)
+            values = condition.values
+            if kind == "boolean":
+                values = [_boolean_label(v) for v in values]
+            listed = ", ".join(lit(v) for v in values)
             sql = f"{_label(typed, kind)} IN ({listed})"
     else:  # part_in
         if condition.part is None or not condition.values:

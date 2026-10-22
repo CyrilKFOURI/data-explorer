@@ -70,12 +70,23 @@ def comparison_content(c: Comparison) -> dict[str, Any]:
         ]
     if c.contingency is not None:
         t = c.contingency
+        # totals and shares given ready-made: the model must not compute figures (R-AG-G1)
+        column_totals = [sum(row[j] for row in t.counts) for j in range(len(t.columns))]
         content["crosstab"] = {
             "rows_are": c.y,
             "columns_are": c.x,
             "columns": t.columns,
+            "column_totals": column_totals,
             "rows": [
-                {"category": label, "counts": counts}
+                {
+                    "category": label,
+                    "counts": counts,
+                    "total": sum(counts),
+                    "pct_of_column": [
+                        _pct(n, total) for n, total in zip(counts, column_totals, strict=False)
+                    ],
+                    "pct_of_row": [_pct(n, sum(counts)) for n in counts],
+                }
                 for label, counts in list(zip(t.rows, t.counts, strict=False))[:MAX_GROUPS]
             ],
         }
@@ -86,6 +97,10 @@ def comparison_content(c: Comparison) -> dict[str, Any]:
     if c.message:
         content["note"] = c.message
     return content
+
+
+def _pct(part: float, whole: float) -> float | None:
+    return round(100 * part / whole, 1) if whole else None
 
 
 def _verdict(c: Comparison) -> str:
