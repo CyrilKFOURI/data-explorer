@@ -252,7 +252,8 @@ class CountInput(BaseModel):
             "Extra conditions combined with AND, on top of the user's filters. Examples: "
             '{"column": "Sex", "op": "in", "values": ["female"]}, '
             '{"column": "Age", "op": "between", "low": 20, "high": 40}, '
-            '{"column": "Cabin", "op": "is_null"}.'
+            '{"column": "Cabin", "op": "is_null"}, '
+            '{"column": "Survived", "op": "in", "values": ["True"]} (a boolean column).'
         ),
         max_length=10,
     )

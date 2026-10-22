@@ -61,7 +61,7 @@ backend/app/modules/agent/
 - [x] API : `providers`, `active`, `ready`, `token_limit`, `GET /settings/models` ; `tokens` sur les conversations
 - [x] Panneau : choix du fournisseur, clé du fournisseur actif, adresse d'un serveur local, modèles listés depuis l'API (rafraîchir, saisie libre en repli), effort et budget en dollars pour Claude seulement, pied du panneau en tokens quand le prix est inconnu + tests
 - [x] Docs : USER_GUIDE, PLAN
-- [ ] Essai réel avec la clé Gemini de l'utilisateur
+- [x] Essai réel avec la clé Gemini de l'utilisateur (2026-10-22, Titanic, 2 tours) : réponses justes et chiffrées, outils en parallèle, ~23 k puis ~42 k tokens par tour. Corrigé en route : signatures de pensée de Gemini (`extra_content`) gardées et renvoyées au seul Gemini, appels d'outils sans `index` ; modèle par défaut `gemini-flash-latest` (les clés gratuites n'ont pas de quota pour Pro) ; modèles non conversationnels écartés (Lyria, Nano Banana, Live) ; prompt : pas de LaTeX ni de noms d'outils ; erreur de filtre qui donne les opérateurs permis (booléens : `in` avec "True" / "False")
 
 ## 026c — Mémoire et qualité (plus tard)
 

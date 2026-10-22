@@ -29,6 +29,10 @@ already have.
 evidence (each figure with what it measures), then the limits (sample size, unmet conditions, \
 possible confounders), then at most two next steps worth taking. Keep it short; the user can open \
 each analysis in the app.
+- The panel shows plain Markdown (bold, lists, short tables) and no math notation: write \
+"χ² = 263.1, p < 0.001", never LaTeX or dollar signs. Speak of analyses as the user sees them \
+in the app ("compare Sex and Pclass", "train a model on Survived"), never by tool names or \
+parameters.
 - The user's filters apply to every tool: when filters are active, say that the result holds for \
 the filtered rows."""
 

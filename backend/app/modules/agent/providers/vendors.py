@@ -42,7 +42,8 @@ VENDORS: tuple[Vendor, ...] = (
         "GEMINI_API_KEY",
         base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
         prefixes=("AIza",),
-        prefer=("pro", "flash"),
+        # flash: good with tools, free keys have no quota for pro; "-latest" follows new versions
+        prefer=("flash-latest", "flash"),
         console="aistudio.google.com",
     ),
     Vendor(
@@ -107,7 +108,7 @@ PREFERENCE = ("anthropic", "gemini", "openai", "openrouter", "groq", "mistral", 
 # Listed models that are not chat models (embeddings, images, audio…).
 NOT_CHAT = re.compile(
     r"embed|image|imagen|tts|audio|whisper|dall-e|moderation|transcri|realtime|veo|aqa|"
-    r"learnlm|search|computer-use|robotics",
+    r"learnlm|search|computer-use|robotics|lyria|banana|live|translate",
     re.IGNORECASE,
 )
 
@@ -146,6 +147,6 @@ def pick_default(vendor: Vendor, models: list[str]) -> str | None:
     for wanted in vendor.prefer:
         matching = [m for m in models if wanted in m.lower()]
         if matching:
-            stable = [m for m in matching if not re.search(r"preview|exp|beta", m)] or matching
+            stable = [m for m in matching if not re.search(r"preview|exp|beta|lite", m)] or matching
             return max(stable, key=lambda m: (_version(m), -len(m)))
     return models[0] if models else None

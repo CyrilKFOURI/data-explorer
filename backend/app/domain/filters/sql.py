@@ -90,7 +90,11 @@ def condition_sql(condition: Condition, column: FilterColumn) -> str:
     if kind == "ignored":
         raise InvalidFilterError(f"{column.name!r} is ignored: it can't be filtered.")
     if condition.op not in ALLOWED[kind]:
-        raise InvalidFilterError(f"{column.name!r} ({kind}) can't use {condition.op!r}.")
+        hint = ' with values "True" / "False"' if kind == "boolean" else ""
+        raise InvalidFilterError(
+            f"{column.name!r} ({kind}) can't use {condition.op!r}; "
+            f"use {', '.join(ALLOWED[kind])}{hint}."
+        )
     typed = typed_sql(column.name, column.parser)
     if condition.op == "is_null":
         return f"({typed}) IS NOT NULL" if condition.negate else f"({typed}) IS NULL"

@@ -29,4 +29,5 @@ def make_provider(vendor: Vendor, key: str, base_url: str | None = None) -> Prov
         base_url if vendor.id == "custom" else vendor.base_url,
         vendor.label,
         needs_key=vendor.needs_key,
+        tag=vendor.id,
     )

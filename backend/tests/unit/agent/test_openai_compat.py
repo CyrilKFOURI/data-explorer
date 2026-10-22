@@ -152,6 +152,57 @@ def test_errors_and_missing_key() -> None:
     assert raised.value.kind == "no_key"
 
 
+def test_gemini_thought_signatures_are_kept_and_sent_back() -> None:
+    signature = {"google": {"thought_signature": "c2lnbmF0dXJl"}}
+    client = FakeClient(
+        [  # Gemini sends each call whole, with no index, and its signature beside it
+            chunk(
+                role="assistant",
+                tool_calls=[
+                    {
+                        "index": 0,
+                        "id": "call_a",
+                        "type": "function",
+                        "function": {"name": "profile_column", "arguments": '{"column": "Age"}'},
+                        "extra_content": signature,
+                    }
+                ],
+            ),
+            chunk(
+                tool_calls=[
+                    {
+                        "index": 0,
+                        "id": "call_b",
+                        "type": "function",
+                        "function": {"name": "profile_column", "arguments": '{"column": "Sex"}'},
+                    }
+                ],
+                finish="tool_calls",
+            ),
+        ]
+    )
+    for sent_chunk in client.chunks:  # type: ignore[union-attr]
+        sent_chunk.choices[0].delta.tool_calls[0].index = None  # as the SDK lets Gemini's through
+    gemini = OpenAICompatProvider(
+        "AIza-key",
+        "https://x/v1",
+        "Google Gemini",
+        client_factory=lambda k, u: client,
+        tag="gemini",
+    )
+
+    done = list(gemini.stream(request()))[-1]
+
+    assert isinstance(done, Completed)
+    first, second = done.message.blocks
+    assert (first.call_id, second.call_id) == ("call_a", "call_b")
+    assert second.input == {"column": "Sex"}
+    sent = to_api("system", [done.message], "gemini")[1]["tool_calls"]
+    assert sent[0]["extra_content"] == signature and "extra_content" not in sent[1]
+    # another vendor never receives Gemini's signatures
+    assert "extra_content" not in to_api("system", [done.message], "openai")[1]["tool_calls"][0]
+
+
 def test_models_are_listed_without_non_chat_ones() -> None:
     assert chat_models([m for m in provider(FakeClient([])).list_models()]) == ["gemini-x-pro"]
 
@@ -167,8 +218,11 @@ def test_keys_tell_their_vendor() -> None:
 
 def test_the_default_model_is_the_newest_of_the_preferred_family() -> None:
     gemini = BY_ID["gemini"]
-    listed = ["gemini-2.0-flash", "gemini-2.5-pro", "gemini-3.0-pro-preview", "gemini-2.5-flash"]
-    assert pick_default(gemini, listed) == "gemini-2.5-pro"  # stable before previews
+    listed = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-3.5-flash", "gemini-3.8-flash-preview"]
+    # flash (free keys have no quota for pro), newest stable version first
+    assert pick_default(gemini, listed) == "gemini-3.5-flash"
+    assert pick_default(gemini, [*listed, "gemini-flash-latest"]) == "gemini-flash-latest"
+    assert chat_models(["lyria-3.5", "nano-banana-pro-preview", "gemini-3.8-live"]) == []
     assert pick_default(BY_ID["anthropic"], []) == "claude-opus-5-5"
 
 
