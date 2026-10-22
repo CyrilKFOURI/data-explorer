@@ -177,6 +177,9 @@ class AgentMessage(BaseModel):
     text: str
     thinking: str = ""
     steps: list[AgentStep] = Field(default_factory=list)
+    unverified: list[str] = Field(
+        default_factory=list, description="Figures of the answer found in no analysis."
+    )
 
 
 class AgentConversationDetail(BaseModel):
@@ -274,6 +277,8 @@ def transcript(messages: list[Message], agent: AgentService) -> list[AgentMessag
         for block in message.blocks:
             if block.kind == "text":
                 current.text += ("\n\n" if current.text else "") + block.text
+                if block.meta and "unverified" in block.meta:
+                    current.unverified = list(block.meta["unverified"])
             elif block.kind == "thinking" and block.text:
                 current.thinking += ("\n\n" if current.thinking else "") + block.text
             elif block.kind == "tool_call":

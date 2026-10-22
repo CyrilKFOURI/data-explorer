@@ -8420,6 +8420,14 @@
             },
             "type": "array",
             "title": "Steps"
+          },
+          "unverified": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unverified",
+            "description": "Figures of the answer found in no analysis."
           }
         },
         "type": "object",

@@ -63,6 +63,12 @@ backend/app/modules/agent/
 - [x] Docs : USER_GUIDE, PLAN
 - [x] Essai réel avec la clé Gemini de l'utilisateur (2026-10-22, Titanic, 2 tours) : réponses justes et chiffrées, outils en parallèle, ~23 k puis ~42 k tokens par tour. Corrigé en route : signatures de pensée de Gemini (`extra_content`) gardées et renvoyées au seul Gemini, appels d'outils sans `index` ; modèle par défaut `gemini-flash-latest` (les clés gratuites n'ont pas de quota pour Pro) ; modèles non conversationnels écartés (Lyria, Nano Banana, Live) ; prompt : pas de LaTeX ni de noms d'outils ; erreur de filtre qui donne les opérateurs permis (booléens : `in` avec "True" / "False")
 
-## 026c — Mémoire et qualité (plus tard)
+## 026c — Mémoire et qualité (spec § 13.1)
 
-Notes du dataset, compaction côté serveur, playbooks, partage des lignes et masquage, OpenAI, évaluation réelle.
+- [x] Vérificateur d'ancrage : `engine/grounding.py` (pur) + tests ; enregistré avec la réponse, événement `done`, transcription ; note sous la réponse dans le panneau
+- [ ] Notes : migration `0013_agent_notes.sql`, repository, outil `remember` (write), routes `GET|POST|DELETE /datasets/{id}/notes`, injection dans le prompt ; vue Notes dans le panneau + tests
+- [ ] Playbooks : six fichiers markdown, outil `get_playbook`, ligne dans le prompt + tests
+- [ ] Compaction : `engine/compaction.py` (pur), appliquée à chaque requête + tests
+- [ ] Évaluation : `backend/evals/agent_eval.py` et ses cas ; un passage avec la clé Gemini de l'utilisateur, résultats notés ici
+- [ ] Docs : USER_GUIDE, BACKEND_SCHEMA, ARCHITECTURE, PLAN
+- [ ] Partage des lignes (`sample_rows`) : reporté en V2

@@ -246,6 +246,18 @@ C'est l'équivalent léger d'agents spécialisés : la méthode change selon le 
 | **026b — Actions** | Outils `compute` et `write` : ML (entraîner, comparer, optimiser, expliquer), KPI, séries temporelles, rapport, synthétique ; confirmations ; `wait_job` et progression ; cartes de résultat. |
 | **026c — Mémoire et qualité** | Notes du dataset, compaction, playbooks, partage des lignes et masquage, fournisseur OpenAI et compatibles, évaluation réelle. |
 
+### 13.1 026c — décisions (2026-10-22)
+
+Le fournisseur OpenAI et compatibles est déjà livré (026b+). Le **partage des lignes** (`sample_rows`, niveaux et masquage) passe en **V2** : l'agent répond bien avec les seules statistiques, et « l'assistant ne voit jamais vos lignes » reste la promesse de la V1. Le reste de 026c :
+
+| Exigence | Décision |
+|---|---|
+| R-AG-G1 **Vérificateur d'ancrage** | Après chaque réponse, sans appel au modèle : chaque nombre de la réponse est cherché dans les résultats d'outils de la conversation, le schéma du dataset, les notes et le message de l'utilisateur. Un nombre est retrouvé s'il égale une source à la précision écrite (arrondi), ou une part ×100 (0,742 → 74,2 %). Ignorés : entiers de 0 à 10 (listes, « 2 next steps »), seuils usuels (0,05, 0,01, 0,001), nombres collés à des lettres (« 1st », « Q3 »). Les nombres introuvables sont enregistrés avec la réponse et affichés sous elle (« 2 figures not found in the analyses: 46.8, 23.4 »). Un chiffre calculé par le modèle (une différence) est donc signalé : c'est voulu, la règle est « chaque chiffre vient d'un outil ». |
+| R-AG-M1 **Notes du dataset** | Table `agent_notes` (migration 0013). Au plus 30 notes de 300 caractères par dataset. L'outil `remember` (classe `write`, donc confirmé) en ajoute une ; l'utilisateur les ajoute, lit et supprime dans le panneau (vue Notes). Injectées dans le prompt système comme données échappées (`<dataset_notes>`), comme le schéma. Supprimées avec le dataset. |
+| R-AG-M2 **Playbooks** | Six fichiers markdown (`eda`, `statistics`, `ml`, `kpi`, `timeseries`, `synthetic`) chargés par l'outil `get_playbook(topic)` (classe `read`) quand la demande est large, plutôt que par mots-clés : le modèle choisit, le prompt de chaque tour ne grossit pas. Le prompt système les cite en une ligne. |
+| R-AG-M3 **Compaction** | Sans appel au modèle : avant chaque requête, les résultats d'outils des tours antérieurs aux 2 dernières questions sont remplacés par leur résumé d'une ligne (« [earlier result] Strongest link with Survived: Sex (V 0.543) »). L'historique enregistré reste complet ; seule la requête est allégée. |
+| R-AG-E1 **Évaluation** | `backend/evals/agent_eval.py` : environ 15 cas sur les jeux de démo (et Titanic s'il est importé), chacun avec les outils attendus, des motifs que la réponse doit contenir et un maximum de chiffres non retrouvés. Joué contre l'app lancée (API), avec la clé configurée ; rapport : réussite par cas, tokens, chiffres non retrouvés. Lancé à la main, jamais en CI. |
+
 ## 14. Questions ouvertes (à trancher avant de coder)
 
 1. **Dépendance** : SDK officiel `anthropic` (et `openai` pour 026c) dans un extra `[agent]` comme `[deep]`, ou `httpx` seul avec des appels écrits à la main ? *Recommandation : SDK officiel en extra `[agent]` ; ils gèrent le flux, les nouvelles tentatives et les types d'outils, et le cœur de l'app reste léger.* Demande d'accord requise (règle « pas de dépendance sans demander »).

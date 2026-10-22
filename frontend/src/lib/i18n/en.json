@@ -2219,5 +2219,8 @@
   "agent.modelRefresh": "Refresh the list of models",
   "agent.tokenBudget": "Prices are only known for Claude models: with this provider, each conversation stops at {limit} tokens.",
   "agent.tokens": "{count} tokens",
-  "agent.tokensHint": "Tokens used by this conversation (price unknown for this model)"
+  "agent.tokensHint": "Tokens used by this conversation (price unknown for this model)",
+  "agent.unverifiedOne": "1 figure not found in the analyses: {figures}",
+  "agent.unverifiedMany": "{count} figures not found in the analyses: {figures}",
+  "agent.unverifiedHint": "Every figure should come from an analysis the assistant ran. These ones could not be matched: they may be computed by the model (a difference, a ratio) or wrong. Check them before relying on them."
 }

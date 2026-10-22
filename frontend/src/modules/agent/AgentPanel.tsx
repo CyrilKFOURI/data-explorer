@@ -163,6 +163,7 @@ function Chat({ datasetId, onClose }: { datasetId: string; onClose: () => void }
                   text={message.text}
                   thinking={message.thinking ?? ""}
                   steps={message.steps ?? []}
+                  unverified={message.unverified ?? []}
                 />
               ),
             )}

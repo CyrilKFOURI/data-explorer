@@ -12,6 +12,7 @@ from app.core.errors import AppError
 from app.domain.filters.model import Condition
 from app.domain.report.build import describe_condition
 from app.modules.agent.engine.budget import Budget
+from app.modules.agent.engine.grounding import Grounding, check
 from app.modules.agent.engine.loop import (
     Decision,
     Notice,
@@ -322,12 +323,13 @@ class AgentService:
             question = user_text(
                 turn_context([describe_condition(c) for c in conditions], page) + text
             )
+            system = self._system(conversation.dataset_id)
             turn = Turn(
                 provider=self.provider_factory(vendor, key, settings.base_url),
                 registry=self.registry,
                 context=ToolContext(conversation.dataset_id, conditions, run.stop.is_set),
                 model=model,
-                system=self._system(conversation.dataset_id),
+                system=system,
                 history=[*history, question],
                 budget=budget,
                 emit=lambda event: emit(_event(event)),
@@ -336,6 +338,7 @@ class AgentService:
                 effort=settings.effort,
             )
             result = turn.run()
+            grounding = ground(system, [*history, question], result.messages)
             if result.messages:
                 tokens = sum(u.total for u in result.usage)
                 self.repository.append(
@@ -343,7 +346,7 @@ class AgentService:
                 )
                 if conversation.title == NEW_TITLE:
                     self.repository.rename(conversation.id, _title(text))
-            emit(_finish(result, budget))
+            emit(_finish(result, budget, grounding))
         except Exception as error:  # the stream must always end with a message
             emit(_error("other", f"The assistant failed: {error}"))
         finally:
@@ -366,6 +369,23 @@ class AgentService:
             if v.type != "ignored"
         ]
         return system_prompt(dataset.name, dataset.row_count or 0, columns)
+
+
+def ground(system: str, history: list[Message], turn: list[Message]) -> Grounding | None:
+    """Checks the turn's answer against everything the model was given (R-AG-G1) and records
+    the result on the answer's last text block."""
+    answer = [b for m in turn if m.role == "assistant" for b in m.blocks if b.kind == "text"]
+    if not answer:
+        return None
+    sources = [system]
+    for message in [*history, *turn]:
+        sources += [
+            b.text for b in message.blocks if b.kind == "tool_result" or message.role == "user"
+        ]
+    found = check("\n".join(b.text for b in answer), sources)
+    meta = answer[-1].meta or {}
+    answer[-1].meta = {**meta, "checked": found.checked, "unverified": found.unverified}
+    return found
 
 
 def strip_context(text: str) -> str:
@@ -435,7 +455,7 @@ ENDINGS = {
 }
 
 
-def _finish(result: TurnResult, budget: Budget) -> dict[str, Any]:
+def _finish(result: TurnResult, budget: Budget, grounding: Grounding | None) -> dict[str, Any]:
     if result.end == "error" and result.error is not None:
         return _error(result.error.kind, result.error.message)
     return {
@@ -446,4 +466,5 @@ def _finish(result: TurnResult, budget: Budget) -> dict[str, Any]:
         "conversation_usd": budget.spent_usd,
         "conversation_tokens": budget.tokens,
         "priced": budget.priced,
+        "unverified": grounding.unverified if grounding else [],
     }

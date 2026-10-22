@@ -1711,6 +1711,11 @@ export interface components {
             thinking: string;
             /** Steps */
             steps?: components["schemas"]["AgentStep"][];
+            /**
+             * Unverified
+             * @description Figures of the answer found in no analysis.
+             */
+            unverified?: string[];
         };
         /** AgentModels */
         AgentModels: {

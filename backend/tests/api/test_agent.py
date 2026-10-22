@@ -115,7 +115,13 @@ def test_a_turn_runs_tools_streams_and_is_saved(client: TestClient, traps: str) 
     assert detail["conversation"]["title"] == "Describe age"
     assert detail["conversation"]["cost_usd"] > 0
     user, assistant = detail["messages"]
-    assert user == {"role": "user", "text": "Describe age", "thinking": "", "steps": []}
+    assert user == {
+        "role": "user",
+        "text": "Describe age",
+        "thinking": "",
+        "steps": [],
+        "unverified": [],
+    }
     assert assistant["text"] == "Age is right-skewed."
     step = assistant["steps"][0]
     assert step["tool"] == "profile_column" and step["ok"] and step["label"] == "Profiling age"
@@ -123,6 +129,21 @@ def test_a_turn_runs_tools_streams_and_is_saved(client: TestClient, traps: str) 
     script(client, answer("Sure."))
     client.post(f"{BASE}/conversations/{cid}/messages", json={"text": "And income?"})
     assert len(client.get(f"{BASE}/conversations/{cid}").json()["messages"]) == 4
+
+
+def test_figures_found_in_no_analysis_are_flagged(client: TestClient, traps: str) -> None:
+    script(
+        client,
+        calls(("count_rows", {"conditions": []})),
+        answer("The file has 600 rows, and 4,321 of them are duplicates."),
+    )
+    cid = conversation(client, traps)
+
+    seen = events(client.post(f"{BASE}/conversations/{cid}/messages", json={"text": "Size?"}))
+
+    assert seen[-1]["unverified"] == ["4,321"]
+    assistant = client.get(f"{BASE}/conversations/{cid}").json()["messages"][1]
+    assert assistant["unverified"] == ["4,321"]
 
 
 def test_errors_end_the_stream_with_a_message(client: TestClient, traps: str) -> None:

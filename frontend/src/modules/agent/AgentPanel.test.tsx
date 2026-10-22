@@ -60,6 +60,7 @@ const saved = [
     role: "assistant",
     text: "**Sex** is the strongest driver.",
     thinking: "",
+    unverified: ["46.8"],
     steps: [
       {
         id: "s1",
@@ -122,6 +123,7 @@ describe("Assistant panel", () => {
     const sent = calls.find((c) => c.key === "POST /modules/agent/conversations/c1/messages");
     expect(sent?.body).toMatchObject({ text: "What is most linked to Survived, and how?", filters: [], page: "Columns" });
     expect(localStorage.getItem("de.agent.open")).toBe("true");
+    expect(await within(panel).findByText("1 figure not found in the analyses: 46.8")).toBeInTheDocument();
   });
 
   it("explains how to add a key when none is set", async () => {

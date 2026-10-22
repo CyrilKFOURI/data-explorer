@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowUpRight, Check, CircleAlert, Download, LoaderCircle, ShieldQuestion } from "lucide-react";
+import { ArrowUpRight, Check, CircleAlert, Download, LoaderCircle, SearchX, ShieldQuestion } from "lucide-react";
 import { useMemo } from "react";
 
 import { Markdown, parse } from "../../features/help/markdown";
@@ -33,6 +33,7 @@ export function AssistantMessage({
   thinking,
   steps,
   streaming = false,
+  unverified = [],
   onDecide,
 }: {
   datasetId: string;
@@ -40,6 +41,8 @@ export function AssistantMessage({
   thinking: string;
   steps: ShownStep[];
   streaming?: boolean;
+  /** Figures of the answer found in no analysis (grounding check). */
+  unverified?: string[];
   /** Answers a change the assistant asked to make (live turn only). */
   onDecide?: (stepId: string, approved: boolean) => void;
 }) {
@@ -65,6 +68,17 @@ export function AssistantMessage({
         </div>
       ) : (
         streaming && <p className="text-xs text-ink-3">{t("agent.working")}</p>
+      )}
+      {unverified.length > 0 && (
+        <p className="flex items-start gap-1.5 text-xs text-ink-3" title={t("agent.unverifiedHint")}>
+          <SearchX size={13} className="mt-px shrink-0" aria-hidden />
+          <span>
+            {t(unverified.length === 1 ? "agent.unverifiedOne" : "agent.unverifiedMany", {
+              count: String(unverified.length),
+              figures: unverified.join(", "),
+            })}
+          </span>
+        </p>
       )}
     </div>
   );
