@@ -25,7 +25,7 @@ cd frontend && npm run lint && npm run typecheck && npm test && npm run build
 - **API changes**: regenerate the typed client — `uv run python -m app.openapi_dump openapi.json` in `backend/`, then `npm run gen:api` in `frontend/`.
 - **Where code goes**: see [ARCHITECTURE](docs/ARCHITECTURE.md). The statistics live in `backend/app/domain/` with no web code; each module (`backend/app/modules/`) stays isolated and registers in one line.
 - **Visible changes**: update the [user guide](docs/USER_GUIDE.md), which the app shows on `/help`.
-- **New dependencies**: open an issue first; the Docker image has a size budget (900 MB).
+- **New dependencies**: open an issue first; the Docker image has a size budget (900 MB uncompressed, checked in CI; 850 MB today). Dependabot proposes monthly updates.
 
 ## The assistant
 

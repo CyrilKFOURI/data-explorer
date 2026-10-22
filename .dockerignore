@@ -11,3 +11,4 @@ docs
 !docs/USER_GUIDE.md
 backend/tests
 backend/openapi.json
+backend/evals

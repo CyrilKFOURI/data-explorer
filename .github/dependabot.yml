@@ -1,0 +1,28 @@
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /backend
+    schedule:
+      interval: monthly
+    groups:
+      python:
+        patterns: ["*"]
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: monthly
+    ignore:
+      # TypeScript 6+ breaks typescript-eslint and openapi-typescript peers: bump by hand
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+    groups:
+      javascript:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: monthly
