@@ -12,6 +12,7 @@ from dataclasses import dataclass, field, replace
 from typing import Any, Literal
 
 from app.modules.agent.engine.budget import Budget
+from app.modules.agent.engine.compaction import compact
 from app.modules.agent.engine.messages import Block, Message
 from app.modules.agent.engine.provider import (
     Completed,
@@ -166,7 +167,7 @@ class Turn:
         request = Request(
             model=self.model,
             system=self.system,
-            messages=self.history + result.messages,
+            messages=compact(self.history) + result.messages,  # older results summarised
             tools=self.registry.specs(),
             effort=self.effort,
         )
