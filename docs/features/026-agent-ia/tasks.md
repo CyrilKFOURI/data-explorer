@@ -75,5 +75,5 @@ backend/app/modules/agent/
   - un filtre booléen écrit `true` (JSON) ou `"true"` échouait ou ne gardait aucune ligne → valeurs converties en texte, booléens reconnus quelle que soit l'écriture ;
   - quota du jour : message clair (« today's quota of 20 requests… again in 21h56m ») au lieu d'une limite générique
 - [ ] Rejouer les 15 cas quand le quota le permet (ou avec une clé payante)
-- [ ] Docs : USER_GUIDE, BACKEND_SCHEMA, ARCHITECTURE, PLAN
+- [x] Docs : USER_GUIDE, BACKEND_SCHEMA, ARCHITECTURE, PLAN
 - [ ] Partage des lignes (`sample_rows`) : reporté en V2

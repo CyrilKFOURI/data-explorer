@@ -178,6 +178,10 @@ An optional AI analyst docked on the right of every dataset page (**Ask the assi
 - **Cost**: each conversation shows what it has spent; it stops at its budget (1 $ by default, change it in the settings). Pick the model and how hard it thinks (effort) there too: Opus 5.5 is the most capable, Sonnet 5.5 costs half, Haiku 5.5 is the quickest and cheapest.
 - **It asks before changing anything.** Saving a KPI or creating a dataset from synthetic data shows a card: **Confirm** or **Dismiss**. Trained models and generated runs are kept like the ones you make yourself.
 - **Stop** ends an answer after the current step (and cancels a training, forecast or generation in progress). Conversations are kept per dataset; start a new one with **+**.
+- **Figures are checked.** After each answer, the app looks for every number of the answer in the results of the analyses it ran (no extra call to the model). A figure found nowhere is listed under the answer ("1 figure not found in the analyses: 46.8"): it may be computed by the model, like a difference, or wrong. Check it before relying on it.
+- **Dataset notes** (the notebook button in the panel's header): short facts every conversation on this dataset starts with, such as the target, a unit or what a code means. Write them yourself, or let the assistant offer one: it asks you first, like any change. Notes go with the dataset.
+- **Method**: for broad requests (a first look at the data, preparing a model, a forecast, KPIs, synthetic data), the assistant reads a short method written for that kind of work before it starts; the step shows as "Reading the … method".
+- Long conversations stay light: results from older questions are sent to the model as their one-line summary.
 
 ### Correlations
 

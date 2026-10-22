@@ -3,39 +3,94 @@
 [![CI](https://github.com/CyrilKFOURI/data-explorer/actions/workflows/ci.yml/badge.svg)](https://github.com/CyrilKFOURI/data-explorer/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Explore a CSV, Parquet or Excel file with real statistics: the right chart and the right test for every column, explained in plain words. Local and offline.
+**The statistical depth of a notebook written by a statistician, without writing code.**
+Open a CSV, Parquet or Excel file and get the right chart and the right test for every column, with effect sizes, checked assumptions and results explained in plain words. Then go further: time series, machine learning, KPIs, synthetic data, an HTML report, and an AI assistant that runs all of it for you. Local and offline: your data never leaves your computer.
 
 ![Overview](docs/screenshots/overview.png)
 
+## Why
+
+Automatic EDA tools (ydata-profiling, sweetviz…) stop at descriptive statistics: few real tests, no check of their conditions, little help to read them. Data Explorer chooses the analysis from the column types, runs the tests a careful statistician would (normality, law fitting, bivariate tests with effect sizes, multiple-testing awareness), and says what the result means — with a second, deeper level of explanation for students.
+
 ## Features
 
-- **Column types** detected and explained (numbers, categories, dates, ids…), and editable.
-- **Per variable**: statistics, normality tests, law fitting, outliers.
-- **Compare** two variables: the chart and the test follow their types, with effect sizes.
-- **Correlations** between every pair, with insights graded by evidence.
-- **Data** table for millions of rows, global filters, exports to CSV, Parquet, Excel.
+**Exploration**
+- **Column types** detected and explained — numbers, categories, booleans, dates, identifiers, free text — from a knowledge base of naming patterns and value checks (French decimals, `oui/non`, `21/02/2019`, `5%`, ZIP codes…), and editable.
+- **Variable page**: descriptive statistics, normality tests, law fitting ranked by AIC, outlier rules.
+- **Compare** two or three variables: the chart and the test follow their types (t / Welch / Mann-Whitney, ANOVA / Kruskal-Wallis, chi-square, correlations), with effect sizes and conditions checked.
+- **Correlations** across every pair of types (Pearson, Spearman, Cramér's V, η), clustering, and insights graded by evidence.
+- **Data** table for millions of rows (DuckDB), global filters, exports to CSV, Parquet, Excel.
+- **HTML report**: one self-contained file with key findings, a card per variable, relationships and correlations.
+
+**Modules**
+- **Time series**: decomposition (STL, MSTL), trend, seasonality, stationarity (ADF, KPSS, Phillips-Perron…), autocorrelation, volatility, change points, and forecasts (naive, ETS, ARIMA…) with backtests and intervals.
+- **Machine learning**: pick a target, get a first model at once with automatic, explained preparation; a full catalogue (linear models to XGBoost, LightGBM, CatBoost), cross-validation, model comparison, Optuna tuning, and explanations (permutation importance, SHAP, partial dependence).
+- **KPI builder**: an indicator in one click — the grain, chart, totals and comparisons chosen for you, with the reason, and fully customisable.
+- **Synthetic data**: faithful copies without real rows (CART, Gaussian copula, Bayesian network, CTGAN, TVAE, TimeGAN), with fidelity, detection, utility and privacy reports.
+
+**AI assistant** (optional, bring your own key)
+- Ask in plain words — *"what drives Survived?"* — and it runs the app's own analyses through 25 tools, reads their results and explains them. Each step links to the analysis in the app.
+- **Every figure is checked**: after each answer, the numbers are matched against the analyses' results, and any figure found nowhere is flagged under the answer.
+- Works with **Anthropic (Claude), Google Gemini, OpenAI, OpenRouter, Groq, Mistral, DeepSeek** or a **local model** (Ollama, LM Studio). The provider is recognised from the key.
+- It **asks before changing anything** (saving a KPI, creating a dataset), keeps **notes** per dataset, follows written **methods** for broad requests, and stays within a budget.
+- **Only statistics leave your computer** — column names and types, counts, means, test results — never whole rows.
+
+![The assistant answers from the app's own analyses](docs/screenshots/assistant.png)
 
 | | |
 |---|---|
-| ![Variable](docs/screenshots/variable.png) | ![Compare](docs/screenshots/compare.png) |
-| ![Correlations](docs/screenshots/correlations.png) | ![Data](docs/screenshots/data.png) |
+| ![Variable page: distribution, normality, laws](docs/screenshots/variable.png) | ![Compare: the test follows the types](docs/screenshots/compare.png) |
+| ![Correlations and graded insights](docs/screenshots/correlations.png) | ![Data table](docs/screenshots/data.png) |
+| ![Time series](docs/screenshots/timeseries.png) | ![Machine learning](docs/screenshots/ml.png) |
+| ![KPI builder](docs/screenshots/kpi.png) | ![Synthetic data](docs/screenshots/synthetic.png) |
 
 ## Run
+
+With Docker:
 
 ```bash
 docker compose up --build
 ```
 
-Open <http://localhost:8000> and pick a demo dataset. Put your own files in `./data` to browse them from the app.
+Open <http://localhost:8000> and pick a demo dataset. Put your own files in `./data` to browse them from the app (mounted read-only).
+
+To use the assistant, paste an API key in its settings (**Ctrl+J**, then the settings button), or set it before starting, for example `GEMINI_API_KEY` or `ANTHROPIC_API_KEY`.
 
 ## Develop
 
-Requires [uv](https://docs.astral.sh/uv/) and Node 22: `./scripts/serve.ps1` builds the frontend and serves the whole app at http://127.0.0.1:8000 (`-Port 8001` if 8000 is taken), as fast as the Docker image. `./scripts/dev.ps1` starts the backend (FastAPI, DuckDB) and the frontend (React, Vite) with hot reload, to work on the code: much slower to use. Tests: `uv run pytest` in `backend/`, `npm test` in `frontend/`.
+Requires [uv](https://docs.astral.sh/uv/) and Node 22.
+
+```bash
+./scripts/serve.ps1          # build the frontend, serve the whole app at http://127.0.0.1:8000
+./scripts/dev.ps1            # backend + Vite with hot reload, to work on the code
+```
+
+| | Backend (`backend/`) | Frontend (`frontend/`) |
+|---|---|---|
+| Tests | `uv run pytest` | `npm test` |
+| Lint | `uv run ruff check .` | `npm run lint` |
+| Types | `uv run pyright` | `npm run typecheck` |
+
+Optional extras: `uv sync --extra agent` (assistant SDKs), `--extra deep` (PyTorch models for synthetic data). The assistant's golden tasks run against a live app with a real key: `uv run python evals/agent_eval.py --url http://127.0.0.1:8000`.
+
+## Architecture
+
+```
+frontend/  React 19 · TypeScript · TanStack Router & Query · plotly.js · Tailwind
+   │  typed client generated from the OpenAPI schema
+backend/   FastAPI
+   ├── domain/    the statistics: typing, profiling, compare, correlations, report… (no web code)
+   ├── api/       HTTP routes over the domain
+   ├── modules/   time series · ML · KPI · synthetic · agent — each isolated, registered in one line
+   └── core/      DuckDB on Parquet copies of the data, SQLite for app state, background jobs
+```
+
+The assistant is a module like the others: a pure engine (ReAct loop, budget, grounding check, compaction) tested with a scripted provider, providers behind one interface, and tools that call the app's services. See [ARCHITECTURE](docs/ARCHITECTURE.md).
 
 ## Docs
 
-- [User guide](docs/USER_GUIDE.md): every page and every metric (also in the app).
-- [`docs/`](docs/): product and technical notes (in French).
+- [User guide](docs/USER_GUIDE.md): every page and every metric (also in the app, on `/help`).
+- [`docs/`](docs/): product, technical and feature specifications (in French).
 
 ## License
 

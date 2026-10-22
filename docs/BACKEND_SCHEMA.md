@@ -26,7 +26,7 @@
 | `kpi_definitions` (migration 0008 : dataset, nom, définition JSON — les choix « auto » restent « auto » et suivent les données —, créé / modifié ; supprimés avec le dataset) | Builder KPI (022) |
 | `synthetic_runs` (migration 0009 : dataset source, méthode, réglages JSON, lignes générées, scores JSON, statut, erreur, durée, dataset créé (nullable, `SET NULL` s'il est supprimé), créé le ; données, lignes réelles d'évaluation et rapport dans `datasets/<id>/synthetic/<run>/` (`data.parquet`, `train.parquet`, `holdout.parquet`, `report.json`), supprimés avec le dataset source) | Données synthétiques (023) |
 | `settings` clé `compute` (`use_gpu` : vrai, faux ou automatique) | Paramètres › Compute (023) |
-| `agent_conversations` (migration 0011 : dataset, titre, modèle, coût cumulé en $, créée / modifiée ; supprimées avec le dataset) et `agent_messages` (conversation, rôle, blocs JSON du moteur — les blocs propres au fournisseur, comme la réflexion, sont gardés tels quels et rejoués ; historique en ajout seul). Réglages dans `<workspace>/agent/settings.json`, clé d'API dans l'environnement ou `<workspace>/agent/secrets.env` (jamais en base, jamais renvoyée par l'API) | Agent IA (026) |
+| `agent_conversations` (migration 0011 : dataset, titre, modèle, coût cumulé en $, créée / modifiée ; supprimées avec le dataset) et `agent_messages` (conversation, rôle, blocs JSON du moteur — les blocs propres au fournisseur, comme la réflexion, sont gardés tels quels et rejoués ; historique en ajout seul). `agent_conversations.tokens` (migration 0012 : tokens consommés, budget des modèles sans prix connu). `agent_notes` (migration 0013 : dataset, texte de 300 caractères au plus, source `user` ou `agent`, créée ; 30 au plus par dataset ; supprimées avec le dataset). Le bloc de texte final d'une réponse garde dans `meta` le résultat du vérificateur d'ancrage (`checked`, `unverified`). Réglages dans `<workspace>/agent/settings.json`, clé d'API dans l'environnement ou `<workspace>/agent/secrets.env` (jamais en base, jamais renvoyée par l'API) | Agent IA (026) |
 
 ## Relations
 
@@ -40,6 +40,7 @@ datasets 1──n jobs
 (futur) datasets 1──n ml_experiments 1──n ml_runs
 (futur) datasets 1──n synthetic_runs ──▶ produit un nouveau dataset (datasets.id)
 datasets 1──n agent_conversations 1──n agent_messages
+datasets 1──n agent_notes
 ```
 
 - **Type effectif** d'une colonne = `user_type` s'il est renseigné, sinon `detected_type`. Même règle pour le rôle.
