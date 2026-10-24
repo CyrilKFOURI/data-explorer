@@ -44,6 +44,26 @@ Automatic EDA tools (ydata-profiling, sweetviz…) stop at descriptive statistic
 | ![Time series](docs/screenshots/timeseries.png) | ![Machine learning](docs/screenshots/ml.png) |
 | ![KPI builder](docs/screenshots/kpi.png) | ![Synthetic data](docs/screenshots/synthetic.png) |
 
+## Python library
+
+The engine is also a Python package, [`cyfouri-data-explorer`](packages/cyfouri-data-explorer), for notebooks and scripts. The app runs the same code, so the results match.
+
+```python
+import cyfouri_data_explorer as dx
+
+ds = dx.open("titanic.csv")
+ds.compare("Age", "Survived")            # the test follows the types
+ds.where("Sex", "in", ["female"]).variable("Age")
+ds.ml("Survived").train().explain()
+ds.report("titanic.html")
+```
+
+```bash
+pip install -e packages/cyfouri-data-explorer   # add [ml] for XGBoost, LightGBM, Optuna
+```
+
+See its [README](packages/cyfouri-data-explorer/README.md) and the [example notebook](packages/cyfouri-data-explorer/examples/quickstart.ipynb).
+
 ## Run
 
 With Docker:
@@ -65,11 +85,11 @@ Requires [uv](https://docs.astral.sh/uv/) and Node 22.
 ./scripts/dev.ps1            # backend + Vite with hot reload, to work on the code
 ```
 
-| | Backend (`backend/`) | Frontend (`frontend/`) |
-|---|---|---|
-| Tests | `uv run pytest` | `npm test` |
-| Lint | `uv run ruff check .` | `npm run lint` |
-| Types | `uv run pyright` | `npm run typecheck` |
+| | Engine (`packages/cyfouri-data-explorer/`) | Backend (`backend/`) | Frontend (`frontend/`) |
+|---|---|---|---|
+| Tests | `uv run pytest` | `uv run pytest` | `npm test` |
+| Lint | `uv run ruff check .` | `uv run ruff check .` | `npm run lint` |
+| Types | `uv run pyright` | `uv run pyright` | `npm run typecheck` |
 
 Optional extras: `uv sync --extra agent` (assistant SDKs), `--extra deep` (PyTorch models for synthetic data). The assistant's golden tasks run against a live app with a real key: `uv run python evals/agent_eval.py --url http://127.0.0.1:8000`.
 
@@ -79,10 +99,13 @@ Optional extras: `uv sync --extra agent` (assistant SDKs), `--extra deep` (PyTor
 frontend/  React 19 · TypeScript · TanStack Router & Query · plotly.js · Tailwind
    │  typed client generated from the OpenAPI schema
 backend/   FastAPI
-   ├── domain/    the statistics: typing, profiling, compare, correlations, report… (no web code)
-   ├── api/       HTTP routes over the domain
+   ├── api/       HTTP routes over the engine
+   ├── services/  app state: datasets, column corrections, saved filters, settings (SQLite)
    ├── modules/   time series · ML · KPI · synthetic · agent — each isolated, registered in one line
-   └── core/      DuckDB on Parquet copies of the data, SQLite for app state, background jobs
+   └── core/      SQLite, workspace, background jobs
+   │  depends on
+packages/cyfouri-data-explorer/   the engine, a Python library: typing, profiling, tests,
+                                  correlations, time series, ML, KPI, synthetic, report (no web code)
 ```
 
 The assistant is a module like the others: a pure engine (ReAct loop, budget, grounding check, compaction) tested with a scripted provider, providers behind one interface, and tools that call the app's services. See [ARCHITECTURE](docs/ARCHITECTURE.md).

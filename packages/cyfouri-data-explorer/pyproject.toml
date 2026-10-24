@@ -64,6 +64,8 @@ packages = ["src/cyfouri_data_explorer"]
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+# The README's examples keep their aligned comments.
+extend-exclude = ["*.md"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]

@@ -62,7 +62,8 @@ class TimeSeries:
         return self._service.seasonality(*self._args(), self._methods)
 
     def decomposition(self, method: str = "stl") -> SeriesDecomposition:
-        """Trend, seasonal and remainder (`stl`, `mstl`, `classical`…)."""
+        """Trend, seasonal and remainder: `stl`, `mstl`, `classical_additive` or
+        `classical_multiplicative`."""
         return self._service.decomposition(*self._args(), method)
 
     def stationarity(self, transform: st.Transform = "none") -> SeriesStationarity:

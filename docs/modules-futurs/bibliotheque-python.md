@@ -1,6 +1,6 @@
 # Bibliothèque Python — `pip install` du moteur d'analyse
 
-> **Statut : à planifier, après les modules (dernière étape du projet).** Ce document fixe l'intention dès maintenant (décidé le 2026-10-19), pour que tout le code écrit d'ici là reste réutilisable hors de l'app.
+> **Statut : phase 1 livrée le 2026-10-25** ([spec 027](../features/027-bibliotheque-python/spec.md)) : paquet `cyfouri-data-explorer` dans `packages/`, `import cyfouri_data_explorer as dx`. Restent les visuels (`.plot()`), `_repr_html_`, l'extra `[app]` et PyPI. Ce document garde l'intention d'origine (2026-10-19) ; les noms réels sont dans la spec et le README du paquet.
 
 ## Objectif
 

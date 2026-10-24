@@ -64,7 +64,7 @@ backend/app/                     ← l'app : dépend du paquet (source uv en che
 | R-LIB-07 | **Données** : `dx.open(path, **options)` lit CSV, Parquet, Excel ou un dossier avec le lecteur de l'app (même détection du séparateur, des décimales, de l'encodage). Il écrit la copie Parquet dans un cache (`~/.cache/cyfouri-data-explorer/`, ou `cache_dir=`), réutilisée tant que la source ne change pas (même empreinte que l'app). `dx.from_pandas(df)` et `dx.from_arrow(table)` passent par le même cache. |
 | R-LIB-08 | **Filtres** : `ds.where(column, op, values)` rend un nouveau `Dataset` qui partage le catalogue et ajoute une `Condition` (mêmes opérateurs que la barre de filtres). Les conditions se cumulent en ET. |
 | R-LIB-09 | **Dépendances** : le cœur reprend celles de l'app sans FastAPI ni uvicorn (duckdb, pyarrow, numpy, scipy, statsmodels, scikit-learn, pydantic, openpyxl). Extras : `[ml]` (lightgbm, xgboost, optuna, cmaes), `[deep]` (torch). Aucune nouvelle dépendance. |
-| R-LIB-10 | **Résultats** : les dataclasses existantes. Le paquet ajoute `to_dict()` (JSON-sérialisable, NaN → None) et `to_pandas()` sur les résultats tabulaires. |
+| R-LIB-10 | **Résultats** : les dataclasses existantes, inchangées. Deux fonctions les convertissent : `dx.to_dict(résultat)` (JSON-sérialisable, NaN → None) et `dx.to_pandas(résultat)` pour les résultats tabulaires. S'y ajoute `ds.to_pandas()` (les lignes typées). Ce sont des fonctions plutôt que des méthodes, pour ne pas toucher aux classes que l'API sérialise. |
 | R-LIB-11 | **Version** `0.1.0`, Python ≥ 3.12. Pas de publication sur PyPI sans accord explicite. |
 
 ## Ordre de migration
@@ -88,7 +88,8 @@ Les tests restent verts à chaque étape, avec un commit par étape.
 - GIVEN `ds.retype("Pclass", "categorical_ordinal")` THEN `ds.compare("Pclass", "Survived")` traite Pclass comme une catégorie, comme dans l'app après correction.
 - GIVEN `ds.where("Sex", "in", ["female"])` THEN le nombre de lignes et les statistiques portent sur les femmes seulement, et `ds` reste inchangé.
 - GIVEN un second `dx.open()` du même fichier inchangé THEN la copie Parquet en cache est réutilisée.
-- GIVEN `ds.report("out.html")` THEN le fichier est identique au rapport de l'app (hors date de génération).
+- GIVEN `ds.report("out.html")` THEN le fichier sort de la même fonction que celui de l'app (`report/generate.py`), avec la version du paquet dans l'en-tête.
+- GIVEN l'installation de base, sans `[ml]` THEN `ds.ml().train()` fonctionne et `tune()` dit d'installer l'extra (Optuna se charge au premier usage).
 - Les tests de l'app passent sans changement de comportement, et l'image Docker reste sous 900 Mo.
 
 ## Hors scope (phase 1)
