@@ -156,3 +156,24 @@ def test_from_pandas(tmp_path: Path) -> None:
     assert ds.columns == ["x", "label"]
     assert len(ds) == 50
     assert ds.column("label").type in ("categorical_nominal", "boolean")
+
+
+def test_results_as_plain_data(traps: dx.Dataset) -> None:
+    import json
+
+    profile = dx.to_dict(traps.variable("age"))
+    assert profile["name"] == "age" and profile["numeric"]["describe"]["count"] > 0
+    json.dumps(dx.to_dict(traps.correlations()), allow_nan=False)
+    matrix = dx.to_pandas(traps.correlations())
+    assert matrix.shape[0] == matrix.shape[1] and "age" in matrix.index
+    assert list(dx.to_pandas(traps.types)["name"]) == traps.columns
+    assert len(dx.to_pandas(traps.rows(limit=5))) == 5
+    with pytest.raises(TypeError, match="No table"):
+        dx.to_pandas(traps.variable("age"))
+
+
+def test_to_pandas_reads_every_column_in_its_type(traps: dx.Dataset) -> None:
+    frame = traps.to_pandas()
+    assert len(frame) == 600
+    assert frame["price_eur"].dtype.kind == "f"  # "79,50" read as 79.5
+    assert frame["is_active"].dtype.kind == "b" or str(frame["is_active"].dtype) == "boolean"

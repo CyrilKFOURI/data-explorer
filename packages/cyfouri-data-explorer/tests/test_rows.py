@@ -4,6 +4,8 @@ from pathlib import Path
 import duckdb
 import pyarrow as pa
 import pytest
+from openpyxl import load_workbook
+
 from cyfouri_data_explorer.rows.export import TooManyRowsError, column_summary, write_view
 from cyfouri_data_explorer.rows.view import (
     SAMPLE,
@@ -15,7 +17,6 @@ from cyfouri_data_explorer.rows.view import (
     view_relation,
 )
 from cyfouri_data_explorer.typing.types import Parser
-from openpyxl import load_workbook
 
 RAW = Parser(kind="raw")
 NUMBER = Parser(kind="number", decimal=",")
@@ -128,7 +129,7 @@ def test_export_formats(connection, tmp_path: Path) -> None:
     with (tmp_path / "a.csv").open(encoding="utf-8") as handle:
         lines = list(csv.reader(handle))
     assert lines[0] == ["city", "price"] and lines[1] == ["Paris", "3.0"]
-    parquet = duckdb.sql(f"SELECT * FROM '{(tmp_path / 'a.parquet').as_posix()}'").fetchall()
+    parquet = duckdb.execute(f"SELECT * FROM '{(tmp_path / 'a.parquet').as_posix()}'").fetchall()
     assert parquet[0] == ("Paris", 3.0) and len(parquet) == 6
     sheet = load_workbook(tmp_path / "a.xlsx").active
     assert sheet is not None

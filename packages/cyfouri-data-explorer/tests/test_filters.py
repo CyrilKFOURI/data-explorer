@@ -1,5 +1,6 @@
 import duckdb
 import pytest
+
 from cyfouri_data_explorer.filters.model import Condition, InvalidFilterError, parse_filters
 from cyfouri_data_explorer.filters.sql import FilterColumn, where_sql
 from cyfouri_data_explorer.typing.types import Parser

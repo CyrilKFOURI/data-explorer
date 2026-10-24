@@ -4,12 +4,12 @@ import time
 from typing import Any
 
 import pytest
+
 from cyfouri_data_explorer.ml import catalog
 from cyfouri_data_explorer.ml import tune as tuner
 from cyfouri_data_explorer.ml.catalog.base import Context
 from cyfouri_data_explorer.ml.train import _setup, model_pipeline
-
-from tests.unit.test_ml import FIELDS, FRAME, by_name
+from tests.test_ml import FIELDS, FRAME, by_name
 
 PRICE = by_name["price"]
 FEATURES = [f for f in FIELDS if f.name not in ("price_copy", "expensive")]

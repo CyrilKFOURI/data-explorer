@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+
 from cyfouri_data_explorer.synthetic import diagnostic, encode
 from cyfouri_data_explorer.synthetic import quality as q
 from cyfouri_data_explorer.synthetic.deep import auto_epochs
@@ -113,7 +114,8 @@ def test_a_short_training_gives_valid_data_with_the_rare_level(method: str) -> N
     assert result.fitted.device == "CPU" and result.fitted.epochs == 60
     assert messages[-1].startswith("Epoch 60 / 60")
     assert "rare" in set(result.frame["level"].dropna())
-    assert abs(result.frame["value"].isna().mean() - frame["value"].isna().mean()) <= 0.08
+    missing = result.frame["value"].isna().to_numpy().mean()
+    assert abs(missing - frame["value"].isna().to_numpy().mean()) <= 0.08
 
 
 def test_tvae_keeps_both_peaks() -> None:

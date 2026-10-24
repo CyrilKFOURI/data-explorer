@@ -4,11 +4,11 @@ threshold, radius neighbours and categorical Naive Bayes."""
 import numpy as np
 import pandas as pd
 import pytest
+
 from cyfouri_data_explorer.ml import evaluate
 from cyfouri_data_explorer.ml.catalog.other import RadiusRegressor
 from cyfouri_data_explorer.ml.train import TrainingCancelled, TrainingError, estimate, train
-
-from tests.unit.test_ml import FIELDS, FRAME, by_name
+from tests.test_ml import FIELDS, FRAME, by_name
 
 PRICE, EXPENSIVE = by_name["price"], by_name["expensive"]
 FEATURES = [f for f in FIELDS if f.name not in ("price_copy", "expensive")]

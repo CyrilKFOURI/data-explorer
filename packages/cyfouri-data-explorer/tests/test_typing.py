@@ -2,6 +2,7 @@ from pathlib import Path
 
 import duckdb
 import pytest
+
 from cyfouri_data_explorer.ingestion.importer import import_to_parquet
 from cyfouri_data_explorer.ingestion.options import ImportOptions
 from cyfouri_data_explorer.ingestion.sources import list_source_files
@@ -11,9 +12,9 @@ from cyfouri_data_explorer.typing.knowledge_base import load, name_tokens
 from cyfouri_data_explorer.typing.parsers import typed_sql
 from cyfouri_data_explorer.typing.summary import summarize
 from cyfouri_data_explorer.typing.types import ColumnDetection, Parser
-
-from app.config import default_samples_dir
 from tests.factories import write_csv
+
+SAMPLES = Path(__file__).resolve().parents[3] / "samples"
 
 # Reference answers: (type, role). Detection must get all of them right.
 TYPING_TRAPS = {
@@ -62,7 +63,7 @@ def detect(source: Path, tmp_path: Path) -> dict[str, ColumnDetection]:
 
 @pytest.fixture(scope="module")
 def traps(tmp_path_factory: pytest.TempPathFactory) -> dict[str, ColumnDetection]:
-    return detect(default_samples_dir() / "typing_traps.csv", tmp_path_factory.mktemp("traps"))
+    return detect(SAMPLES / "typing_traps.csv", tmp_path_factory.mktemp("traps"))
 
 
 class TestReferenceDatasets:
@@ -72,7 +73,7 @@ class TestReferenceDatasets:
         assert found == TYPING_TRAPS
 
     def test_sales_timeseries_all_columns(self, tmp_path: Path) -> None:
-        detections = detect(default_samples_dir() / "sales_timeseries.csv", tmp_path)
+        detections = detect(SAMPLES / "sales_timeseries.csv", tmp_path)
 
         assert {name: (d.type, d.role) for name, d in detections.items()} == SALES_TIMESERIES
 

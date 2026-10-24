@@ -1,5 +1,6 @@
 import duckdb
 import pytest
+
 from cyfouri_data_explorer.charts.prepare import ChartParams, ColumnInput, prepare_chart
 from cyfouri_data_explorer.typing.dates import auto_step, classify_step, part_label
 from cyfouri_data_explorer.typing.types import Parser

@@ -5,13 +5,13 @@ from typing import cast
 import numpy as np
 import pandas as pd
 import pytest
+
 from cyfouri_data_explorer.ml import evaluate
 from cyfouri_data_explorer.ml import explain as explainer
 from cyfouri_data_explorer.ml.data import Field
 from cyfouri_data_explorer.ml.target import Task
 from cyfouri_data_explorer.ml.train import train
-
-from tests.unit.test_ml import FIELDS, FRAME, RAW, by_name
+from tests.test_ml import FIELDS, FRAME, RAW, by_name
 
 PRICE, EXPENSIVE = by_name["price"], by_name["expensive"]
 FEATURES = [f for f in FIELDS if f.name not in ("price_copy", "expensive")]

@@ -179,7 +179,7 @@ def unique_copies(synthetic: Rows, train: Rows) -> int:
         return 0
     keys = _copy_keys(train, None)
     counts = pd.Series(1, index=keys).groupby(level=list(range(keys.nlevels))).size()
-    single = counts[counts == 1].index
+    single = cast(pd.Series, counts[counts == 1]).index
     return int(_copy_keys(synthetic, None).isin(single).sum())
 
 

@@ -4,6 +4,7 @@ from typing import Annotated, Any
 from cyfouri_data_explorer.filters.model import Condition, parse_filters
 from cyfouri_data_explorer.ml import catalog
 from cyfouri_data_explorer.ml.classes import Classes, TargetDistribution
+from cyfouri_data_explorer.ml.engine import Catalogue, Targets
 from cyfouri_data_explorer.ml.evaluate import Validation
 from cyfouri_data_explorer.ml.preparation import Choices
 from cyfouri_data_explorer.ml.target import Task
@@ -13,7 +14,6 @@ from fastapi.responses import Response
 from pydantic import TypeAdapter, ValidationError
 
 from app.modules.ml.service import (
-    Catalogue,
     CompareJob,
     CompareRequest,
     ExplanationState,
@@ -21,7 +21,6 @@ from app.modules.ml.service import (
     MlService,
     Run,
     RunSummary,
-    Targets,
     TrainingJob,
     TuneJob,
     TuneStart,

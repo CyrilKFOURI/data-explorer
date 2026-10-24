@@ -1,15 +1,16 @@
 """Search the best settings of a model within a budget (021), with Optuna. Every trial is judged by
 3-fold cross-validation on the training rows only: the test rows are never seen here."""
 
+from __future__ import annotations
+
 import math
 import time
 import warnings
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
-import optuna
 import pandas as pd
 from pydantic import BaseModel, Field
 from sklearn.base import clone
@@ -20,6 +21,9 @@ from cyfouri_data_explorer.ml import catalog, evaluate
 from cyfouri_data_explorer.ml import preparation as prep
 from cyfouri_data_explorer.ml.explain import SCORERS
 from cyfouri_data_explorer.ml.target import Task
+
+if TYPE_CHECKING:  # Optuna is the `ml` extra: imported when a search starts
+    import optuna
 
 FOLDS = 3
 GRID_POINTS = 4
@@ -78,6 +82,14 @@ class TuneError(ValueError):
     pass
 
 
+def _optuna() -> Any:
+    try:
+        import optuna
+    except ModuleNotFoundError:
+        raise TuneError("Tuning needs Optuna: pip install 'cyfouri-data-explorer[ml]'.") from None
+    return optuna
+
+
 def default_space(model: str) -> list[SearchParam]:
     return [
         SearchParam(key=p.key, kind=p.kind, low=p.low, high=p.high, log=p.log, choices=p.choices)
@@ -126,6 +138,7 @@ def _scorer(metric: str, task: Task) -> Any:
 
 
 def _sampler(kind: Sampler, space: list[SearchParam]) -> optuna.samplers.BaseSampler:
+    optuna = _optuna()
     if kind == "random":
         return optuna.samplers.RandomSampler(seed=SEED)
     if kind == "cmaes":
@@ -156,6 +169,7 @@ def _sampler(kind: Sampler, space: list[SearchParam]) -> optuna.samplers.BaseSam
 
 
 def _pruner(kind: Pruner) -> optuna.pruners.BasePruner:
+    optuna = _optuna()
     return {
         "median": optuna.pruners.MedianPruner(n_startup_trials=5, n_warmup_steps=0),
         "halving": optuna.pruners.SuccessiveHalvingPruner(),
@@ -194,6 +208,7 @@ def tune(
     """Optimise `request.space` on 3-fold cross-validation of the training rows `x`, `y`.
     `build(values, rows)` returns the full pipeline for a set of settings; `progress` is updated
     after every trial (the caller reads it while the search runs)."""
+    optuna = _optuna()
     space = request.space if request.space is not None else default_space(spec.key)
     if not [p for p in space if p.fixed is None]:
         raise TuneError(f"{spec.label} has nothing worth tuning.")

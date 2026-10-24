@@ -27,6 +27,28 @@ jobs:
       - name: Tests (performance checks on millions of rows excluded)
         run: uv run pytest
 
+  library:
+    # The engine alone, as a notebook user installs it: no FastAPI, no app.
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/cyfouri-data-explorer
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.15"
+      - run: uv python install 3.12
+      - run: uv sync --frozen --extra ml --extra deep  # CPU PyTorch on Linux
+      - name: Lint
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Typecheck
+        run: uv run pyright
+      - name: Tests
+        run: uv run pytest
+      - name: Builds a wheel
+        run: uv build --wheel --out-dir dist && ls dist
+
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -47,7 +69,7 @@ jobs:
 
   docker:
     runs-on: ubuntu-latest
-    needs: [backend, frontend]
+    needs: [backend, library, frontend]
     steps:
       - uses: actions/checkout@v4
       - name: Build the image

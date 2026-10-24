@@ -3,14 +3,14 @@
 import numpy as np
 import pandas as pd
 import pytest
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LogisticRegression
+
 from cyfouri_data_explorer.ml import catalog, evaluate
 from cyfouri_data_explorer.ml.catalog.base import Context, SettingsError, resolve
 from cyfouri_data_explorer.ml.catalog.other import neighbours
 from cyfouri_data_explorer.ml.train import TrainingError, train
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import LogisticRegression
-
-from tests.unit.test_ml import FIELDS, FRAME, by_name
+from tests.test_ml import FIELDS, FRAME, by_name
 
 SMALL = FRAME.iloc[:400].reset_index(drop=True)
 PRICE, EXPENSIVE = by_name["price"], by_name["expensive"]

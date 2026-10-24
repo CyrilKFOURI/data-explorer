@@ -5,6 +5,8 @@ import duckdb
 import numpy as np
 import pyarrow as pa
 import pytest
+from scipy import stats
+
 from cyfouri_data_explorer.correlations.insights import insights_for
 from cyfouri_data_explorer.correlations.matrix import (
     MatrixColumn,
@@ -13,7 +15,6 @@ from cyfouri_data_explorer.correlations.matrix import (
     eta,
 )
 from cyfouri_data_explorer.typing.types import AnalysisType, Parser
-from scipy import stats
 
 RAW = Parser(kind="raw")
 N = 2_000

@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+
 from cyfouri_data_explorer.synthetic import (
     compare,
     detection,
@@ -170,12 +171,13 @@ def test_every_method_respects_bounds_levels_integers_and_empty_rates(method: st
     result = synthesize(train, SPECS, method, Options(rows=2_000, seed=7))  # type: ignore[arg-type]
     frame = result.frame
     assert list(frame.columns) == [s.name for s in SPECS] and len(frame) == 2_000
-    assert frame["x"].between(train["x"].min(), train["x"].max()).all()
+    assert bool(frame["x"].between(train["x"].min(), train["x"].max()).all())
     assert set(frame["group"].dropna()) <= {"hi", "lo", "mid"}
-    assert (frame["k"] == frame["k"].round()).all()
+    assert bool((frame["k"] == frame["k"].round()).all())
     for name in ("y", "group"):
-        assert abs(frame[name].isna().mean() - train[name].isna().mean()) <= 0.03
-    assert frame["day"].between(train["day"].min(), train["day"].max()).all()
+        share = frame[name].isna().to_numpy().mean()
+        assert abs(share - train[name].isna().to_numpy().mean()) <= 0.03
+    assert bool(frame["day"].between(train["day"].min(), train["day"].max()).all())
     assert frame["id"].is_unique and not encode.column_of(frame, "id").isin(train["id"]).any()
     checks = diagnostic.diagnose(
         frame, result.learned, ["id"], result.bounds, [s.name for s in SPECS]

@@ -4,12 +4,12 @@ import duckdb
 import numpy as np
 import pandas as pd
 import pytest
+from pydantic import ValidationError
+
 from cyfouri_data_explorer.ml import classes as binning
 from cyfouri_data_explorer.ml.data import Field
 from cyfouri_data_explorer.ml.train import train
-from pydantic import ValidationError
-
-from tests.unit.test_ml import FIELDS, FRAME, RAW, by_name
+from tests.test_ml import FIELDS, FRAME, RAW, by_name
 
 PRICE = by_name["price"]
 

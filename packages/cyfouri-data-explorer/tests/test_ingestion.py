@@ -2,13 +2,13 @@ from pathlib import Path
 
 import duckdb
 import pytest
+
 from cyfouri_data_explorer.ingestion.csv_sniff import sniff_csv
 from cyfouri_data_explorer.ingestion.errors import IngestionError
 from cyfouri_data_explorer.ingestion.importer import import_to_parquet
 from cyfouri_data_explorer.ingestion.options import CsvOptions, ImportOptions, SourceOptions
 from cyfouri_data_explorer.ingestion.preview import preview_source
 from cyfouri_data_explorer.ingestion.sources import fingerprint, list_source_files
-
 from tests.factories import SEMICOLON_CSV, write_csv, write_excel, write_parquet
 
 

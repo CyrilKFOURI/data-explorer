@@ -7,6 +7,13 @@ updates:
     groups:
       python:
         patterns: ["*"]
+  - package-ecosystem: uv
+    directory: /packages/cyfouri-data-explorer
+    schedule:
+      interval: monthly
+    groups:
+      python:
+        patterns: ["*"]
   - package-ecosystem: npm
     directory: /frontend
     schedule:

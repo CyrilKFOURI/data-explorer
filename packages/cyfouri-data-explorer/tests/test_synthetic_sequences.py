@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+
 from cyfouri_data_explorer.synthetic import diagnostic, encode
 from cyfouri_data_explorer.synthetic import sequences as seq
 from cyfouri_data_explorer.synthetic.generate import Spec, synthesize
@@ -71,9 +72,9 @@ def test_held_out_rows_are_whole_histories() -> None:
     frame = stores(count=5)
     train, holdout = seq.split_histories(frame, "date", "store", seed=3)
     assert set(train["store"]).isdisjoint(set(holdout["store"]))
-    assert holdout["store"].nunique() == 1 and len(train) + len(holdout) == len(frame)
+    assert bool(holdout["store"].nunique() == 1) and len(train) + len(holdout) == len(frame)
     series_train, series_holdout = seq.split_histories(stores(count=1), "date", None, seed=3)
-    assert series_train["date"].max() < series_holdout["date"].min()
+    assert bool(series_train["date"].max() < series_holdout["date"].min())
 
 
 def test_autocorrelation_sees_a_cycle_and_its_similarity_is_one_for_the_same_windows() -> None:
@@ -118,11 +119,11 @@ def test_timegan_makes_new_dated_histories_of_the_planned_length() -> None:
         ),
     )
     out = result.frame
-    assert len(out) == 6 * 14 and out["store"].nunique() == 6
+    assert len(out) == 6 * 14 and bool(out["store"].nunique() == 6)
     assert not encode.column_of(out, "store").isin(encode.column_of(frame, "store")).any()
     for _, history in out.groupby("store"):
         gaps = history["date"].diff().dropna()
-        assert len(history) == 14 and (gaps == pd.Timedelta(days=1)).all()
+        assert len(history) == 14 and bool((gaps == pd.Timedelta(days=1)).all())
     assert messages[-1] == "Joint training · step 100 / 100"
     checks = diagnostic.diagnose(out, result.learned, [], result.bounds, [s.name for s in SPECS])
     assert checks.score == 1.0

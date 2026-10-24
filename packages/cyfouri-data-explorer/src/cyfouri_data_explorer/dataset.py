@@ -5,6 +5,8 @@ detects the column types with the app's engine. A `Dataset` is its own catalog (
 the analysis services the app uses; `where()` gives a filtered view sharing that catalog.
 """
 
+from __future__ import annotations
+
 import hashlib
 import json
 import os
@@ -12,9 +14,10 @@ import shutil
 from dataclasses import asdict, dataclass, field, replace
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import duckdb
+import pandas as pd
 
 from cyfouri_data_explorer.catalog import (
     ColumnChange,
@@ -58,6 +61,13 @@ from cyfouri_data_explorer.variable.fitting import Fit
 from cyfouri_data_explorer.variable.outliers import OutlierMethod, Outliers
 from cyfouri_data_explorer.variable.service import VariableService
 from cyfouri_data_explorer.version import __version__
+
+if TYPE_CHECKING:  # machine learning and synthetic data load on first use (scikit-learn, Optuna)
+    from cyfouri_data_explorer.ml.classes import Classes
+    from cyfouri_data_explorer.ml.engine import Targets
+    from cyfouri_data_explorer.ml.evaluate import Validation
+    from cyfouri_data_explorer.ml.facade import MachineLearning
+    from cyfouri_data_explorer.synthetic.facade import Synthesizer
 
 DETECTION_VERSION = 1  # bump when detection changes, to ignore cached detections
 
@@ -163,30 +173,30 @@ class Dataset:
 
     # --- Correcting the types ---------------------------------------------------------------
 
-    def retype(self, column: str, analysis_type: AnalysisType) -> "Dataset":
+    def retype(self, column: str, analysis_type: AnalysisType) -> Dataset:
         """Read a column in another type (same rules as the app's Columns page)."""
         return self._change(ColumnChange(name=column, type=analysis_type))
 
-    def set_role(self, column: str, role: str | None) -> "Dataset":
+    def set_role(self, column: str, role: str | None) -> Dataset:
         """A semantic role from the knowledge base (`None`: no role)."""
         return self._change(ColumnChange(name=column, role=role or ""))
 
-    def set_order(self, column: str, order: list[str]) -> "Dataset":
+    def set_order(self, column: str, order: list[str]) -> Dataset:
         """The order of an ordinal category's values (empty: back to the detected order)."""
         return self._change(ColumnChange(name=column, order=order))
 
-    def exclude(self, *columns: str) -> "Dataset":
+    def exclude(self, *columns: str) -> Dataset:
         """Leave columns out of the analyses (overview, correlations, report)."""
         for column in columns:
             self._change(ColumnChange(name=column, excluded=True))
         return self
 
-    def include(self, *columns: str) -> "Dataset":
+    def include(self, *columns: str) -> Dataset:
         for column in columns:
             self._change(ColumnChange(name=column, excluded=False))
         return self
 
-    def reset_types(self, *columns: str) -> "Dataset":
+    def reset_types(self, *columns: str) -> Dataset:
         """Back to the detected type, role and order (every column when none is given)."""
         for column in columns or tuple(self.columns):
             self._change(ColumnChange(name=column, reset=True))
@@ -198,7 +208,7 @@ class Dataset:
             raise ColumnNotFound(name, self.columns)
         return record
 
-    def _change(self, change: ColumnChange) -> "Dataset":
+    def _change(self, change: ColumnChange) -> Dataset:
         """Changes the dataset in place (every filtered view of it sees the change)."""
         record = self._record(change.name)
         before = (record.user_type, record.user_parser, record.user_role, record.user_order)
@@ -222,7 +232,7 @@ class Dataset:
         *,
         negate: bool = False,
         **options: Any,
-    ) -> "Dataset":
+    ) -> Dataset:
         """A filtered view: `ds.where("Sex", "in", ["female"])`, `ds.where("Age", "between",
         (18, 30))`, `ds.where("Fare", "gt", 50)`. Conditions add up (AND); the values of an
         `in` combine with OR. Same operators as the app's filter bar."""
@@ -243,7 +253,7 @@ class Dataset:
         where_for(self.types, list(conditions))  # an invalid filter fails now, not later
         return Dataset(self._state, conditions)
 
-    def unfiltered(self) -> "Dataset":
+    def unfiltered(self) -> Dataset:
         return Dataset(self._state)
 
     # --- Analyses ---------------------------------------------------------------------------
@@ -315,6 +325,15 @@ class Dataset:
         view = View(mode=mode, search=search, sort=sort, desc=desc)
         return self._state.service(RowService).rows(self._id, view, offset, limit, self.conditions)
 
+    def to_pandas(self, columns: list[str] | None = None) -> pd.DataFrame:
+        """The (filtered) rows as a pandas DataFrame, each column read in its type."""
+        service: RowService = self._state.service(RowService)
+        exported = service.export(self._id, "parquet", View(), columns, self.conditions)
+        try:
+            return pd.read_parquet(exported.path)
+        finally:
+            exported.remove()
+
     def export(
         self,
         path: str | os.PathLike[str],
@@ -372,6 +391,47 @@ class Dataset:
             else Definition.model_validate(definition)
         )
         return self._state.service(KpiEngine).compute(self._id, chosen, self.conditions)
+
+    def ml_targets(self) -> Targets:
+        """Every column as a possible target: the problem it makes (regression, binary,
+        multiclass) or why it cannot be one."""
+        from cyfouri_data_explorer.ml.engine import MlEngine
+
+        return self._state.service(MlEngine).targets(self._id, self.conditions)
+
+    def ml(
+        self,
+        target: str,
+        *,
+        classes: Classes | None = None,
+        validation: Validation | None = None,
+    ) -> MachineLearning:
+        """Models predicting `target`: `.train()`, `.compare()`, `.tune()`, `.preview()`."""
+        from cyfouri_data_explorer.ml.engine import MlEngine
+        from cyfouri_data_explorer.ml.facade import MachineLearning
+
+        self._record(target)
+        engine = self._state.service(MlEngine)
+        return MachineLearning(engine, self._id, target, self.conditions, classes, validation)
+
+    def synthetic(self, use_gpu: bool | None = None) -> Synthesizer:
+        """Synthetic copies of the whole dataset (filters do not apply, as in the app).
+        `use_gpu`: whether the deep methods may use the GPU (`None`: when PyTorch sees one)."""
+        from cyfouri_data_explorer.synthetic.engine import SyntheticEngine
+        from cyfouri_data_explorer.synthetic.facade import Synthesizer, gpu_compute
+
+        key = f"SyntheticEngine:{use_gpu}"
+        services = self._state._services
+        if key not in services:
+            found: list[tuple[str | None, bool]] = []
+
+            def compute() -> tuple[str | None, bool]:
+                if not found:
+                    found.append(gpu_compute(use_gpu))
+                return found[0]
+
+            services[key] = SyntheticEngine(self._state, compute)
+        return Synthesizer(self.unfiltered(), services[key], self._id)
 
     def report(self, path: str | os.PathLike[str] | None = None) -> str:
         """The app's HTML report (one self-contained file); written to `path` when given.

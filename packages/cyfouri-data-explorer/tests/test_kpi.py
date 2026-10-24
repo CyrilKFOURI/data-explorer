@@ -8,6 +8,7 @@ import duckdb
 import numpy as np
 import pandas as pd
 import pytest
+
 from cyfouri_data_explorer.ingestion.sql import lit
 from cyfouri_data_explorer.kpi import rules
 from cyfouri_data_explorer.kpi.compute import KpiError, compute

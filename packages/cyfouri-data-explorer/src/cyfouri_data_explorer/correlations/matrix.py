@@ -133,7 +133,9 @@ def load(connection: duckdb.DuckDBPyConnection, source: str, columns: list[Matri
             f"ORDER BY hash(file_row_number + {SEED}) LIMIT {MAX_ROWS}"
         )
         query += f" WHERE file_row_number IN ({picked})"
+    # execute(): the connection may hold an unfinished result, which DuckDB 2 refuses for sql().
     table = connection.execute(query).to_arrow_table()
+    assert table is not None
     arrays: dict[str, np.ndarray] = {}
     labels: dict[str, list[str]] = {}
     for i, column in enumerate(columns):

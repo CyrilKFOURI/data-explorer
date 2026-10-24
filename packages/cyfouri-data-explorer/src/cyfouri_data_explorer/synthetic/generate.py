@@ -89,7 +89,7 @@ def drop_copies(
     "replicated uniques" rule); the spare rows generated take their place. A combination that
     many real rows share reveals nobody, so it stays."""
     real = _row_hashes(cast(pd.DataFrame, train[list(synthetic.columns)])).value_counts()
-    copied = _row_hashes(synthetic).isin(set(real[real == 1].index))
+    copied = _row_hashes(synthetic).isin(set(cast(pd.Series, real[real == 1]).index))
     kept = cast(pd.DataFrame, synthetic[~copied.to_numpy()])
     dropped = int(copied.iloc[:rows].sum())
     if len(kept) < rows and len(kept):

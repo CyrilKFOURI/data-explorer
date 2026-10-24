@@ -15,6 +15,7 @@ from cyfouri_data_explorer.catalog import ColumnView
 from cyfouri_data_explorer.dataset import Dataset, DatasetInfo, from_arrow, from_pandas, open
 from cyfouri_data_explorer.errors import ColumnNotFound, ExplorerError, NotFoundError
 from cyfouri_data_explorer.filters.model import Condition
+from cyfouri_data_explorer.results import to_dict, to_pandas
 from cyfouri_data_explorer.typing.engine import DEFAULT_THRESHOLDS, Thresholds
 from cyfouri_data_explorer.version import __version__
 
@@ -32,4 +33,6 @@ __all__ = [
     "from_arrow",
     "from_pandas",
     "open",
+    "to_dict",
+    "to_pandas",
 ]

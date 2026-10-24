@@ -227,29 +227,33 @@ def _association(
     pair = pd.DataFrame({"x": feature, "y": target}).dropna()
     if len(pair) < 10:
         return 0.0
+    x, y = cast(pd.Series, pair["x"]), cast(pd.Series, pair["y"])
     if feature_numeric and target_numeric:
-        if pair["x"].std() == 0 or pair["y"].std() == 0:
+        if x.nunique() < 2 or y.nunique() < 2:  # a constant: no correlation
             return 0.0
-        return abs(float(np.corrcoef(pair["x"], pair["y"])[0, 1]))
+        return abs(float(np.corrcoef(x, y)[0, 1]))
     if not feature_numeric and not target_numeric:
-        table = pd.crosstab(pair["x"].astype(str), pair["y"].astype(str))
+        table = pd.crosstab(x.astype(str), y.astype(str))
         if min(table.shape) < 2:
             return 0.0
         chi2 = float(np.asarray(stats.chi2_contingency(table, correction=False)[0], dtype=float))
         return float(math.sqrt(chi2 / (len(pair) * (min(table.shape) - 1))))
-    numbers, groups = (pair["x"], pair["y"]) if feature_numeric else (pair["y"], pair["x"])
-    total = float(((numbers - numbers.mean()) ** 2).sum())
+    numbers, groups = (x, y) if feature_numeric else (y, x)
+    mean = float(numbers.mean())
+    total = float(((numbers - mean) ** 2).sum())
     if total == 0:
         return 0.0
     grouped = numbers.groupby(groups.astype(str)).agg(["count", "mean"])
-    between = float((grouped["count"] * (grouped["mean"] - numbers.mean()) ** 2).sum())
+    counts, means = cast(pd.Series, grouped["count"]), cast(pd.Series, grouped["mean"])
+    between = float((counts * (means - mean) ** 2).sum())
     return math.sqrt(between / total)
 
 
 def _separation(feature: pd.Series, target: pd.Series) -> float:
     """How well a single threshold on a number separates two classes (AUC, either direction)."""
     pair = pd.DataFrame({"x": feature, "y": target.astype(str)}).dropna()
-    if len(pair) < 10 or pair["y"].nunique() != 2 or pair["x"].nunique() < 2:
+    x, y = cast(pd.Series, pair["x"]), cast(pd.Series, pair["y"])
+    if len(pair) < 10 or y.nunique() != 2 or x.nunique() < 2:
         return 0.0
     positive = pair["y"] == pair["y"].iloc[0]
     ranks = stats.rankdata(pair["x"])

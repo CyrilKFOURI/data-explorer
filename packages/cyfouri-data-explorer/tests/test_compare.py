@@ -5,6 +5,8 @@ import duckdb
 import numpy as np
 import pyarrow as pa
 import pytest
+from scipy import stats
+
 from cyfouri_data_explorer.compare.analyze import (
     CompareColumn,
     NotComparableError,
@@ -14,7 +16,6 @@ from cyfouri_data_explorer.compare.analyze import (
 )
 from cyfouri_data_explorer.compare.stats import GroupStats, anovas
 from cyfouri_data_explorer.typing.types import Parser
-from scipy import stats
 
 RAW = Parser(kind="raw")
 N = 3_000

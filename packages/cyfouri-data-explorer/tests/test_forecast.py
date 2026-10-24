@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+
 from cyfouri_data_explorer.timeseries import forecast as fc
 
 RNG = np.random.default_rng(12)

@@ -10,106 +10,36 @@ from collections import OrderedDict
 from collections.abc import Iterator
 from concurrent.futures import Future, ThreadPoolExecutor
 from contextlib import contextmanager
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import dataclass, field, fields
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal, cast
 
 import duckdb
 import joblib
-import pandas as pd
 from cyfouri_data_explorer.filters.model import Condition
-from cyfouri_data_explorer.filters.scope import scoped_source, where_for
 from cyfouri_data_explorer.ml import classes as binning
-from cyfouri_data_explorer.ml import data as ml_data
 from cyfouri_data_explorer.ml import evaluate
 from cyfouri_data_explorer.ml import explain as explainer
 from cyfouri_data_explorer.ml import models as catalogue
 from cyfouri_data_explorer.ml import preparation as prep
 from cyfouri_data_explorer.ml import train as trainer
 from cyfouri_data_explorer.ml import tune as tuner
-from cyfouri_data_explorer.ml.catalog import Context as ModelContext
-from cyfouri_data_explorer.ml.catalog.spaces import Param
 from cyfouri_data_explorer.ml.data import NUMERIC, Field
-from cyfouri_data_explorer.ml.target import Candidate, Task, candidate
-from pydantic import BaseModel, TypeAdapter
-from pydantic import Field as PydanticField
+from cyfouri_data_explorer.ml.engine import (
+    CompareRequest,
+    MlEngine,
+    MlError,
+    TuneStart,
+)
+from cyfouri_data_explorer.ml.target import Task
+from pydantic import TypeAdapter
 
 from app.core import db
-from app.core.errors import AppError
 from app.core.storage import Workspace
 from app.services.columns.service import ColumnService
 
 Stage = Literal["loading", "preparing", "training", "saving"]
-
-
-class MlError(AppError):
-    def __init__(self, message: str, code: str = "ml", status_code: int = 422) -> None:
-        super().__init__(message, code=code, status_code=status_code)
-
-
-@dataclass
-class SettingView:
-    key: str
-    label: str
-    kind: str
-    default: Any
-    level: str
-    options: list[str]
-    minimum: float | None
-    maximum: float | None
-    log: bool
-    why: str
-    shown_when: dict[str, list[Any]] | None
-    group: str
-    param: str
-    option_labels: dict[str, str]
-
-
-@dataclass
-class RuleView:
-    when: dict[str, list[Any]]
-    setting: str
-    allowed: list[Any]
-    reason: str
-
-
-@dataclass
-class ModelView:
-    key: str
-    label: str
-    family: str
-    description: str
-    tasks: list[str]
-    settings: list[SettingView]
-    rules: list[RuleView]
-    badges: list[str]
-    installed: bool
-    unavailable: str | None  # why it cannot run on this data
-    probabilities: bool
-    space: list[Param]  # where the optimizer searches (empty: nothing to tune)
-
-
-@dataclass
-class Recommendation:
-    key: str
-    why: str
-
-
-@dataclass
-class Catalogue:
-    families: list[str]
-    models: list[ModelView]
-    recommended: list[Recommendation]
-    metrics: list[str]  # every metric of the problem, the default first
-    default_metric: str
-    compare: list[str]  # models compared by default: one per suitable family
-
-
-@dataclass
-class Targets:
-    candidates: list[Candidate]
-    rows: int  # rows after the filters
 
 
 @dataclass
@@ -191,15 +121,6 @@ class TuneJob:
     space: list[tuner.SearchParam] = field(default_factory=list)
 
 
-class CompareRequest(BaseModel):
-    models: list[str] = PydanticField(min_length=1, max_length=40)
-    preparation: prep.Choices | None = None
-
-
-class TuneStart(tuner.TuneRequest):
-    preparation: prep.Choices | None = None
-
-
 @dataclass
 class TrainingJob:
     id: str
@@ -238,9 +159,12 @@ def _now() -> str:
     return datetime.now(UTC).isoformat()
 
 
-class MlService:
+class MlService(MlEngine):
+    """The engine, plus training jobs, saved runs, comparisons, tunings and explanations."""
+
     def __init__(self, columns: ColumnService, workspace: Workspace) -> None:
-        self.columns = columns
+        super().__init__(columns)
+        self.columns: ColumnService = columns
         self.workspace = workspace
         self._executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="ml")
         self._jobs: OrderedDict[str, TrainingJob] = OrderedDict()
@@ -262,92 +186,6 @@ class MlService:
 
     def _folder(self, dataset_id: str) -> Path:
         return self.workspace.dataset_dir(dataset_id) / "ml"
-
-    # --- Catalogue and targets -----------------------------------------------------------------
-
-    def catalogue(self, context: catalogue.Context) -> Catalogue:
-        """The models that handle a task, their settings with data-dependent defaults, the rules
-        between settings, and two or three recommendations for this data."""
-        task = context.task
-        models = []
-        for spec in catalogue.CATALOGUE.values():
-            if task not in spec.tasks:
-                continue
-            settings = spec.settings(context)
-            defaults = {s.key: s.default for s in settings}
-            models.append(
-                ModelView(
-                    spec.key,
-                    spec.label,
-                    spec.family,
-                    spec.description,
-                    list(spec.tasks),
-                    [SettingView(**asdict(setting)) for setting in settings],
-                    [RuleView(**asdict(rule)) for rule in spec.rules],
-                    spec.badges(context),
-                    spec.installed,
-                    spec.limit(context),
-                    task == "regression" or spec.has_probabilities(defaults),
-                    catalogue.spaces.space(spec.key),
-                )
-            )
-        default = evaluate.default_metric(task, context.minority_share)
-        metrics = evaluate.metrics_for(task)
-        return Catalogue(
-            [f for f in catalogue.FAMILIES if any(m.family == f for m in models)],
-            models,
-            [Recommendation(key, why) for key, why in catalogue.recommend(context)],
-            [default, *(m for m in metrics if m != default)],
-            default,
-            self._compare_default(models, context),
-        )
-
-    @staticmethod
-    def _compare_default(models: list[ModelView], context: ModelContext) -> list[str]:
-        """One model per family that suits the problem and the data."""
-        ready = {m.key for m in models if m.installed and m.unavailable is None}
-        wanted = [
-            catalogue.default_model(context.task),
-            "random_forest",
-            "xgboost" if "xgboost" in ready else "hist_gradient_boosting",
-            "knn",
-            "mlp",
-            "decision_tree",
-        ]
-        if context.task != "regression":
-            wanted.append("gaussian_nb")
-        if context.rows <= 10_000:
-            wanted.append("kernel_svm")
-        return [key for key in wanted if key in ready]
-
-    def _fields(self, dataset_id: str) -> tuple[list[Field], Any]:
-        dataset = self.columns.ready(dataset_id)
-        views = [v for v in self.columns.columns(dataset_id) if not v.excluded]
-        fields = [Field(v.name, v.type, v.parser, v.role, v.order) for v in views]
-        return fields, (dataset, views)
-
-    def targets(self, dataset_id: str, conditions: list[Condition]) -> Targets:
-        fields, (dataset, views) = self._fields(dataset_id)
-        connection = duckdb.connect()
-        try:
-            source = scoped_source(
-                dataset.storage_path, where_for(views, conditions), numbered=True
-            )
-            parts = ", ".join(
-                f"count(DISTINCT {ml_data._expression(f)}), count({ml_data._expression(f)})"
-                for f in fields
-            )
-            row = connection.execute(f"SELECT count(*), {parts} FROM {source}").fetchone() or ()
-        finally:
-            connection.close()
-        total = int(row[0]) if row else 0
-        found = []
-        for i, fld in enumerate(fields):
-            distinct, present = int(row[1 + 2 * i]), int(row[2 + 2 * i])
-            missing = 1 - present / total if total else 1.0
-            found.append(candidate(fld.name, fld.type, fld.role, distinct, missing, present))
-        found.sort(key=lambda c: (c.task is None, not c.suggested))
-        return Targets(found, total)
 
     # --- Training ------------------------------------------------------------------------------
 
@@ -384,117 +222,12 @@ class MlService:
         )
         return job
 
-    def _request(
-        self,
-        dataset_id: str,
-        target: str,
-        model: str | None,
-        conditions: list[Condition],
-        classes: binning.Classes | None = None,
-    ) -> tuple[list[Field], Field, str]:
-        fields, (dataset, views) = self._fields(dataset_id)
-        by_name = {f.name: f for f in fields}
-        if target not in by_name:
-            raise MlError(f"Unknown or ignored column {target!r}.", "unknown_column")
-        field_ = by_name[target]
-        if field_.type in ("identifier", "text", "datetime"):
-            raise MlError(f"{target!r} cannot be predicted: it is {field_.type}.", "bad_target")
-        if model is not None and model not in catalogue.CATALOGUE:
-            raise MlError(f"Unknown model {model!r}.", "unknown_model")
-        if classes is not None and field_.type not in NUMERIC:
-            raise MlError(
-                f"{target!r} is not a number: it cannot be cut into classes.", "bad_classes"
-            )
-        source = scoped_source(dataset.storage_path, where_for(views, conditions), numbered=True)
-        return fields, field_, source
-
-    def _load(
-        self,
-        fields: list[Field],
-        target: Field,
-        source: str,
-        limit: int | None = ml_data.MAX_ROWS,
-    ) -> tuple[ml_data.Frame, Task]:
-        connection = duckdb.connect()
-        try:
-            frame = ml_data.load(connection, source, fields, target.name, limit)
-        finally:
-            connection.close()
-        if frame.rows < 15:
-            raise MlError("Fewer than 15 rows have a target value.")
-        distinct = len(set(frame.data[target.name].dropna().astype(str)))
-        task = candidate(target.name, target.type, target.role, distinct, 0).task
-        if task is None:
-            raise MlError(f"{target.name!r} cannot be predicted.")
-        return frame, task
-
-    def preview(
-        self,
-        dataset_id: str,
-        target: str,
-        model: str | None,
-        settings: dict[str, Any] | None,
-        conditions: list[Condition],
-        choices: prep.Choices | None,
-        classes: binning.Classes | None = None,
-    ) -> trainer.PreparationPreview:
-        """The preparation the next training would use, and its first prepared rows."""
-        fields, field_, source = self._request(dataset_id, target, model, conditions, classes)
-        frame, task = self._load(fields, field_, source)
-        if classes is not None:
-            task = "binary" if len(classes.names) == 2 else "multiclass"
-        try:
-            return trainer.preview(
-                frame.data,
-                fields,
-                field_,
-                task,
-                model or catalogue.default_model(task),
-                settings,
-                choices,
-                classes=classes,
-            )
-        except (trainer.TrainingError, catalogue.SettingsError) as error:
-            raise MlError(str(error)) from None
-
     def cancel(self, job_id: str) -> TrainingJob:
         """Stop a training at its next checkpoint (a fit in progress finishes first)."""
         job = self.job(job_id)
         if job.status == "running":
             self._stops.add(job_id)
         return job
-
-    def estimate(
-        self,
-        dataset_id: str,
-        target: str,
-        model: str | None,
-        settings: dict[str, Any] | None,
-        conditions: list[Condition],
-        choices: prep.Choices | None,
-        classes: binning.Classes | None = None,
-        validation: evaluate.Validation | None = None,
-    ) -> trainer.Estimate:
-        """How long the training would take, from fits on 500 and 2 000 rows."""
-        fields, field_, source = self._request(dataset_id, target, model, conditions, classes)
-        validation = validation or evaluate.Validation()
-        frame, task = self._load(fields, field_, source, validation.max_rows)
-        if classes is not None:
-            task = "binary" if len(classes.names) == 2 else "multiclass"
-        try:
-            return trainer.estimate(
-                frame.data,
-                fields,
-                field_,
-                task,
-                model or catalogue.default_model(task),
-                settings,
-                choices,
-                classes,
-                validation,
-            )
-        except (trainer.TrainingError, catalogue.SettingsError) as error:
-            raise MlError(str(error)) from None
 
     def job(self, job_id: str) -> TrainingJob:
         job = self._jobs.get(job_id)
@@ -516,27 +249,22 @@ class MlService:
         classes: binning.Classes | None = None,
         validation: evaluate.Validation | None = None,
     ) -> None:
-        validation = validation or evaluate.Validation()
         try:
-            frame, task = self._load(fields, target, source, validation.max_rows)
-            if classes is not None:
-                task = "binary" if len(classes.names) == 2 else "multiclass"
-            job.stage = "preparing"
-            key = model or catalogue.default_model(task)
-            job.stage = "training"
-            trained = trainer.train(
-                frame.data,
+
+            def stage(name: str) -> None:
+                job.stage = cast(Stage, name)
+
+            trained = self._fit(
                 fields,
                 target,
-                task,
-                key,
+                source,
+                model,
                 settings,
-                frame.rows,
-                frame.sampled,
-                choices=choices,
-                classes=classes,
-                validation=validation,
+                choices,
+                classes,
+                validation,
                 should_stop=lambda: job.id in self._stops,
+                stage=stage,
             )
             if job.id in self._stops:
                 raise trainer.TrainingCancelled
@@ -749,49 +477,22 @@ class MlService:
         validation: evaluate.Validation,
     ) -> None:
         try:
-            frame, task = self._load(fields, target, source, validation.max_rows)
-            if classes is not None:
-                task = "binary" if len(classes.names) == 2 else "multiclass"
-            setup = trainer._setup(
-                frame.data,
+
+            def started(progress: tuner.TuneProgress) -> None:
+                job.progress = progress
+
+            progress = self._search(
                 fields,
                 target,
-                task,
-                request.model,
-                request.settings,
-                None,
-                request.preparation,
+                source,
+                request,
+                job.space,
                 classes,
                 validation,
-            )
-            metric = validation.metric or evaluate.default_metric(setup.task, setup.minority)
-            job.progress = tuner.TuneProgress(metric, metric not in evaluate.LOWER_IS_BETTER)
-
-            def build(values: dict[str, Any], rows: int) -> Any:
-                return trainer.model_pipeline(
-                    setup.spec,
-                    values,
-                    setup.context,
-                    setup.preparation,
-                    setup.task,
-                    rows,
-                    setup.unregularized,
-                )
-
-            tuner.tune(
-                setup.x_train,
-                setup.y_train,
-                setup.task,
-                setup.spec,
-                setup.context,
-                setup.preparation,
-                request.model_copy(update={"space": job.space}),
-                metric,
-                job.progress,
                 lambda: job.id in self._stops,
-                build,
+                started,
             )
-            job.status = "stopped" if job.progress.stopped else "done"
+            job.status = "stopped" if progress.stopped else "done"
             self._save_tuning(dataset_id, target.name, job, request)
         except (
             MlError,
@@ -906,35 +607,7 @@ class MlService:
         conditions = (
             [Condition.model_validate(c) for c in json.loads(row["conditions"])] if row else []
         )
-        fields, target, source = self._request(dataset_id, run.target, None, conditions)
-        connection = duckdb.connect()
-        try:
-            frame = ml_data.load(connection, source, fields, target.name, run.validation.max_rows)
-        finally:
-            connection.close()
-        data = frame.data[frame.data["__row"].isin(list(run.evaluation_rows))].reset_index(
-            drop=True
-        )
-        inputs = [str(c) for c in pipeline.feature_names_in_]
-        missing = [c for c in inputs if c not in data.columns]
-        if missing or data.empty:
-            raise MlError("The data changed since this run: train it again to explain it.")
-        series = cast(pd.Series, data[target.name])
-        if run.classes is not None:
-            y = binning.apply(series, run.classes).astype(str)
-        else:
-            y = trainer.prepare_target(series, run.task)
-        positive = run.classification.positive if run.classification else None
-        found = explainer.explain(
-            pipeline,
-            cast(pd.DataFrame, data[inputs]),
-            y,
-            cast(pd.Series, data["__row"]).to_numpy(dtype=int),
-            run.task,
-            run.primary,
-            [p.row for p in run.predictions],
-            positive,
-        )
+        found = self._explanation(dataset_id, pipeline, run, conditions)
         (folder / f"{run.id}.explain.json").write_bytes(EXPLANATION.dump_json(found))
         return found
 
