@@ -1,10 +1,9 @@
 import numpy as np
 import pytest
+from cyfouri_data_explorer.timeseries import breaks as br
+from cyfouri_data_explorer.timeseries import residuals as rs
+from cyfouri_data_explorer.timeseries import volatility as vo
 from scipy import stats
-
-from app.domain.timeseries import breaks as br
-from app.domain.timeseries import residuals as rs
-from app.domain.timeseries import volatility as vo
 
 RNG = np.random.default_rng(8)
 STEADY = np.random.default_rng(30).normal(0, 1, 300)

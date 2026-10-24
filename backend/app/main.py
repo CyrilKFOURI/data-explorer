@@ -4,6 +4,11 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+from cyfouri_data_explorer.compare.service import CompareService
+from cyfouri_data_explorer.correlations.service import CorrelationService
+from cyfouri_data_explorer.profiling.service import ProfilingService
+from cyfouri_data_explorer.rows.service import RowService
+from cyfouri_data_explorer.variable.service import VariableService
 from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -29,17 +34,12 @@ from app.config import Settings
 from app.core import db
 from app.core.jobs import JobRunner, ThreadJobRunner
 from app.core.storage import Workspace
-from app.domain.columns.service import ColumnService
-from app.domain.compare.service import CompareService
-from app.domain.correlations.service import CorrelationService
-from app.domain.datasets.service import DatasetService
-from app.domain.filters.saved import SavedFilterService
-from app.domain.profiling.service import ProfilingService
-from app.domain.report.service import ReportService
-from app.domain.rows.service import RowService
-from app.domain.settings.service import SettingsService
-from app.domain.variable.service import VariableService
 from app.modules.registry import mount_modules
+from app.services.columns.service import ColumnService
+from app.services.datasets.service import DatasetService
+from app.services.filters.saved import SavedFilterService
+from app.services.report.service import ReportService
+from app.services.settings.service import SettingsService
 
 API_PREFIX = "/api/v1"
 

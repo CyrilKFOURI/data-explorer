@@ -1,11 +1,11 @@
 from typing import Annotated, Literal
 
+from cyfouri_data_explorer.compare.analyze import Comparison
+from cyfouri_data_explorer.compare.service import CompareService
+from cyfouri_data_explorer.timeseries.series import Aggregate, Align, Options, Period
 from fastapi import APIRouter, Depends, Query, Request
 
 from app.api.filters import Filters
-from app.domain.compare.analyze import Comparison
-from app.domain.compare.service import CompareService
-from app.domain.timeseries.series import Aggregate, Align, Options, Period
 
 router = APIRouter(tags=["compare"])
 

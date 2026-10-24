@@ -1,9 +1,9 @@
 from typing import Literal
 
+from cyfouri_data_explorer.ingestion.options import ImportOptions, SourceOptions
 from pydantic import BaseModel, Field
 
-from app.domain.datasets.repository import DatasetRecord, JobRecord
-from app.domain.ingestion.options import ImportOptions, SourceOptions
+from app.services.datasets.repository import DatasetRecord, JobRecord
 
 
 class JobOut(BaseModel):

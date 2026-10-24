@@ -3,13 +3,13 @@
 import numpy as np
 import pandas as pd
 import pytest
+from cyfouri_data_explorer.ml import models as catalogue
+from cyfouri_data_explorer.ml import preparation as prep
+from cyfouri_data_explorer.ml import steps
+from cyfouri_data_explorer.ml.data import Field
+from cyfouri_data_explorer.ml.train import _setup, preview, train
 from sklearn.pipeline import Pipeline
 
-from app.domain.ml import models as catalogue
-from app.domain.ml import preparation as prep
-from app.domain.ml import steps
-from app.domain.ml.data import Field
-from app.domain.ml.train import _setup, preview, train
 from tests.unit.test_ml import FIELDS, FRAME, RAW, by_name
 
 PRICE = by_name["price"]

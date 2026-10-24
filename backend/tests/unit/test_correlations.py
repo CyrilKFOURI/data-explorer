@@ -5,16 +5,15 @@ import duckdb
 import numpy as np
 import pyarrow as pa
 import pytest
-from scipy import stats
-
-from app.domain.correlations.insights import insights_for
-from app.domain.correlations.matrix import (
+from cyfouri_data_explorer.correlations.insights import insights_for
+from cyfouri_data_explorer.correlations.matrix import (
     MatrixColumn,
     association_matrix,
     cramers_v,
     eta,
 )
-from app.domain.typing.types import AnalysisType, Parser
+from cyfouri_data_explorer.typing.types import AnalysisType, Parser
+from scipy import stats
 
 RAW = Parser(kind="raw")
 N = 2_000
@@ -199,14 +198,14 @@ def test_near_unique_categories_are_left_out(connection: duckdb.DuckDBPyConnecti
 
 
 def graded(a: str, b: str, metric, value: float, p: float):
-    from app.domain.correlations.evidence import effect_size, grade
-    from app.domain.correlations.matrix import Pair
+    from cyfouri_data_explorer.correlations.evidence import effect_size, grade
+    from cyfouri_data_explorer.correlations.matrix import Pair
 
     return Pair(a, b, metric, value, p, 600, p, grade(effect_size(metric, value), p))
 
 
 def test_effect_sizes_follow_cohen() -> None:
-    from app.domain.correlations.evidence import effect_size
+    from cyfouri_data_explorer.correlations.evidence import effect_size
 
     assert [effect_size("pearson", v) for v in (0.05, -0.2, 0.35, -0.6)] == [
         "negligible",
@@ -218,7 +217,7 @@ def test_effect_sizes_follow_cohen() -> None:
 
 
 def test_evidence_crosses_size_and_adjusted_p() -> None:
-    from app.domain.correlations.evidence import grade
+    from cyfouri_data_explorer.correlations.evidence import grade
 
     assert grade("large", 0.0001) == "strong"
     assert grade("large", 0.01) == "moderate"  # big, real, but not beyond doubt
@@ -231,7 +230,7 @@ def test_evidence_crosses_size_and_adjusted_p() -> None:
 
 
 def test_p_values_are_adjusted_for_testing_every_pair() -> None:
-    from app.domain.correlations.evidence import adjusted
+    from cyfouri_data_explorer.correlations.evidence import adjusted
 
     q = adjusted([0.01, 0.04, None, 0.03, 0.5])
 
@@ -242,7 +241,7 @@ def test_p_values_are_adjusted_for_testing_every_pair() -> None:
 
 
 def test_link_wording_follows_the_evidence() -> None:
-    from app.domain.correlations.insights import pair_insight
+    from cyfouri_data_explorer.correlations.insights import pair_insight
 
     roles = {"price": "num", "city": "cat", "x": "num", "y": "num"}
     chance = pair_insight(graded("price", "city", "eta", 0.57, 0.426), roles)  # many small groups

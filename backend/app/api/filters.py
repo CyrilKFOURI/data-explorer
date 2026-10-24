@@ -1,10 +1,10 @@
 from typing import Annotated
 
+from cyfouri_data_explorer.filters.model import Condition, parse_filters
 from fastapi import APIRouter, Depends, Query, Request, Response
 from pydantic import BaseModel, Field
 
-from app.domain.filters.model import Condition, parse_filters
-from app.domain.filters.saved import SavedFilter, SavedFilterService
+from app.services.filters.saved import SavedFilter, SavedFilterService
 
 router = APIRouter(tags=["filters"])
 

@@ -3,12 +3,12 @@ seasonality, stationarity) and forecast it, through this module's own service.""
 
 from typing import Any, ClassVar, Literal
 
+from cyfouri_data_explorer.timeseries import series as ts
+from cyfouri_data_explorer.timeseries.service import Request, TimeSeriesError, TimeSeriesService
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
 from app.core.tools import AppLink, Tool, ToolContext, ToolError, ToolOutput, compact, wait_for
-from app.domain.timeseries import series as ts
-from app.modules.timeseries.service import Request, TimeSeriesError, TimeSeriesService
 
 
 class SeriesInput(BaseModel):

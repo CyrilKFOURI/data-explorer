@@ -3,14 +3,14 @@
 from difflib import get_close_matches
 from typing import Any, ClassVar
 
+from cyfouri_data_explorer.charts.prepare import ChartParams
+from cyfouri_data_explorer.filters.model import Condition
+from cyfouri_data_explorer.variable.analyze import VariableProfile
 from pydantic import BaseModel, Field
 
-from app.domain.charts.prepare import ChartParams
-from app.domain.columns.service import ColumnView
-from app.domain.filters.model import Condition
-from app.domain.variable.analyze import VariableProfile
 from app.modules.agent.engine.tools import AppLink, Tool, ToolContext, ToolError, ToolOutput
 from app.modules.agent.tools import AppServices
+from app.services.columns.service import ColumnView
 
 ALPHA = 0.05
 NUMERIC = ("numeric_continuous", "numeric_discrete")

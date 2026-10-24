@@ -12,3 +12,5 @@ docs
 backend/tests
 backend/openapi.json
 backend/evals
+packages/*/tests
+packages/*/examples

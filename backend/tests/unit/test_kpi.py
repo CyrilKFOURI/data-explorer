@@ -8,13 +8,12 @@ import duckdb
 import numpy as np
 import pandas as pd
 import pytest
-
-from app.domain.ingestion.sql import lit
-from app.domain.kpi import rules
-from app.domain.kpi.compute import KpiError, compute
-from app.domain.kpi.definition import Definition
-from app.domain.kpi.suggest import split_candidates, suggest
-from app.domain.typing.types import Parser
+from cyfouri_data_explorer.ingestion.sql import lit
+from cyfouri_data_explorer.kpi import rules
+from cyfouri_data_explorer.kpi.compute import KpiError, compute
+from cyfouri_data_explorer.kpi.definition import Definition
+from cyfouri_data_explorer.kpi.suggest import split_candidates, suggest
+from cyfouri_data_explorer.typing.types import Parser
 
 
 @dataclass

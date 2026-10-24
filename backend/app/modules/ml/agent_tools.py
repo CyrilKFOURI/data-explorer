@@ -3,12 +3,12 @@ compare, tune and explain models, through this module's own service."""
 
 from typing import Any, ClassVar
 
+from cyfouri_data_explorer.ml import catalog as catalogue
+from cyfouri_data_explorer.ml import evaluate
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
 from app.core.tools import AppLink, Tool, ToolContext, ToolError, ToolOutput, compact, wait_for
-from app.domain.ml import catalog as catalogue
-from app.domain.ml import evaluate
 from app.modules.ml.service import CompareRequest, MlError, MlService, Run, TuneStart
 
 TRAIN_TIMEOUT = 600.0

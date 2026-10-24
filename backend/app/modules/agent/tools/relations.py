@@ -2,11 +2,11 @@
 
 from typing import Any, ClassVar, Literal
 
+from cyfouri_data_explorer.compare.analyze import Comparison
+from cyfouri_data_explorer.compare.stats import BivariateTest
+from cyfouri_data_explorer.correlations.matrix import Pair
 from pydantic import BaseModel, Field
 
-from app.domain.compare.analyze import Comparison
-from app.domain.compare.stats import BivariateTest
-from app.domain.correlations.matrix import Pair
 from app.modules.agent.engine.tools import AppLink, Tool, ToolContext, ToolError, ToolOutput
 from app.modules.agent.tools import AppServices
 from app.modules.agent.tools.dataset import _r, find_column

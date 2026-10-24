@@ -3,13 +3,13 @@ from pathlib import Path
 from urllib.parse import quote
 
 import pytest
+from cyfouri_data_explorer.ingestion.errors import IngestionError
+from cyfouri_data_explorer.ingestion.paths import to_local_path
 from fastapi.testclient import TestClient
 
 from app.api.security import hostname
 from app.config import Settings
 from app.core.jobs import InlineJobRunner
-from app.domain.ingestion.errors import IngestionError
-from app.domain.ingestion.paths import to_local_path
 from app.main import create_app
 
 

@@ -2,15 +2,14 @@ import duckdb
 import numpy as np
 import pyarrow as pa
 import pytest
+from cyfouri_data_explorer.typing.types import AnalysisType, Parser
+from cyfouri_data_explorer.variable import profiles
+from cyfouri_data_explorer.variable.analyze import analyze
+from cyfouri_data_explorer.variable.fitting import fit
+from cyfouri_data_explorer.variable.numeric import describe, ecdf, normality, qq
+from cyfouri_data_explorer.variable.outliers import outliers
+from cyfouri_data_explorer.variable.source import VariableInput, VariableSource
 from scipy import stats
-
-from app.domain.typing.types import AnalysisType, Parser
-from app.domain.variable import profiles
-from app.domain.variable.analyze import analyze
-from app.domain.variable.fitting import fit
-from app.domain.variable.numeric import describe, ecdf, normality, qq
-from app.domain.variable.outliers import outliers
-from app.domain.variable.source import VariableInput, VariableSource
 
 RAW = Parser(kind="raw")
 

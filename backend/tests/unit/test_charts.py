@@ -1,9 +1,8 @@
 import duckdb
 import pytest
-
-from app.domain.charts.prepare import ChartParams, ColumnInput, prepare_chart
-from app.domain.typing.dates import auto_step, classify_step, part_label
-from app.domain.typing.types import Parser
+from cyfouri_data_explorer.charts.prepare import ChartParams, ColumnInput, prepare_chart
+from cyfouri_data_explorer.typing.dates import auto_step, classify_step, part_label
+from cyfouri_data_explorer.typing.types import Parser
 
 RAW = Parser(kind="raw")
 TEXT = Parser(kind="text")

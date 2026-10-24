@@ -1,10 +1,10 @@
 from typing import Annotated
 
+from cyfouri_data_explorer.correlations.matrix import Method
+from cyfouri_data_explorer.correlations.service import Correlations, CorrelationService
 from fastapi import APIRouter, Depends, Query, Request
 
 from app.api.filters import Filters
-from app.domain.correlations.matrix import Method
-from app.domain.correlations.service import Correlations, CorrelationService
 
 router = APIRouter(tags=["correlations"])
 

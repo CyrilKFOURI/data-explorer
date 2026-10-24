@@ -1,12 +1,12 @@
 from typing import Annotated, Literal
 
+from cyfouri_data_explorer.synthetic.compare import ColumnDetail, PairDetail
+from cyfouri_data_explorer.synthetic.plan import Plan
+from cyfouri_data_explorer.synthetic.privacy import Disclosure
+from cyfouri_data_explorer.synthetic.utility import Utility
 from fastapi import APIRouter, Depends, Query, Request, Response
 from pydantic import BaseModel, Field
 
-from app.domain.synthetic.compare import ColumnDetail, PairDetail
-from app.domain.synthetic.plan import Plan
-from app.domain.synthetic.privacy import Disclosure
-from app.domain.synthetic.utility import Utility
 from app.modules.synthetic.service import (
     Origin,
     RunRequest,

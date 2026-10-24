@@ -19,25 +19,25 @@ from typing import Any, Literal, cast
 
 import duckdb
 import pandas as pd
+from cyfouri_data_explorer.filters.scope import scoped_source, where_for
+from cyfouri_data_explorer.ingestion.options import ImportOptions
+from cyfouri_data_explorer.ml.data import Field as TypedField
+from cyfouri_data_explorer.ml.data import _expression
+from cyfouri_data_explorer.synthetic import compare as side_by_side
+from cyfouri_data_explorer.synthetic import deep, encode, plan
+from cyfouri_data_explorer.synthetic import sequences as seq
+from cyfouri_data_explorer.synthetic.generate import Spec, group_like, synthesize
+from cyfouri_data_explorer.synthetic.methods import Cancelled, Options, SequenceSettings
+from cyfouri_data_explorer.synthetic.plan import Method, Plan, PlanColumn, Treatment
+from cyfouri_data_explorer.synthetic.privacy import Disclosure, PrivacyError, disclosure
+from cyfouri_data_explorer.synthetic.report import LeftOut, Report, evaluate
+from cyfouri_data_explorer.synthetic.utility import Utility, UtilityError, utility
 from pydantic import BaseModel, Field, TypeAdapter
 
 from app.core import db
 from app.core.errors import AppError
 from app.core.storage import Workspace
-from app.domain.columns.service import ColumnChange, ColumnService, ColumnView
-from app.domain.filters.scope import scoped_source, where_for
-from app.domain.ingestion.options import ImportOptions
-from app.domain.ml.data import Field as TypedField
-from app.domain.ml.data import _expression
-from app.domain.synthetic import compare as side_by_side
-from app.domain.synthetic import deep, encode, plan
-from app.domain.synthetic import sequences as seq
-from app.domain.synthetic.generate import Spec, group_like, synthesize
-from app.domain.synthetic.methods import Cancelled, Options, SequenceSettings
-from app.domain.synthetic.plan import Method, Plan, PlanColumn, Treatment
-from app.domain.synthetic.privacy import Disclosure, PrivacyError, disclosure
-from app.domain.synthetic.report import LeftOut, Report, evaluate
-from app.domain.synthetic.utility import Utility, UtilityError, utility
+from app.services.columns.service import ColumnChange, ColumnService, ColumnView
 
 Stage = Literal["loading", "generating", "evaluating", "saving"]
 KEPT_JOBS = 32
@@ -496,7 +496,7 @@ class SyntheticService:
                 stopped,
             )
             if histories is not None and histories.time is not None:
-                from app.domain.synthetic.deep.sequence_report import evaluate_sequences
+                from cyfouri_data_explorer.synthetic.deep.sequence_report import evaluate_sequences
 
                 report.sequences = evaluate_sequences(
                     train,

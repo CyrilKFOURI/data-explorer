@@ -3,14 +3,20 @@
 import numpy as np
 import pandas as pd
 import pytest
-
-from app.domain.synthetic import compare, detection, diagnostic, encode, identifiers, privacy
-from app.domain.synthetic import quality as q
-from app.domain.synthetic.generate import Spec, group_like, synthesize
-from app.domain.synthetic.methods import Cancelled, Options, draw_in_groups
-from app.domain.synthetic.plan import PlanColumn, make_plan
-from app.domain.synthetic.report import evaluate
-from app.domain.synthetic.utility import UtilityError, utility
+from cyfouri_data_explorer.synthetic import (
+    compare,
+    detection,
+    diagnostic,
+    encode,
+    identifiers,
+    privacy,
+)
+from cyfouri_data_explorer.synthetic import quality as q
+from cyfouri_data_explorer.synthetic.generate import Spec, group_like, synthesize
+from cyfouri_data_explorer.synthetic.methods import Cancelled, Options, draw_in_groups
+from cyfouri_data_explorer.synthetic.plan import PlanColumn, make_plan
+from cyfouri_data_explorer.synthetic.report import evaluate
+from cyfouri_data_explorer.synthetic.utility import UtilityError, utility
 
 METHODS = ["cart", "copula", "bayes", "independent"]
 

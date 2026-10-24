@@ -3,19 +3,18 @@
 import numpy as np
 import pandas as pd
 import pytest
-
-from app.domain.synthetic import diagnostic, encode
-from app.domain.synthetic import quality as q
-from app.domain.synthetic.deep import auto_epochs
-from app.domain.synthetic.generate import Spec, synthesize
-from app.domain.synthetic.methods import Cancelled, Options
-from app.domain.synthetic.plan import DEEP_MISSING, PlanColumn, make_plan
+from cyfouri_data_explorer.synthetic import diagnostic, encode
+from cyfouri_data_explorer.synthetic import quality as q
+from cyfouri_data_explorer.synthetic.deep import auto_epochs
+from cyfouri_data_explorer.synthetic.generate import Spec, synthesize
+from cyfouri_data_explorer.synthetic.methods import Cancelled, Options
+from cyfouri_data_explorer.synthetic.plan import DEEP_MISSING, PlanColumn, make_plan
 
 torch = pytest.importorskip("torch")
 
-from app.domain.synthetic.deep import transformer  # noqa: E402
-from app.domain.synthetic.deep.device import Device, pick, with_fallback  # noqa: E402
-from app.domain.synthetic.deep.sampler import Sampler  # noqa: E402
+from cyfouri_data_explorer.synthetic.deep import transformer  # noqa: E402
+from cyfouri_data_explorer.synthetic.deep.device import Device, pick, with_fallback  # noqa: E402
+from cyfouri_data_explorer.synthetic.deep.sampler import Sampler  # noqa: E402
 
 
 def bimodal(n: int = 2_000, seed: int = 0) -> pd.DataFrame:

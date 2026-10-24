@@ -3,14 +3,13 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 import pytest
+from cyfouri_data_explorer.ml import models as catalogue
+from cyfouri_data_explorer.ml import preparation as prep
+from cyfouri_data_explorer.ml.data import Field
+from cyfouri_data_explorer.ml.target import candidate
+from cyfouri_data_explorer.ml.train import TrainingError, train
+from cyfouri_data_explorer.typing.types import Parser
 from sklearn.linear_model import LinearRegression
-
-from app.domain.ml import models as catalogue
-from app.domain.ml import preparation as prep
-from app.domain.ml.data import Field
-from app.domain.ml.target import candidate
-from app.domain.ml.train import TrainingError, train
-from app.domain.typing.types import Parser
 
 RAW = Parser(kind="raw")
 RNG = np.random.default_rng(7)

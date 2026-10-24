@@ -3,12 +3,12 @@ this module's own service."""
 
 from typing import Any, ClassVar
 
+from cyfouri_data_explorer.kpi.definition import Definition
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
 from app.core.errors import AppError
 from app.core.tools import AppLink, Tool, ToolContext, ToolError, ToolOutput, compact
-from app.domain.kpi.definition import Definition
 from app.modules.kpi.service import KpiService
 
 DEFINITION_HELP = (

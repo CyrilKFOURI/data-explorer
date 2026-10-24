@@ -1,12 +1,11 @@
 from typing import Annotated
 
+from cyfouri_data_explorer.typing.knowledge_base import load
+from cyfouri_data_explorer.typing.types import AnalysisType
 from fastapi import APIRouter, Depends, Query, Request
 
 from app.api.datasets import to_out
 from app.api.deps import Datasets
-from app.domain.columns.service import ColumnService
-from app.domain.typing.knowledge_base import load
-from app.domain.typing.types import AnalysisType
 from app.schemas.columns import (
     ColumnChangesRequest,
     ColumnOut,
@@ -15,6 +14,7 @@ from app.schemas.columns import (
     RoleOut,
 )
 from app.schemas.datasets import DatasetOut
+from app.services.columns.service import ColumnService
 
 router = APIRouter(tags=["columns"])
 

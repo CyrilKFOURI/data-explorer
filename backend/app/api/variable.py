@@ -1,12 +1,12 @@
 from typing import Annotated
 
+from cyfouri_data_explorer.variable.analyze import VariableProfile
+from cyfouri_data_explorer.variable.fitting import Fit
+from cyfouri_data_explorer.variable.outliers import OutlierMethod, Outliers
+from cyfouri_data_explorer.variable.service import VariableService
 from fastapi import APIRouter, Depends, Query, Request
 
 from app.api.filters import Filters
-from app.domain.variable.analyze import VariableProfile
-from app.domain.variable.fitting import Fit
-from app.domain.variable.outliers import OutlierMethod, Outliers
-from app.domain.variable.service import VariableService
 
 router = APIRouter(tags=["variable"])
 

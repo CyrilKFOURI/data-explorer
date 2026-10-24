@@ -1,11 +1,11 @@
 from typing import Annotated
 
+from cyfouri_data_explorer.charts.prepare import Chart, ChartParams
+from cyfouri_data_explorer.profiling.overview import Overview
+from cyfouri_data_explorer.profiling.service import ProfilingService
 from fastapi import APIRouter, Depends, Query, Request
 
 from app.api.filters import Filters
-from app.domain.charts.prepare import Chart, ChartParams
-from app.domain.profiling.overview import Overview
-from app.domain.profiling.service import ProfilingService
 from app.schemas.columns import ColumnSummary
 
 router = APIRouter(tags=["profiling"])

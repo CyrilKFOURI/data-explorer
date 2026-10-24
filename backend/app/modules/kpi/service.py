@@ -3,40 +3,19 @@
 import json
 import sqlite3
 import uuid
-from collections import OrderedDict
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Any
 
-import duckdb
+from cyfouri_data_explorer.kpi.definition import Definition
+from cyfouri_data_explorer.kpi.service import KpiEngine
 
 from app.core import db
 from app.core.errors import AppError
 from app.core.storage import Workspace
-from app.domain.columns.service import ColumnService
-from app.domain.datasets.repository import now
-from app.domain.datasets.service import NotFoundError
-from app.domain.filters.model import Condition, filters_key
-from app.domain.filters.scope import scoped_source, where_for
-from app.domain.kpi.compute import KpiResult, compute
-from app.domain.kpi.definition import Definition
-from app.domain.kpi.suggest import split_candidates, suggest
-
-CACHE_SIZE = 16
-
-
-@dataclass
-class SuggestedKpi:
-    rule: str
-    name: str
-    definition: Definition
-
-
-@dataclass
-class Suggestions:
-    kpis: list[SuggestedKpi]
-    splits: list[str]  # the best columns to split by, best first
+from app.services.columns.service import ColumnService
+from app.services.datasets.repository import now
+from app.services.datasets.service import NotFoundError
 
 
 @dataclass
@@ -65,14 +44,13 @@ def _name(name: str) -> str:
     return name
 
 
-class KpiService:
-    def __init__(self, columns: ColumnService, workspace: Workspace) -> None:
-        self.columns = columns
-        self.workspace = workspace
-        self._cache: OrderedDict[tuple[Any, ...], KpiResult] = OrderedDict()
+class KpiService(KpiEngine):
+    """The engine's suggestions and computation, plus the KPIs saved in the workspace."""
 
-    def clear(self) -> None:
-        self._cache.clear()
+    def __init__(self, columns: ColumnService, workspace: Workspace) -> None:
+        super().__init__(columns)
+        self.columns: ColumnService = columns
+        self.workspace = workspace
 
     @contextmanager
     def _db(self) -> Iterator[sqlite3.Connection]:
@@ -81,51 +59,6 @@ class KpiService:
             yield connection
         finally:
             connection.close()
-
-    def _views(self, dataset_id: str) -> list[Any]:
-        return [v for v in self.columns.columns(dataset_id) if not v.excluded]
-
-    # --- Automatic start -------------------------------------------------------------------------
-
-    def suggestions(self, dataset_id: str) -> Suggestions:
-        views = self._views(dataset_id)
-        found = suggest(views)
-        return Suggestions(
-            [SuggestedKpi(s.rule, s.name, s.definition) for s in found], split_candidates(views)
-        )
-
-    # --- Compute ---------------------------------------------------------------------------------
-
-    def compute(
-        self, dataset_id: str, definition: Definition, conditions: list[Condition]
-    ) -> KpiResult:
-        dataset = self.columns.ready(dataset_id)
-        views = self._views(dataset_id)
-        if definition.time is not None and not definition.time.page_filters:
-            conditions = []  # the KPI only sees its own period
-        data = definition.model_dump(mode="json", exclude={"view"})  # display needs no recompute
-        key = (
-            dataset_id,
-            dataset.imported_at,
-            json.dumps(data, sort_keys=True),
-            tuple(
-                (v.name, v.type, v.role, v.parser.model_dump_json(), str(v.order)) for v in views
-            ),
-            filters_key(conditions),
-        )
-        if key in self._cache:
-            self._cache.move_to_end(key)
-            return self._cache[key]
-        connection = duckdb.connect()
-        try:
-            source = scoped_source(dataset.storage_path, where_for(views, conditions))
-            result = compute(connection, source, views, definition)
-        finally:
-            connection.close()
-        self._cache[key] = result
-        if len(self._cache) > CACHE_SIZE:
-            self._cache.popitem(last=False)
-        return result
 
     # --- Saved KPIs ------------------------------------------------------------------------------
 

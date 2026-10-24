@@ -6,8 +6,8 @@ from fastapi.testclient import TestClient
 from app.config import Settings
 from app.core import db
 from app.core.jobs import InlineJobRunner
-from app.domain.datasets import repository as repo
 from app.main import create_app
+from app.services.datasets import repository as repo
 from tests.factories import SEMICOLON_CSV, write_csv
 
 

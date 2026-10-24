@@ -1,9 +1,8 @@
 import duckdb
 import pytest
-
-from app.domain.filters.model import Condition, InvalidFilterError, parse_filters
-from app.domain.filters.sql import FilterColumn, where_sql
-from app.domain.typing.types import Parser
+from cyfouri_data_explorer.filters.model import Condition, InvalidFilterError, parse_filters
+from cyfouri_data_explorer.filters.sql import FilterColumn, where_sql
+from cyfouri_data_explorer.typing.types import Parser
 
 RAW = Parser(kind="raw")
 COLUMNS = {
@@ -155,7 +154,7 @@ def fleet() -> duckdb.DuckDBPyConnection:
 
 
 def rows_of(con: duckdb.DuckDBPyConnection, *conditions: Condition) -> list[int]:
-    from app.domain.filters.sql import filtered_source, row_steps
+    from cyfouri_data_explorer.filters.sql import filtered_source, row_steps
 
     relation = filtered_source("f", where_sql(list(conditions), FLEET))
     for step in row_steps(list(conditions), FLEET):
@@ -195,7 +194,7 @@ def test_value_filters_apply_first(fleet: duckdb.DuckDBPyConnection) -> None:
 
 
 def test_row_conditions_are_validated() -> None:
-    from app.domain.filters.sql import row_steps
+    from cyfouri_data_explorer.filters.sql import row_steps
 
     with pytest.raises(InvalidFilterError, match="Unknown column"):
         row_steps([c("vehicle", "unique", columns=["nope"])], FLEET)

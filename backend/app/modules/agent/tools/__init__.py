@@ -3,14 +3,15 @@
 from dataclasses import dataclass
 from typing import Any
 
-from app.domain.columns.service import ColumnService
-from app.domain.compare.service import CompareService
-from app.domain.correlations.service import CorrelationService
-from app.domain.profiling.service import ProfilingService
-from app.domain.report.service import ReportService
-from app.domain.variable.service import VariableService
+from cyfouri_data_explorer.compare.service import CompareService
+from cyfouri_data_explorer.correlations.service import CorrelationService
+from cyfouri_data_explorer.profiling.service import ProfilingService
+from cyfouri_data_explorer.variable.service import VariableService
+
 from app.modules.agent.engine.tools import Tool, ToolRegistry
 from app.modules.agent.repository import NoteRepository
+from app.services.columns.service import ColumnService
+from app.services.report.service import ReportService
 
 
 @dataclass(frozen=True)

@@ -1,9 +1,8 @@
 import numpy as np
 import pytest
+from cyfouri_data_explorer.timeseries import autocorrelation as ac
+from cyfouri_data_explorer.timeseries import stationarity as st
 from statsmodels.tsa.stattools import adfuller
-
-from app.domain.timeseries import autocorrelation as ac
-from app.domain.timeseries import stationarity as st
 
 RNG = np.random.default_rng(21)
 NOISE = np.random.default_rng(30).normal(0, 1, 400)  # a draw without chance autocorrelation

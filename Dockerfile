@@ -18,10 +18,13 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_PROJECT_ENVIRONMENT=/opt/venv
 WORKDIR /app
 COPY backend/pyproject.toml backend/uv.lock ./
-RUN uv sync --frozen --no-dev --no-install-project --extra agent
+# Third-party dependencies first (cached layer); the engine package and the app come next.
+RUN uv sync --frozen --no-dev --no-install-project --no-install-local --extra agent
+# The engine is a path dependency (../packages): installed as a regular package, not editable.
+COPY packages/cyfouri-data-explorer/ /packages/cyfouri-data-explorer/
 COPY backend/ ./
 # Libraries' own test suites are never run here (~55 MB).
-RUN uv sync --frozen --no-dev --extra agent \
+RUN uv sync --frozen --no-dev --no-editable --extra agent \
     && find /opt/venv -type d -name tests -prune -exec rm -rf {} +
 
 # --- Runtime: Python backend serving the API and the built frontend (no uv, no build tools) --

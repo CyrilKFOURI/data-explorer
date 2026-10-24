@@ -1,12 +1,13 @@
 from typing import Annotated
 
+from cyfouri_data_explorer.filters.model import Condition, parse_filters
+from cyfouri_data_explorer.kpi.compute import KpiResult
+from cyfouri_data_explorer.kpi.definition import Definition
+from cyfouri_data_explorer.kpi.service import Suggestions
 from fastapi import APIRouter, Depends, Query, Request, Response
 from pydantic import BaseModel, Field
 
-from app.domain.filters.model import Condition, parse_filters
-from app.domain.kpi.compute import KpiResult
-from app.domain.kpi.definition import Definition
-from app.modules.kpi.service import KpiService, SavedKpi, Suggestions
+from app.modules.kpi.service import KpiService, SavedKpi
 
 router = APIRouter(tags=["module:kpi"])
 

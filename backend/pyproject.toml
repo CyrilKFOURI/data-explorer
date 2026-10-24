@@ -5,26 +5,17 @@ description = "Local, offline exploratory data analysis with statistical depth."
 requires-python = ">=3.12"
 license = "MIT"
 dependencies = [
-    "cmaes>=0.13.1",
+    # The engine: every calculation, shared with notebooks and scripts (packages/).
+    "cyfouri-data-explorer[ml]",
     "duckdb>=1.5.6",
     "fastapi>=0.143.0",
-    "lightgbm>=4.7.0",
-    "numpy>=2.5.4",
-    "openpyxl>=3.1.5",
-    "optuna>=5.0.0",
-    "pyarrow>=26.0.0",
     "pydantic-settings>=2.15.0",
-    "scikit-learn>=1.9.1",
-    "scipy>=1.18.1",
-    "statsmodels>=0.15.0",
     "uvicorn[standard]>=0.54.0",
-    "xgboost>=3 ; sys_platform != 'linux'",
-    "xgboost-cpu>=3 ; sys_platform == 'linux'",
 ]
 
 [project.optional-dependencies]
 # Deep synthetic-data models (023b: CTGAN, TVAE, TimeGAN). Not in the default Docker image.
-deep = ["torch>=2.14"]
+deep = ["cyfouri-data-explorer[deep]", "torch>=2.14"]
 # AI agent (026): the official Anthropic SDK (Claude) and OpenAI SDK (OpenAI and every
 # OpenAI-compatible API: Gemini, Mistral, Groq, OpenRouter, local models). Optional.
 agent = ["anthropic>=2", "openai>=3"]
@@ -40,6 +31,7 @@ dev = [
 # PyTorch: built for CUDA 13.0 on Windows (driver >= 580), CPU-only on Linux (CI, small), the
 # default wheels on macOS (Apple GPU through MPS).
 [tool.uv.sources]
+cyfouri-data-explorer = { path = "../packages/cyfouri-data-explorer", editable = true }
 torch = [
     { index = "pytorch-cu130", marker = "sys_platform == 'win32'" },
     { index = "pytorch-cpu", marker = "sys_platform == 'linux'" },
@@ -71,9 +63,6 @@ select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
 
 [tool.ruff.lint.per-file-ignores]
 # Statistical notation (×, ρ, η², en dashes) is intended in these messages.
-"app/domain/compare/*" = ["RUF001", "RUF003"]
-"app/domain/correlations/*" = ["RUF001", "RUF003"]
-"app/domain/report/*" = ["RUF001", "RUF002", "RUF003"]
 "app/modules/agent/**" = ["RUF001", "RUF002", "RUF003"]
 "app/core/tools.py" = ["RUF002", "RUF003"]
 "app/modules/*/agent_tools.py" = ["RUF001", "RUF002", "RUF003"]

@@ -4,7 +4,7 @@ from urllib.parse import quote
 from fastapi import APIRouter, Depends, Request, Response
 
 from app.api.filters import Filters
-from app.domain.report.service import ReportJob, ReportService
+from app.services.report.service import ReportJob, ReportService
 
 router = APIRouter(tags=["report"])
 

@@ -3,13 +3,13 @@
 import numpy as np
 import pandas as pd
 import pytest
+from cyfouri_data_explorer.ml import catalog, evaluate
+from cyfouri_data_explorer.ml.catalog.base import Context, SettingsError, resolve
+from cyfouri_data_explorer.ml.catalog.other import neighbours
+from cyfouri_data_explorer.ml.train import TrainingError, train
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LogisticRegression
 
-from app.domain.ml import catalog, evaluate
-from app.domain.ml.catalog.base import Context, SettingsError, resolve
-from app.domain.ml.catalog.other import neighbours
-from app.domain.ml.train import TrainingError, train
 from tests.unit.test_ml import FIELDS, FRAME, by_name
 
 SMALL = FRAME.iloc[:400].reset_index(drop=True)

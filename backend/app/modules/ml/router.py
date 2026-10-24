@@ -1,17 +1,17 @@
 import json
 from typing import Annotated, Any
 
+from cyfouri_data_explorer.filters.model import Condition, parse_filters
+from cyfouri_data_explorer.ml import catalog
+from cyfouri_data_explorer.ml.classes import Classes, TargetDistribution
+from cyfouri_data_explorer.ml.evaluate import Validation
+from cyfouri_data_explorer.ml.preparation import Choices
+from cyfouri_data_explorer.ml.target import Task
+from cyfouri_data_explorer.ml.train import Estimate, PreparationPreview
 from fastapi import APIRouter, Body, Depends, Query, Request
 from fastapi.responses import Response
 from pydantic import TypeAdapter, ValidationError
 
-from app.domain.filters.model import Condition, parse_filters
-from app.domain.ml import catalog
-from app.domain.ml.classes import Classes, TargetDistribution
-from app.domain.ml.evaluate import Validation
-from app.domain.ml.preparation import Choices
-from app.domain.ml.target import Task
-from app.domain.ml.train import Estimate, PreparationPreview
 from app.modules.ml.service import (
     Catalogue,
     CompareJob,

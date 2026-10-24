@@ -18,27 +18,27 @@ from typing import Any, Literal, cast
 import duckdb
 import joblib
 import pandas as pd
+from cyfouri_data_explorer.filters.model import Condition
+from cyfouri_data_explorer.filters.scope import scoped_source, where_for
+from cyfouri_data_explorer.ml import classes as binning
+from cyfouri_data_explorer.ml import data as ml_data
+from cyfouri_data_explorer.ml import evaluate
+from cyfouri_data_explorer.ml import explain as explainer
+from cyfouri_data_explorer.ml import models as catalogue
+from cyfouri_data_explorer.ml import preparation as prep
+from cyfouri_data_explorer.ml import train as trainer
+from cyfouri_data_explorer.ml import tune as tuner
+from cyfouri_data_explorer.ml.catalog import Context as ModelContext
+from cyfouri_data_explorer.ml.catalog.spaces import Param
+from cyfouri_data_explorer.ml.data import NUMERIC, Field
+from cyfouri_data_explorer.ml.target import Candidate, Task, candidate
 from pydantic import BaseModel, TypeAdapter
 from pydantic import Field as PydanticField
 
 from app.core import db
 from app.core.errors import AppError
 from app.core.storage import Workspace
-from app.domain.columns.service import ColumnService
-from app.domain.filters.model import Condition
-from app.domain.filters.scope import scoped_source, where_for
-from app.domain.ml import classes as binning
-from app.domain.ml import data as ml_data
-from app.domain.ml import evaluate
-from app.domain.ml import explain as explainer
-from app.domain.ml import models as catalogue
-from app.domain.ml import preparation as prep
-from app.domain.ml import train as trainer
-from app.domain.ml import tune as tuner
-from app.domain.ml.catalog import Context as ModelContext
-from app.domain.ml.catalog.spaces import Param
-from app.domain.ml.data import NUMERIC, Field
-from app.domain.ml.target import Candidate, Task, candidate
+from app.services.columns.service import ColumnService
 
 Stage = Literal["loading", "preparing", "training", "saving"]
 
@@ -929,7 +929,7 @@ class MlService:
             pipeline,
             cast(pd.DataFrame, data[inputs]),
             y,
-            data["__row"].to_numpy(dtype=int),
+            cast(pd.Series, data["__row"]).to_numpy(dtype=int),
             run.task,
             run.primary,
             [p.row for p in run.predictions],

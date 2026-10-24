@@ -2,13 +2,12 @@ from datetime import datetime, timedelta
 
 import numpy as np
 import pytest
+from cyfouri_data_explorer.timeseries import methods
+from cyfouri_data_explorer.timeseries import series as ts
+from cyfouri_data_explorer.timeseries.decomposition import DecompositionError, decompose, strength
+from cyfouri_data_explorer.timeseries.seasonality import profiles, starts, year_overlay
 from scipy import stats
 from statsmodels.tsa.seasonal import STL
-
-from app.domain.timeseries import methods
-from app.domain.timeseries import series as ts
-from app.domain.timeseries.decomposition import DecompositionError, decompose, strength
-from app.domain.timeseries.seasonality import profiles, starts, year_overlay
 
 RNG = np.random.default_rng(11)
 WEEKLY = 10 + np.tile([0, 0, 0, 0, 1, 6, 4], 30) + RNG.normal(0, 0.5, 210)  # strong Sat/Sun

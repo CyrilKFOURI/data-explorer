@@ -1,20 +1,18 @@
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, Query, Request
-
-from app.domain.filters.model import Condition, parse_filters
-from app.domain.timeseries import autocorrelation as ac
-from app.domain.timeseries import breaks as br
-from app.domain.timeseries import forecast as fc
-from app.domain.timeseries import methods
-from app.domain.timeseries import residuals as rs
-from app.domain.timeseries import stationarity as st
-from app.domain.timeseries import volatility as vo
-from app.domain.timeseries.decomposition import Method
-from app.domain.timeseries.series import Aggregate, Align, Gaps, Options, Period
-from app.modules.timeseries.forecasting import ForecastJob
-from app.modules.timeseries.service import Request as SeriesRequest
-from app.modules.timeseries.service import (
+from cyfouri_data_explorer.filters.model import Condition, parse_filters
+from cyfouri_data_explorer.timeseries import autocorrelation as ac
+from cyfouri_data_explorer.timeseries import breaks as br
+from cyfouri_data_explorer.timeseries import forecast as fc
+from cyfouri_data_explorer.timeseries import methods
+from cyfouri_data_explorer.timeseries import residuals as rs
+from cyfouri_data_explorer.timeseries import stationarity as st
+from cyfouri_data_explorer.timeseries import volatility as vo
+from cyfouri_data_explorer.timeseries.decomposition import Method
+from cyfouri_data_explorer.timeseries.forecasting import ForecastJob
+from cyfouri_data_explorer.timeseries.series import Aggregate, Align, Gaps, Options, Period
+from cyfouri_data_explorer.timeseries.service import Request as SeriesRequest
+from cyfouri_data_explorer.timeseries.service import (
     SeriesAutocorrelation,
     SeriesBreaks,
     SeriesDecomposition,
@@ -26,6 +24,7 @@ from app.modules.timeseries.service import (
     TimeSeriesError,
     TimeSeriesService,
 )
+from fastapi import APIRouter, Depends, Query, Request
 
 router = APIRouter(tags=["module:timeseries"])
 

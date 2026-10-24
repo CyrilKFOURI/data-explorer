@@ -1,9 +1,9 @@
-from app.domain.charts.prepare import Chart
-from app.domain.correlations.matrix import Matrix, MatrixMember
-from app.domain.filters.model import Condition
-from app.domain.report import svg
-from app.domain.report.build import anchor, describe_condition, file_name, fmt
-from app.domain.report.model import Missing
+from cyfouri_data_explorer.charts.prepare import Chart
+from cyfouri_data_explorer.correlations.matrix import Matrix, MatrixMember
+from cyfouri_data_explorer.filters.model import Condition
+from cyfouri_data_explorer.report import svg
+from cyfouri_data_explorer.report.build import anchor, describe_condition, file_name, fmt
+from cyfouri_data_explorer.report.model import Missing
 
 
 def test_numbers_are_written_for_people() -> None:

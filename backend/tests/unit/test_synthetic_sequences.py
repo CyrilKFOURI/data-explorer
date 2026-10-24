@@ -3,11 +3,10 @@
 import numpy as np
 import pandas as pd
 import pytest
-
-from app.domain.synthetic import diagnostic, encode
-from app.domain.synthetic import sequences as seq
-from app.domain.synthetic.generate import Spec, synthesize
-from app.domain.synthetic.methods import Cancelled, Options, SequenceSettings
+from cyfouri_data_explorer.synthetic import diagnostic, encode
+from cyfouri_data_explorer.synthetic import sequences as seq
+from cyfouri_data_explorer.synthetic.generate import Spec, synthesize
+from cyfouri_data_explorer.synthetic.methods import Cancelled, Options, SequenceSettings
 
 
 def stores(days: int = 120, count: int = 4, seed: int = 0) -> pd.DataFrame:
@@ -93,7 +92,7 @@ def test_autocorrelation_sees_a_cycle_and_its_similarity_is_one_for_the_same_win
 
 torch = pytest.importorskip("torch")
 
-from app.domain.synthetic.deep.sequence_report import evaluate_sequences  # noqa: E402
+from cyfouri_data_explorer.synthetic.deep.sequence_report import evaluate_sequences  # noqa: E402
 
 SPECS = [
     Spec("date", "datetime", "model"),

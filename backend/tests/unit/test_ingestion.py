@@ -2,13 +2,13 @@ from pathlib import Path
 
 import duckdb
 import pytest
+from cyfouri_data_explorer.ingestion.csv_sniff import sniff_csv
+from cyfouri_data_explorer.ingestion.errors import IngestionError
+from cyfouri_data_explorer.ingestion.importer import import_to_parquet
+from cyfouri_data_explorer.ingestion.options import CsvOptions, ImportOptions, SourceOptions
+from cyfouri_data_explorer.ingestion.preview import preview_source
+from cyfouri_data_explorer.ingestion.sources import fingerprint, list_source_files
 
-from app.domain.ingestion.csv_sniff import sniff_csv
-from app.domain.ingestion.errors import IngestionError
-from app.domain.ingestion.importer import import_to_parquet
-from app.domain.ingestion.options import CsvOptions, ImportOptions, SourceOptions
-from app.domain.ingestion.preview import preview_source
-from app.domain.ingestion.sources import fingerprint, list_source_files
 from tests.factories import SEMICOLON_CSV, write_csv, write_excel, write_parquet
 
 
@@ -182,7 +182,7 @@ class TestFingerprint:
 def test_excel_columns_keep_types_and_names(tmp_path: Path) -> None:
     from datetime import datetime
 
-    from app.domain.ingestion.reader import read_sheet
+    from cyfouri_data_explorer.ingestion.reader import read_sheet
 
     path = write_excel(
         tmp_path / "mixed.xlsx",

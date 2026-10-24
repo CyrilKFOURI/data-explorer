@@ -1,10 +1,10 @@
 from typing import Literal
 
+from cyfouri_data_explorer.typing.knowledge_base import load
+from cyfouri_data_explorer.typing.types import AnalysisType, Parser
 from pydantic import BaseModel
 
-from app.domain.columns.service import ColumnChange, ColumnView
-from app.domain.typing.knowledge_base import load
-from app.domain.typing.types import AnalysisType, Parser
+from app.services.columns.service import ColumnChange, ColumnView
 
 
 class HistogramBar(BaseModel):

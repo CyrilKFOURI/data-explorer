@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
-
-from app.domain.timeseries import forecast as fc
+from cyfouri_data_explorer.timeseries import forecast as fc
 
 RNG = np.random.default_rng(12)
 T = np.arange(120)
@@ -125,7 +124,7 @@ def test_jobs_cancel_between_models_and_reuse_finished_ones() -> None:
     import threading
     import time
 
-    from app.modules.timeseries.forecasting import ForecastJobs, future_periods
+    from cyfouri_data_explorer.timeseries.forecasting import ForecastJobs, future_periods
 
     gate = threading.Event()
 

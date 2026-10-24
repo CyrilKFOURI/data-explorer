@@ -3,11 +3,11 @@
 See docs/pages/10-series-temporelles.md.
 """
 
+from cyfouri_data_explorer.timeseries.service import TimeSeriesService
 from fastapi import FastAPI
 
 from app.modules.timeseries.agent_tools import agent_tools
 from app.modules.timeseries.router import router
-from app.modules.timeseries.service import TimeSeriesService
 
 
 def setup(app: FastAPI) -> None:

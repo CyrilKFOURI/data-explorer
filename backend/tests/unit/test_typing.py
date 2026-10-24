@@ -2,17 +2,17 @@ from pathlib import Path
 
 import duckdb
 import pytest
+from cyfouri_data_explorer.ingestion.importer import import_to_parquet
+from cyfouri_data_explorer.ingestion.options import ImportOptions
+from cyfouri_data_explorer.ingestion.sources import list_source_files
+from cyfouri_data_explorer.typing.conversion import parser_for
+from cyfouri_data_explorer.typing.engine import detect_columns
+from cyfouri_data_explorer.typing.knowledge_base import load, name_tokens
+from cyfouri_data_explorer.typing.parsers import typed_sql
+from cyfouri_data_explorer.typing.summary import summarize
+from cyfouri_data_explorer.typing.types import ColumnDetection, Parser
 
 from app.config import default_samples_dir
-from app.domain.ingestion.importer import import_to_parquet
-from app.domain.ingestion.options import ImportOptions
-from app.domain.ingestion.sources import list_source_files
-from app.domain.typing.conversion import parser_for
-from app.domain.typing.engine import detect_columns
-from app.domain.typing.knowledge_base import load, name_tokens
-from app.domain.typing.parsers import typed_sql
-from app.domain.typing.summary import summarize
-from app.domain.typing.types import ColumnDetection, Parser
 from tests.factories import write_csv
 
 # Reference answers: (type, role). Detection must get all of them right.

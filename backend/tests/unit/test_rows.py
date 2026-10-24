@@ -4,10 +4,8 @@ from pathlib import Path
 import duckdb
 import pyarrow as pa
 import pytest
-from openpyxl import load_workbook
-
-from app.domain.rows.export import TooManyRowsError, column_summary, write_view
-from app.domain.rows.view import (
+from cyfouri_data_explorer.rows.export import TooManyRowsError, column_summary, write_view
+from cyfouri_data_explorer.rows.view import (
     SAMPLE,
     RowColumn,
     UnknownColumnError,
@@ -16,7 +14,8 @@ from app.domain.rows.view import (
     page,
     view_relation,
 )
-from app.domain.typing.types import Parser
+from cyfouri_data_explorer.typing.types import Parser
+from openpyxl import load_workbook
 
 RAW = Parser(kind="raw")
 NUMBER = Parser(kind="number", decimal=",")

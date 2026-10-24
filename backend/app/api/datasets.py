@@ -1,9 +1,7 @@
+from cyfouri_data_explorer.ingestion.preview import ColumnInfo
 from fastapi import APIRouter, Query, Response
 
 from app.api.deps import Datasets
-from app.domain.datasets.repository import DatasetRecord
-from app.domain.datasets.service import DatasetService
-from app.domain.ingestion.preview import ColumnInfo
 from app.schemas.datasets import (
     DatasetOut,
     HeadOut,
@@ -12,6 +10,8 @@ from app.schemas.datasets import (
     JobOut,
     RenameRequest,
 )
+from app.services.datasets.repository import DatasetRecord
+from app.services.datasets.service import DatasetService
 
 router = APIRouter(prefix="/datasets", tags=["datasets"])
 

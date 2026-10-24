@@ -8,9 +8,10 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from typing import Any
 
+from cyfouri_data_explorer.filters.model import Condition
+from cyfouri_data_explorer.report.build import describe_condition
+
 from app.core.errors import AppError
-from app.domain.filters.model import Condition
-from app.domain.report.build import describe_condition
 from app.modules.agent.engine.budget import Budget
 from app.modules.agent.engine.grounding import Grounding, check
 from app.modules.agent.engine.loop import (

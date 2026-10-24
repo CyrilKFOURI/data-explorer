@@ -1,9 +1,9 @@
 from typing import Annotated
 
+from cyfouri_data_explorer.gpu import GpuStatus
 from fastapi import APIRouter, Depends, Request, Response
 
-from app.domain.settings.gpu import GpuStatus
-from app.domain.settings.service import AppSettings, SettingsService, StorageInfo
+from app.services.settings.service import AppSettings, SettingsService, StorageInfo
 
 router = APIRouter(tags=["settings"])
 

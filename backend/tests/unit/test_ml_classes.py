@@ -4,11 +4,11 @@ import duckdb
 import numpy as np
 import pandas as pd
 import pytest
+from cyfouri_data_explorer.ml import classes as binning
+from cyfouri_data_explorer.ml.data import Field
+from cyfouri_data_explorer.ml.train import train
 from pydantic import ValidationError
 
-from app.domain.ml import classes as binning
-from app.domain.ml.data import Field
-from app.domain.ml.train import train
 from tests.unit.test_ml import FIELDS, FRAME, RAW, by_name
 
 PRICE = by_name["price"]
@@ -124,7 +124,7 @@ def test_distribution_gives_quantiles_histogram_sample_and_values() -> None:
 
 
 def test_a_class_too_small_to_learn_is_refused_clearly() -> None:
-    from app.domain.ml.train import TrainingError
+    from cyfouri_data_explorer.ml.train import TrainingError
 
     values = np.sort(FRAME["price"].to_numpy())
     classes = binning.Classes(edges=[values[600], values[601]], names=["L", "M", "H"])

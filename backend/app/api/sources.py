@@ -1,12 +1,12 @@
 from pathlib import Path
 
+from cyfouri_data_explorer.ingestion.browse import Listing
+from cyfouri_data_explorer.ingestion.preview import Preview
+from cyfouri_data_explorer.ingestion.sources import detect_format
 from fastapi import APIRouter, Query, Request
 
 from app.api.deps import Datasets
 from app.core.errors import AppError
-from app.domain.ingestion.browse import Listing
-from app.domain.ingestion.preview import Preview
-from app.domain.ingestion.sources import detect_format
 from app.schemas.datasets import PreviewRequest, SampleOut, UploadOut
 
 router = APIRouter(tags=["sources"])

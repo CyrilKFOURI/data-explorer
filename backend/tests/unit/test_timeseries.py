@@ -4,12 +4,11 @@ import duckdb
 import numpy as np
 import pyarrow as pa
 import pytest
+from cyfouri_data_explorer.compare.analyze import CompareColumn, compare
+from cyfouri_data_explorer.timeseries import series as ts
+from cyfouri_data_explorer.timeseries.trend import mann_kendall, trend
+from cyfouri_data_explorer.typing.types import Parser
 from scipy import stats
-
-from app.domain.compare.analyze import CompareColumn, compare
-from app.domain.timeseries import series as ts
-from app.domain.timeseries.trend import mann_kendall, trend
-from app.domain.typing.types import Parser
 
 RAW = Parser(kind="raw")
 
