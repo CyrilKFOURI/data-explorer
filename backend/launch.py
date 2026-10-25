@@ -27,7 +27,7 @@ def free_port(start: int = 8000) -> int:
 def open_when_ready(url: str) -> None:
     for _ in range(120):
         try:
-            urllib.request.urlopen(url + "/api/health", timeout=1)  # noqa: S310 (local URL)
+            urllib.request.urlopen(url + "/api/health", timeout=1)
             break
         except OSError:
             time.sleep(0.5)
