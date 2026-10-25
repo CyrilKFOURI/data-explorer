@@ -463,10 +463,13 @@ class Dataset:
         self,
         target: str,
         *,
-        classes: Classes | None = None,
-        validation: Validation | None = None,
+        classes: Classes | dict[str, Any] | None = None,
+        validation: Validation | dict[str, Any] | None = None,
     ) -> MachineLearning:
-        """Models predicting `target`: `.train()`, `.compare()`, `.tune()`, `.preview()`."""
+        """Models predicting `target`: `.train()`, `.compare()`, `.tune()`, `.preview()`.
+        `validation`: e.g. `{"method": "kfold", "folds": 10, "metric": "f1_macro"}`;
+        `classes`: a number cut into classes, e.g. `{"edges": [18, 65], "names": ["young",
+        "adult", "senior"]}`."""
         from cyfouri_data_explorer.ml.engine import MlEngine
         from cyfouri_data_explorer.ml.facade import MachineLearning
 
