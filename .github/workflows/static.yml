@@ -1,0 +1,44 @@
+name: Built frontend
+
+# Keeps backend/static (the built frontend that run.bat / run.sh serve) in step with the
+# frontend sources, so a clone runs the app without Node.
+on:
+  push:
+    branches: [master, feature/python-library]
+    paths:
+      - "frontend/**"
+      - "docs/USER_GUIDE.md"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: static-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci && npm run build
+        working-directory: frontend
+      - name: Commit backend/static when it changed
+        run: |
+          rm -rf backend/static
+          cp -r frontend/dist backend/static
+          git add -A backend/static
+          if git diff --cached --quiet; then
+            echo "backend/static is up to date"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Rebuild backend/static from the frontend sources"
+            git push
+          fi

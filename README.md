@@ -67,6 +67,20 @@ See its [README](packages/cyfouri-data-explorer/README.md) and the [example note
 
 ## Run
 
+With one command, without Docker or Node (Windows, in PowerShell):
+
+```powershell
+git clone https://github.com/CyrilKFOURI/data-explorer.git; cd data-explorer; .\run.bat
+```
+
+On macOS or Linux:
+
+```bash
+git clone https://github.com/CyrilKFOURI/data-explorer.git && cd data-explorer && ./run.sh
+```
+
+The browser opens on the app. The first run installs [uv](https://docs.astral.sh/uv/) if needed (no admin rights), which fetches Python and the libraries (a few minutes, once); the next runs start in seconds with `.\run.bat` or `./run.sh`. The frontend ships already built in `backend/static`, kept up to date by CI. Without git, download the ZIP from GitHub (Code → Download ZIP) and run the same file from the unzipped folder.
+
 With Docker:
 
 ```bash
