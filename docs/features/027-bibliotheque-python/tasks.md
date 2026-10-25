@@ -24,4 +24,9 @@ Corrigé au passage :
 
 ## Phase 2 — visuels
 
-- [ ] Demander l'accord pour plotly, puis `.plot()` avec les mêmes figures que l'app
+- [x] Accord pour plotly (2026-10-25) : extra `[plot]`, hors de l'image Docker
+- [x] `plots/theme.py` : tokens clair et sombre (tokens.css), mise en page de base, fusion des axes et des marges
+- [x] Figures portées depuis le frontend : carte de colonne (barres, camembert, histogramme, boîte, chronologie), variable (KDE, ECDF, violon, QQ, lois, calendrier, mots), compare (nuage + régression, densité, 3D, boîtes / violons / moyennes, avec couleur, tableau croisé, empilé, séries), corrélations, séries temporelles (vue d'ensemble, saisonnalité, superposition par année, décomposition, série transformée, ACF / PACF, volatilité, résidus, ruptures, prévision), ML (prédit / réel, résidus, confusion, ROC, PR, calibration, coefficients, importances, courbe d'apprentissage, permutation, SHAP, dépendance, cascade d'une ligne, essais d'optimisation, superposition de modèles), synthétique (moyennes, écarts-types, ACP, liens, DCR, scores, colonne, paire, séquences), KPI (tous les types de graphique et modes « Show as »)
+- [x] `dx.plot()`, `ds.plot()`, `ds.chart()` ; tests (`test_plots.py`, 28 cas) ; galerie de vérification visuelle en clair et en sombre ; README, notebook
+- Écarts voulus avec l'app : fond de la couleur de surface (une cellule de notebook n'a pas de fond de page), zoom permis (axes non figés), marge d'un côté élargi fusionnée avec les autres (dans l'app, les figures à étiquettes longues retombaient sur les marges par défaut de plotly)
+- Corrigé en route : `to_dict()` prenait tout objet ayant un attribut `result` pour un modèle ; domaine d'axe de la décomposition à −2,8e-17 (arrondi) refusé par plotly

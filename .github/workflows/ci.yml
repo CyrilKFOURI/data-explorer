@@ -39,7 +39,7 @@ jobs:
         with:
           version: "0.12.15"
       - run: uv python install 3.12
-      - run: uv sync --frozen --extra ml --extra deep  # CPU PyTorch on Linux
+      - run: uv sync --frozen --extra ml --extra deep --extra plot  # CPU PyTorch on Linux
       - name: Lint
         run: uv run ruff check . && uv run ruff format --check .
       - name: Typecheck

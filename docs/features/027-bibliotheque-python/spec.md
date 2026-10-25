@@ -34,7 +34,7 @@ ds.report("titanic.html")
 ## Phases
 
 1. **Moteurs de calcul**, sans affichage. Chaque résultat est une dataclass avec `.to_dict()`. Les parties tabulaires se convertissent en DataFrame pandas (`.to_pandas()`) ; pandas est déjà installé par statsmodels.
-2. **Visuels** : `.plot()` rend les mêmes figures que l'app. Cette phase demande une dépendance (plotly), à faire valider avant de commencer.
+2. **Visuels** (accord pour plotly le 2026-10-25, en extra `[plot]`, hors de l'image Docker) : `dx.plot(résultat, vue)` et `ds.plot(colonne, vue)` rendent les figures de l'app. Elles sont portées une à une depuis les constructeurs du frontend (`frontend/src/**/figures.ts`), dans `cyfouri_data_explorer/plots/`, avec les mêmes tokens de couleur (thème clair et sombre). Une vue qui ne convient pas au résultat lève `PlotError` en listant celles qui conviennent.
 
 ## Architecture
 
@@ -94,7 +94,6 @@ Les tests restent verts à chaque étape, avec un commit par étape.
 
 ## Hors scope (phase 1)
 
-- Les visuels (phase 2).
 - `_repr_html_` dans Jupyter (après les visuels).
 - La commande `dataexplorer app` et l'extra `[app]`.
 - La publication sur PyPI et la documentation mkdocs.

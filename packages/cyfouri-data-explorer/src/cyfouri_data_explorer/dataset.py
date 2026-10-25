@@ -28,6 +28,7 @@ from cyfouri_data_explorer.catalog import (
     summarize_record,
     to_view,
 )
+from cyfouri_data_explorer.charts.prepare import Chart, ChartParams
 from cyfouri_data_explorer.compare.analyze import Comparison
 from cyfouri_data_explorer.compare.service import CompareService
 from cyfouri_data_explorer.correlations.matrix import Method
@@ -281,6 +282,65 @@ class Dataset:
         self._record(column)
         return self._state.service(VariableService).outliers(
             self._id, column, method, self.conditions
+        )
+
+    def chart(
+        self, column: str, view: str | None = None, *, top_n: int = 10, bins: int | None = None
+    ) -> Chart:
+        """The data of a column's chart, as on the Overview cards (`view`: one of `.views`)."""
+        self._record(column)
+        params = ChartParams(view=view, top_n=top_n, bins=bins)
+        return self._state.service(ProfilingService).chart(
+            self._id, column, params, self.conditions
+        )
+
+    def plot(
+        self,
+        column: str,
+        view: str | None = None,
+        *,
+        theme: Literal["light", "dark"] = "light",
+        title: str | None = None,
+        height: int | None = None,
+        **options: Any,
+    ) -> Any:
+        """A column drawn as in the app (a plotly Figure, the `plot` extra). `view`: the card's
+        views (histogram, box, pie, timeline, month…), and for a number kde, ecdf, violin, qq or
+        laws (the best fitted laws over the histogram); calendar for a date, words for text."""
+        from cyfouri_data_explorer.plots import PlotError, plot
+        from cyfouri_data_explorer.results import to_dict
+
+        record = self.column(column)
+        numeric_views = ("kde", "ecdf", "violin", "qq")
+        if view in numeric_views or (view == "box" and record.type.startswith("numeric")):
+            return plot(self.variable(column), view, theme=theme, title=title, height=height)
+        if view in ("calendar", "words"):
+            return plot(self.variable(column), view, theme=theme, title=title, height=height)
+        if view == "laws":
+            if not record.type.startswith("numeric"):
+                raise PlotError(f"{column!r} is not numeric: no law to fit.")
+            histogram = to_dict(self.chart(column, "histogram"))
+            profile = self.variable(column)
+            count = profile.numeric.describe.count if profile.numeric else 0
+            return plot(
+                self.fit(column),
+                "laws",
+                theme=theme,
+                title=title,
+                height=height,
+                bins=histogram["bins"],
+                count=count,
+            )
+        pie = view == "pie"
+        chart = self.chart(column, None if pie else view)
+        return plot(
+            chart,
+            "pie" if pie else None,
+            theme=theme,
+            title=title,
+            height=height,
+            analysis_type=record.type,
+            **options,
         )
 
     def compare(

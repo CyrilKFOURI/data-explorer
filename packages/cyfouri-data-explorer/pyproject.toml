@@ -28,6 +28,8 @@ ml = [
 ]
 # Deep synthetic-data models (023b: CTGAN, TVAE, TimeGAN).
 deep = ["torch>=2.14"]
+# The app's charts as interactive figures (dx.plot).
+plot = ["plotly>=6"]
 
 [dependency-groups]
 dev = [
@@ -77,6 +79,8 @@ select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
 "src/cyfouri_data_explorer/report/*" = ["RUF001", "RUF002", "RUF003"]
 "src/cyfouri_data_explorer/dataset.py" = ["RUF001", "RUF002", "RUF003"]
 "src/cyfouri_data_explorer/timeseries/facade.py" = ["RUF002"]
+# Chart labels and hover texts use the app's symbols (×, −, σ, ρ, η, ≤).
+"src/cyfouri_data_explorer/plots/*" = ["RUF001", "RUF002", "RUF003"]
 
 [tool.pyright]
 pythonVersion = "3.12"

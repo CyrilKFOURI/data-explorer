@@ -177,6 +177,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.5.4" },
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "optuna", marker = "extra == 'ml'", specifier = ">=5.0.0" },
+    { name = "plotly", marker = "extra == 'plot'", specifier = ">=6" },
     { name = "pyarrow", specifier = ">=26.0.0" },
     { name = "pydantic", specifier = ">=2.14" },
     { name = "scikit-learn", specifier = ">=1.9.1" },
@@ -188,7 +189,7 @@ requires-dist = [
     { name = "xgboost", marker = "sys_platform != 'linux' and extra == 'ml'", specifier = ">=3" },
     { name = "xgboost-cpu", marker = "sys_platform == 'linux' and extra == 'ml'", specifier = ">=3" },
 ]
-provides-extras = ["ml", "deep"]
+provides-extras = ["ml", "deep", "plot"]
 
 [package.metadata.requires-dev]
 dev = [

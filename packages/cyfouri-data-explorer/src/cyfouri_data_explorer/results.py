@@ -27,8 +27,8 @@ if TYPE_CHECKING:
 def to_dict(result: Any) -> Any:
     """A result as dicts, lists and plain numbers (NaN and infinities become None): ready for
     `json.dumps`."""
-    if hasattr(result, "result") and dataclasses.is_dataclass(result.result):
-        return to_dict(result.result)  # a TrainedModel: its run, without the pipeline
+    if type(result).__name__ == "TrainedModel":
+        return to_dict(result.result)  # its run, without the pipeline
     if dataclasses.is_dataclass(result) and not isinstance(result, type):
         return {
             f.name: to_dict(getattr(result, f.name))

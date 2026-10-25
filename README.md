@@ -55,11 +55,12 @@ ds = dx.open("titanic.csv")
 ds.compare("Age", "Survived")            # the test follows the types
 ds.where("Sex", "in", ["female"]).variable("Age")
 ds.ml("Survived").train().explain()
+dx.plot(ds.compare("Age", "Survived"))   # the app's charts, with plotly
 ds.report("titanic.html")
 ```
 
 ```bash
-pip install -e packages/cyfouri-data-explorer   # add [ml] for XGBoost, LightGBM, Optuna
+pip install -e packages/cyfouri-data-explorer   # [ml]: XGBoost, LightGBM, Optuna · [plot]: charts
 ```
 
 See its [README](packages/cyfouri-data-explorer/README.md) and the [example notebook](packages/cyfouri-data-explorer/examples/quickstart.ipynb).

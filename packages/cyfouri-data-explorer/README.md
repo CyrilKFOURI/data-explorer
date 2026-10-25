@@ -21,6 +21,7 @@ From the repository (not on PyPI yet):
 pip install -e packages/cyfouri-data-explorer             # the core
 pip install -e "packages/cyfouri-data-explorer[ml]"       # + XGBoost, LightGBM, Optuna
 pip install -e "packages/cyfouri-data-explorer[deep]"     # + PyTorch: CTGAN, TVAE, TimeGAN
+pip install -e "packages/cyfouri-data-explorer[plot]"     # + plotly: the app's charts
 ```
 
 Python 3.12 or later. The core needs DuckDB, pyarrow, NumPy, SciPy, statsmodels, scikit-learn and pydantic; no server, no database.
@@ -125,6 +126,25 @@ made.utility("Survived")  # train on synthetic, test on real
 made.to_dataset().compare("Age", "Fare")
 made.save("synthetic.parquet")
 ```
+
+## Charts
+
+The app's charts, drawn by the same rules and in its colours, as interactive plotly figures (the `plot` extra). In a notebook, the figure shows in the cell.
+
+```python
+ds.plot("Fare")                         # the column's card: histogram, Top N bars, timeline…
+ds.plot("Fare", "laws")                 # also box, kde, ecdf, violin, qq; pie for a category
+dx.plot(ds.compare("Fare", "Pclass"))   # the Compare chart; views: box, violin, means
+dx.plot(ds.correlations())              # the association matrix, clustered
+dx.plot(series.decomposition())         # every time series section, forecast included
+dx.plot(model, "roc")                   # predicted, residuals, confusion, roc, pr, calibration…
+dx.plot(model.explain(), "shap")        # permutation, shap, dependence, waterfall
+dx.plot(made, "pca")                    # synthetic: mean, std, pca, links, dcr, scores
+dx.plot(ds.kpi(definition), mode="change_pct")
+dx.plot(result, theme="dark", title="…", height=400)
+```
+
+A view that does not fit the result says which ones do. `fig.write_html("chart.html")` saves a figure as an offline page.
 
 ## Results
 

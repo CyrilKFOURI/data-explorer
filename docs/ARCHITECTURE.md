@@ -24,6 +24,8 @@ New App/
 │       │   ├── catalog.py        ← protocoles Catalog / DatasetRef, ColumnView, règles de correction des colonnes
 │       │   ├── errors.py         ← ExplorerError (message, code, statut HTTP que l'app renverra), ColumnNotFound
 │       │   ├── results.py        ← to_dict() / to_pandas()
+│       │   ├── plots/            ← dx.plot() : les figures de l'app portées en Python (extra [plot]),
+│       │   │                       une par fonction, comme frontend/src/**/figures.ts ; theme.py = tokens
 │       │   ├── ingestion/        ← sources, détection CSV, lecture DuckDB, aperçu, import Parquet, navigation
 │       │   ├── typing/           ← moteur de détection + knowledge_base/ (roles.toml, vocabulary.toml)
 │       │   ├── profiling/ · variable/ · compare/ · correlations/ · charts/ · filters/ · rows/
@@ -106,7 +108,7 @@ Backend  :  api ─▶ services ─▶ core                     modules ─▶ (
 | Un panneau à côté des pages (ex. l'assistant, 026) | Un composant qui décide lui-même quand s'afficher + un `PanelManifest` (`id`, `component`) listé dans `panels` de `frontend/src/modules/registry.ts` ; le Shell l'affiche à droite du contenu, sur toutes les pages. |
 | Un module isolé avec son propre moteur (ex. l'agent, 026) | `backend/app/modules/agent/` : `engine/` pur (ni FastAPI, ni SQLite, ni SDK : testable avec un fournisseur simulé ; boucle, budget, prompt, vérificateur d'ancrage `grounding.py`, `compaction.py`), `playbooks/` (méthodes en markdown, lues par l'outil `get_playbook`), `providers/` (SDK derrière l'interface `Provider`), `tools/` (chaque outil appelle les services V1 injectés via `AppServices`, jamais un autre module), `service.py` / `router.py` / `repository.py` autour. Le reste de l'app ne le connaît pas : une ligne dans `modules/registry.py`, une migration, un panneau. |
 | Un outil de l'agent dans un module (026b) | `app/modules/<nom>/agent_tools.py` : des classes `Tool` (contrat partagé `app/core/tools.py` : entrée Pydantic, `kind` read / compute / write, sortie compacte + lien app, `wait_for` pour suivre une tâche de fond, `compact` pour alléger un résultat) et une fonction `agent_tools(app)`, déclarée dans `Module(agent_tools=…)` de `modules/registry.py`. Le module n'importe pas l'agent ; l'agent ramasse ces outils au démarrage. Un outil `write` est toujours confirmé par l'utilisateur. |
-| Un visuel | `frontend/src/charts/builders/<visuel>.ts` (+ préparation dans `cyfouri_data_explorer/charts/` si besoin), voir [VISUALS.md](VISUALS.md) |
+| Un visuel | Sa figure dans le frontend (`figures.ts` de la page ou du module) **et** sa jumelle dans `cyfouri_data_explorer/plots/` (branchée dans `plots/__init__.py`, testée dans `test_plots.py`) ; `frontend/src/charts/builders/<visuel>.ts` (+ préparation dans `cyfouri_data_explorer/charts/` si besoin), voir [VISUALS.md](VISUALS.md) |
 | Un test statistique | Une fonction dans le moteur, à côté de sa famille (`cyfouri_data_explorer/compare/stats.py`, `variable/numeric.py`, `timeseries/…`), testée contre l'implémentation de référence (SciPy, statsmodels) ; l'app et la bibliothèque la voient ensemble. |
 | Un rôle de colonne | Une entrée TOML dans `cyfouri_data_explorer/typing/knowledge_base/roles.toml` + un cas de test, voir [COLUMN_DETECTION.md](COLUMN_DETECTION.md) |
 | Une table SQLite | Une migration numérotée dans `core/migrations/` + mise à jour de [BACKEND_SCHEMA.md](BACKEND_SCHEMA.md) |
