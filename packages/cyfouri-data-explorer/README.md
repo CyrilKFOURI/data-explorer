@@ -24,6 +24,14 @@ pip install -e "packages/cyfouri-data-explorer[deep]"     # + PyTorch: CTGAN, TV
 pip install -e "packages/cyfouri-data-explorer[plot]"     # + plotly: the app's charts
 ```
 
+On another computer, straight from GitHub (the repository is private: be signed in to GitHub, for example with `gh auth login`):
+
+```bash
+pip install "cyfouri-data-explorer[ml,plot] @ git+https://github.com/CyrilKFOURI/data-explorer.git@feature/python-library#subdirectory=packages/cyfouri-data-explorer"
+```
+
+Add `--upgrade` to get the latest version. The notebooks in `examples/` read the sample files of `samples/` at the repository root.
+
 Python 3.12 or later. The core needs DuckDB, pyarrow, NumPy, SciPy, statsmodels, scikit-learn and pydantic; no server, no database.
 
 ## Open data
