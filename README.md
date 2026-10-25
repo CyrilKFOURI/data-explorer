@@ -79,7 +79,7 @@ On macOS or Linux:
 git clone https://github.com/CyrilKFOURI/data-explorer.git && cd data-explorer && ./run.sh
 ```
 
-The browser opens on the app. The first run installs [uv](https://docs.astral.sh/uv/) if needed (no admin rights), which fetches Python and the libraries (a few minutes, once); the next runs start in seconds with `.\run.bat` or `./run.sh`. The frontend ships already built in `backend/static`, kept up to date by CI. Without git, download the ZIP from GitHub (Code → Download ZIP) and run the same file from the unzipped folder.
+The browser opens on the app. The first run installs [uv](https://docs.astral.sh/uv/) if needed (no admin rights), which fetches Python and the libraries (a few minutes, once); the next runs start in seconds with `.\run.bat` or `./run.sh`. The frontend ships already built in `backend/static`, kept up to date by CI. To use the Python library in notebooks instead, run `.\run.bat notebook` (or `./run.sh notebook`): JupyterLab opens on the [notebook that replays every page of the app](packages/cyfouri-data-explorer/examples/app_tour.ipynb), in the same environment. Without git, download the ZIP from GitHub (Code → Download ZIP) and run the same file from the unzipped folder.
 
 With Docker:
 
