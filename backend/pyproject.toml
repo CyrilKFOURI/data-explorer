@@ -7,9 +7,9 @@ license = "MIT"
 dependencies = [
     # The engine: every calculation, shared with notebooks and scripts (packages/).
     "cyfouri-data-explorer[ml]",
-    "duckdb>=1.5.6",
-    "fastapi>=0.143.0",
-    "pydantic-settings>=2.15.0",
+    "duckdb>=2.0.0",
+    "fastapi>=0.159.1",
+    "pydantic-settings>=2.16.1",
     "uvicorn[standard]>=0.54.0",
 ]
 
@@ -18,14 +18,14 @@ dependencies = [
 deep = ["cyfouri-data-explorer[deep]", "torch>=2.14"]
 # AI agent (026): the official Anthropic SDK (Claude) and OpenAI SDK (OpenAI and every
 # OpenAI-compatible API: Gemini, Mistral, Groq, OpenRouter, local models). Optional.
-agent = ["anthropic>=2", "openai>=3"]
+agent = ["anthropic>=2.1.0", "openai>=3.36.1"]
 
 [dependency-groups]
 dev = [
     "httpx>=0.28.1",
     "pyright>=1.1.414",
     "pytest>=9.1.1",
-    "ruff>=0.17.0",
+    "ruff>=0.17.1",
 ]
 
 # PyTorch: built for CUDA 13.0 on Windows (driver >= 580), CPU-only on Linux (CI, small), the
