@@ -140,7 +140,8 @@ dx.plot(series.decomposition())         # every time series section, forecast in
 dx.plot(model, "roc")                   # predicted, residuals, confusion, roc, pr, calibration…
 dx.plot(model.explain(), "shap")        # permutation, shap, dependence, waterfall
 dx.plot(made, "pca")                    # synthetic: mean, std, pca, links, dcr, scores
-dx.plot(ds.kpi(definition), mode="change_pct")
+dx.plot(ds.kpi(definition), mode="change_pct")   # "share": the % of total under it
+dx.plot([made, other])                  # several synthetic runs, scores side by side
 dx.plot(result, theme="dark", title="…", height=400)
 ```
 

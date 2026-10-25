@@ -151,6 +151,8 @@ def test_synthetic_figures(traps: dx.Dataset) -> None:
     drawn(dx.plot(made.column("age")))
     drawn(dx.plot(made.column("segment")))
     drawn(dx.plot(made.pair("income", "segment")))
+    copula = traps.synthetic(use_gpu=False).generate("copula", rows=200)
+    assert len(drawn(dx.plot([made, copula])).data) == 2  # scores of two runs side by side
 
 
 def test_kpi_figure(tmp_path: Path) -> None:
@@ -161,3 +163,5 @@ def test_kpi_figure(tmp_path: Path) -> None:
     by_store = sales.kpi({**suggested.definition.model_dump(), "groups": [{"column": "store"}]})
     assert len(drawn(dx.plot(by_store)).data) >= 2
     drawn(dx.plot(result, mode="change_pct"))
+    share = drawn(dx.plot(by_store, "share"))
+    assert share.layout.yaxis.ticksuffix == " %"

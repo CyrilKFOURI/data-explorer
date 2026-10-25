@@ -181,6 +181,16 @@ def figure_data(
     if (
         isinstance(result, list)
         and result
+        and all(type(r).__name__ == "SyntheticData" for r in result)
+    ):
+        runs = [
+            (f"{made.generation.method} · {i + 1}", to_dict(made.report.scores))
+            for i, made in enumerate(result)
+        ]
+        return synthetic.scores_figure(runs, tokens), 300
+    if (
+        isinstance(result, list)
+        and result
         and all(type(r).__name__ in ("TrainedModel", "Failed") for r in result)
     ):
         runs = [(r.model, to_dict(r)) for r in result if type(r).__name__ == "TrainedModel"]
@@ -286,6 +296,8 @@ def figure_data(
             )
         return ml.trials_figure(data, tokens), 300
     if kind == "KpiResult":
+        if view == "share":
+            return kpi.share_figure(data, tokens, options.get("measure")), 200
         built = kpi.kpi_figure(
             data,
             tokens,

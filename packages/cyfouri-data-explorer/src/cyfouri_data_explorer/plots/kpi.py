@@ -226,6 +226,7 @@ def kpi_figure(
     labels: str = "auto",
     hide_other: bool = False,
     panel: str | None = None,
+    any_chart: bool = False,
 ) -> Built:
     """One measure's chart (one panel of small multiples when `panel` is set). `chart`: the
     rules' choice by default; `mode`: value, share_total, change, change_pct, change_yoy,
@@ -233,7 +234,7 @@ def kpi_figure(
     measures = {m["id"]: m for m in result["measures"]}
     chosen = measures[measure] if measure else result["measures"][0]
     allowed = {o["value"] for o in chosen["chart"]["options"] if o.get("allowed", True)}
-    drawn = chart if chart and chart in allowed else chosen["chart"]["value"]
+    drawn = chart if chart and (any_chart or chart in allowed) else chosen["chart"]["value"]
     if drawn == "none":
         return {"data": []}
     effective = effective_mode(mode, chosen["additive"], result["resolved"]["time"])
@@ -435,3 +436,9 @@ def kpi_figure(
     elif drawn == "grouped_bars":
         layout["barmode"] = "group"
     return {"data": traces, "layout": layout}
+
+
+def share_figure(result: dict[str, Any], tokens: Tokens, measure: str | None = None) -> Built:
+    """The "% of total" chart drawn under the main one, same x axis (R-VIS-22)."""
+    chart = "stacked_area" if len(result["periods"]) > 24 else "stacked_bars"
+    return kpi_figure(result, tokens, measure, chart, "share_total", any_chart=True)
