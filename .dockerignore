@@ -1,0 +1,16 @@
+.git
+.env
+**/node_modules
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+frontend/dist
+data
+docs
+!docs/USER_GUIDE.md
+backend/tests
+backend/openapi.json
+backend/evals
+packages/*/tests
+packages/*/examples

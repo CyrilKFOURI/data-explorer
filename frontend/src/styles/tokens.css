@@ -1,0 +1,119 @@
+/*
+ * Design tokens: the only source of colors, fonts and density in the app.
+ * Direction: warm neutral + terracotta accent (docs/UI_UX.md).
+ * Light by default, dark via the system or [data-theme="dark"].
+ */
+
+:root {
+  color-scheme: light;
+  --font-ui: "IBM Plex Sans", system-ui, sans-serif;
+  --font-code: "IBM Plex Mono", ui-monospace, monospace;
+
+  --surface-0: #f7f5f2;
+  --surface-1: #fffdfa;
+  --surface-2: #efebe5;
+  --ink-1: #24201b;
+  --ink-2: #5c544a;
+  --ink-3: #71695f; /* 4.5:1 on every surface (WCAG AA) */
+  --line: #e2dcd3;
+  --accent: #ad4a27; /* 4.6:1 as text on surfaces, 5.5:1 under white text */
+  --accent-ink: #ffffff;
+  --accent-soft: #f6e3da;
+
+  --ok: #2f7d4f;
+  --warn: #8f5b00;
+  --bad: #b3261e;
+
+  --type-numeric: #3b6ea8;
+  --type-categorical: #8a5a9e;
+  --type-date: #2f7d6d;
+  --type-bool: #8c6d1f;
+  --type-text: #6b6259;
+  --type-id: #77706a;
+
+  /* Categorical chart palette (validated with the dataviz skill on our surfaces), fixed order. */
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
+  --chart-3: #1baf7a;
+  --chart-4: #eda100;
+  --chart-5: #e87ba4;
+  --chart-6: #008300;
+  --chart-7: #4a3aa7;
+  --chart-8: #e34948;
+
+  /* Compact density (default). */
+  --control-h: 28px;
+  --sidebar-w: 216px;
+  --sidebar-w-collapsed: 52px;
+  --topbar-h: 44px;
+}
+
+:root[data-density="comfortable"] {
+  --control-h: 32px;
+  --sidebar-w: 232px;
+  --topbar-h: 48px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface-0: #14120f;
+    --surface-1: #1d1a16;
+    --surface-2: #27231e;
+    --ink-1: #ede8e1;
+    --ink-2: #b5aca0;
+    --ink-3: #988f83;
+    --line: #332e28;
+    --accent: #e07a50;
+    --accent-ink: #14120f;
+    --accent-soft: #3a2519;
+    --ok: #5dbb84;
+    --warn: #e0a23a;
+    --bad: #f07167;
+    --type-numeric: #7fa7d6;
+    --type-categorical: #c39ad3;
+    --type-date: #6cc0ad;
+    --type-bool: #d4b25e;
+    --type-text: #b0a69b;
+    --type-id: #a39b93;
+    --chart-1: #3987e5;
+    --chart-2: #d95926;
+    --chart-3: #199e70;
+    --chart-4: #c98500;
+    --chart-5: #d55181;
+    --chart-6: #008300;
+    --chart-7: #9085e9;
+    --chart-8: #e66767;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-0: #14120f;
+  --surface-1: #1d1a16;
+  --surface-2: #27231e;
+  --ink-1: #ede8e1;
+  --ink-2: #b5aca0;
+  --ink-3: #988f83;
+  --line: #332e28;
+  --accent: #e07a50;
+  --accent-ink: #14120f;
+  --accent-soft: #3a2519;
+  --ok: #5dbb84;
+  --warn: #e0a23a;
+  --bad: #f07167;
+  --type-numeric: #7fa7d6;
+  --type-categorical: #c39ad3;
+  --type-date: #6cc0ad;
+  --type-bool: #d4b25e;
+  --type-text: #b0a69b;
+  --type-id: #a39b93;
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-4: #c98500;
+  --chart-5: #d55181;
+  --chart-6: #008300;
+  --chart-7: #9085e9;
+  --chart-8: #e66767;
+}

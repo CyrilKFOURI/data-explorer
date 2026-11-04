@@ -1,0 +1,89 @@
+# Values that mean "missing", compared lowercased and trimmed.
+null_tokens = ["", "na", "n/a", "nan", "null", "none", "nil", "-", "--", "?", "#n/a", "#na", "missing"]
+
+# Pairs of words meaning true / false. A two-valued text column using one pair is boolean.
+[[boolean_pair]]
+true = ["true", "t"]
+false = ["false", "f"]
+
+[[boolean_pair]]
+true = ["yes", "y"]
+false = ["no", "n"]
+
+[[boolean_pair]]
+true = ["oui", "o"]
+false = ["non", "n"]
+
+[[boolean_pair]]
+true = ["vrai"]
+false = ["faux"]
+
+[[boolean_pair]]
+true = ["1"]
+false = ["0"]
+
+[[boolean_pair]]
+true = ["si", "sí"]
+false = ["no"]
+
+[[boolean_pair]]
+true = ["ja"]
+false = ["nein"]
+
+# Known orders: a categorical column whose values all belong to one list is ordinal.
+[[order]]
+values = ["very low", "low", "medium", "high", "very high"]
+
+[[order]]
+values = ["low", "medium", "high"]
+
+[[order]]
+values = ["low", "mid", "high"]
+
+[[order]]
+values = ["très faible", "faible", "moyen", "élevé", "très élevé"]
+
+[[order]]
+values = ["faible", "moyen", "élevé"]
+
+[[order]]
+values = ["bas", "moyen", "haut"]
+
+[[order]]
+values = ["xxs", "xs", "s", "m", "l", "xl", "xxl", "xxxl"]
+
+[[order]]
+values = ["small", "medium", "large", "extra large"]
+
+[[order]]
+values = ["bad", "poor", "average", "good", "very good", "excellent"]
+
+[[order]]
+values = ["never", "rarely", "sometimes", "often", "always"]
+
+[[order]]
+values = ["strongly disagree", "disagree", "neutral", "agree", "strongly agree"]
+
+[[order]]
+values = ["bronze", "silver", "gold", "platinum"]
+
+[[order]]
+values = ["primary", "secondary", "tertiary"]
+
+[[order]]
+values = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]
+
+[[order]]
+values = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
+
+[[order]]
+values = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"]
+
+[[order]]
+values = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+
+[[order]]
+values = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+
+[[order]]
+values = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]

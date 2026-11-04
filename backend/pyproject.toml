@@ -1,0 +1,80 @@
+[project]
+name = "data-explorer"
+version = "0.1.0"
+description = "Local, offline exploratory data analysis with statistical depth."
+requires-python = ">=3.12"
+license = "MIT"
+dependencies = [
+    # The engine: every calculation, shared with notebooks and scripts (packages/).
+    "cyfouri-data-explorer[ml]",
+    "duckdb>=1.5.6",
+    "fastapi>=0.143.0",
+    "pydantic-settings>=2.15.0",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[project.optional-dependencies]
+# Deep synthetic-data models (023b: CTGAN, TVAE, TimeGAN). Not in the default Docker image.
+deep = ["cyfouri-data-explorer[deep]", "torch>=2.14"]
+# AI agent (026): the official Anthropic SDK (Claude) and OpenAI SDK (OpenAI and every
+# OpenAI-compatible API: Gemini, Mistral, Groq, OpenRouter, local models). Optional.
+agent = ["anthropic>=2", "openai>=3"]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pyright>=1.1.414",
+    "pytest>=9.1.1",
+    "ruff>=0.17.0",
+]
+
+# PyTorch: built for CUDA 13.0 on Windows (driver >= 580), CPU-only on Linux (CI, small), the
+# default wheels on macOS (Apple GPU through MPS).
+[tool.uv.sources]
+cyfouri-data-explorer = { path = "../packages/cyfouri-data-explorer", editable = true }
+torch = [
+    { index = "pytorch-cu130", marker = "sys_platform == 'win32'" },
+    { index = "pytorch-cpu", marker = "sys_platform == 'linux'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+# Statistical notation (×, ρ, η², en dashes) is intended in these messages.
+"app/modules/agent/**" = ["RUF001", "RUF002", "RUF003"]
+"app/core/tools.py" = ["RUF002", "RUF003"]
+"app/modules/*/agent_tools.py" = ["RUF001", "RUF002", "RUF003"]
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "standard"
+include = ["app", "tests"]
+venvPath = "."
+venv = ".venv"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["slow: performance checks on millions of rows (run with -m slow)"]
+addopts = "-m 'not slow'"

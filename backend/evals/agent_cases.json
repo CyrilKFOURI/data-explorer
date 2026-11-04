@@ -1,0 +1,125 @@
+{
+  "_about": "Golden tasks for the assistant (spec 026, R-AG-E1). Each case: a dataset (by name), a question, the tools at least one of which must run, patterns the answer must contain (regular expressions, case-insensitive), and how many figures may go unmatched by the grounding check. Titanic cases run only when a dataset named like 'titanic' is imported.",
+  "cases": [
+    {
+      "id": "titanic-drivers",
+      "dataset": "titanic",
+      "question": "What is most linked to Survived, and how strongly?",
+      "tools": ["rank_associations_with", "compare_columns"],
+      "mention": ["\\bsex\\b", "74\\.2", "18\\.9"],
+      "max_unverified": 1
+    },
+    {
+      "id": "titanic-class-by-sex",
+      "dataset": "titanic",
+      "question": "Did passenger class matter as much for women as for men?",
+      "tools": ["count_rows", "compare_columns"],
+      "mention": ["96\\.8|97", "13\\.5|14"],
+      "max_unverified": 3
+    },
+    {
+      "id": "titanic-quality",
+      "dataset": "titanic",
+      "question": "Which columns need cleaning before an analysis?",
+      "tools": ["get_dataset_overview", "list_columns"],
+      "mention": ["cabin", "age"],
+      "max_unverified": 1
+    },
+    {
+      "id": "titanic-age",
+      "dataset": "titanic",
+      "question": "Describe the age of the passengers.",
+      "tools": ["profile_column"],
+      "mention": ["29\\.7|29\\.6|28"],
+      "max_unverified": 1
+    },
+    {
+      "id": "titanic-fare-class",
+      "dataset": "titanic",
+      "question": "Is the fare linked to the class? Give the effect size.",
+      "tools": ["compare_columns", "get_correlations"],
+      "mention": ["fare", "class"],
+      "max_unverified": 1
+    },
+    {
+      "id": "titanic-model",
+      "dataset": "titanic",
+      "question": "Train a model to predict Survived and tell me how good it is and what it relies on.",
+      "tools": ["train_model"],
+      "mention": ["sex"],
+      "max_unverified": 2
+    },
+    {
+      "id": "titanic-children",
+      "dataset": "titanic",
+      "question": "How many passengers were under 10 years old?",
+      "tools": ["count_rows"],
+      "mention": ["\\b62\\b"],
+      "max_unverified": 1
+    },
+    {
+      "id": "sales-top-store",
+      "dataset": "sales_timeseries",
+      "question": "Which store brings in the most revenue in total?",
+      "tools": ["compare_columns", "compute_kpi", "suggest_kpis", "profile_column"],
+      "mention": ["paris"],
+      "max_unverified": 1
+    },
+    {
+      "id": "sales-promo",
+      "dataset": "sales_timeseries",
+      "question": "Do promotions increase the units sold? By how much?",
+      "tools": ["compare_columns"],
+      "mention": ["169\\.8|170", "126\\.6|127"],
+      "max_unverified": 1
+    },
+    {
+      "id": "sales-period",
+      "dataset": "sales_timeseries",
+      "question": "What period does this data cover and how many rows are there?",
+      "tools": ["get_dataset_overview", "profile_column", "list_columns"],
+      "mention": ["2022", "2024", "3[ ,.]?285"],
+      "max_unverified": 1
+    },
+    {
+      "id": "sales-seasonality",
+      "dataset": "sales_timeseries",
+      "question": "Is there a trend or a seasonality in revenue over time?",
+      "tools": ["analyze_time_series"],
+      "mention": ["season|trend"],
+      "max_unverified": 2
+    },
+    {
+      "id": "sales-forecast",
+      "dataset": "sales_timeseries",
+      "question": "Forecast the revenue for the next 3 months.",
+      "tools": ["forecast"],
+      "mention": ["interval|range|between"],
+      "max_unverified": 3
+    },
+    {
+      "id": "traps-quality",
+      "dataset": "typing_traps",
+      "question": "Take a first look at this dataset: what should I know before analysing it?",
+      "tools": ["get_dataset_overview", "get_playbook"],
+      "mention": ["600"],
+      "max_unverified": 1
+    },
+    {
+      "id": "traps-identifier",
+      "dataset": "typing_traps",
+      "question": "Is customer_id useful for an analysis?",
+      "tools": ["profile_column", "list_columns", "get_dataset_overview"],
+      "mention": ["identifier|unique|id\\b"],
+      "max_unverified": 1
+    },
+    {
+      "id": "traps-no-made-up-figures",
+      "dataset": "typing_traps",
+      "question": "What is the average income of customers in Belgium compared with France?",
+      "tools": ["compare_columns", "profile_column", "count_rows"],
+      "mention": ["income"],
+      "max_unverified": 0
+    }
+  ]
+}
