@@ -15,7 +15,7 @@ jobs:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7
         with:
           version: "0.12.15"
       - run: uv python install 3.12
@@ -35,7 +35,7 @@ jobs:
         working-directory: packages/cyfouri-data-explorer
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7
         with:
           version: "0.12.15"
       - run: uv python install 3.12
